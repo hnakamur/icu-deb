@@ -1,15 +1,15 @@
 Source: icu
 Section: libs
 Priority: optional
-Maintainer: Ivo Timmermans <ivo@debian.org>
+Maintainer: Jay Berkenbilt <qjb@debian.org>
 Uploaders: Daniel Glassey <danglassey@ntlworld.com>
-Standards-Version: 3.5.6
-Build-Depends: debhelper, doxygen
+Standards-Version: 3.6.2
+Build-Depends: debhelper (>= 2), doxygen
 
 Package: libicu21-dev
 Section: devel
 Architecture: any
-Depends: libicu${major}c102 (= ${Source-Version}), libc6-dev
+Depends: libicu${major} (= ${Source-Version}), libc6-dev
 Provides: libicu-dev
 Conflicts: libicu-dev
 Suggests: icu-doc
@@ -17,7 +17,7 @@ Description: International Components for Unicode (development files)
  ICU is a C++ and C library that provides robust and full-featured Unicode
  and locale support. This package contains the development files for ICU.
 
-Package: icu-doc
+Package: icu21-doc
 Section: doc
 Architecture: all
 Description: API documentation for ICU classes and functions
@@ -25,13 +25,13 @@ Description: API documentation for ICU classes and functions
  and locale support. This package contains HTML files documenting the ICU
  APIs.
  
-Package: libicu21c102
+Package: libicu21
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}
 Recommends: icu
-Conflicts: libicu21
-Replaces: libicu21
+Conflicts: libicu21c102
+Replaces: libicu21c102
 Description: International Components for Unicode (libraries)
  ICU is a C++ and C library that provides robust and full-featured Unicode
  and locale support. This package contains the runtime libraries for
@@ -41,7 +41,7 @@ Description: International Components for Unicode (libraries)
 Package: icu
 Section: libs
 Architecture: any
-Depends: libicu${major}c102 (>= ${Source-Version}), make
+Depends: libicu${major} (>= ${Source-Version}), make
 Recommends: icu-locales
 Description: International Components for Unicode (non locale data)
  ICU is a C++ and C library that provides robust and full-featured Unicode
@@ -50,7 +50,7 @@ Description: International Components for Unicode (non locale data)
  and time formatting, support for more than 140 locales, message catalogs
  and resources, message formatting, normalization, number and currency
  formatting, time zones support, transliteration, word, line and
- sentence breaking, etc. 
+ sentence breaking, etc.
  .
  This package contains the Unicode character database and derived
  properties, along with converters and time zones data.
@@ -59,7 +59,7 @@ Description: International Components for Unicode (non locale data)
 Package: icu-locales
 Section: libs
 Architecture: any
-Depends: libicu${major}c102 (>= ${Source-Version})
+Depends: libicu${major} (>= ${Source-Version})
 Description: Locale data for ICU
  The locale data are used by ICU to provide localization (l10n) and
  internationalization (i18n) support to applications using the ICU library.

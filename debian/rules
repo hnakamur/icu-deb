@@ -74,15 +74,15 @@ $(builddir)/configure-stamp:
 build: $(builddir)/configure-stamp debian-files $(builddir)/build-stamp
 
 # Build some Debian files
-DEBIAN_FILES=icu.conffiles postinst prerm icu.postinst icu.prerm libicu$(major)c102.postinst README.Debian.libicu$(major)-dev
+DEBIAN_FILES=icu.conffiles postinst prerm icu.postinst icu.prerm libicu$(major).postinst README.Debian.libicu$(major)-dev
 
 debian/%: debian/%.in
 	cd $(builddir) \
 	  && CONFIG_FILES=$(builddir_relative_topdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-debian/libicu$(major)c102%: debian/libicu%
+debian/libicu$(major)%: debian/libicu%
 	cp $< $@
-debian/README.Debian.libicu$(major)c102%: debian/README.Debian.libicu%
+debian/README.Debian.libicu$(major)%: debian/README.Debian.libicu%
 	cp $< $@
 debian/README.Debian.libicu$(major)%: debian/README.Debian.libicu%
 	cp $< $@
@@ -124,11 +124,11 @@ install: build
 # Build architecture-independent files here.
 binary-indep: build install
 	#
-	# build icu-doc package by moving files
+	# build icu21-doc package by moving files
 	#
-	mv debian/tmp/usr/share/doc/icu debian/tmp/usr/share/doc/icu-doc
-	dh_movefiles -picu-doc \
-	    usr/share/doc/icu-doc
+	mv debian/tmp/usr/share/doc/icu debian/tmp/usr/share/doc/icu21-doc
+	dh_movefiles -picu21-doc \
+	    usr/share/doc/icu21-doc
 	#
 	# build icu-i18ndata from the source data
 	#
@@ -156,12 +156,12 @@ binary-arch: build install
 	dh_testdir
 	dh_testroot
 	#
-	# build libicu${major}c102 package by moving files from icu-dev
+	# build libicu${major} package by moving files from icu-dev
 	#
 	$(RM) debian/tmp/usr/lib/libicuctestfw.*
-	dh_movefiles -plibicu$(major)c102 \
+	dh_movefiles -plibicu$(major) \
 	    usr/lib/*.so.*
-	mkdir debian/libicu$(major)c102/usr/lib/icu
+	mkdir debian/libicu$(major)/usr/lib/icu
 	#
 	# massage data files
 	#
@@ -229,7 +229,7 @@ endif
 	dh_makeshlibs
 	dh_installdeb
 #	dh_perl
-	dh_shlibdeps -ldebian/libicu$(major)c102/usr/lib
+	dh_shlibdeps -ldebian/libicu$(major)/usr/lib
 	dh_gencontrol -- -Vversion=$(version) -Vmajor=$(major)
 	dh_md5sums
 	dh_builddeb
@@ -240,7 +240,7 @@ update-debian-files:
 	then \
 	    cvers=`sed -n 's/^icu (\([^)]*\)).*/\1/p' debian/changelog | head -1`; if dpkg --compare-versions $$cvers lt $(version)-1; then \
 	        dch -v $(version)-1 "Update to ICU version $(version). (This comment is generated.)"; \
-	        sed 's/libicu[0-9][0-9]*/libicu$(major)c102/g' debian/control >debian/control.new && mv debian/control.new debian/control; \
+	        sed 's/libicu[0-9][0-9]*/libicu$(major)/g' debian/control >debian/control.new && mv debian/control.new debian/control; \
 	    fi; \
 	fi
 
