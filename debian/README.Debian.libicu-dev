@@ -2,7 +2,7 @@ libicu-dev for Debian
 ---------------------
 
 The documentation in /usr/share/doc/libicu-dev/docs/ provides a high-level
-overview of ICU. Detailed API documentation is provided by the icu-docs
+overview of ICU. Detailed API documentation is provided by the icu21-doc
 package.
 
  -- Yves Arrouye <yves@debian.org>, Wed, 11 Oct 2000 19:37:57 -0700

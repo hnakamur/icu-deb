@@ -1,3 +1,39 @@
+icu (2.1-3ubuntu1) breezy; urgency=low
+
+  * Resynchronise with Debian.
+
+ -- Sebastian Dröge <mail@slomosnail.de>  Mon, 25 Jul 2005 18:31:41 +0200 
+
+icu (2.1-3) unstable; urgency=low
+
+  * New maintainer as per discussion with Ivo.
+  * g++ 4.0 transition: libicu21c102 is now libicu21c2.
+  * Accepted changes from NMU below for now.  This change will be
+    reversed soon when icu is updated to the current upstream version.
+    The icu28 package will also be removed at that time, as per discussion
+    with the icu28 maintainer.  Closes: #301316
+  * Add shlibs files
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat,  9 Jul 2005 13:33:35 -0400
+
+icu (2.1-2.1) unstable; urgency=medium
+
+  * Rename icu-doc to icu21-doc. icu-doc is built by the icu28 package.
+
+ -- Matthias Klose <doko@debian.org>  Sat, 21 May 2005 22:44:31 +0200
+
+icu (2.1-2ubuntu2) breezy; urgency=low
+
+  * Rename icu-doc to icu21-doc. icu-doc is built by the icu28 package.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sat, 21 May 2005 20:29:50 +0000
+
+icu (2.1-2ubuntu1) breezy; urgency=low
+
+  * CXX transition: Rename libicu21c102 to libicu21.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sat, 14 May 2005 14:42:23 +0000
+
 icu (2.1-2) unstable; urgency=low
 
   * debian/control: Changed maintainer, added Daniel Glassey as Uploader.
@@ -20,7 +56,6 @@ icu (2.1-1.1) unstable; urgency=low
   * source/common/unicode/docmain.h: Fix \mainpage and \section tags,
     so doxygen doesn't get confused any more. Closes: #178344
   * debian/copyright: Added upstream URL. Closes: #165780
-  * 
 
  -- Ivo Timmermans <ivo@debian.org>  Fri, 14 Feb 2003 15:21:56 +0100
 
@@ -133,5 +168,3 @@ icu (1.6.0.1-20001017-1) unstable; urgency=low
   * Initial Release.
 
  -- Yves Arrouye <yves@debian.org>  Tue, 24 Oct 2000 16:14:12 -0700
-
-
