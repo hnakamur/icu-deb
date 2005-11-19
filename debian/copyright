@@ -1,15 +1,17 @@
-The original source for this package is available from
-	http://oss.software.ibm.com/icu/
+This package was debianized by Jay Berkenbilt <qjb@debian.org> on
+August 5, 2005.
 
-Upstream Authors: A list is available from
-	http://oss.software.ibm.com/icu/credits/team.html
+The original source was downloaded from
+ftp://ftp.software.ibm.com/software/globalization/icu/3.4/icu-3.4.tgz
+
+The main web site for ICU is
+http://www-306.ibm.com/software/globalization/icu/index.jsp
 
 
-ICU License - ICU 1.8.1 and later
 
 COPYRIGHT AND PERMISSION NOTICE
 
-Copyright (c) 1995-2001 International Business Machines Corporation and others
+Copyright (c) 1995-2005 International Business Machines Corporation and others
 All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -39,4 +41,3 @@ of the copyright holder.
 
 --------------------------------------------------------------------------------
 All trademarks and registered trademarks mentioned herein are the property of their respective owners.
-
