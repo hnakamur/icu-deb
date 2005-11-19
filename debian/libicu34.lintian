@@ -1,0 +1,6 @@
+# libicu34 installs multiple shared libraries, none of which is
+# actually called libicu.so.34, but all of which are libicu*.so.34.
+libicu34: package-name-doesnt-match-sonames
+# libicudata.so.34.0 contains static data only
+libicu34: shared-lib-without-dependency-information
+libicu34: shlib-without-PT_GNU_STACK-section usr/lib/libicudata.so.34.0
