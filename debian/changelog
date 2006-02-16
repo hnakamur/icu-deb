@@ -1,3 +1,18 @@
+icu (3.4-4build1) dapper; urgency=low
+
+  * Rebuild using g++-4.0.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 16 Feb 2006 04:04:59 +0100
+
+icu (3.4-4) unstable; urgency=low
+
+  * Build with g++ 4.0 with -fno-strict-aliasing to work around g++ 4.0
+    bugs that impact ICU.  Future versions should work properly with the
+    latest g++ without any special flags.  (Closes: #342970)
+  * Enable static libraries.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 22 Jan 2006 11:36:59 -0500
+
 icu (3.4-3) unstable; urgency=low
 
   * Explicitly build with g++ 3.4.  The current ICU fails its test suite
