@@ -1,0 +1,3 @@
+# This debhelper issue is in the upstream source's debian directory
+# which we do not use.
+icu source: package-uses-deprecated-debhelper-compat-version 1

@@ -5,8 +5,8 @@
 # variables' names with l_.
 
 l_PWD := $(shell pwd)
-l_STAMPS = debian/l_stamps
-l_RUN_CHECK = 0
+l_STAMPS := debian/l_stamps
+l_RUN_CHECK := 0
 
 # Variables used by cdbs
 
@@ -14,7 +14,7 @@ VERSION := $(shell dpkg-parsechangelog | \
              awk '/Version:/ {print $$2}' | cut -d- -f 1)
 
 DEB_TAR_SRCDIR = icu/source
-DEB_CONFIGURE_USER_FLAGS = --disable-samples
+DEB_CONFIGURE_USER_FLAGS = --disable-samples --enable-static
 DEB_COMPRESS_EXCLUDE = html examples
 DEB_INSTALL_EXAMPLES_libicu34-dev = \
 	build-tree/$(DEB_TAR_SRCDIR)/samples/*
@@ -29,11 +29,10 @@ DEB_BUILD_OPTIONS += nocheck
 
 DEB_MAKE_INSTALL_TARGET += install-doc
 
-# TEMPORARY -- icu 3.4 fails its test suite with gcc 4.0 but passes
-# with gcc 3.4.  Future versions should work with gcc 4.0.  When
-# removing this, also remove build dependency on gcc 3.4.
-export CC = gcc-3.4
-export CXX = g++-3.4
+# TEMPORARY -- icu 3.4 fails its test suite with gcc 4.0 without
+# -fno-strict-aliasing.
+CFLAGS += -fno-strict-aliasing
+CXXFLAGS += -fno-strict-aliasing
 
 cleanbuilddir::
 	$(RM) -r $(l_STAMPS)
@@ -45,7 +44,9 @@ clean::
 
 # Running the test suite here, even ignoring failure, may still create
 # build problems if the test suite hangs, which it did on at least one
-# occasion.
+# occasion.  I (qjb) have manually run the test suite on i386, ia64,
+# and powerpc to ensure that we have a passing test suite on at least
+# one little-endian, one big-endian, and one 64-bit system.
 ifeq ($(l_RUN_CHECK), 1)
 # Run the test suite so we can check its output in the buildd logs,
 # but don't let a test suite failure cause overall failure.
