@@ -1,3 +1,9 @@
+icu (3.4-4ubuntu1) dapper; urgency=low
+
+  * Fix Bengali rendering. Ubuntu #35085.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 15 Mar 2006 20:55:47 +0000
+
 icu (3.4-4build1) dapper; urgency=low
 
   * Rebuild using g++-4.0.

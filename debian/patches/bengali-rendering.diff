@@ -1,0 +1,11 @@
+--- icu/source/layout/IndicClassTables.cpp	2005-07-12 03:52:06.000000000 +0530
++++ icu/source/layout/IndicClassTables.cpp	2006-03-16 01:27:13.000000000 +0530
+@@ -87,7 +87,7 @@
+ 
+ static const IndicClassTable::CharClass bengCharClasses[] =
+ {
+-    _xx, _ma, _mp, _mp, _xx, _i2, _iv, _iv, _iv, _iv, _iv, _iv, _iv, _xx, _xx, _i2, // 0980 - 098F
++    _xx, _ma, _mp, _mp, _xx, _ct, _iv, _iv, _iv, _iv, _iv, _iv, _iv, _xx, _xx, _iv, // 0980 - 098F
+     _iv, _xx, _xx, _iv, _iv, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, // 0990 - 099F
+     _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _xx, _ct, _ct, _bb, _ct, _ct, _pb, // 09A0 - 09AF
+     _rv, _xx, _ct, _xx, _xx, _xx, _ct, _ct, _ct, _ct, _xx, _xx, _nu, _xx, _r2, _dl, // 09B0 - 09BF
