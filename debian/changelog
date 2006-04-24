@@ -1,3 +1,24 @@
+icu (3.4.1a-1ubuntu1) dapper; urgency=low
+
+  * Synchronize with Debian unstable.
+
+ -- Matthias Klose <doko@ubuntu.com>  Mon, 24 Apr 2006 18:37:52 +0000
+
+icu (3.4.1a-1) unstable; urgency=low
+
+  * Upstream re-released 3.4.1 without changing the version number because
+    the header file with 3.4.1 still said it was 3.4.  Unfortunately, the
+    debian 3.4.1 package had already been uploaded.  This "3.4.1a" release
+    now matches upstream's 3.4.1.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 29 Mar 2006 22:19:08 -0500
+
+icu (3.4.1-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri,  3 Mar 2006 23:07:52 -0500
+
 icu (3.4-4ubuntu1) dapper; urgency=low
 
   * Fix Bengali rendering. Ubuntu #35085.

@@ -29,8 +29,16 @@ DEB_BUILD_OPTIONS += nocheck
 
 DEB_MAKE_INSTALL_TARGET += install-doc
 
-# TEMPORARY -- icu 3.4 fails its test suite with gcc 4.0 without
-# -fno-strict-aliasing.
+# Turn off optimization on m68k in hopes of avoiding some internal
+# compiler errors.
+ifeq ($(shell dpkg --print-architecture),m68k)
+CFLAGS := $(filter-out -O%,$(CFLAGS)) -O0
+CXXFLAGS := $(filter-out -O%,$(CXXFLAGS)) -O0
+endif
+
+# TEMPORARY (hopefully) -- icu 3.4 fails its test suite with gcc 4.0
+# without -fno-strict-aliasing.  This is verified to still be the case
+# in 3.4.1.
 CFLAGS += -fno-strict-aliasing
 CXXFLAGS += -fno-strict-aliasing
 
