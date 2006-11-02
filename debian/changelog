@@ -1,3 +1,9 @@
+icu (3.4.1a-1ubuntu2) feisty; urgency=low
+
+  * Rebuild for ldbl128 change on powerpc and sparc.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu,  2 Nov 2006 09:59:56 +0000
+
 icu (3.4.1a-1ubuntu1) dapper; urgency=low
 
   * Synchronize with Debian unstable.
