@@ -1,3 +1,52 @@
+icu (3.6-2) unstable; urgency=low
+
+  * Include patch to fix error in IndicClassTables to fix
+    worstCaseExpansion for Sinhala.  Thanks to Harshula for forwarding
+    this.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 27 Nov 2006 21:19:09 -0500
+
+icu (3.6-1) unstable; urgency=low
+
+  * New upstream release
+  * Provide libicu34-dev since ICU 3.6 provides backward compatible
+    interfaces in addition to new ones.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 19 Sep 2006 12:10:41 -0400
+
+icu (3.6~d02-1) experimental; urgency=low
+
+  * New upstream release.
+  * Remove special optimization hack to work around now-fixed m68k build
+    problems.  (Closes: #360743)
+  * Update standards version.  No changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 15 Aug 2006 16:34:34 -0400
+
+icu (3.4.1a-1) unstable; urgency=low
+
+  * Upstream re-released 3.4.1 without changing the version number because
+    the header file with 3.4.1 still said it was 3.4.  Unfortunately, the
+    debian 3.4.1 package had already been uploaded.  This "3.4.1a" release
+    now matches upstream's 3.4.1.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 29 Mar 2006 22:19:08 -0500
+
+icu (3.4.1-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri,  3 Mar 2006 23:07:52 -0500
+
+icu (3.4-4) unstable; urgency=low
+
+  * Build with g++ 4.0 with -fno-strict-aliasing to work around g++ 4.0
+    bugs that impact ICU.  Future versions should work properly with the
+    latest g++ without any special flags.  (Closes: #342970)
+  * Enable static libraries.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 22 Jan 2006 11:36:59 -0500
+
 icu (3.4-3) unstable; urgency=low
 
   * Explicitly build with g++ 3.4.  The current ICU fails its test suite

@@ -5,8 +5,8 @@
 # variables' names with l_.
 
 l_PWD := $(shell pwd)
-l_STAMPS = debian/l_stamps
-l_RUN_CHECK = 0
+l_STAMPS := debian/l_stamps
+l_RUN_CHECK := 1
 
 # Variables used by cdbs
 
@@ -14,9 +14,9 @@ VERSION := $(shell dpkg-parsechangelog | \
              awk '/Version:/ {print $$2}' | cut -d- -f 1)
 
 DEB_TAR_SRCDIR = icu/source
-DEB_CONFIGURE_USER_FLAGS = --disable-samples
+DEB_CONFIGURE_USER_FLAGS = --disable-samples --enable-static
 DEB_COMPRESS_EXCLUDE = html examples
-DEB_INSTALL_EXAMPLES_libicu34-dev = \
+DEB_INSTALL_EXAMPLES_libicu36-dev = \
 	build-tree/$(DEB_TAR_SRCDIR)/samples/*
 # Include cdbs rules files.
 include /usr/share/cdbs/1/rules/tarball.mk
@@ -24,16 +24,7 @@ include /usr/share/cdbs/1/rules/simple-patchsys.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
-# Suppress automatic running of test suite; we do it manually below.
-DEB_BUILD_OPTIONS += nocheck
-
 DEB_MAKE_INSTALL_TARGET += install-doc
-
-# TEMPORARY -- icu 3.4 fails its test suite with gcc 4.0 but passes
-# with gcc 3.4.  Future versions should work with gcc 4.0.  When
-# removing this, also remove build dependency on gcc 3.4.
-export CC = gcc-3.4
-export CXX = g++-3.4
 
 cleanbuilddir::
 	$(RM) -r $(l_STAMPS)
@@ -43,24 +34,11 @@ cleanbuilddir::
 clean::
 	$(RM) debian/compat *.cdbs-config_list
 
-# Running the test suite here, even ignoring failure, may still create
-# build problems if the test suite hangs, which it did on at least one
-# occasion.
-ifeq ($(l_RUN_CHECK), 1)
-# Run the test suite so we can check its output in the buildd logs,
-# but don't let a test suite failure cause overall failure.
-common-post-build-impl::
-	-$(DEB_MAKE_INVOKE) check
-endif
-
-install/libicu34-dev::
-	mkdir -p debian/$(cdbs_curpkg)/usr/share/man/man1
-	mkdir -p debian/$(cdbs_curpkg)/usr/share/man/man8
-	cp debian/misc/genbrk.1 debian/$(cdbs_curpkg)/usr/share/man/man1
-	cp debian/misc/icuswap.8 debian/$(cdbs_curpkg)/usr/share/man/man8
-
-binary-post-install/libicu34-dev::
+# As per upstream, icuswap is deprecated and should not be
+# distributed.
+binary-post-install/libicu36-dev::
 	find debian/$(cdbs_curpkg) -type f -name .cvsignore | xargs rm
+	rm debian/$(cdbs_curpkg)/usr/sbin/icuswap
 
 # Install lintian override files
 binary-post-install/%::

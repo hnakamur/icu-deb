@@ -1,7 +1,0 @@
-debian/tmp/usr/lib/lib*.so
-debian/tmp/usr/lib/icu
-debian/tmp/usr/include
-debian/tmp/usr/bin
-debian/tmp/usr/sbin
-debian/tmp/usr/share/icu
-debian/tmp/usr/share/man
