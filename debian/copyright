@@ -2,16 +2,17 @@ This package was debianized by Jay Berkenbilt <qjb@debian.org> on
 August 5, 2005.
 
 The original source was downloaded from
-ftp://ftp.software.ibm.com/software/globalization/icu/3.4/icu-3.4.tgz
+ftp://ftp.software.ibm.com/software/globalization/icu/3.6/icu4c-3_6-src.tgz
 
-The main web site for ICU is
-http://www-306.ibm.com/software/globalization/icu/index.jsp
+The main web sites for ICU are
+http://icu.sourceforge.net/
+http://www.ibm.com/software/globalization/icu/
 
-
+ICU License - ICU 1.8.1 and later
 
 COPYRIGHT AND PERMISSION NOTICE
 
-Copyright (c) 1995-2005 International Business Machines Corporation and others
+Copyright (c) 1995-2001 International Business Machines Corporation and others
 All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a
