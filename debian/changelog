@@ -1,3 +1,9 @@
+icu (3.6-2build1) feisty; urgency=low
+
+  * Rebuild for changes in the amd64 toolchain.
+
+ -- Matthias Klose <doko@ubuntu.com>  Mon,  5 Mar 2007 01:18:44 +0000
+
 icu (3.6-2) unstable; urgency=low
 
   * Include patch to fix error in IndicClassTables to fix
