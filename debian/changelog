@@ -1,3 +1,10 @@
+icu (3.6-3) unstable; urgency=low
+
+  * Include patch from Samuel Thibault to allow icu to build on gnu hurd.
+    (Closes: #414446)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 10 Jul 2007 17:31:56 -0400
+
 icu (3.6-2) unstable; urgency=low
 
   * Include patch to fix error in IndicClassTables to fix
