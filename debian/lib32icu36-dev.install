@@ -1,0 +1,3 @@
+debian/tmp32/usr/lib32/lib*.so
+debian/tmp32/usr/lib32/lib*.a
+debian/tmp32/usr/lib32/icu
