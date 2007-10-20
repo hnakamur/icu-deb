@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+DEB_HOST_ARCH_CPU	?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
+
 # To distinguish variables that are truly local to this file (rather
 # than for use by cdbs), we adopt the convention of starting local
 # variables' names with l_.
@@ -7,6 +9,26 @@
 l_PWD := $(shell pwd)
 l_STAMPS := debian/l_stamps
 l_RUN_CHECK := 1
+l_CFLAGS := -g -Wall
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	l_CFLAGS += -O0
+else
+	l_CFLAGS += -O2
+endif
+# common configure cruft
+l_CONFIGURE = CC="gcc" CXX="g++" CPPFLAGS="" LDFLAGS="" \
+	./configure \
+	--build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
+	--includedir="\$${prefix}/include" \
+	--mandir="\$${prefix}/share/man" --infodir="\$${prefix}/share/info" \
+	--sysconfdir=/etc --localstatedir=/var \
+	--disable-maintainer-mode --disable-dependency-tracking
+# specific to this package
+l_CONFIGURE += --disable-samples --enable-static
+
+ifneq (, $(filter $(DEB_HOST_ARCH_CPU), amd64 ppc64 kfreebsd-amd64))
+build32 := build32
+endif
 
 # Variables used by cdbs
 
@@ -14,17 +36,13 @@ VERSION := $(shell dpkg-parsechangelog | \
              awk '/Version:/ {print $$2}' | cut -d- -f 1)
 
 DEB_TAR_SRCDIR = icu/source
-DEB_CONFIGURE_USER_FLAGS = --disable-samples --enable-static
 DEB_COMPRESS_EXCLUDE = html examples
 DEB_INSTALL_EXAMPLES_libicu36-dev = \
-	build-tree/$(DEB_TAR_SRCDIR)/samples/*
+	build-tree/$(DEB_TAR_SRCDIR)-build/samples/*
 # Include cdbs rules files.
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/autotools.mk
-
-DEB_MAKE_INSTALL_TARGET += install-doc
 
 cleanbuilddir::
 	$(RM) -r $(l_STAMPS)
@@ -33,6 +51,39 @@ cleanbuilddir::
 # creates it conditionally, so this doesn't have a trivial fix.
 clean::
 	$(RM) debian/compat *.cdbs-config_list
+	$(RM) -rf debian/tmp32
+
+pre-build::
+	chmod a+x $(DEB_SRCDIR)/configure
+	cp -a $(DEB_SRCDIR) $(DEB_SRCDIR)-build
+ifneq (, $(build32))
+	cp -a $(DEB_SRCDIR) $(DEB_SRCDIR)-build32
+endif
+
+configure/libicu36 configure/libicu36-dev::
+	cd $(DEB_SRCDIR)-build && \
+		CFLAGS="$(l_CFLAGS)" CXXFLAGS="$(l_CFLAGS)" \
+		$(l_CONFIGURE)
+
+configure/lib32icu36 configure/lib32icu36-dev::
+	cd $(DEB_SRCDIR)-build32 && \
+		CFLAGS="$(l_CFLAGS) -m32" CXXFLAGS="$(l_CFLAGS) -m32" \
+		$(l_CONFIGURE) --libdir=/usr/lib32
+
+build/libicu36 build/libicu36-dev::
+	$(MAKE) -C $(DEB_SRCDIR)-build
+
+build/lib32icu36 build/lib32icu36-dev::
+	$(MAKE) -C $(DEB_SRCDIR)-build32
+
+install/libicu36 install/libicu36-dev::
+	$(MAKE) -C $(DEB_SRCDIR)-build install DESTDIR=$(CURDIR)/debian/tmp
+
+install/lib32icu36 install/lib32icu36-dev::
+	$(MAKE) -C $(DEB_SRCDIR)-build32 install DESTDIR=$(CURDIR)/debian/tmp32
+
+install/icu-doc:: install/libicu36 install/libicu36-dev
+	$(MAKE) -C $(DEB_SRCDIR)-build install-doc DESTDIR=$(CURDIR)/debian/tmp
 
 # As per upstream, icuswap is deprecated and should not be
 # distributed.
