@@ -1,8 +1,22 @@
+icu (3.6-8) unstable; urgency=low
+
+  * Clean up 32-bit library patch to avoid excessive and unnecessary runs
+    of configure. (Closes: #447771)
+  * make setBreakType public in rbbi.h; needed by OpenOffice.org.  This
+    patch is included in OpenOffice.org's internal ICU.  Including it here
+    allows OpenOffice.org to continue to use this ICU package.  Thanks
+    Rene Engelhard.  (Closes: #448745)
+  * Rename debian/watch.not-yet to debian/no-watch so it won't get picked
+    up even though it's not supposed to.  ICU's ftp site uses a structure
+    that isn't supported by uscan.  (Closes: #449701)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 06 Nov 2007 20:56:38 -0500
+
 icu (3.6-7) unstable; urgency=low
 
   * Fix bug in which 32-bit library installs were overwriting files for
     64-bit libraries on amd64.  Thanks Robert Millan for the patch.
-    (Closes: #447275).
+    (Closes: #447275)
 
  -- Jay Berkenbilt <qjb@debian.org>  Sat, 20 Oct 2007 11:30:12 -0400
 
