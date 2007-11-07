@@ -38,7 +38,7 @@ VERSION := $(shell dpkg-parsechangelog | \
 DEB_TAR_SRCDIR = icu/source
 DEB_COMPRESS_EXCLUDE = html examples
 DEB_INSTALL_EXAMPLES_libicu36-dev = \
-	build-tree/$(DEB_TAR_SRCDIR)-build/samples/*
+	build-tree/$(DEB_TAR_SRCDIR)/samples/*
 # Include cdbs rules files.
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
@@ -52,38 +52,42 @@ cleanbuilddir::
 clean::
 	$(RM) debian/compat *.cdbs-config_list
 	$(RM) -rf debian/tmp32
+	$(RM) debian/stamp-configure debian/stamp-configure32
 
-pre-build::
+post-patches::
 	chmod a+x $(DEB_SRCDIR)/configure
-	cp -a $(DEB_SRCDIR) $(DEB_SRCDIR)-build
 ifneq (, $(build32))
 	cp -a $(DEB_SRCDIR) $(DEB_SRCDIR)-build32
 endif
 
-configure/libicu36 configure/libicu36-dev::
-	cd $(DEB_SRCDIR)-build && \
+configure/libicu36 configure/libicu36-dev:: debian/stamp-configure
+debian/stamp-configure:
+	cd $(DEB_SRCDIR) && \
 		CFLAGS="$(l_CFLAGS)" CXXFLAGS="$(l_CFLAGS)" \
 		$(l_CONFIGURE)
+	touch debian/stamp-configure
 
-configure/lib32icu36 configure/lib32icu36-dev::
+configure/lib32icu36 configure/lib32icu36-dev:: debian/stamp-configure32
+debian/stamp-configure32:
 	cd $(DEB_SRCDIR)-build32 && \
 		CFLAGS="$(l_CFLAGS) -m32" CXXFLAGS="$(l_CFLAGS) -m32" \
 		$(l_CONFIGURE) --libdir=/usr/lib32
+	touch debian/stamp-configure32
 
 build/libicu36 build/libicu36-dev::
-	$(MAKE) -C $(DEB_SRCDIR)-build
+	$(MAKE) -C $(DEB_SRCDIR)
 
 build/lib32icu36 build/lib32icu36-dev::
 	$(MAKE) -C $(DEB_SRCDIR)-build32
 
 install/libicu36 install/libicu36-dev::
-	$(MAKE) -C $(DEB_SRCDIR)-build install DESTDIR=$(CURDIR)/debian/tmp
+	$(MAKE) -C $(DEB_SRCDIR) install DESTDIR=$(CURDIR)/debian/tmp
 
 install/lib32icu36 install/lib32icu36-dev::
 	$(MAKE) -C $(DEB_SRCDIR)-build32 install DESTDIR=$(CURDIR)/debian/tmp32
 
 install/icu-doc:: install/libicu36 install/libicu36-dev
-	$(MAKE) -C $(DEB_SRCDIR)-build install-doc DESTDIR=$(CURDIR)/debian/tmp
+	$(MAKE) -C $(DEB_SRCDIR) install-doc DESTDIR=$(CURDIR)/debian/tmp
 
 # As per upstream, icuswap is deprecated and should not be
 # distributed.
