@@ -1,3 +1,18 @@
+icu (3.6-10) unstable; urgency=low
+
+  * It appears that amd64 requires 32-bit libraries to be in
+    /emul/ia32-linux/usr/lib instead of /usr/lib32.  Following zlib's
+    example of moving them around for amd64 only. (Closes: #451495)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 18 Nov 2007 11:03:10 -0500
+
+icu (3.6-9) unstable; urgency=low
+
+  * Yet another 32-bit library fix.  Files were installed in /32 because
+    of the debian/tmp32 thing.  How did this ever work? (Closes: #451495)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 17 Nov 2007 12:12:18 -0500
+
 icu (3.6-8) unstable; urgency=low
 
   * Clean up 32-bit library patch to avoid excessive and unnecessary runs

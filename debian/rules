@@ -39,6 +39,10 @@ DEB_TAR_SRCDIR = icu/source
 DEB_COMPRESS_EXCLUDE = html examples
 DEB_INSTALL_EXAMPLES_libicu36-dev = \
 	build-tree/$(DEB_TAR_SRCDIR)/samples/*
+
+# Overridden for 32-bit packages on 64-bit platforms
+DEB_DH_INSTALL_SOURCEDIR=debian/tmp
+
 # Include cdbs rules files.
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
@@ -83,11 +87,20 @@ build/lib32icu36 build/lib32icu36-dev::
 install/libicu36 install/libicu36-dev::
 	$(MAKE) -C $(DEB_SRCDIR) install DESTDIR=$(CURDIR)/debian/tmp
 
+binary-install/lib32icu36 binary-install/lib32icu36-dev:: DEB_DH_INSTALL_SOURCEDIR=debian/tmp32
 install/lib32icu36 install/lib32icu36-dev::
 	$(MAKE) -C $(DEB_SRCDIR)-build32 install DESTDIR=$(CURDIR)/debian/tmp32
 
 install/icu-doc:: install/libicu36 install/libicu36-dev
 	$(MAKE) -C $(DEB_SRCDIR) install-doc DESTDIR=$(CURDIR)/debian/tmp
+
+ifeq ($(DEB_HOST_ARCH),amd64)
+# On amd64 only, it appears that we need to put these in a different
+# location.
+binary-install/lib32icu36 binary-install/lib32icu36-dev::
+	mkdir -p debian/$(cdbs_curpkg)/emul/ia32-linux/usr
+	mv debian/$(cdbs_curpkg)/usr/lib32 debian/$(cdbs_curpkg)/emul/ia32-linux/usr/lib
+endif
 
 # As per upstream, icuswap is deprecated and should not be
 # distributed.

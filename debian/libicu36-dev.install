@@ -1,8 +1,8 @@
-debian/tmp/usr/lib/lib*.so
-debian/tmp/usr/lib/lib*.a
-debian/tmp/usr/lib/icu
-debian/tmp/usr/include
-debian/tmp/usr/bin
-debian/tmp/usr/sbin
-debian/tmp/usr/share/icu
-debian/tmp/usr/share/man
+usr/lib/lib*.so
+usr/lib/lib*.a
+usr/lib/icu
+usr/include
+usr/bin
+usr/sbin
+usr/share/icu
+usr/share/man
