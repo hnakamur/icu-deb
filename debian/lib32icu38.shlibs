@@ -1,0 +1,7 @@
+libicudata 38 lib32icu38 (>= 3.8-5)
+libicui18n 38 lib32icu38 (>= 3.8-5)
+libicuio 38 lib32icu38 (>= 3.8-5)
+libicule 38 lib32icu38 (>= 3.8-5)
+libiculx 38 lib32icu38 (>= 3.8-5)
+libicutu 38 lib32icu38 (>= 3.8-5)
+libicuuc 38 lib32icu38 (>= 3.8-5)

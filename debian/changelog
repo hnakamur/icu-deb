@@ -1,3 +1,16 @@
+icu (3.8-5) unstable; urgency=low
+
+  * Filter out extraneous dependencies among different versions of the
+    library packages. (Closes: #451767, 451978)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 01 Dec 2007 09:47:32 -0500
+
+icu (3.8-4) experimental; urgency=low
+
+  * Include changes from 3.6-10.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 18 Nov 2007 11:04:16 -0500
+
 icu (3.6-10) unstable; urgency=low
 
   * It appears that amd64 requires 32-bit libraries to be in
@@ -6,12 +19,25 @@ icu (3.6-10) unstable; urgency=low
 
  -- Jay Berkenbilt <qjb@debian.org>  Sun, 18 Nov 2007 11:03:10 -0500
 
+icu (3.8-3) experimental; urgency=low
+
+  * Include changes from 3.6-9.
+  * Include -dbg package with unstripped versions of the libraries.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 17 Nov 2007 15:02:36 -0500
+
 icu (3.6-9) unstable; urgency=low
 
   * Yet another 32-bit library fix.  Files were installed in /32 because
     of the debian/tmp32 thing.  How did this ever work? (Closes: #451495)
 
  -- Jay Berkenbilt <qjb@debian.org>  Sat, 17 Nov 2007 12:12:18 -0500
+
+icu (3.8-2) experimental; urgency=low
+
+  * Include changes from 3.6-8.  (Closes: #448747)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 06 Nov 2007 20:58:09 -0500
 
 icu (3.6-8) unstable; urgency=low
 
@@ -26,6 +52,13 @@ icu (3.6-8) unstable; urgency=low
     that isn't supported by uscan.  (Closes: #449701)
 
  -- Jay Berkenbilt <qjb@debian.org>  Tue, 06 Nov 2007 20:56:38 -0500
+
+icu (3.8-1) experimental; urgency=low
+
+  * New upstream release.  All previously included patches have been
+    incorporated into upstream.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 20 Oct 2007 11:53:32 -0400
 
 icu (3.6-7) unstable; urgency=low
 
@@ -57,6 +90,15 @@ icu (3.6-4) unstable; urgency=low
     #398778)
 
  -- Jay Berkenbilt <qjb@debian.org>  Sat, 15 Sep 2007 21:42:33 -0400
+
+icu (3.8~d01-1) experimental; urgency=low
+
+  * New upstream release
+  * Configure with weak reference to thread library.  (Closes: #389260)
+  * The development package no longer has the library soname in its name.
+    It is now just libicu-dev.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 04 Aug 2007 11:04:49 -0400
 
 icu (3.6-3) unstable; urgency=low
 
