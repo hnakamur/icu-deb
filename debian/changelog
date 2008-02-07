@@ -1,3 +1,17 @@
+icu (3.8-6) unstable; urgency=high
+
+  * Add debian/patches/00-cve-2007-4770-4771.patch created from with
+    svn diff -c 23292 \
+    http://source.icu-project.org/repos/icu/icu/branches/maint/maint-3-8
+    to address the following security vulnerablilities:
+     - CVE-2007-4770: reference to non-existent capture group may
+       cause access to invalid memory
+     - CVE-2007-4771: buffer overflow in regexcmp.cpp
+    (Closes: #463688)
+  * Updated standards version to 3.7.3: no changes required.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 07 Feb 2008 12:58:34 -0500
+
 icu (3.8-5) unstable; urgency=low
 
   * Filter out extraneous dependencies among different versions of the

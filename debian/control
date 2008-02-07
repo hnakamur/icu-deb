@@ -2,7 +2,7 @@ Source: icu
 Section: libs
 Priority: optional
 Maintainer: Jay Berkenbilt <qjb@debian.org>
-Standards-Version: 3.7.2
+Standards-Version: 3.7.3
 Build-Depends: cdbs, debhelper (>= 5), doxygen, gcc-multilib [amd64 kfreebsd-amd64 ppc64] | gcc-4.1 (<< 4.1.2) [amd64 kfreebsd-amd64 ppc64],
  g++-multilib [amd64 kfreebsd-amd64 ppc64] | g++-4.1 (<< 4.1.2) [amd64 kfreebsd-amd64 ppc64],
  libc6-dev-i386 [amd64], libc0.1-dev-i386 [kfreebsd-amd64], libc6-dev-powerpc [ppc64]
