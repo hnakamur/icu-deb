@@ -1,3 +1,11 @@
+icu (3.8.1-1) unstable; urgency=low
+
+  * New upstream release
+  * Patch to support GNU/kFreeBSD.  Thanks Aurelien Jarno.  (Closes: #
+    461782)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 11 Feb 2008 20:11:00 -0500
+
 icu (3.8-6) unstable; urgency=high
 
   * Add debian/patches/00-cve-2007-4770-4771.patch created from with
