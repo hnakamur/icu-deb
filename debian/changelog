@@ -1,3 +1,18 @@
+icu (3.4.1a-1ubuntu1.6.06.1) dapper-security; urgency=low
+
+  * SECURITY UPDATE: possible read from and write to out of bounds memory
+    locations via back reference '\0' in regular expressions
+  * SECURITY UPDATE: denial of service due to memory exhaustion via a
+    crafted regular expression
+  * debian/patches/SECURITY_CVE-2007-4770_4771.patch: fix regexcmp.cpp to
+    return error on invalid back reference. fix rematch.cpp, uvectr32.h and
+    uvectr32.cpp to return error when capacity is greater than maxCapacity
+  * References
+    CVE-2007-4770
+    CVE-2007-4771
+
+ -- Jamie Strandboge <jamie@ubuntu.com>  Thu, 20 Mar 2008 14:31:40 -0400
+
 icu (3.4.1a-1ubuntu1) dapper; urgency=low
 
   * Synchronize with Debian unstable.
