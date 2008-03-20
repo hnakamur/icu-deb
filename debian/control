@@ -1,7 +1,8 @@
 Source: icu
 Section: libs
 Priority: optional
-Maintainer: Jay Berkenbilt <qjb@debian.org>
+Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Jay Berkenbilt <qjb@debian.org>
 Standards-Version: 3.7.2
 Build-Depends: cdbs, debhelper (>= 4.1.0), doxygen
 
