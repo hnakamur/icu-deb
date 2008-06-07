@@ -1,8 +1,18 @@
+icu (3.8.1-2) unstable; urgency=low
+
+  * Patch from Harshula to fix split conjuncts problem in
+    Sinhala. (Closes: #483563)
+  * Force structures to be padded at byte boundaries (rather than 32-bit
+    boundaries) on arm. (Closes: #484138)
+  * Update doc-base section.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 07 Jun 2008 13:09:07 -0400
+
 icu (3.8.1-1) unstable; urgency=low
 
   * New upstream release
-  * Patch to support GNU/kFreeBSD.  Thanks Aurelien Jarno.  (Closes: #
-    461782)
+  * Patch to support GNU/kFreeBSD.  Thanks Aurelien Jarno.  (Closes:
+    #461782)
 
  -- Jay Berkenbilt <qjb@debian.org>  Mon, 11 Feb 2008 20:11:00 -0500
 

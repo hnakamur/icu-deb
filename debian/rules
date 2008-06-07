@@ -15,6 +15,12 @@ ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 else
 	l_CFLAGS += -O2
 endif
+
+# Make sure structures are padded at no larger than byte boundaries.
+ifeq ($(shell dpkg --print-architecture),arm)
+l_CFLAGS += -mstructure-size-boundary=8
+endif
+
 # common configure cruft
 l_CONFIGURE = CC="gcc" CXX="g++" CPPFLAGS="" LDFLAGS="" \
 	./configure \
