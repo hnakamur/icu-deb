@@ -1,0 +1,17 @@
+--- icu/source/common/unicode/rbbi.h-old	2007-10-31 15:52:08.000000000 +0100
++++ icu/source/common/unicode/rbbi.h	2007-10-31 15:52:47.000000000 +0100
+@@ -611,12 +611,14 @@
+     virtual int32_t getBreakType() const;
+ #endif
+ 
++public:
+     /**
+       * Set the type of the break iterator.
+       * @internal
+       */
+     virtual void setBreakType(int32_t type);
+ 
++protected:
+     /**
+       * Common initialization function, used by constructors and bufferClone.
+       *   (Also used by DictionaryBasedBreakIterator::createBufferClone().)
