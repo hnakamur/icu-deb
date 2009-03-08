@@ -1,0 +1,13 @@
+Index: source/layoutex/ParagraphLayout.cpp
+===================================================================
+--- source.orig/layoutex/ParagraphLayout.cpp	2009-03-07 19:17:14.431692160 -0500
++++ source/layoutex/ParagraphLayout.cpp	2009-03-07 19:17:20.392813633 -0500
+@@ -868,7 +868,7 @@
+ 
+     return nullLanguageCode;
+ }
+-#elif
++#else
+ 
+ // TODO - dummy implementation for right now...
+ le_int32 ParagraphLayout::getLanguageCode(const Locale *locale)

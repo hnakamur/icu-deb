@@ -1,0 +1,82 @@
+INFORMATION SPECIFIC TO ICU
+===========================
+
+The packaging guidelines in the ICU documentation suggest that
+packagers should use the --enable-renaming option to ./configure.  We
+should not do this could potentially result in using the same soname
+with ABI changes.  Although ICU guarantees that no documented parts of
+the public ABI will change, there is nothing to stop people from using
+undocumented or deprecated interfaces.  For additional details, please
+see the thread about this topic on the icu-design list.  You can get
+to the mailing list archives here:
+
+http://sourceforge.net/mailarchive/forum.php?forum_name=icu-design
+
+and find the thread from June 10, 2008 with the subject "debian: use
+of --disable-rename and ICU library sonames".
+
+------
+
+The ICU software is packaged using the tarball-in-tarball approach
+because the upstream sources contain an incompatible debian
+directory.  Upstream has promised that this will be removed for
+version 4.2.
+
+To get a clean, unpatched source tree that is ready to edit, run
+
+./debian/rules pre-build
+
+Follow the directions below for information on managing patches,
+including getting a patched source tree.
+
+
+BOILER-PLATE TEXT
+=================
+
+This package uses quilt to manage all modifications to the upstream
+source.  Changes are stored in the source package as diffs in
+debian/patches and applied during the build.
+
+To get the fully patched source after unpacking the source package, cd to
+the root level of the source package and run:
+
+    quilt push -a
+
+The last patch listed in debian/patches/series will become the current
+patch.
+
+To add a new set of changes, first run quilt push -a, and then run:
+
+    quilt new <patch>
+
+where <patch> is a descriptive name for the patch, used as the filename in
+debian/patches.  Then, for every file that will be modified by this patch,
+run:
+
+    quilt add <file>
+
+before editing those files.  You must tell quilt with quilt add what files
+will be part of the patch before making changes or quilt will not work
+properly.  After editing the files, run:
+
+    quilt refresh
+
+to save the results as a patch.
+
+Alternately, if you already have an external patch and you just want to
+add it to the build system, run quilt push -a and then:
+
+    quilt import -P <patch> /path/to/patch
+    quilt push -a
+
+(add -p 0 to quilt import if needed). <patch> as above is the filename to
+use in debian/patches.  The last quilt push -a will apply the patch to
+make sure it works properly.
+
+To remove an existing patch from the list of patches that will be applied,
+run:
+
+    quilt delete <patch>
+
+You may need to run quilt pop -a to unapply patches first before running
+this command.

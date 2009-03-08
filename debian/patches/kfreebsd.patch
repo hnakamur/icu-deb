@@ -1,0 +1,55 @@
+Index: source/common/putil.c
+===================================================================
+--- source.orig/common/putil.c	2009-03-07 19:07:32.704192053 -0500
++++ source/common/putil.c	2009-03-07 19:08:05.128079041 -0500
+@@ -106,7 +106,7 @@
+ #   define ICU_NO_USER_DATA_OVERRIDE 1
+ #elif defined(OS390)
+ #include "unicode/ucnv.h"   /* Needed for UCNV_SWAP_LFNL_OPTION_STRING */
+-#elif defined(U_DARWIN) || defined(U_LINUX) || defined(U_BSD)
++#elif defined(U_DARWIN) || defined(U_LINUX) || defined(U_BSD) || defined(U_KBSD)
+ #include <limits.h>
+ #include <unistd.h>
+ #elif defined(U_QNX)
+@@ -611,7 +611,7 @@
+ extern U_IMPORT char *U_TZNAME[];
+ #endif
+ 
+-#if !UCONFIG_NO_FILE_IO && (defined(U_DARWIN) || defined(U_LINUX) || defined(U_BSD))
++#if !UCONFIG_NO_FILE_IO && (defined(U_DARWIN) || defined(U_LINUX) || defined(U_BSD) || defined(U_KBSD))
+ /* These platforms are likely to use Olson timezone IDs. */
+ #define CHECK_LOCALTIME_LINK 1
+ #if defined(U_DARWIN)
+@@ -1493,7 +1493,7 @@
+         */
+         name = "eucjis";
+     }
+-#elif defined(U_LINUX)
++#elif defined(U_LINUX) || defined(U_KBSD)
+     if (locale != NULL && uprv_strcmp(name, "euc") == 0) {
+         /* Linux underspecifies the "EUC" name. */
+         if (uprv_strcmp(locale, "korean") == 0) {
+Index: source/configure
+===================================================================
+--- source.orig/configure	2009-03-07 19:07:40.043692083 -0500
++++ source/configure	2009-03-07 19:08:05.132202284 -0500
+@@ -8373,6 +8373,7 @@
+ case "${host}" in
+ 	*-*-solaris*) 	platform=U_SOLARIS ;;
+ 	*-*-linux*) 	platform=U_LINUX ;;
++	*-*-k*bsd*-gnu*) platform=U_KBSD ;;
+ 	*-pc-gnu) 	platform=U_HURD ;;
+ 	*-*-*bsd*|*-*-dragonfly*) 	platform=U_BSD ;;
+ 	*-*-aix*) 	platform=U_AIX ;;
+Index: source/configure.in
+===================================================================
+--- source.orig/configure.in	2009-03-07 19:07:38.784192033 -0500
++++ source/configure.in	2009-03-07 19:08:05.132202284 -0500
+@@ -1023,6 +1023,7 @@
+ case "${host}" in
+ 	*-*-solaris*) 	platform=U_SOLARIS ;;
+ 	*-*-linux*) 	platform=U_LINUX ;;
++	*-*-k*bsd*-gnu*) platform=U_KBSD ;;
+ 	*-pc-gnu) 	platform=U_HURD ;;
+ 	*-*-*bsd*|*-*-dragonfly*) 	platform=U_BSD ;;
+ 	*-*-aix*) 	platform=U_AIX ;;
