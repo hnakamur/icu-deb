@@ -17,6 +17,12 @@ else
 	l_CFLAGS += -O2
 endif
 
+# Turn off optimization on armel to avoid some internal compiler
+# errors.  This can be removed once bug 484053 is resolved.
+ifeq ($(shell dpkg --print-architecture),armel)
+l_CFLAGS := $(filter-out -O%,$(l_CFLAGS)) -O0
+endif
+
 # Make sure structures are padded at no larger than byte boundaries.
 ifeq ($(shell dpkg --print-architecture),arm)
 l_CFLAGS += -mstructure-size-boundary=8
