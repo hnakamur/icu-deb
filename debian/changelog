@@ -1,3 +1,15 @@
+icu (3.8.1-2ubuntu0.1) intrepid-security; urgency=low
+
+  * SECURITY UPDATE: Cross-site scripting attack via invalid character
+    sequences (LP: #341834)
+    - debian/patches/03-cve-2008-1036.patch: Improve parsing logic in
+      source/common/{ucnv2022.c,ucnv_bld.*,ucnv.c,ucnvhz.c} to replace
+      invalid character sequences. Also, add test case to
+      source/test/{cintltst/nucnvtst.c,testdata/conversion.txt}.
+    - CVE-2008-1036
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 25 Mar 2009 09:09:07 -0400
+
 icu (3.8.1-2) unstable; urgency=low
 
   * Patch from Harshula to fix split conjuncts problem in
