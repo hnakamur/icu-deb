@@ -1,3 +1,11 @@
+icu (3.8.1-3+lenny1) stable-security; urgency=high
+
+  * Non-maintainer upload.
+  * debian/patches/CVE-2008-1036.patch: Backported patch to fix Cross-site
+    scripting attack via invalid character sequences. (CVE-2008-1036)
+
+ -- Giuseppe Iuculano <giuseppe@iuculano.it>  Sat, 28 Mar 2009 09:11:44 +0100
+
 icu (3.8.1-3) unstable; urgency=medium
 
   * Work around gcc internal error on armel.  Temporary until bug 484053
