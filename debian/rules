@@ -109,14 +109,6 @@ install/lib32icu$(l_SONAME) install/lib32icu-dev::
 install/icu-doc:: install/libicu$(l_SONAME) install/libicu-dev
 	$(MAKE) -C $(DEB_SRCDIR) install-doc DESTDIR=$(CURDIR)/debian/tmp
 
-ifeq ($(DEB_HOST_ARCH),amd64)
-# On amd64 only, it appears that we need to put these in a different
-# location.
-binary-install/lib32icu$(l_SONAME) binary-install/lib32icu-dev::
-	mkdir -p debian/$(cdbs_curpkg)/emul/ia32-linux/usr
-	mv debian/$(cdbs_curpkg)/usr/lib32 debian/$(cdbs_curpkg)/emul/ia32-linux/usr/lib
-endif
-
 # As per upstream, icuswap is deprecated and should not be
 # distributed.
 binary-post-install/libicu-dev::
