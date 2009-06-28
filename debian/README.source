@@ -15,20 +15,6 @@ http://sourceforge.net/mailarchive/forum.php?forum_name=icu-design
 and find the thread from June 10, 2008 with the subject "debian: use
 of --disable-rename and ICU library sonames".
 
-------
-
-The ICU software is packaged using the tarball-in-tarball approach
-because the upstream sources contain an incompatible debian
-directory.  Upstream has promised that this will be removed for
-version 4.2.
-
-To get a clean, unpatched source tree that is ready to edit, run
-
-./debian/rules pre-build
-
-Follow the directions below for information on managing patches,
-including getting a patched source tree.
-
 
 BOILER-PLATE TEXT
 =================
@@ -80,3 +66,5 @@ run:
 
 You may need to run quilt pop -a to unapply patches first before running
 this command.
+
+ -- Jay Berkenbilt <qjb@debian.org>, Sun, 24 May 2009 09:30:49 -0400

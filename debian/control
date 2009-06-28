@@ -8,7 +8,7 @@ Build-Depends: cdbs, debhelper (>= 5), quilt, doxygen, gcc-multilib [amd64 kfree
  libc6-dev-i386 [amd64], libc0.1-dev-i386 [kfreebsd-amd64], libc6-dev-powerpc [ppc64]
 Homepage: http://www.icu-project.org
 
-Package: libicu40
+Package: libicu42
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
@@ -19,11 +19,11 @@ Description: International Components for Unicode
  Unicode and locale support.  This package contains the runtime
  libraries for ICU.
 
-Package: libicu40-dbg
+Package: libicu42-dbg
 Section: debug
 Priority: extra
 Architecture: any
-Depends: ${misc:Depends}, libicu40 (= ${binary:Version})
+Depends: ${misc:Depends}, libicu42 (= ${binary:Version})
 Description: International Components for Unicode
  ICU is a C++ and C library that provides robust and full-featured
  Unicode and locale support.  This package contains debugging symbols
@@ -32,7 +32,7 @@ Description: International Components for Unicode
 Package: libicu-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends}, libicu40 (= ${binary:Version}), libc6-dev | libc-dev
+Depends: ${misc:Depends}, libicu42 (= ${binary:Version}), libc6-dev | libc-dev
 Replaces: libicu34-dev, libicu36-dev
 Conflicts: libicu34-dev, libicu36-dev
 Suggests: icu-doc
@@ -42,7 +42,7 @@ Description: Development files for International Components for Unicode
  files for ICU along with programs used to manipulate data files found
  in the ICU sources.
 
-Package: lib32icu40
+Package: lib32icu42
 Section: libs
 Architecture: amd64 ppc64 kfreebsd-amd64
 Depends: ${misc:Depends}, ${shlibs:Depends}
@@ -54,7 +54,7 @@ Description: International Components for Unicode (32-bit)
 Package: lib32icu-dev
 Section: libdevel
 Architecture: amd64 ppc64 kfreebsd-amd64
-Depends: ${misc:Depends}, libicu-dev (= ${binary:Version}), lib32icu40 (= ${binary:Version})
+Depends: ${misc:Depends}, libicu-dev (= ${binary:Version}), lib32icu42 (= ${binary:Version})
 Suggests: icu-doc
 Description: Development files for International Components for Unicode (32-bit)
  ICU is a C++ and C library that provides robust and full-featured
