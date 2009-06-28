@@ -1,6 +1,0 @@
-# libicu40 installs multiple shared libraries, none of which is
-# actually called libicu.so.40, but all of which are libicu*.so.40.
-libicu40: package-name-doesnt-match-sonames
-# libicudata.so.40.0 contains static data only
-libicu40: shared-lib-without-dependency-information
-libicu40: shlib-without-PT_GNU_STACK-section usr/lib/libicudata.so.40.0

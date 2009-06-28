@@ -1,3 +1,27 @@
+icu (4.2.1~rc1-3) experimental; urgency=low
+
+  * More aggressive fix to invalid object files being written by pkgdata.
+    This is a temporary fix until upstream provides a better one.
+    (Closes: #533850)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 28 Jun 2009 09:57:40 -0400
+
+icu (4.2.1~rc1-2) experimental; urgency=low
+
+  * Bug 530568 is not fixed.  Add some debugging code.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 27 Jun 2009 09:34:16 -0400
+
+icu (4.2.1~rc1-1) experimental; urgency=low
+
+  * New upstream release
+  * Fixed bug in pkgdata that was causing build failures on most
+    platforms. (Closes: #530568)
+  * Removed /emul/ia32-linux stuff. (Closes: #533850)
+  * Updated standards version to 3.8.2
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 26 Jun 2009 22:12:55 -0400
+
 icu (4.0.1-3) unstable; urgency=low
 
   * Removed /emul/ia32-linux stuff. (Closes: #533850)
@@ -5,6 +29,17 @@ icu (4.0.1-3) unstable; urgency=low
   * Fixed section of -dbg package
 
  -- Jay Berkenbilt <qjb@debian.org>  Fri, 26 Jun 2009 22:12:06 -0400
+
+icu (4.2-1) experimental; urgency=low
+
+  * New upstream release
+  * Updated standards to 3.8.1: no changes required.
+  * Removed arm workarounds since the underlying problem has been fixed
+    upstream and arm is no longer supported anyway.
+  * Now that upstream has removed obsolete debian directory, this package
+    no longer uses tarball-in-tarball packaging.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 24 May 2009 09:35:30 -0400
 
 icu (4.0.1-2) unstable; urgency=low
 

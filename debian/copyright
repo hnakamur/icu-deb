@@ -2,7 +2,7 @@ This package was debianized by Jay Berkenbilt <qjb@debian.org> on
 August 5, 2005.
 
 The original source was downloaded from
-http://download.icu-project.org/files/icu4c/
+http://icu-project.org/download/4.2.html
 
 The main web site for ICU is
 http://www.icu-project.org/
@@ -11,7 +11,7 @@ ICU License - ICU 1.8.1 and later
 
 COPYRIGHT AND PERMISSION NOTICE
 
-Copyright (c) 1995-2008 International Business Machines Corporation
+Copyright (c) 1995-2009 International Business Machines Corporation
 and others
 
 All rights reserved.

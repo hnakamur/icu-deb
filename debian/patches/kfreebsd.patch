@@ -1,7 +1,7 @@
 Index: source/common/putil.c
 ===================================================================
---- source.orig/common/putil.c	2009-03-07 19:07:32.704192053 -0500
-+++ source/common/putil.c	2009-03-07 19:08:05.128079041 -0500
+--- source.orig/common/putil.c	2009-05-08 12:12:20.000000000 -0400
++++ source/common/putil.c	2009-05-24 10:51:31.091442839 -0400
 @@ -106,7 +106,7 @@
  #   define ICU_NO_USER_DATA_OVERRIDE 1
  #elif defined(OS390)
@@ -20,7 +20,7 @@ Index: source/common/putil.c
  /* These platforms are likely to use Olson timezone IDs. */
  #define CHECK_LOCALTIME_LINK 1
  #if defined(U_DARWIN)
-@@ -1493,7 +1493,7 @@
+@@ -1656,7 +1656,7 @@
          */
          name = "eucjis";
      }
@@ -31,9 +31,9 @@ Index: source/common/putil.c
          if (uprv_strcmp(locale, "korean") == 0) {
 Index: source/configure
 ===================================================================
---- source.orig/configure	2009-03-07 19:07:40.043692083 -0500
-+++ source/configure	2009-03-07 19:08:05.132202284 -0500
-@@ -8373,6 +8373,7 @@
+--- source.orig/configure	2009-05-08 12:13:08.000000000 -0400
++++ source/configure	2009-05-24 10:51:31.095443119 -0400
+@@ -10320,6 +10320,7 @@
  case "${host}" in
  	*-*-solaris*) 	platform=U_SOLARIS ;;
  	*-*-linux*) 	platform=U_LINUX ;;
@@ -43,9 +43,9 @@ Index: source/configure
  	*-*-aix*) 	platform=U_AIX ;;
 Index: source/configure.in
 ===================================================================
---- source.orig/configure.in	2009-03-07 19:07:38.784192033 -0500
-+++ source/configure.in	2009-03-07 19:08:05.132202284 -0500
-@@ -1023,6 +1023,7 @@
+--- source.orig/configure.in	2009-05-08 12:13:08.000000000 -0400
++++ source/configure.in	2009-05-24 10:51:31.099463373 -0400
+@@ -1068,6 +1068,7 @@
  case "${host}" in
  	*-*-solaris*) 	platform=U_SOLARIS ;;
  	*-*-linux*) 	platform=U_LINUX ;;

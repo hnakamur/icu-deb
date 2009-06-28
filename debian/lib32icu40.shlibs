@@ -1,7 +1,0 @@
-libicudata 40 lib32icu40 (>= 4.0-1)
-libicui18n 40 lib32icu40 (>= 4.0-1)
-libicuio 40 lib32icu40 (>= 4.0-1)
-libicule 40 lib32icu40 (>= 4.0-1)
-libiculx 40 lib32icu40 (>= 4.0-1)
-libicutu 40 lib32icu40 (>= 4.0-1)
-libicuuc 40 lib32icu40 (>= 4.0-1)

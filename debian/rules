@@ -6,10 +6,7 @@ DEB_HOST_ARCH_CPU	?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 # than for use by cdbs), we adopt the convention of starting local
 # variables' names with l_.
 
-l_SONAME := 40
-l_PWD := $(shell pwd)
-l_STAMPS := debian/l_stamps
-l_RUN_CHECK := 1
+l_SONAME := 42
 l_CFLAGS := -g -Wall
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	l_CFLAGS += -O0
@@ -21,11 +18,6 @@ endif
 # errors.  This can be removed once bug 484053 is resolved.
 ifeq ($(shell dpkg --print-architecture),armel)
 l_CFLAGS := $(filter-out -O%,$(l_CFLAGS)) -O0
-endif
-
-# Make sure structures are padded at no larger than byte boundaries.
-ifeq ($(shell dpkg --print-architecture),arm)
-l_CFLAGS += -mstructure-size-boundary=8
 endif
 
 # common configure cruft
@@ -48,23 +40,21 @@ endif
 VERSION := $(shell dpkg-parsechangelog | \
              awk '/Version:/ {print $$2}' | cut -d- -f 1)
 
-DEB_TAR_SRCDIR = icu/source
+DEB_SRCDIR = $(CURDIR)/source
 DEB_COMPRESS_EXCLUDE = html examples
 DEB_INSTALL_EXAMPLES_libicu-dev = \
-	build-tree/$(DEB_TAR_SRCDIR)/samples/*
+	source/samples/*
 
 # Overridden for 32-bit packages on 64-bit platforms
 DEB_DH_INSTALL_SOURCEDIR=debian/tmp
 
 DEB_DBG_PACKAGE_libicu$(l_SONAME) = libicu$(l_SONAME)-dbg
 
+override DEB_MAKE_CHECK_TARGET = check
+
 # Include cdbs rules files.
-include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/patchsys-quilt.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
-
-cleanbuilddir::
-	$(RM) -r $(l_STAMPS)
 
 # As 0.4.21, cdbs creates but doesn't remove debian/compat.  It
 # creates it conditionally, so this doesn't have a trivial fix.
@@ -73,9 +63,12 @@ clean::
 	$(RM) -rf debian/tmp32
 	$(RM) debian/stamp-configure debian/stamp-configure32
 
+# chmod -R +r here is to work around quilt creating files with mode
+# 000.  See debian bug 534840.
 post-patches::
 	chmod a+x $(DEB_SRCDIR)/configure
 ifneq (, $(build32))
+	chmod -R +r $(DEB_SRCDIR)
 	cp -a $(DEB_SRCDIR) $(DEB_SRCDIR)-build32
 endif
 
@@ -108,11 +101,6 @@ install/lib32icu$(l_SONAME) install/lib32icu-dev::
 
 install/icu-doc:: install/libicu$(l_SONAME) install/libicu-dev
 	$(MAKE) -C $(DEB_SRCDIR) install-doc DESTDIR=$(CURDIR)/debian/tmp
-
-# As per upstream, icuswap is deprecated and should not be
-# distributed.
-binary-post-install/libicu-dev::
-	rm debian/$(cdbs_curpkg)/usr/sbin/icuswap
 
 # Install lintian override files
 binary-post-install/%::
