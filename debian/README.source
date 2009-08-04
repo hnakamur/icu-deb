@@ -27,7 +27,8 @@ To get a clean, unpatched source tree that is ready to edit, run
 ./debian/rules pre-build
 
 Follow the directions below for information on managing patches,
-including getting a patched source tree.
+including getting a patched source tree, noting that you must cd to
+build-tree/icu* before running any quilt commands.
 
 
 BOILER-PLATE TEXT
@@ -35,7 +36,11 @@ BOILER-PLATE TEXT
 
 This package uses quilt to manage all modifications to the upstream
 source.  Changes are stored in the source package as diffs in
-debian/patches and applied during the build.
+debian/patches and applied during the build.  To set up quilt for
+working with this package, cd to the root of the extracted source
+package and run
+
+    export QUILT_PATCHES=$PWD/debian/patches
 
 To get the fully patched source after unpacking the source package, cd to
 the root level of the source package and run:
