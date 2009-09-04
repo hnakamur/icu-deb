@@ -1,3 +1,4 @@
 kfreebsd.patch
 gencfu-man.patch
 pkgdata.patch
+install-doc.patch

@@ -1,3 +1,11 @@
+icu (4.2.1-3) unstable; urgency=low
+
+  * Change install-doc target to not fail if there are subdirectories of
+    doc/html.  This is necessary to handle the doc/html/search directory
+    created by doxygen 3.6.1.  (Closes: #544799)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 04 Sep 2009 11:56:06 -0400
+
 icu (4.2.1-2) unstable; urgency=low
 
   * Added missing 4.0.1-4 entry to changelog.
