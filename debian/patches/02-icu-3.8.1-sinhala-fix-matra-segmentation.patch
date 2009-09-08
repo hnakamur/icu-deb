@@ -1,8 +1,8 @@
-diff --git icu.old/source/layout/IndicClassTables.cpp icu/source/layout/IndicClassTables.cpp
-index 2d3e809..2d1272f 100644
---- icu.old/source/layout/IndicClassTables.cpp
-+++ icu/source/layout/IndicClassTables.cpp
-@@ -48,6 +48,7 @@ U_NAMESPACE_BEGIN
+Index: icu/source/layout/IndicClassTables.cpp
+===================================================================
+--- icu.orig/source/layout/IndicClassTables.cpp	2009-09-07 19:53:29.829856228 -0400
++++ icu/source/layout/IndicClassTables.cpp	2009-09-07 19:53:54.945856127 -0400
+@@ -48,6 +48,7 @@
  #define _m2  (CC_SPLIT_VOWEL_PIECE_2 | CF_LENGTH_MARK)
  #define _m3  (CC_SPLIT_VOWEL_PIECE_3 | CF_LENGTH_MARK)
  #define _vr  (CC_VIRAMA)
@@ -10,7 +10,7 @@ index 2d3e809..2d1272f 100644
  
  // split matras
  #define _s1  (_dv | _x1)
-@@ -206,7 +207,7 @@ static const IndicClassTable::CharClass sinhCharClasses[] =
+@@ -206,7 +207,7 @@
      _iv, _iv, _iv, _iv, _iv, _iv, _iv, _xx, _xx, _xx, _ct, _ct, _ct, _ct, _ct, _ct, // 0D90 - 0D9F
      _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, // 0DA0 - 0DAF
      _ct, _ct, _xx, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _ct, _xx, _ct, _xx, _xx, // 0DB0 - 0DBF
@@ -19,7 +19,7 @@ index 2d3e809..2d1272f 100644
      _dr, _dr, _da, _da, _db, _xx, _db, _xx, _dr, _dl, _s1, _dl, _s2, _s3, _s4, _dr, // 0DD0 - 0DDF
      _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, _xx, // 0DE0 - 0DEF
      _xx, _xx, _dr, _dr, _xx                                                         // 0DF0 - 0DF4
-@@ -248,7 +249,7 @@ static const SplitMatra sinhSplitTable[] = {{0x0DD9, 0x0DCA}, {0x0DD9, 0x0DCF},
+@@ -248,7 +249,7 @@
  #define TELU_SCRIPT_FLAGS (SF_MATRAS_AFTER_BASE | SF_FILTER_ZERO_WIDTH | 3)
  #define KNDA_SCRIPT_FLAGS (SF_MATRAS_AFTER_BASE | SF_FILTER_ZERO_WIDTH | 3)
  #define MLYM_SCRIPT_FLAGS (SF_MPRE_FIXUP | SF_NO_POST_BASE_LIMIT /*| SF_FILTER_ZERO_WIDTH*/)
@@ -28,11 +28,11 @@ index 2d3e809..2d1272f 100644
  
  //
  // Indic Class Tables
-diff --git icu.old/source/layout/IndicReordering.cpp icu/source/layout/IndicReordering.cpp
-index 5ca4d0d..0b35a62 100644
---- icu.old/source/layout/IndicReordering.cpp
-+++ icu/source/layout/IndicReordering.cpp
-@@ -73,8 +73,8 @@ private:
+Index: icu/source/layout/IndicReordering.cpp
+===================================================================
+--- icu.orig/source/layout/IndicReordering.cpp	2009-09-07 19:53:29.841856267 -0400
++++ icu/source/layout/IndicReordering.cpp	2009-09-07 19:53:54.945856127 -0400
+@@ -73,8 +73,8 @@
      LEUnicode   fLengthMark;
      le_int32    fLengthMarkIndex;
  
@@ -43,7 +43,7 @@ index 5ca4d0d..0b35a62 100644
  
      FeatureMask fMatraFeatures;
      
-@@ -97,9 +97,9 @@ private:
+@@ -97,9 +97,9 @@
          if (IndicClassTable::isLengthMark(matraClass)) {
              fLengthMark = matra;
              fLengthMarkIndex = matraIndex;
@@ -56,7 +56,7 @@ index 5ca4d0d..0b35a62 100644
          } else {
              switch (matraClass & CF_POS_MASK) {
              case CF_POS_BEFORE:
-@@ -133,7 +133,7 @@ public:
+@@ -133,7 +133,7 @@
      IndicReorderingOutput(LEUnicode *outChars, LEGlyphStorage &glyphStorage, MPreFixups *mpreFixups)
          : fSyllableCount(0), fOutIndex(0), fOutChars(outChars), fGlyphStorage(glyphStorage),
            fMpre(0), fMpreIndex(0), fMbelow(0), fMbelowIndex(0), fMabove(0), fMaboveIndex(0),
@@ -65,7 +65,7 @@ index 5ca4d0d..0b35a62 100644
            fMatraFeatures(0), fMPreOutIndex(-1), fMPreFixups(mpreFixups),
            fVMabove(0), fVMpost(0), fVMIndex(0), fVMFeatures(0),
            fSMabove(0), fSMbelow(0), fSMIndex(0), fSMFeatures(0)
-@@ -150,7 +150,7 @@ public:
+@@ -150,7 +150,7 @@
      {
          fSyllableCount += 1;
  
@@ -74,7 +74,7 @@ index 5ca4d0d..0b35a62 100644
          fMPreOutIndex = -1;
          
          fVMabove = fVMpost  = 0;
-@@ -255,11 +255,11 @@ public:
+@@ -255,11 +255,11 @@
          }
      }
  
@@ -90,7 +90,7 @@ index 5ca4d0d..0b35a62 100644
          }
      }
  
-@@ -370,20 +370,21 @@ static const le_int32 featureCount = LE_ARRAY_SIZE(featureMap);
+@@ -370,20 +370,21 @@
  
  static const le_int8 stateTable[][CC_COUNT] =
  {
@@ -126,7 +126,7 @@ index 5ca4d0d..0b35a62 100644
  };
  
  
-@@ -466,6 +467,7 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
+@@ -466,6 +467,7 @@
  
              break;
  
@@ -134,7 +134,7 @@ index 5ca4d0d..0b35a62 100644
          case CC_NUKTA:
          case CC_VIRAMA:
              output.writeChar(C_DOTTED_CIRCLE, prev, tagArray1);
-@@ -500,7 +502,7 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
+@@ -500,7 +502,7 @@
              }
  
              output.writeLengthMark();
@@ -143,7 +143,7 @@ index 5ca4d0d..0b35a62 100644
  
              if ((classTable->scriptFlags & SF_REPH_AFTER_BELOW) == 0) {
                  output.writeVMabove();
-@@ -632,7 +634,11 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
+@@ -632,7 +634,11 @@
                  bcSpan += 1;
              }
  
@@ -156,7 +156,7 @@ index 5ca4d0d..0b35a62 100644
                  bcSpan += 1;
  
                  if (bcSpan < markStart && chars[bcSpan] == C_SIGN_ZWNJ) {
-@@ -708,7 +714,7 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
+@@ -708,7 +714,7 @@
              }
  
              output.writeLengthMark();
@@ -165,11 +165,11 @@ index 5ca4d0d..0b35a62 100644
  
              // write reph
              if ((classTable->scriptFlags & SF_REPH_AFTER_BELOW) == 0) {
-diff --git icu.old/source/layout/IndicReordering.h icu/source/layout/IndicReordering.h
-index 5a1938e..fc1d429 100644
---- icu.old/source/layout/IndicReordering.h
-+++ icu/source/layout/IndicReordering.h
-@@ -37,7 +37,8 @@ U_NAMESPACE_BEGIN
+Index: icu/source/layout/IndicReordering.h
+===================================================================
+--- icu.orig/source/layout/IndicReordering.h	2009-09-07 19:53:29.853855608 -0400
++++ icu/source/layout/IndicReordering.h	2009-09-07 19:53:54.949856132 -0400
+@@ -37,7 +37,8 @@
  #define CC_SPLIT_VOWEL_PIECE_3   12U
  #define CC_VIRAMA                13U
  #define CC_ZERO_WIDTH_MARK       14U
@@ -179,7 +179,7 @@ index 5a1938e..fc1d429 100644
  
  // Character class flags
  #define CF_CLASS_MASK    0x0000FFFFU
-@@ -98,6 +99,7 @@ struct IndicClassTable
+@@ -98,6 +99,7 @@
      inline le_bool isConsonant(LEUnicode ch) const;
      inline le_bool isReph(LEUnicode ch) const;
      inline le_bool isVirama(LEUnicode ch) const;
@@ -187,7 +187,7 @@ index 5a1938e..fc1d429 100644
      inline le_bool isNukta(LEUnicode ch) const;
      inline le_bool isVattu(LEUnicode ch) const;
      inline le_bool isMatra(LEUnicode ch) const;
-@@ -112,6 +114,7 @@ struct IndicClassTable
+@@ -112,6 +114,7 @@
      inline static le_bool isConsonant(CharClass charClass);
      inline static le_bool isReph(CharClass charClass);
      inline static le_bool isVirama(CharClass charClass);
@@ -195,7 +195,7 @@ index 5a1938e..fc1d429 100644
      inline static le_bool isNukta(CharClass charClass);
      inline static le_bool isVattu(CharClass charClass);
      inline static le_bool isMatra(CharClass charClass);
-@@ -193,6 +196,11 @@ inline le_bool IndicClassTable::isVirama(CharClass charClass)
+@@ -193,6 +196,11 @@
      return (charClass & CF_CLASS_MASK) == CC_VIRAMA;
  }
  
@@ -207,7 +207,7 @@ index 5a1938e..fc1d429 100644
  inline le_bool IndicClassTable::isVattu(CharClass charClass)
  {
      return (charClass & CF_VATTU) != 0;
-@@ -255,6 +263,11 @@ inline le_bool IndicClassTable::isVirama(LEUnicode ch) const
+@@ -255,6 +263,11 @@
      return isVirama(getCharClass(ch));
  }
  

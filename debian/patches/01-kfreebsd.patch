@@ -1,5 +1,7 @@
---- icu.orig/source/common/putil.c	2007-12-12 19:57:26 +0100
-+++ icu/source/common/putil.c	2008-01-20 21:08:57 +0100
+Index: icu/source/common/putil.c
+===================================================================
+--- icu.orig/source/common/putil.c	2009-09-07 19:53:29.053856156 -0400
++++ icu/source/common/putil.c	2009-09-07 19:53:56.910355591 -0400
 @@ -105,7 +105,7 @@
  #   define ICU_NO_USER_DATA_OVERRIDE 1
  #elif defined(OS390)
@@ -31,8 +33,10 @@
      if (locale != NULL && uprv_strcmp(name, "euc") == 0) {
          /* Linux underspecifies the "EUC" name. */
          if (uprv_strcmp(locale, "korean") == 0) {
---- icu.orig/source/configure	2007-12-12 19:58:06 +0100
-+++ icu/source/configure	2008-01-20 21:07:42 +0100
+Index: icu/source/configure
+===================================================================
+--- icu.orig/source/configure	2009-09-07 19:53:29.061855656 -0400
++++ icu/source/configure	2009-09-07 19:53:56.914356065 -0400
 @@ -8291,6 +8291,7 @@
  case "${host}" in
  	*-*-solaris*) 	platform=U_SOLARIS ;;
@@ -41,8 +45,10 @@
  	*-pc-gnu) 	platform=U_HURD ;;
  	*-*-*bsd*|*-*-dragonfly*) 	platform=U_BSD ;;
  	*-*-aix*) 	platform=U_AIX ;;
---- icu.orig/source/configure.in	2007-12-12 19:58:06 +0100
-+++ icu/source/configure.in	2008-01-20 21:07:42 +0100
+Index: icu/source/configure.in
+===================================================================
+--- icu.orig/source/configure.in	2009-09-07 19:53:29.073855791 -0400
++++ icu/source/configure.in	2009-09-07 19:53:56.922355024 -0400
 @@ -996,6 +996,7 @@
  case "${host}" in
  	*-*-solaris*) 	platform=U_SOLARIS ;;

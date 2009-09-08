@@ -1,3 +1,15 @@
+icu (3.8.1-3+lenny2) stable-security; urgency=high
+
+  * Apply patch CVE-2009-0153.patch to fix problem handling invalid byte
+    sequences during Unicode conversion.  Thanks to Red Hat for
+    backporting the patch to ICU version 3.8.1.  Applying this patch to
+    the debian package required pulling in three additional Red Hat
+    patches for tickets 5797, 6001, and 6002 in ICU's issue tracking
+    system as well as adjusting offsets in CVE-2008-1036.patch.  (Closes:
+    #534590)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 07 Sep 2009 20:00:39 -0400
+
 icu (3.8.1-3+lenny1) stable-security; urgency=high
 
   * Non-maintainer upload.
