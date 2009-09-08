@@ -1,5 +1,7 @@
---- icu/source/common/unicode/rbbi.h-old	2007-10-31 15:52:08.000000000 +0100
-+++ icu/source/common/unicode/rbbi.h	2007-10-31 15:52:47.000000000 +0100
+Index: icu/source/common/unicode/rbbi.h
+===================================================================
+--- icu.orig/source/common/unicode/rbbi.h	2009-09-07 19:53:29.017855637 -0400
++++ icu/source/common/unicode/rbbi.h	2009-09-07 19:53:57.165855852 -0400
 @@ -611,12 +611,14 @@
      virtual int32_t getBreakType() const;
  #endif
