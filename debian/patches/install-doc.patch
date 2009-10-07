@@ -1,0 +1,15 @@
+Index: source/Makefile.in
+===================================================================
+--- source.orig/Makefile.in	2009-09-04 12:11:43.204758139 -0400
++++ source/Makefile.in	2009-09-04 12:11:45.372757942 -0400
+@@ -145,8 +145,8 @@
+ else
+ install-doc: doc
+ 	$(RM) -r $(DESTDIR)$(docdir)/$(docsubdir)
+-	$(MKINSTALLDIRS) $(DESTDIR)$(docdir)/$(docsubdir)
+-	$(INSTALL_DATA) doc/html/* $(DESTDIR)$(docdir)/$(docsubdir)
++	$(MKINSTALLDIRS) `dirname $(DESTDIR)$(docdir)/$(docsubdir)`
++	cp -r doc/html $(DESTDIR)$(docdir)/$(docsubdir)
+ endif
+ 
+ $(DESTDIR)$(pkglibdir)/%: $(top_srcdir)/../data/%
