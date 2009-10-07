@@ -1,3 +1,16 @@
+icu (3.8.1-3ubuntu1.1) jaunty-security; urgency=low
+
+  * SECURITY UPDATE: fix improper handling of invalid byte sequences
+    during Unicode conversion
+    - debian/07-CVE-2009-0153.patch: backported patch thanks to RedHat via
+      Debian
+    - 03-redhat.icu5797.patch, 04-redhat.icu6001.patch, and
+      05-redhat.icu6002.patch required for applying 07-CVE-2009-0153.patch
+      with 06-CVE-2008-1036.patch needing adjustments. Patch from Debian.
+    - CVE-2009-0153
+
+ -- Jamie Strandboge <jamie@ubuntu.com>  Wed, 07 Oct 2009 10:29:13 -0500
+
 icu (3.8.1-3ubuntu1) jaunty; urgency=low
 
   * SECURITY UPDATE: Cross-site scripting attack via invalid character
