@@ -1,3 +1,9 @@
+icu (4.0.1-2ubuntu2) karmic; urgency=low
+
+  * No change rebuild to fix misbuilt binaries on armel.
+
+ -- Loïc Minier <loic.minier@ubuntu.com>  Wed, 21 Oct 2009 14:45:37 +0200
+
 icu (4.0.1-2ubuntu1) karmic; urgency=low
 
   * Backport from unstable (Jay Berkenbilt):
