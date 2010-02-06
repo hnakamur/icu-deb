@@ -77,6 +77,13 @@ U_CDECL_END
 #define CAN_WRITE_OBJ_CODE
 #endif
 
+// Temporary fix until http://bugs.icu-project.org/trac/ticket/7119 is
+// resolved.
+#ifdef CAN_WRITE_OBJ_CODE
+# undef CAN_WRITE_OBJ_CODE
+# define BUILD_DATA_WITHOUT_ASSEMBLY
+#endif
+
 /*
  * When building the data library without assembly,
  * some platforms use a single c code file for all of
