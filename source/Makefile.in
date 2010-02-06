@@ -1,6 +1,6 @@
 #******************************************************************************
 #
-#   Copyright (C) 1998-2009, International Business Machines
+#   Copyright (C) 1998-2010, International Business Machines
 #   Corporation and others.  All Rights Reserved.
 #
 #******************************************************************************
@@ -16,6 +16,11 @@ include $(top_builddir)/icudefs.mk
 
 docdir = $(datadir)/doc
 docsubdir = $(PACKAGE)$(ICULIBDASHSUFFIX)/html
+docsubsrchdir = $(docsubdir)/search
+docfilesdir = doc/html
+docfiles = $(docfilesdir)/*.gif $(docfilesdir)/*.png $(docfilesdir)/*.html $(docfilesdir)/*.css $(docfilesdir)/*.tag $(docfilesdir)/installdox
+docsrchdir = $(docfilesdir)/search
+docsrchfiles = $(docsrchdir)/*
 
 ##
 
@@ -145,8 +150,9 @@ install-doc:
 else
 install-doc: doc
 	$(RM) -r $(DESTDIR)$(docdir)/$(docsubdir)
-	$(MKINSTALLDIRS) $(DESTDIR)$(docdir)/$(docsubdir)
-	$(INSTALL_DATA) doc/html/* $(DESTDIR)$(docdir)/$(docsubdir)
+	$(MKINSTALLDIRS) $(DESTDIR)$(docdir)/$(docsubsrchdir)
+	$(INSTALL_DATA) $(docfiles) $(DESTDIR)$(docdir)/$(docsubdir)
+	$(INSTALL_DATA) $(docsrchfiles) $(DESTDIR)$(docdir)/$(docsubsrchdir)
 endif
 
 $(DESTDIR)$(pkglibdir)/%: $(top_srcdir)/../data/%
@@ -164,7 +170,7 @@ clean-local:
 
 distclean-local: clean-local
 	$(RMV) $(top_builddir)/config/Makefile.inc $(top_builddir)/config/pkgdata.inc $(top_builddir)/config/icu-config
-	$(RMV) config.cache config.log config.status $(top_builddir)/config/icucross.mk
+	$(RMV) config.cache config.log config.status $(top_builddir)/config/icucross.mk autom4te.cache
 	$(RMV) Makefile config/Makefile icudefs.mk $(LIBDIR) $(BINDIR)
 
 check-local: $(top_builddir)/config/icu-config $(top_builddir)/config/Makefile.inc $(top_builddir)/config/pkgdata.inc
@@ -219,7 +225,7 @@ $(top_builddir)/config/icu-config: $(top_builddir)/Makefile $(top_srcdir)/config
 	echo "# Rebuilt on "`date` >> $@
 	chmod u-w $@
 
-config.status: $(srcdir)/configure $(srcdir)/common/unicode/uversion.h
+config.status: $(srcdir)/configure $(srcdir)/common/unicode/uvernum.h
 	@echo
 	@echo
 	@echo "*** config.status has become stale ***"

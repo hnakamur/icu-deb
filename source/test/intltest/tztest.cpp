@@ -115,7 +115,16 @@ TimeZoneTest::TestGenericAPI()
     }
 
     if ((tzoffset % 900) != 0) {
+#ifdef U_DARWIN
+        /*
+         * Ticket: 6364 (mow - 090522)
+         * On MacOSX 10.5.3 and up, this test fails when TZ is set to certain timezones (e.g. Africa/Dar_es_Salaam)
+         * Their GMT offset is not a multiple of 15 minutes. This is a MacOSX issue and is not a problem with ICU.
+         */
+        infoln("[WARNING] FAIL: t_timezone may be incorrect. It is not a multiple of 15min. It is %d (Note: This is a known issue on MacOSX)", tzoffset);
+#else
         errln("FAIL: t_timezone may be incorrect. It is not a multiple of 15min. It is %d", tzoffset);
+#endif
     }
 
     TimeZone::adoptDefault(zone);
@@ -1185,6 +1194,21 @@ TimeZoneTest::TestDisplayName()
         {TRUE,  TimeZone::SHORT, "PDT"},
         {FALSE, TimeZone::LONG,  "Pacific Standard Time"},
         {TRUE,  TimeZone::LONG,  "Pacific Daylight Time"},
+
+        {FALSE, TimeZone::SHORT_GENERIC, "PT"},
+        {TRUE,  TimeZone::SHORT_GENERIC, "PT"},
+        {FALSE, TimeZone::LONG_GENERIC,  "Pacific Time"},
+        {TRUE,  TimeZone::LONG_GENERIC,  "Pacific Time"},
+
+        {FALSE, TimeZone::SHORT_GMT, "-0800"},
+        {TRUE,  TimeZone::SHORT_GMT, "-0700"},
+        {FALSE, TimeZone::LONG_GMT,  "GMT-08:00"},
+        {TRUE,  TimeZone::LONG_GMT,  "GMT-07:00"},
+
+        {FALSE, TimeZone::SHORT_COMMONLY_USED, "PST"},
+        {TRUE,  TimeZone::SHORT_COMMONLY_USED, "PDT"},
+        {FALSE, TimeZone::GENERIC_LOCATION,  "United States (Los Angeles)"},
+        {TRUE,  TimeZone::GENERIC_LOCATION,  "United States (Los Angeles)"},
 
         {FALSE, TimeZone::LONG, ""}
     };

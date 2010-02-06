@@ -1,0 +1,6 @@
+# libicu43 installs multiple shared libraries, none of which is
+# actually called libicu.so.43, but all of which are libicu*.so.43.
+libicu43: package-name-doesnt-match-sonames
+# libicudata.so.43.0 contains static data only
+libicu43: shared-lib-without-dependency-information
+libicu43: shlib-without-PT_GNU_STACK-section usr/lib/libicudata.so.43.0

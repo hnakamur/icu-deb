@@ -1,7 +1,11 @@
-Index: source/tools/gencfu/Makefile.in
+Description: supply manual page for program that doesn't have one
+Author: Jay Berkenbilt <qjb@debian.org>
+Bug: http://bugs.icu-project.org/trac/ticket/7409
+
+Index: icu-4.3.4/source/tools/gencfu/Makefile.in
 ===================================================================
---- source.orig/tools/gencfu/Makefile.in	2009-05-24 12:04:12.511442910 -0400
-+++ source/tools/gencfu/Makefile.in	2009-05-24 12:04:53.864414583 -0400
+--- icu-4.3.4.orig/source/tools/gencfu/Makefile.in	2010-02-06 17:01:01.651257672 -0500
++++ icu-4.3.4/source/tools/gencfu/Makefile.in	2010-02-06 17:01:04.715257540 -0500
 @@ -17,7 +17,7 @@
  
  SECTION = 1
@@ -22,10 +26,10 @@ Index: source/tools/gencfu/Makefile.in
  
  dist-local:
  
-Index: source/tools/gencfu/gencfu.1.in
+Index: icu-4.3.4/source/tools/gencfu/gencfu.1.in
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source/tools/gencfu/gencfu.1.in	2009-05-24 12:18:07.371452356 -0400
++++ icu-4.3.4/source/tools/gencfu/gencfu.1.in	2010-02-06 17:01:04.715257540 -0500
 @@ -0,0 +1,91 @@
 +.\" Hey, Emacs! This is -*-nroff-*- you know...
 +.\"

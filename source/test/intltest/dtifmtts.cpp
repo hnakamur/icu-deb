@@ -262,9 +262,27 @@ void DateIntervalFormatTest::testAPI() {
 
     delete dtitvfmt;
 
-
     //====== test format  in testFormat()
     
+    //====== test DateInterval class (better coverage)
+    DateInterval dtitv1(3600*24*365, 3600*24*366);
+    DateInterval dtitv2(dtitv1);
+
+    if (!(dtitv1 == dtitv2)) {
+        errln("ERROR: Copy constructor failed for DateInterval.");
+    }
+
+    DateInterval dtitv3(3600*365, 3600*366);
+    dtitv3 = dtitv1;
+    if (!(dtitv3 == dtitv1)) {
+        errln("ERROR: Equal operator failed for DateInterval.");
+    }
+
+    DateInterval *dtitv4 = dtitv1.clone();
+    if (*dtitv4 != dtitv1) {
+        errln("ERROR: Equal operator failed for DateInterval.");
+    }
+    delete dtitv4;
 }
 
 
@@ -704,7 +722,7 @@ void DateIntervalFormatTest::testFormat() {
         
         "zh", "2007 11 10 10:10:10", "2007 11 20 10:10:10", "M", "11", 
         
-        "zh", "2007 11 10 10:10:10", "2007 11 20 10:10:10", "MMM", "11\\u6708", // (fixed expected result per ticket:6626:)
+        "zh", "2007 11 10 10:10:10", "2007 11 20 10:10:10", "MMM", "\\u5341\\u4E00\\u6708", // (fixed expected result per ticket:6626: and others)
         
         
         "zh", "2007 11 10 10:10:10", "2007 11 20 10:10:10", "hmz", "2007\\u5e7411\\u670810\\u65e5 \\u4e0a\\u534810:10 \\u683c\\u6797\\u5c3c\\u6cbb\\u6807\\u51c6\\u65f6\\u95f4-0800\\u20132007\\u5e7411\\u670820\\u65e5 \\u4e0a\\u534810:10 \\u683c\\u6797\\u5c3c\\u6cbb\\u6807\\u51c6\\u65f6\\u95f4-0800", 

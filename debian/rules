@@ -6,7 +6,7 @@ DEB_HOST_ARCH_CPU	?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 # than for use by cdbs), we adopt the convention of starting local
 # variables' names with l_.
 
-l_SONAME := 42
+l_SONAME := 43
 l_CFLAGS := -g -Wall
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	l_CFLAGS += -O0
@@ -53,7 +53,6 @@ DEB_DBG_PACKAGE_libicu$(l_SONAME) = libicu$(l_SONAME)-dbg
 override DEB_MAKE_CHECK_TARGET = check
 
 # Include cdbs rules files.
-include /usr/share/cdbs/1/rules/patchsys-quilt.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 
 # As 0.4.21, cdbs creates but doesn't remove debian/compat.  It
