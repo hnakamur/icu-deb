@@ -1,6 +1,0 @@
-# libicu42 installs multiple shared libraries, none of which is
-# actually called libicu.so.42, but all of which are libicu*.so.42.
-libicu42: package-name-doesnt-match-sonames
-# libicudata.so.42.0 contains static data only
-libicu42: shared-lib-without-dependency-information
-libicu42: shlib-without-PT_GNU_STACK-section usr/lib/libicudata.so.42.0

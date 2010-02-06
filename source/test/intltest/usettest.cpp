@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 1999-2009 International Business Machines Corporation and
+*   Copyright (C) 1999-2010 International Business Machines Corporation and
 *   others. All Rights Reserved.
 ********************************************************************************
 *   Date        Name        Description
@@ -709,6 +709,37 @@ void UnicodeSetTest::TestAPI() {
     TEST_ASSERT((void *)constUSet == (void *)constSet);
     const UnicodeSet *constSetx = UnicodeSet::fromUSet(constUSet);
     TEST_ASSERT((void *)constSetx == (void *)constUSet);
+
+    // span(UnicodeString) and spanBack(UnicodeString) convenience methods
+    UnicodeString longString=UNICODE_STRING_SIMPLE("aaaaaaaaaabbbbbbbbbbcccccccccc");
+    UnicodeSet ac(0x61, 0x63);
+    ac.remove(0x62).freeze();
+    if( ac.span(longString, -5, USET_SPAN_CONTAINED)!=10 ||
+        ac.span(longString, 0, USET_SPAN_CONTAINED)!=10 ||
+        ac.span(longString, 5, USET_SPAN_CONTAINED)!=10 ||
+        ac.span(longString, 10, USET_SPAN_CONTAINED)!=10 ||
+        ac.span(longString, 15, USET_SPAN_CONTAINED)!=15 ||
+        ac.span(longString, 20, USET_SPAN_CONTAINED)!=30 ||
+        ac.span(longString, 25, USET_SPAN_CONTAINED)!=30 ||
+        ac.span(longString, 30, USET_SPAN_CONTAINED)!=30 ||
+        ac.span(longString, 35, USET_SPAN_CONTAINED)!=30 ||
+        ac.span(longString, INT32_MAX, USET_SPAN_CONTAINED)!=30
+    ) {
+        errln("UnicodeSet.span(UnicodeString, ...) returns incorrect end indexes");
+    }
+    if( ac.spanBack(longString, -5, USET_SPAN_CONTAINED)!=0 ||
+        ac.spanBack(longString, 0, USET_SPAN_CONTAINED)!=0 ||
+        ac.spanBack(longString, 5, USET_SPAN_CONTAINED)!=0 ||
+        ac.spanBack(longString, 10, USET_SPAN_CONTAINED)!=0 ||
+        ac.spanBack(longString, 15, USET_SPAN_CONTAINED)!=15 ||
+        ac.spanBack(longString, 20, USET_SPAN_CONTAINED)!=20 ||
+        ac.spanBack(longString, 25, USET_SPAN_CONTAINED)!=20 ||
+        ac.spanBack(longString, 30, USET_SPAN_CONTAINED)!=20 ||
+        ac.spanBack(longString, 35, USET_SPAN_CONTAINED)!=20 ||
+        ac.spanBack(longString, INT32_MAX, USET_SPAN_CONTAINED)!=20
+    ) {
+        errln("UnicodeSet.spanBack(UnicodeString, ...) returns incorrect start indexes");
+    }
 }
 
 void UnicodeSetTest::TestIteration() {
@@ -1215,9 +1246,11 @@ void UnicodeSetTest::TestCloseOver() {
 
         CASE, "[{\\u1f7c\\u03b9}]", "[\\u1ff2{\\u1f7c\\u03b9}]", // last in sorted table
 
+#if !UCONFIG_NO_FILE_IO
         CASE_MAPPINGS,
         "[aq\\u00DF{Bc}{bC}{Fi}]",
         "[aAqQ\\u00DF{ss}{Ss}{SS}{Bc}{BC}{bC}{bc}{FI}{Fi}{fi}]",
+#endif
 
         CASE_MAPPINGS,
         "[\\u01F1]", // 'DZ'

@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2008, International Business Machines Corporation and    *
+* Copyright (C) 1997-2009, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 *
@@ -100,7 +100,7 @@ BreakIterator::buildInstance(const Locale& loc, const char *type, int32_t kind, 
             UChar* extStart=u_strchr(brkfname, 0x002e);
             int len = 0;
             if(extStart!=NULL){
-                len = extStart-brkfname;
+                len = (int)(extStart-brkfname);
                 u_UCharsToChars(extStart+1, ext, sizeof(ext)); // nul terminates the buff
                 u_UCharsToChars(brkfname, fnbuff, len);
             }
@@ -378,7 +378,6 @@ BreakIterator::createInstance(const Locale& loc, int32_t kind, UErrorCode& statu
         return NULL;
     }
 
-    u_init(&status);
 #if !UCONFIG_NO_SERVICE
     if (hasService()) {
         Locale actualLoc("");

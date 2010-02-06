@@ -54,7 +54,7 @@ static const char* const rawData2[LOCALE_INFO_SIZE][LOCALE_SIZE] = {
     /* language code */
     {   "en",   "fr",   "ca",   "el",   "no",   "zh",   "de",   "es",  "ja"    },
     /* script code */
-    {   "",     "",     "",     "",     "",     "Hans", "", "", ""  },
+    {   "",     "",     "",     "",     "",     "", "", "", ""  },
     /* country code */
     {   "US",   "FR",   "ES",   "GR",   "NO",   "CN", "DE", "", "JP"    },
     /* variant code */
@@ -206,7 +206,9 @@ void addLocaleTest(TestNode** root)
     TESTCASE(TestDisplayNames);
     TESTCASE(TestGetAvailableLocales);
     TESTCASE(TestDataDirectory);
+#if !UCONFIG_NO_FILE_IO && !UCONFIG_NO_LEGACY_CONVERSION
     TESTCASE(TestISOFunctions);
+#endif
     TESTCASE(TestISO3Fallback);
     TESTCASE(TestUninstalledISO3Names);
     TESTCASE(TestSimpleDisplayNames);
@@ -219,7 +221,9 @@ void addLocaleTest(TestNode** root)
     TESTCASE(TestDisplayKeywords);
     TESTCASE(TestDisplayKeywordValues);
     TESTCASE(TestGetBaseName);
+#if !UCONFIG_NO_FILE_IO
     TESTCASE(TestGetLocale);
+#endif
     TESTCASE(TestDisplayNameWarning);
     TESTCASE(TestNonexistentLanguageExemplars);
     TESTCASE(TestLocDataErrorCodeChaining);
@@ -2320,7 +2324,7 @@ static void TestGetLocale(void) {
         const char *req = "es_AR_BUENOSAIRES", *valid, *actual;
         obj = ucol_open(req, &ec);
         if (U_FAILURE(ec)) {
-            log_err("ucol_open failed\n");
+            log_err("ucol_open failed - %s\n", u_errorName(ec));
             return;
         }
         valid = ucol_getLocaleByType(obj, ULOC_VALID_LOCALE, &ec);
@@ -2605,7 +2609,7 @@ typedef struct OrientationStructTag {
     ULayoutType line;
 } OrientationStruct;
 
-const char* ULayoutTypeToString(ULayoutType type)
+static const char* ULayoutTypeToString(ULayoutType type)
 {
     switch(type)
     {
@@ -5205,7 +5209,7 @@ static void TestLikelySubtags()
         const char* const minimal = basic_maximize_data[i][0];
         const char* const maximal = basic_maximize_data[i][1];
 
-        const int32_t length =
+        /* const int32_t length = */
             uloc_addLikelySubtags(
                 minimal,
                 buffer,
@@ -5231,7 +5235,7 @@ static void TestLikelySubtags()
         const char* const maximal = basic_minimize_data[i][0];
         const char* const minimal = basic_minimize_data[i][1];
 
-        const int32_t length =
+        /* const int32_t length = */
             uloc_minimizeSubtags(
                 maximal,
                 buffer,
@@ -5258,7 +5262,7 @@ static void TestLikelySubtags()
         const char* const minimal = full_data[i][0];
         const char* const maximal = full_data[i][1];
 
-        const int32_t length =
+        /* const int32_t length = */
             uloc_addLikelySubtags(
                 minimal,
                 buffer,
@@ -5286,7 +5290,7 @@ static void TestLikelySubtags()
 
         if (strlen(maximal) > 0) {
 
-            const int32_t length =
+            /* const int32_t length = */
                 uloc_minimizeSubtags(
                     maximal,
                     buffer,
@@ -5380,27 +5384,27 @@ static void TestLikelySubtags()
 const char* const locale_to_langtag[][3] = {
     {"",            "und",          "und"},
     {"en",          "en",           "en"},
-    {"en_US",       "en-us",        "en-us"},
-    {"iw_IL",       "he-il",        "he-il"},
-    {"sr_Latn_SR",  "sr-latn-sr",   "sr-latn-sr"},
+    {"en_US",       "en-US",        "en-US"},
+    {"iw_IL",       "he-IL",        "he-IL"},
+    {"sr_Latn_SR",  "sr-Latn-SR",   "sr-Latn-SR"},
     {"en__POSIX",   "en-posix",     "en-posix"},
-    {"en_POSIX",    "en",           NULL},
+    {"en_POSIX",    "en",           "en"},
     {"und_555",     "und-555",      "und-555"},
     {"123",         "und",          NULL},
     {"%$#&",        "und",          NULL},
-    {"_Latn",       "und-latn",     "und-latn"},
-    {"_DE",         "und-de",       "und-de"},
-    {"und_FR",      "und-fr",       "und-fr"},
-    {"th_TH_TH",    "th-th",        NULL},
+    {"_Latn",       "und-Latn",     "und-Latn"},
+    {"_DE",         "und-DE",       "und-DE"},
+    {"und_FR",      "und-FR",       "und-FR"},
+    {"th_TH_TH",    "th-TH",        NULL},
     {"bogus",       "bogus",        "bogus"},
     {"foooobarrr",  "und",          NULL},
-    {"az_AZ_CYRL",  "az-cyrl-az",   "az-cyrl-az"},
-    {"aa_BB_CYRL",  "aa-bb",        NULL},
-    {"en_US_1234",  "en-us-1234",   "en-us-1234"},
-    {"en_US_VARIANTA_VARIANTB", "en-us-varianta-variantb",  "en-us-varianta-variantb"},
-    {"en_US_VARIANTB_VARIANTA", "en-us-varianta-variantb",  "en-us-varianta-variantb"},
+    {"az_AZ_CYRL",  "az-Cyrl-AZ",   "az-Cyrl-AZ"},
+    {"aa_BB_CYRL",  "aa-BB",        NULL},
+    {"en_US_1234",  "en-US-1234",   "en-US-1234"},
+    {"en_US_VARIANTA_VARIANTB", "en-US-varianta-variantb",  "en-US-varianta-variantb"},
+    {"en_US_VARIANTB_VARIANTA", "en-US-varianta-variantb",  "en-US-varianta-variantb"},
     {"ja__9876_5432",   "ja-5432-9876", "ja-5432-9876"},
-    {"zh_Hant__VAR",    "zh-hant",  NULL},
+    {"zh_Hant__VAR",    "zh-Hant",  NULL},
     {"es__BADVARIANT_GOODVAR",  "es-goodvar",   NULL},
     {"en@calendar=gregorian",   "en-u-ca-gregory",  "en-u-ca-gregory"},
     {"de@collation=phonebook;calendar=gregorian",   "de-u-ca-gregory-co-phonebk",   "de-u-ca-gregory-co-phonebk"},
@@ -5473,11 +5477,11 @@ static const struct {
 } langtag_to_locale[] = {
     {"en",                  "en",                   2},
     {"en-us",               "en_US",                5},
-    {"und-us",              "_US",                  6},
+    {"und-US",              "_US",                  6},
     {"und-latn",            "_Latn",                8},
-    {"en-us-posix",         "en_US_POSIX",          11},
+    {"en-US-posix",         "en_US_POSIX",          11},
     {"de-de_euro",          "de",                   2},
-    {"kok-in",              "kok_IN",               6},
+    {"kok-IN",              "kok_IN",               6},
     {"123",                 "",                     0},
     {"en_us",               "",                     0},
     {"en-latn-x",           "en_Latn",              7},

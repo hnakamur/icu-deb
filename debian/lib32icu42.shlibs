@@ -1,7 +1,0 @@
-libicudata 42 lib32icu42 (>= 4.2-1)
-libicui18n 42 lib32icu42 (>= 4.2-1)
-libicuio 42 lib32icu42 (>= 4.2-1)
-libicule 42 lib32icu42 (>= 4.2-1)
-libiculx 42 lib32icu42 (>= 4.2-1)
-libicutu 42 lib32icu42 (>= 4.2-1)
-libicuuc 42 lib32icu42 (>= 4.2-1)
