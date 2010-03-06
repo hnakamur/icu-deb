@@ -5,7 +5,9 @@
 *******************************************************************************
 */
 
-#if !UCONFIG_NO_FORMAT
+#include "unicode/utypes.h"
+
+#if !UCONFIG_NO_FORMATTING
 
 #include "fphdlimp.h"
 #include "uvectr32.h"
@@ -65,23 +67,26 @@ FieldPositionOnlyHandler::isRecording(void) {
 
 // utility subclass FieldPositionIteratorHandler
 
-FieldPositionIteratorHandler::FieldPositionIteratorHandler(FieldPositionIterator& posIter,
+FieldPositionIteratorHandler::FieldPositionIteratorHandler(FieldPositionIterator* posIter,
                                                            UErrorCode& _status)
     : iter(posIter), vec(NULL), status(_status) {
-  if (U_SUCCESS(status)) {
+  if (iter && U_SUCCESS(status)) {
     vec = new UVector32(status);
   }
 }
 
 FieldPositionIteratorHandler::~FieldPositionIteratorHandler() {
   // setData adopts the vec regardless of status, so it's safe to null it
-  iter.setData(vec, status);
+  if (iter) {
+    iter->setData(vec, status);
+  }
+  // if iter is null, we never allocated vec, so no need to free it
   vec = NULL;
 }
 
 void
 FieldPositionIteratorHandler::addAttribute(int32_t id, int32_t start, int32_t limit) {
-  if (U_SUCCESS(status) && start < limit) {
+  if (iter && U_SUCCESS(status) && start < limit) {
     int32_t size = vec->size();
     vec->addElement(id, status);
     vec->addElement(start, status);
@@ -112,4 +117,4 @@ FieldPositionIteratorHandler::isRecording(void) {
 
 U_NAMESPACE_END
 
-#endif /* !UCONFIG_NO_FORMAT */
+#endif /* !UCONFIG_NO_FORMATTING */

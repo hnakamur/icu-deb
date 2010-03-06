@@ -5433,6 +5433,54 @@ static void TestHiragana(void) {
     ucol_close(ucol);
 }
 
+const static UChar testSameStrengthSourceCases[][MAX_TOKEN_LEN] = {
+    {0x0061},
+    {0x0061},
+    {0x006c, 0x0061},
+    {0x0061, 0x0061, 0x0061},
+    {0x0062}
+};
+
+const static UChar testSameStrengthTargetCases[][MAX_TOKEN_LEN] = {
+    {0x0031},
+    {0x006d},
+    {0x006b, 0x0062},
+    {0x0031, 0x0032, 0x0033},
+    {0x007a}
+};
+
+const static UCollationResult sameStrengthResults[] = {
+    UCOL_EQUAL,
+    UCOL_LESS,
+    UCOL_LESS,
+    UCOL_EQUAL,
+    UCOL_LESS
+};
+
+static void TestSameStrengthList(void)
+{
+
+    int32_t i;
+    UParseError error;
+    UErrorCode status = U_ZERO_ERROR;
+    UCollator  *myCollation;
+    UChar rules[] =  { 0x26, 0x61, 0x3c, 0x2a, 0x62, 0x63, 0x64, 0x20, 0x26, 0x62, 0x3c, 0x3c, 0x2a, 0x6b, 0x6c, 0x6d, 0x20, 0x26, 0x6b, 0x3c, 0x3c, 0x3c, 0x2a, 0x78, 0x79, 0x7a, 0x20, 0x26, 0x61, 0x3d, 0x2a, 0x31, 0x32, 0x33, 0x00 }; /* &a<*bcd &b<<*klm &k<<<*xyz &a=*123 */
+
+    myCollation = ucol_openRules(rules, u_strlen(rules), UCOL_ON, UCOL_TERTIARY, &error, &status);
+    if(U_FAILURE(status)){
+        log_err_status(status, "ERROR: in creation of rule based collator: %s\n", myErrorName(status));
+        return;
+    }
+    log_verbose("Testing the <<* syntax\n");
+    /*ucol_setAttribute(myCollation, UCOL_NORMALIZATION_MODE, UCOL_ON, &status);
+      ucol_setStrength(myCollation, UCOL_TERTIARY);*/
+    for (i = 0; i < 5 ; i++)
+    {
+        doTest(myCollation, testSameStrengthSourceCases[i], testSameStrengthTargetCases[i], sameStrengthResults[i]);
+    }
+    ucol_close(myCollation);
+}
+
 #define TEST(x) addTest(root, &x, "tscoll/cmsccoll/" # x)
 
 void addMiscCollTest(TestNode** root)
@@ -5508,6 +5556,7 @@ void addMiscCollTest(TestNode** root)
     TEST(TestTailor6179);
     TEST(TestUCAPrecontext);
     TEST(TestOutOfBuffer5468);
+    TEST(TestSameStrengthList);
 }
 
 #endif /* #if !UCONFIG_NO_COLLATION */

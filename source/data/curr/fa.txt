@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2009 International Business Machines
+// * Copyright (C) 2010 International Business Machines
 // * Corporation and others.  All Rights Reserved.
 // * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
 // * Source File:<path>/common/main/fa.xml
@@ -132,7 +132,7 @@ fa{
             "فرانک کنگو",
         }
         CHF{
-            "Fr.",
+            "CHF",
             "فرانک سوئیس",
         }
         CLP{
@@ -352,11 +352,11 @@ fa{
             "روپیهٔ موریس",
         }
         MXN{
-            "MXN",
+            "MX$",
             "پزوی مکزیک",
         }
         MXP{
-            "MX$",
+            "MXP" /** ===  */,
             "پزوی نقرهٔ مکزیک (۱۸۶۱ تا ۱۹۹۲)",
         }
         MZE{
@@ -603,5 +603,5 @@ fa{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.0.42.82"}
+    Version{"2.0.47.72"}
 }

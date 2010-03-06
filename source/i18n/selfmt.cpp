@@ -33,26 +33,10 @@
 
 U_NAMESPACE_BEGIN
 
-U_CDECL_BEGIN
-
-static void U_CALLCONV
-deleteHashStrings(void *obj) {
-    delete (UnicodeString *)obj;
-}
-
-U_CDECL_END
-
 UOBJECT_DEFINE_RTTI_IMPLEMENTATION(SelectFormat)
 
 #define MAX_KEYWORD_SIZE 30
 static const UChar SELECT_KEYWORD_OTHER[] = {LOW_O, LOW_T, LOW_H, LOW_E, LOW_R, 0};
-
-SelectFormat::SelectFormat(UErrorCode& status) {
-   if (U_FAILURE(status)) {
-      return;
-   } 
-   init(status);
-}
 
 SelectFormat::SelectFormat(const UnicodeString& pat, UErrorCode& status) {
    if (U_FAILURE(status)) {
@@ -74,9 +58,11 @@ SelectFormat::~SelectFormat() {
 
 void
 SelectFormat::init(UErrorCode& status) {
+    if (U_FAILURE(status)) {
+      return;
+    } 
     parsedValuesHash = NULL;
     pattern.remove();
-    status = U_ZERO_ERROR;
 }
 
 
@@ -86,32 +72,29 @@ SelectFormat::applyPattern(const UnicodeString& newPattern, UErrorCode& status) 
       return;
     } 
 
-    this->parsedValuesHash = NULL;
     this->pattern = newPattern;
     enum State{ startState, keywordState, pastKeywordState, phraseState};
 
     //Initialization
-    UnicodeString keyword = UnicodeString();
-    UnicodeString phrase = UnicodeString();
+    UnicodeString keyword ;
+    UnicodeString phrase ;
     UnicodeString* ptrPhrase ;
     int32_t braceCount = 0;
 
-    if (parsedValuesHash == NULL) {
-        parsedValuesHash = new Hashtable(TRUE, status);
-        parsedValuesHash = new Hashtable(TRUE, status);
-        if (U_FAILURE(status)) {
-            return;
-        }
-        parsedValuesHash->setValueDeleter(deleteHashStrings);
+    delete parsedValuesHash;
+    this->parsedValuesHash = NULL;
+    parsedValuesHash = new Hashtable(TRUE, status);
+    if (U_FAILURE(status)) {
+        return;
     }
+    parsedValuesHash->setValueDeleter(uhash_deleteUnicodeString);
 
     //Process the state machine
     State state = startState;
     for (int32_t i = 0; i < pattern.length(); ++i) {
         //Get the character and check its type
         UChar ch = pattern.charAt(i);
-        characterClass type;
-        classifyCharacter(ch, type); 
+        CharacterClass type = classifyCharacter(ch); 
 
         //Allow any character in phrase but nowhere else
         if ( type == tOther ) {
@@ -226,7 +209,7 @@ SelectFormat::applyPattern(const UnicodeString& newPattern, UErrorCode& status) 
         }//end of switch(state)
     }
 
-    //Check if the stae machine is back to startState
+    //Check if the state machine is back to startState
     if ( state != startState){
         status = U_PATTERN_SYNTAX_ERROR;
         return;
@@ -245,20 +228,20 @@ SelectFormat::format(const Formattable& obj,
                    FieldPosition& pos,
                    UErrorCode& status) const
 {
-    if (U_FAILURE(status)) return appendTo;
-    
     switch (obj.getType())
     {
     case Formattable::kString:
-        return format((UnicodeString)obj.getString(), appendTo, pos, status);
+        return format(obj.getString(), appendTo, pos, status);
     default:
-        status = U_ILLEGAL_ARGUMENT_ERROR;
+        if( U_SUCCESS(status) ){
+            status = U_ILLEGAL_ARGUMENT_ERROR;
+        }
         return appendTo;
     }
 }
 
 UnicodeString&
-SelectFormat::format(const UnicodeString& sInput,
+SelectFormat::format(const UnicodeString& keyword,
                      UnicodeString& appendTo, 
                      FieldPosition& pos,
                      UErrorCode& status) const {
@@ -266,7 +249,7 @@ SelectFormat::format(const UnicodeString& sInput,
     if (U_FAILURE(status)) return appendTo;
 
     //Check for the validity of the keyword
-    if ( !checkValidKeyword(sInput) ){
+    if ( !checkValidKeyword(keyword) ){
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return appendTo;
     }
@@ -276,7 +259,7 @@ SelectFormat::format(const UnicodeString& sInput,
         return appendTo;
     }
 
-    UnicodeString *selectedPattern = (UnicodeString *)parsedValuesHash->get(sInput);
+    UnicodeString *selectedPattern = (UnicodeString *)parsedValuesHash->get(keyword);
     if (selectedPattern == NULL) {
         selectedPattern = (UnicodeString *)parsedValuesHash->get(SELECT_KEYWORD_OTHER);
     }
@@ -286,127 +269,60 @@ SelectFormat::format(const UnicodeString& sInput,
 
 UnicodeString&
 SelectFormat::toPattern(UnicodeString& appendTo) {
-    appendTo += pattern;
-    return appendTo;
+    return appendTo += pattern;
 }
 
-void
-SelectFormat::classifyCharacter(UChar ch, characterClass& type) const{
+SelectFormat::CharacterClass
+SelectFormat::classifyCharacter(UChar ch) const{
     if ((ch >= CAP_A) && (ch <= CAP_Z)) {
-        type = tStartKeyword;
-        return;
+        return tStartKeyword;
     }
     if ((ch >= LOW_A) && (ch <= LOW_Z)) {
-        type = tStartKeyword;
-        return;
+        return tStartKeyword;
     }
     if ((ch >= U_ZERO) && (ch <= U_NINE)) {
-        type = tContinueKeyword;
-        return;
+        return tContinueKeyword;
+    }
+    if ( uprv_isRuleWhiteSpace(ch) ){
+        return tSpace;
     }
     switch (ch) {
         case LEFTBRACE: 
-            type = tLeftBrace;
-            break;
+            return tLeftBrace;
         case RIGHTBRACE:
-            type = tRightBrace;
-            break;
-        case SPACE:
-        case TAB:
-            type = tSpace;
-            break;
+            return tRightBrace;
         case HYPHEN:
         case LOWLINE:
-            type = tContinueKeyword;
-            break;
+            return tContinueKeyword;
         default :
-            type = tOther;
+            return tOther;
     }
 }
 
 UBool
 SelectFormat::checkSufficientDefinition() {
     // Check that at least the default rule is defined.
-    if (parsedValuesHash == NULL)  return FALSE;
-    if (parsedValuesHash->get(SELECT_KEYWORD_OTHER) == NULL) {
-        return FALSE;
-    }
-    else {
-        return TRUE;
-    }
+    return (parsedValuesHash != NULL &&
+           parsedValuesHash->get(SELECT_KEYWORD_OTHER) != NULL) ;
 }
 
 UBool
 SelectFormat::checkValidKeyword(const UnicodeString& argKeyword ) const{
-    UnicodeString keyword = UnicodeString();
-    enum State{ startState, keywordState, pastKeywordState };
+    int32_t len = argKeyword.length();
+    if (len < 1){
+        return FALSE;
+    }
+    CharacterClass type = classifyCharacter(argKeyword.charAt(0)); 
+    if( type != tStartKeyword ){
+        return FALSE;
+    }
 
-    //Initialize
-    State state = startState;
-    keyword.remove();
-
-    //Start the processing
     for (int32_t i = 0; i < argKeyword.length(); ++i) {
-        //Get the character and check its type
-        UChar ch = argKeyword.charAt(i);
-        characterClass type;
-        classifyCharacter(ch, type); 
-
-        //Any character that is not allowed
-        if ( type == tOther ) {
+        type = classifyCharacter(argKeyword.charAt(i)); 
+        if( type != tStartKeyword && type != tContinueKeyword ){
             return FALSE;
         }
-
-        //Process the state machine
-        switch (state) {
-            //At the start of pattern
-            case startState:
-                switch (type) {
-                    case tSpace:
-                        break;
-                    case tStartKeyword:
-                        state = keywordState;
-                        keyword += ch;
-                        break;
-                    //If anything else is encountered, it's a syntax error
-                    default:
-                        return FALSE;
-                }//end of switch(type)
-                break;
-
-            //Handle the keyword state
-            case keywordState:
-                switch (type) {
-                    case tSpace:
-                        state = pastKeywordState;
-                        break;
-                    case tStartKeyword:
-                    case tContinueKeyword:
-                        keyword += ch;
-                        break;
-                    //If anything else is encountered,it's a syntax error
-                    default:
-                        return FALSE;
-                }//end of switch(type)
-                break;
-
-            //Handle the pastkeyword state
-            case pastKeywordState:
-                switch (type) {
-                    case tSpace:
-                        break;
-                    //If anything else is encountered,it's a syntax error
-                    default:
-                        return FALSE;
-                }//end of switch(type)
-                break;
-    
-            default:
-              return FALSE; 
-        }//end of switch(state)
-
-    }//end of loop of argKeyword
-
+    }
     return TRUE;
 }
 
@@ -428,10 +344,12 @@ SelectFormat::operator=(const SelectFormat& other) {
 
 UBool
 SelectFormat::operator==(const Format& other) const {
-    // This protected comparison operator should only be called by subclasses
-    // which have confirmed that the other object being compared against is
-    // an instance of a sublcass of SelectFormat.  THIS IS IMPORTANT.
-    // Format::operator== guarantees that this cast is safe
+    if( this == &other){
+        return TRUE;
+    }
+    if( other.getDynamicClassID() != SelectFormat::getStaticClassID() ){
+        return  FALSE;
+    }
     SelectFormat* fmt = (SelectFormat*)&other;
     Hashtable* hashOther = fmt->parsedValuesHash;
     if ( parsedValuesHash == NULL && hashOther == NULL)
@@ -486,9 +404,10 @@ SelectFormat::operator!=(const Format& other) const {
 void
 SelectFormat::parseObject(const UnicodeString& /*source*/,
                         Formattable& /*result*/,
-                        ParsePosition& /*pos*/) const
+                        ParsePosition& pos) const
 {
     // TODO: not yet supported in icu4j and icu4c
+    pos.setErrorIndex(pos.getIndex());
 }
 
 void
@@ -501,7 +420,6 @@ SelectFormat::copyHashtable(Hashtable *other, UErrorCode& status) {
     if (U_FAILURE(status)){
         return;
     }
-    parsedValuesHash->setValueDeleter(deleteHashStrings);
 
     int32_t pos = -1;
     const UHashElement* elem = NULL;

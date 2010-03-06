@@ -1,7 +1,0 @@
-libicudata 43 lib32icu43 (>= 4.3.2-1)
-libicui18n 43 lib32icu43 (>= 4.3.2-1)
-libicuio 43 lib32icu43 (>= 4.3.2-1)
-libicule 43 lib32icu43 (>= 4.3.2-1)
-libiculx 43 lib32icu43 (>= 4.3.2-1)
-libicutu 43 lib32icu43 (>= 4.3.2-1)
-libicuuc 43 lib32icu43 (>= 4.3.2-1)

@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2009 International Business Machines
+// * Copyright (C) 2010 International Business Machines
 // * Corporation and others.  All Rights Reserved.
 // * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
 // * Source File:<path>/common/main/nn.xml
@@ -652,11 +652,11 @@ nn{
             "malawisk kwacha",
         }
         MXN{
-            "MXN",
+            "MX$",
             "meksikansk peso",
         }
         MXP{
-            "MX$",
+            "MXP" /** ===  */,
             "meksikansk sølvpeso (1861-1992)",
         }
         MXV{
@@ -1933,5 +1933,5 @@ nn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.42.82"}
+    Version{"2.0.47.86"}
 }

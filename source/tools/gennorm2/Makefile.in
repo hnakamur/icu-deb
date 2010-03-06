@@ -16,8 +16,13 @@ subdir = tools/gennorm2
 
 TARGET_STUB_NAME = gennorm2
 
+SECTION = 8
+
+MAN_FILES = $(TARGET_STUB_NAME).$(SECTION)
+
+
 ## Extra files to remove for 'make clean'
-CLEANFILES = *~ $(DEPS)
+CLEANFILES = *~ $(DEPS) $(MAN_FILES)
 
 ## Target information
 TARGET = $(BINDIR)/$(TARGET_STUB_NAME)$(EXEEXT)
@@ -47,11 +52,15 @@ distclean : distclean-local
 dist: dist-local
 check: all check-local
 
-all-local: $(TARGET)
+all-local: $(TARGET) $(MAN_FILES)
 
-install-local: all-local
-#	$(MKINSTALLDIRS) $(DESTDIR)$(sbindir)
-#	$(INSTALL) $(TARGET) $(DESTDIR)$(sbindir)
+install-local: all-local install-man
+	$(MKINSTALLDIRS) $(DESTDIR)$(sbindir)
+	$(INSTALL) $(TARGET) $(DESTDIR)$(sbindir)
+
+install-man: $(MAN_FILES)
+	$(MKINSTALLDIRS) $(DESTDIR)$(mandir)/man$(SECTION)
+	$(INSTALL_DATA) $? $(DESTDIR)$(mandir)/man$(SECTION)
 
 dist-local:
 
@@ -71,6 +80,11 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 $(TARGET) : $(OBJECTS)
 	$(LINK.cc) $(OUTOPT)$@ $^ $(LIBS)
 	$(POST_BUILD_STEP)
+
+
+%.$(SECTION): $(srcdir)/%.$(SECTION).in
+	cd $(top_builddir) \
+	 && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 
 ifeq (,$(MAKECMDGOALS))

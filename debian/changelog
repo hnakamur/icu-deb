@@ -1,3 +1,9 @@
+icu (4.4~rc1-1) experimental; urgency=low
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 06 Mar 2010 11:54:54 -0500
+
 icu (4.3.4-1) experimental; urgency=low
 
   * New upstream release

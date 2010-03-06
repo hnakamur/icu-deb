@@ -124,9 +124,6 @@ U_NAMESPACE_USE
  * Note that all of this is only a problem when case-folding _and_
  * canonical equivalence come together.
  * (Comments in unorm_compare() are more up to date than this TODO.)
- *
- * This function could be moved to a different source file, at increased cost
- * for calling the decomposition access function.
  */
 
 /* stack element for previous-level source/decomposition pointers */
@@ -582,6 +579,9 @@ unorm_compare(const UChar *s1, int32_t length1,
             n2=Normalizer2Factory::getNFDInstance(*pErrorCode);
         } else {
             n2=Normalizer2Factory::getFCDInstance(*pErrorCode);
+        }
+        if (U_FAILURE(*pErrorCode)) {
+            return 0;
         }
 
         // check if s1 and/or s2 fulfill the FCD conditions

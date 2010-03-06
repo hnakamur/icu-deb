@@ -1947,12 +1947,25 @@ $as_echo_n "checking for ICU version numbers... " >&6; }
 geticuversion() {
     sed -n 's/^[ 	]*#[ 	]*define[ 	]*U_ICU_VERSION[ 	]*"\([^"]*\)".*/\1/p' "$@"
 }
+getuversion() {
+    sed -n 's/^[ 	]*#[ 	]*define[ 	]*U_UNICODE_VERSION[ 	]*"\([^"]*\)".*/\1/p' "$@"
+}
 VERSION=`geticuversion $srcdir/common/unicode/uvernum.h`
 if test x"$VERSION" = x; then
     VERSION=`geticuversion $srcdir/common/unicode/*.h`
     if test x"$VERSION" = x; then
-        { { $as_echo "$as_me:$LINENO: error: Cannot determine ICU version number from header files" >&5
-$as_echo "$as_me: error: Cannot determine ICU version number from header files" >&2;}
+        { { $as_echo "$as_me:$LINENO: error: Cannot determine ICU version number from uvernum.h header file" >&5
+$as_echo "$as_me: error: Cannot determine ICU version number from uvernum.h header file" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+fi
+
+UNICODE_VERSION=`getuversion $srcdir/common/unicode/uchar.h`
+if test x"$UNICODE_VERSION" = x; then
+    UNICODE_VERSION=`getuversion $srcdir/common/unicode/*.h`
+    if test x"$UNICODE_VERSION" = x; then
+        { { $as_echo "$as_me:$LINENO: error: Cannot determine Unicode version number from uchar.h header file" >&5
+$as_echo "$as_me: error: Cannot determine Unicode version number from uchar.h header file" >&2;}
    { (exit 1); exit 1; }; }
     fi
 fi
@@ -1964,10 +1977,9 @@ LIB_VERSION_MAJOR=`echo $LIB_VERSION | sed 's/\..*//'`
 
 
 
-{ $as_echo "$as_me:$LINENO: result: release $VERSION, library $LIB_VERSION" >&5
-$as_echo "release $VERSION, library $LIB_VERSION" >&6; }
+{ $as_echo "$as_me:$LINENO: result: release $VERSION, library $LIB_VERSION, unicode version $UNICODE_VERSION" >&5
+$as_echo "release $VERSION, library $LIB_VERSION, unicode version $UNICODE_VERSION" >&6; }
 
-UNICODE_VERSION="5.2"
 
 
 # Determine the host system
@@ -7417,7 +7429,7 @@ $as_echo_n "checking for genccode assembly... " >&6; }
 # Check to see if genccode can generate simple assembly.
 GENCCODE_ASSEMBLY=
 case "${host}" in
-i*86-*-linux*|x86_64-*-linux*|powerpc*-*-linux*|i*86-*-*bsd*|i*86-pc-gnu)
+*-linux*|i*86-*-*bsd*|i*86-pc-gnu)
     if test "$GCC" = yes; then
         # We're using gcc, and the simple -a gcc command line works for genccode
         GENCCODE_ASSEMBLY="-a gcc"
@@ -11436,7 +11448,7 @@ then
 fi
 
 # output the Makefiles
-ac_config_files="$ac_config_files icudefs.mk Makefile data/pkgdataMakefile config/Makefile.inc config/pkgdataMakefile data/Makefile stubdata/Makefile common/Makefile i18n/Makefile layout/Makefile layoutex/Makefile io/Makefile extra/Makefile extra/uconv/Makefile extra/uconv/pkgdataMakefile extra/scrptrun/Makefile tools/Makefile tools/ctestfw/Makefile tools/toolutil/Makefile tools/makeconv/Makefile tools/genrb/Makefile tools/genuca/Makefile tools/genccode/Makefile tools/gencmn/Makefile tools/gencnval/Makefile tools/genctd/Makefile tools/gennames/Makefile tools/gentest/Makefile tools/gennorm/Makefile tools/gennorm2/Makefile tools/genprops/Makefile tools/gencase/Makefile tools/genbidi/Makefile tools/genpname/Makefile tools/genbrk/Makefile tools/gensprep/Makefile tools/icuinfo/Makefile tools/icupkg/Makefile tools/icuswap/Makefile tools/pkgdata/Makefile tools/tzcode/Makefile tools/gencfu/Makefile test/Makefile test/compat/Makefile test/testdata/Makefile test/testdata/pkgdataMakefile test/hdrtst/Makefile test/intltest/Makefile test/cintltst/Makefile test/iotest/Makefile test/letest/Makefile test/perf/Makefile test/perf/collationperf/Makefile test/perf/ubrkperf/Makefile test/perf/charperf/Makefile test/perf/convperf/Makefile test/perf/normperf/Makefile test/perf/strsrchperf/Makefile test/perf/unisetperf/Makefile test/perf/usetperf/Makefile test/perf/ustrperf/Makefile test/perf/utfperf/Makefile test/perf/utrie2perf/Makefile samples/Makefile samples/date/Makefile samples/cal/Makefile samples/layout/Makefile common/unicode/platform.h"
+ac_config_files="$ac_config_files icudefs.mk Makefile data/pkgdataMakefile config/Makefile.inc config/pkgdataMakefile data/Makefile stubdata/Makefile common/Makefile i18n/Makefile layout/Makefile layoutex/Makefile io/Makefile extra/Makefile extra/uconv/Makefile extra/uconv/pkgdataMakefile extra/scrptrun/Makefile tools/Makefile tools/ctestfw/Makefile tools/toolutil/Makefile tools/makeconv/Makefile tools/genrb/Makefile tools/genuca/Makefile tools/genccode/Makefile tools/gencmn/Makefile tools/gencnval/Makefile tools/genctd/Makefile tools/gennames/Makefile tools/gentest/Makefile tools/gennorm2/Makefile tools/genprops/Makefile tools/gencase/Makefile tools/genbidi/Makefile tools/genpname/Makefile tools/genbrk/Makefile tools/gensprep/Makefile tools/icuinfo/Makefile tools/icupkg/Makefile tools/icuswap/Makefile tools/pkgdata/Makefile tools/tzcode/Makefile tools/gencfu/Makefile test/Makefile test/compat/Makefile test/testdata/Makefile test/testdata/pkgdataMakefile test/hdrtst/Makefile test/intltest/Makefile test/cintltst/Makefile test/iotest/Makefile test/letest/Makefile test/perf/Makefile test/perf/collationperf/Makefile test/perf/ubrkperf/Makefile test/perf/charperf/Makefile test/perf/convperf/Makefile test/perf/normperf/Makefile test/perf/strsrchperf/Makefile test/perf/unisetperf/Makefile test/perf/usetperf/Makefile test/perf/ustrperf/Makefile test/perf/utfperf/Makefile test/perf/utrie2perf/Makefile samples/Makefile samples/date/Makefile samples/cal/Makefile samples/layout/Makefile common/unicode/platform.h"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -12062,7 +12074,6 @@ do
     "tools/genctd/Makefile") CONFIG_FILES="$CONFIG_FILES tools/genctd/Makefile" ;;
     "tools/gennames/Makefile") CONFIG_FILES="$CONFIG_FILES tools/gennames/Makefile" ;;
     "tools/gentest/Makefile") CONFIG_FILES="$CONFIG_FILES tools/gentest/Makefile" ;;
-    "tools/gennorm/Makefile") CONFIG_FILES="$CONFIG_FILES tools/gennorm/Makefile" ;;
     "tools/gennorm2/Makefile") CONFIG_FILES="$CONFIG_FILES tools/gennorm2/Makefile" ;;
     "tools/genprops/Makefile") CONFIG_FILES="$CONFIG_FILES tools/genprops/Makefile" ;;
     "tools/gencase/Makefile") CONFIG_FILES="$CONFIG_FILES tools/gencase/Makefile" ;;
@@ -12775,7 +12786,7 @@ fi
 
 { $as_echo "$as_me:$LINENO: checking the version of \"$U_MAKE\"" >&5
 $as_echo_n "checking the version of \"$U_MAKE\"... " >&6; }
-if "$U_MAKE" -f "$srcdir/config/gmakever.mk"; then
+if "$U_MAKE" -f "$srcdir/config/gmakever.mk" PLATFORM="$platform"; then
 { $as_echo "$as_me:$LINENO: result: ok" >&5
 $as_echo "ok" >&6; }
 else
