@@ -3,10 +3,10 @@ Author: Aurelien Jarno <aurel32@debian.org>
 Bug-Debian: http://bugs.debian.org/461782
 Bug: http://bugs.icu-project.org/trac/ticket/6406
 
-Index: icu-4.3.4/source/common/putil.c
+Index: icu-4.4~rc1/source/common/putil.c
 ===================================================================
---- icu-4.3.4.orig/source/common/putil.c	2010-02-06 17:01:01.703257361 -0500
-+++ icu-4.3.4/source/common/putil.c	2010-02-06 17:01:04.419258219 -0500
+--- icu-4.4~rc1.orig/source/common/putil.c	2010-03-05 18:23:06.000000000 -0500
++++ icu-4.4~rc1/source/common/putil.c	2010-03-06 12:00:59.535135591 -0500
 @@ -106,7 +106,7 @@
  #   define ICU_NO_USER_DATA_OVERRIDE 1
  #elif defined(OS390)
@@ -34,11 +34,11 @@ Index: icu-4.3.4/source/common/putil.c
      if (locale != NULL && uprv_strcmp(name, "euc") == 0) {
          /* Linux underspecifies the "EUC" name. */
          if (uprv_strcmp(locale, "korean") == 0) {
-Index: icu-4.3.4/source/configure
+Index: icu-4.4~rc1/source/configure
 ===================================================================
---- icu-4.3.4.orig/source/configure	2010-02-06 17:01:01.715257667 -0500
-+++ icu-4.3.4/source/configure	2010-02-06 17:01:04.423258176 -0500
-@@ -11390,6 +11390,7 @@
+--- icu-4.4~rc1.orig/source/configure	2010-03-05 18:24:18.000000000 -0500
++++ icu-4.4~rc1/source/configure	2010-03-06 12:00:59.539135807 -0500
+@@ -11402,6 +11402,7 @@
  case "${host}" in
  	*-*-solaris*) 	platform=U_SOLARIS ;;
  	*-*-linux*) 	platform=U_LINUX ;;
@@ -46,11 +46,11 @@ Index: icu-4.3.4/source/configure
  	*-pc-gnu) 	platform=U_HURD ;;
  	*-*-*bsd*|*-*-dragonfly*) 	platform=U_BSD ;;
  	*-*-aix*) 	platform=U_AIX ;;
-Index: icu-4.3.4/source/configure.in
+Index: icu-4.4~rc1/source/configure.in
 ===================================================================
---- icu-4.3.4.orig/source/configure.in	2010-02-06 17:01:01.723257837 -0500
-+++ icu-4.3.4/source/configure.in	2010-02-06 17:01:04.431257137 -0500
-@@ -1197,6 +1197,7 @@
+--- icu-4.4~rc1.orig/source/configure.in	2010-03-05 18:24:18.000000000 -0500
++++ icu-4.4~rc1/source/configure.in	2010-03-06 12:00:59.679134194 -0500
+@@ -1207,6 +1207,7 @@
  case "${host}" in
  	*-*-solaris*) 	platform=U_SOLARIS ;;
  	*-*-linux*) 	platform=U_LINUX ;;

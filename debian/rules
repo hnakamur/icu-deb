@@ -6,7 +6,7 @@ DEB_HOST_ARCH_CPU	?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 # than for use by cdbs), we adopt the convention of starting local
 # variables' names with l_.
 
-l_SONAME := 43
+l_SONAME := 44
 l_CFLAGS := -g -Wall
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	l_CFLAGS += -O0
@@ -62,12 +62,9 @@ clean::
 	$(RM) -rf debian/tmp32
 	$(RM) debian/stamp-configure debian/stamp-configure32
 
-# chmod -R +r here is to work around quilt creating files with mode
-# 000.  See debian bug 534840.
 post-patches::
 	chmod a+x $(DEB_SRCDIR)/configure
 ifneq (, $(build32))
-	chmod -R +r $(DEB_SRCDIR)
 	cp -a $(DEB_SRCDIR) $(DEB_SRCDIR)-build32
 endif
 
@@ -91,12 +88,18 @@ build/libicu$(l_SONAME) build/libicu-dev::
 build/lib32icu$(l_SONAME) build/lib32icu-dev::
 	$(MAKE) -C $(DEB_SRCDIR)-build32
 
+# Temporarily remove icuinfo until
+# http://bugs.icu-project.org/trac/ticket/7506 is resolevd
 install/libicu$(l_SONAME) install/libicu-dev::
 	$(MAKE) -C $(DEB_SRCDIR) install DESTDIR=$(CURDIR)/debian/tmp
+	rm debian/tmp/usr/bin/icuinfo
 
+# Temporarily remove icuinfo until
+# http://bugs.icu-project.org/trac/ticket/7506 is resolevd
 binary-install/lib32icu$(l_SONAME) binary-install/lib32icu-dev:: DEB_DH_INSTALL_SOURCEDIR=debian/tmp32
 install/lib32icu$(l_SONAME) install/lib32icu-dev::
 	$(MAKE) -C $(DEB_SRCDIR)-build32 install DESTDIR=$(CURDIR)/debian/tmp32
+	rm debian/tmp32/usr/bin/icuinfo
 
 install/icu-doc:: install/libicu$(l_SONAME) install/libicu-dev
 	$(MAKE) -C $(DEB_SRCDIR) install-doc DESTDIR=$(CURDIR)/debian/tmp

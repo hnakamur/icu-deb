@@ -27,6 +27,7 @@
 #include "mutex.h"
 #include "normalizer2impl.h"
 #include "ucln_cmn.h"
+#include "uhash.h"
 
 U_NAMESPACE_BEGIN
 
@@ -52,7 +53,11 @@ class NoopNormalizer2 : public Normalizer2 {
                              const UnicodeString &second,
                              UErrorCode &errorCode) const {
         if(U_SUCCESS(errorCode)) {
-            first.append(second);
+            if(&first!=&second) {
+                first.append(second);
+            } else {
+                errorCode=U_ILLEGAL_ARGUMENT_ERROR;
+            }
         }
         return first;
     }
@@ -210,6 +215,7 @@ class DecomposeNormalizer2 : public Normalizer2WithImpl {
 public:
     DecomposeNormalizer2(const Normalizer2Impl &ni) : Normalizer2WithImpl(ni) {}
 
+private:
     virtual void
     normalize(const UChar *src, const UChar *limit,
               ReorderingBuffer &buffer, UErrorCode &errorCode) const {
@@ -239,6 +245,7 @@ public:
     ComposeNormalizer2(const Normalizer2Impl &ni, UBool fcc) :
         Normalizer2WithImpl(ni), onlyContiguous(fcc) {}
 
+private:
     virtual void
     normalize(const UChar *src, const UChar *limit,
               ReorderingBuffer &buffer, UErrorCode &errorCode) const {
@@ -299,14 +306,15 @@ public:
     virtual UBool isInert(UChar32 c) const {
         return impl.hasCompBoundaryAfter(c, onlyContiguous, TRUE);
     }
-private:
-    UBool onlyContiguous;
+
+    const UBool onlyContiguous;
 };
 
 class FCDNormalizer2 : public Normalizer2WithImpl {
 public:
     FCDNormalizer2(const Normalizer2Impl &ni) : Normalizer2WithImpl(ni) {}
 
+private:
     virtual void
     normalize(const UChar *src, const UChar *limit,
               ReorderingBuffer &buffer, UErrorCode &errorCode) const {
@@ -402,13 +410,21 @@ private:
 
 STATIC_SIMPLE_SINGLETON(noopSingleton);
 
+static UHashtable *cache=NULL;
+
 U_CDECL_BEGIN
+
+static void U_CALLCONV deleteNorm2AllModes(void *allModes) {
+    delete (Norm2AllModes *)allModes;
+}
 
 static UBool U_CALLCONV uprv_normalizer2_cleanup() {
     Norm2AllModesSingleton(nfcSingleton, NULL).deleteInstance();
     Norm2AllModesSingleton(nfkcSingleton, NULL).deleteInstance();
     Norm2AllModesSingleton(nfkc_cfSingleton, NULL).deleteInstance();
     Norm2Singleton(noopSingleton).deleteInstance();
+    uhash_close(cache);
+    cache=NULL;
     return TRUE;
 }
 
@@ -503,6 +519,11 @@ Normalizer2Factory::getNFKC_CFImpl(UErrorCode &errorCode) {
     return allModes!=NULL ? &allModes->impl : NULL;
 }
 
+const Normalizer2Impl *
+Normalizer2Factory::getImpl(const Normalizer2 *norm2) {
+    return &((Normalizer2WithImpl *)norm2)->impl;
+}
+
 const UTrie2 *
 Normalizer2Factory::getFCDTrie(UErrorCode &errorCode) {
     Norm2AllModes *allModes=
@@ -522,8 +543,11 @@ Normalizer2::getInstance(const char *packageName,
     if(U_FAILURE(errorCode)) {
         return NULL;
     }
+    if(name==NULL || *name==0) {
+        errorCode=U_ILLEGAL_ARGUMENT_ERROR;
+    }
+    Norm2AllModes *allModes=NULL;
     if(packageName==NULL) {
-        Norm2AllModes *allModes=NULL;
         if(0==uprv_strcmp(name, "nfc")) {
             allModes=Norm2AllModesSingleton(nfcSingleton, "nfc").getInstance(errorCode);
         } else if(0==uprv_strcmp(name, "nfkc")) {
@@ -531,25 +555,58 @@ Normalizer2::getInstance(const char *packageName,
         } else if(0==uprv_strcmp(name, "nfkc_cf")) {
             allModes=Norm2AllModesSingleton(nfkc_cfSingleton, "nfkc_cf").getInstance(errorCode);
         }
-        if(allModes!=NULL) {
-            switch(mode) {
-            case UNORM2_COMPOSE:
-                return &allModes->comp;
-            case UNORM2_DECOMPOSE:
-                return &allModes->decomp;
-            case UNORM2_FCD:
-                allModes->impl.getFCDTrie(errorCode);
-                return &allModes->fcd;
-            case UNORM2_COMPOSE_CONTIGUOUS:
-                return &allModes->fcc;
-            default:
-                break;  // do nothing
+    }
+    if(allModes==NULL && U_SUCCESS(errorCode)) {
+        {
+            Mutex lock;
+            if(cache!=NULL) {
+                allModes=(Norm2AllModes *)uhash_get(cache, name);
+            }
+        }
+        if(allModes==NULL) {
+            LocalPointer<Norm2AllModes> localAllModes(
+                Norm2AllModes::createInstance(packageName, name, errorCode));
+            if(U_SUCCESS(errorCode)) {
+                Mutex lock;
+                if(cache==NULL) {
+                    cache=uhash_open(uhash_hashChars, uhash_compareChars, NULL, &errorCode);
+                    if(U_FAILURE(errorCode)) {
+                        return NULL;
+                    }
+                    uhash_setKeyDeleter(cache, uprv_free);
+                    uhash_setValueDeleter(cache, deleteNorm2AllModes);
+                }
+                void *temp=uhash_get(cache, name);
+                if(temp==NULL) {
+                    int32_t keyLength=uprv_strlen(name)+1;
+                    char *nameCopy=(char *)uprv_malloc(keyLength);
+                    if(nameCopy==NULL) {
+                        errorCode=U_MEMORY_ALLOCATION_ERROR;
+                        return NULL;
+                    }
+                    uprv_memcpy(nameCopy, name, keyLength);
+                    uhash_put(cache, nameCopy, allModes=localAllModes.orphan(), &errorCode);
+                } else {
+                    // race condition
+                    allModes=(Norm2AllModes *)temp;
+                }
             }
         }
     }
-    if(U_SUCCESS(errorCode)) {
-        // TODO: Real loading and caching...
-        errorCode=U_UNSUPPORTED_ERROR;
+    if(allModes!=NULL && U_SUCCESS(errorCode)) {
+        switch(mode) {
+        case UNORM2_COMPOSE:
+            return &allModes->comp;
+        case UNORM2_DECOMPOSE:
+            return &allModes->decomp;
+        case UNORM2_FCD:
+            allModes->impl.getFCDTrie(errorCode);
+            return &allModes->fcd;
+        case UNORM2_COMPOSE_CONTIGUOUS:
+            return &allModes->fcc;
+        default:
+            break;  // do nothing
+        }
     }
     return NULL;
 }

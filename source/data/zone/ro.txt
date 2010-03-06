@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2009 International Business Machines
+// * Copyright (C) 2010 International Business Machines
 // * Corporation and others.  All Rights Reserved.
 // * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
 // * Source File:<path>/common/main/ro.xml
@@ -10,7 +10,7 @@
  *  ICU <specials> source: <path>/xml/main/ro.xml
  */
 ro{
-    Version{"2.0.42.82"}
+    Version{"2.0.47.63"}
     zoneStrings{
         "Africa:Addis_Ababa"{
             ec{"Addis Abeba"}
@@ -275,13 +275,9 @@ ro{
         "meta:Europe_Western"{
             ld{"Ora de vară a Europei Occidentale"}
             ls{"Ora Europei Occidentale"}
-            sd{"WEST"}
-            ss{"WET"}
         }
         "meta:GMT"{
             cu:int{1}
-            ls{"Greenwich Mean Time"}
-            ss{"GMT"}
         }
         "meta:Lord_Howe"{
             ld{"Ora de vară Lord Howe"}

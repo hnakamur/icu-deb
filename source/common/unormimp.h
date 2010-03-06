@@ -187,13 +187,6 @@ U_CAPI UBool U_EXPORT2
 unorm_haveData(UErrorCode *pErrorCode);
 
 /**
- * internal API, used by StringPrep
- * @internal
- */
-U_CAPI void U_EXPORT2
-unorm_getUnicodeVersion(UVersionInfo *versionInfo, UErrorCode *pErrorCode);
-
-/**
  * Internal API, used by enumeration of canonically equivalent strings
  * @internal
  */
@@ -206,18 +199,6 @@ unorm_isCanonSafeStart(UChar32 c);
  */
 U_CAPI UBool U_EXPORT2
 unorm_getCanonStartSet(UChar32 c, USerializedSet *fillSet);
-
-#ifdef XP_CPLUSPLUS
-
-/**
- * Get normalization exclusion set for the options.
- * Requires unorm_haveData().
- * @internal
- */
-U_CFUNC const U_NAMESPACE_QUALIFIER UnicodeSet *
-unorm_getNX(int32_t options, UErrorCode *pErrorCode);
-
-#endif
 
 /**
  * Enumerate each normalization data trie and add the

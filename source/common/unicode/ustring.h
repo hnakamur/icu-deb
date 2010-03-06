@@ -147,7 +147,7 @@ u_strcat(UChar     *dst,
  *
  * @param dst The destination string.
  * @param src The source string.
- * @param n The maximum number of characters to compare.
+ * @param n The maximum number of characters to append.
  * @return A pointer to <code>dst</code>.
  * @stable ICU 2.0
  */
@@ -967,7 +967,7 @@ u_memrchr32(const UChar *s, UChar32 c, int32_t count);
  *
  * \\a => U+0007, \\b => U+0008, \\t => U+0009, \\n => U+000A,
  * \\v => U+000B, \\f => U+000C, \\r => U+000D, \\e => U+001B,
- * \\" => U+0022, \\' => U+0027, \\? => U+003F, \\\\ => U+005C
+ * \\&quot; => U+0022, \\' => U+0027, \\? => U+003F, \\\\ => U+005C
  *
  * Anything else following a backslash is generically escaped.  For
  * example, "[a\\-z]" returns "[a-z]".
@@ -1546,7 +1546,7 @@ u_strFromUTF32(UChar   *dest,
  * @return The pointer to destination buffer.
  * @see u_strToUTF32
  * @see u_strFromUTF32WithSub
- * @stable ICU 4.4
+ * @stable ICU 4.2
  */
 U_STABLE UChar32* U_EXPORT2
 u_strToUTF32WithSub(UChar32 *dest,
@@ -1591,7 +1591,7 @@ u_strToUTF32WithSub(UChar32 *dest,
  * @return The pointer to destination buffer.
  * @see u_strFromUTF32
  * @see u_strToUTF32WithSub
- * @stable ICU 4.4
+ * @stable ICU 4.2
  */
 U_STABLE UChar* U_EXPORT2
 u_strFromUTF32WithSub(UChar *dest,
