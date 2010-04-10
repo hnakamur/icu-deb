@@ -106,7 +106,7 @@ Cleanly installed Solaris can use this #define.
 #   define ICU_NO_USER_DATA_OVERRIDE 1
 #elif defined(OS390)
 #include "unicode/ucnv.h"   /* Needed for UCNV_SWAP_LFNL_OPTION_STRING */
-#elif defined(U_DARWIN) || defined(U_LINUX) || defined(U_BSD)
+#elif defined(U_DARWIN) || defined(U_LINUX) || defined(U_BSD) || defined(U_KBSD)
 #include <limits.h>
 #include <unistd.h>
 #elif defined(U_QNX)
@@ -631,7 +631,7 @@ uprv_timezone()
 extern U_IMPORT char *U_TZNAME[];
 #endif
 
-#if !UCONFIG_NO_FILE_IO && (defined(U_DARWIN) || defined(U_LINUX) || defined(U_BSD))
+#if !UCONFIG_NO_FILE_IO && (defined(U_DARWIN) || defined(U_LINUX) || defined(U_BSD) || defined(U_KBSD))
 /* These platforms are likely to use Olson timezone IDs. */
 #define CHECK_LOCALTIME_LINK 1
 #if defined(U_DARWIN)
@@ -1702,7 +1702,7 @@ remapPlatformDependentCodepage(const char *locale, const char *name) {
         */
         name = "eucjis";
     }
-#elif defined(U_LINUX)
+#elif defined(U_LINUX) || defined(U_KBSD)
     if (locale != NULL && uprv_strcmp(name, "euc") == 0) {
         /* Linux underspecifies the "EUC" name. */
         if (uprv_strcmp(locale, "korean") == 0) {

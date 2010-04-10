@@ -1207,6 +1207,7 @@ ICUDATA_CHAR=$U_ENDIAN_CHAR
 case "${host}" in
 	*-*-solaris*) 	platform=U_SOLARIS ;;
 	*-*-linux*) 	platform=U_LINUX ;;
+	*-*-k*bsd*-gnu*) platform=U_KBSD ;;
 	*-pc-gnu) 	platform=U_HURD ;;
 	*-*-*bsd*|*-*-dragonfly*) 	platform=U_BSD ;;
 	*-*-aix*) 	platform=U_AIX ;;
