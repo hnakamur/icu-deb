@@ -2,10 +2,10 @@ Description: supply manual page for program that doesn't have one
 Author: Jay Berkenbilt <qjb@debian.org>
 Bug: http://bugs.icu-project.org/trac/ticket/7554
 
-Index: icu-4.4~rc1/source/tools/gennorm2/Makefile.in
+Index: icu-4.4.1/source/tools/gennorm2/Makefile.in
 ===================================================================
---- icu-4.4~rc1.orig/source/tools/gennorm2/Makefile.in	2010-03-15 12:07:27.432373395 -0400
-+++ icu-4.4~rc1/source/tools/gennorm2/Makefile.in	2010-03-15 12:11:50.504875166 -0400
+--- icu-4.4.1.orig/source/tools/gennorm2/Makefile.in	2010-05-01 10:02:43.317326967 -0400
++++ icu-4.4.1/source/tools/gennorm2/Makefile.in	2010-05-01 10:02:44.013327711 -0400
 @@ -16,8 +16,13 @@
  
  TARGET_STUB_NAME = gennorm2
@@ -52,10 +52,10 @@ Index: icu-4.4~rc1/source/tools/gennorm2/Makefile.in
  ifeq (,$(MAKECMDGOALS))
  -include $(DEPS)
  else
-Index: icu-4.4~rc1/source/tools/gennorm2/gennorm2.8.in
+Index: icu-4.4.1/source/tools/gennorm2/gennorm2.8.in
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ icu-4.4~rc1/source/tools/gennorm2/gennorm2.8.in	2010-03-15 12:21:49.688373218 -0400
++++ icu-4.4.1/source/tools/gennorm2/gennorm2.8.in	2010-05-01 10:02:44.013327711 -0400
 @@ -0,0 +1,71 @@
 +.\" Hey, Emacs! This is -*-nroff-*- you know...
 +.\"
