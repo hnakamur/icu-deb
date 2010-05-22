@@ -97,8 +97,8 @@ U_CDECL_END
 #define PKGDATA_FILE_SEP_STRING U_FILE_SEP_STRING
 #endif
 
-#define LARGE_BUFFER_MAX_SIZE 2048
-#define SMALL_BUFFER_MAX_SIZE 512
+#define LARGE_BUFFER_MAX_SIZE 40960
+#define SMALL_BUFFER_MAX_SIZE 40960
 
 static void loadLists(UPKGOptions *o, UErrorCode *status);
 
@@ -472,20 +472,21 @@ main(int argc, char* argv[]) {
 }
 
 static int runCommand(const char* command, UBool specialHandling) {
-    char cmd[SMALL_BUFFER_MAX_SIZE];
+    char cmdbuf[SMALL_BUFFER_MAX_SIZE];
+    char *cmd = cmdbuf;
 
     if (!specialHandling) {
 #ifdef USING_CYGWIN
-        sprintf(cmd, "bash -c \"%s\"", command);
+        sprintf(cmdbuf, "bash -c \"%s\"", command);
 
 #elif defined(OS400)
-        sprintf(cmd, "QSH CMD('%s')", command);
+        sprintf(cmdbuf, "QSH CMD('%s')", command);
 #else
         goto normal_command_mode;
 #endif
     } else {
 normal_command_mode:
-        sprintf(cmd, "%s", command);
+	cmd = (char*) command;
     }
     
     printf("pkgdata: %s\n", cmd);
