@@ -1,0 +1,45 @@
+Description: increase buffer sizes in pkgdata
+Author: Jay Berkenbilt <qjb@debian.org>
+Bug: http://bugs.icu-project.org/trac/ticket/7680
+
+Index: icu-4.4.1/source/tools/pkgdata/pkgdata.cpp
+===================================================================
+--- icu-4.4.1.orig/source/tools/pkgdata/pkgdata.cpp	2010-04-28 11:27:46.000000000 -0400
++++ icu-4.4.1/source/tools/pkgdata/pkgdata.cpp	2010-05-21 22:42:16.227747931 -0400
+@@ -97,8 +97,8 @@
+ #define PKGDATA_FILE_SEP_STRING U_FILE_SEP_STRING
+ #endif
+ 
+-#define LARGE_BUFFER_MAX_SIZE 2048
+-#define SMALL_BUFFER_MAX_SIZE 512
++#define LARGE_BUFFER_MAX_SIZE 40960
++#define SMALL_BUFFER_MAX_SIZE 40960
+ 
+ static void loadLists(UPKGOptions *o, UErrorCode *status);
+ 
+@@ -472,20 +472,21 @@
+ }
+ 
+ static int runCommand(const char* command, UBool specialHandling) {
+-    char cmd[SMALL_BUFFER_MAX_SIZE];
++    char cmdbuf[SMALL_BUFFER_MAX_SIZE];
++    char *cmd = cmdbuf;
+ 
+     if (!specialHandling) {
+ #ifdef USING_CYGWIN
+-        sprintf(cmd, "bash -c \"%s\"", command);
++        sprintf(cmdbuf, "bash -c \"%s\"", command);
+ 
+ #elif defined(OS400)
+-        sprintf(cmd, "QSH CMD('%s')", command);
++        sprintf(cmdbuf, "QSH CMD('%s')", command);
+ #else
+         goto normal_command_mode;
+ #endif
+     } else {
+ normal_command_mode:
+-        sprintf(cmd, "%s", command);
++	cmd = (char*) command;
+     }
+     
+     printf("pkgdata: %s\n", cmd);

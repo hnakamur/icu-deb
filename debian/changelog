@@ -1,3 +1,10 @@
+icu (4.4.1-2) experimental; urgency=low
+
+  * Increase buffer sizes in pkgdata.  Prevents bus errors in kfreebsd and
+    undetected overruns everywhere else.  (Closes: #581174)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 21 May 2010 21:56:34 -0400
+
 icu (4.4.1-1) experimental; urgency=low
 
   * New upstream release
