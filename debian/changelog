@@ -1,3 +1,10 @@
+icu (4.4.1-5) unstable; urgency=low
+
+  * Include patch from upstream to fix arm assembler bug.  Thanks to Adam
+    Barratt for finding the fix.  (Closes: #589076)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 17 Jul 2010 07:30:22 -0400
+
 icu (4.4.1-4) unstable; urgency=low
 
   * Re-upload to unstable
