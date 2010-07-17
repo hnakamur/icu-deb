@@ -2,3 +2,4 @@ gencfu-man.patch
 gennorm2-man.patch
 icuinfo-man.patch
 pkgdata-buffers.patch
+arm-assembler.patch
