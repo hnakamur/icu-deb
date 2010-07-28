@@ -1,3 +1,11 @@
+icu (4.4.1-6) unstable; urgency=low
+
+  * Include patch from Alexander Kurtz to solve failure to build from
+    source resulting from doxygen generating different files.  (Closes:
+    #590393)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 28 Jul 2010 18:44:01 -0400
+
 icu (4.4.1-5) unstable; urgency=low
 
   * Include patch from upstream to fix arm assembler bug.  Thanks to Adam
