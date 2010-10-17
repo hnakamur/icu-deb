@@ -1,3 +1,10 @@
+icu (4.4.2-1) unstable; urgency=low
+
+  * New upstream release
+  * Updated standards version to 3.9.1; no changes required
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 17 Oct 2010 11:06:20 -0400
+
 icu (4.4.1-6) unstable; urgency=low
 
   * Include patch from Alexander Kurtz to solve failure to build from
