@@ -1,9 +1,21 @@
+icu (4.4.2-2) unstable; urgency=low
+
+  * Apply patch to fix Malayam rendering.  (Closes: #591615)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 25 Nov 2010 12:51:18 -0500
+
 icu (4.4.2-1) unstable; urgency=low
 
   * New upstream release
   * Updated standards version to 3.9.1; no changes required
 
  -- Jay Berkenbilt <qjb@debian.org>  Sun, 17 Oct 2010 11:06:20 -0400
+
+icu (4.4.1-7) testing-proposed-updates; urgency=high
+
+  * Apply patch to fix Malayam rendering.  (Closes: #591615)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 25 Nov 2010 12:07:26 -0500
 
 icu (4.4.1-6) unstable; urgency=low
 
