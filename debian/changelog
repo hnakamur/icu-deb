@@ -1,3 +1,9 @@
+icu (4.4.1-7) testing-proposed-updates; urgency=high
+
+  * Apply patch to fix Malayam rendering.  (Closes: #591615)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 25 Nov 2010 12:07:26 -0500
+
 icu (4.4.1-6) unstable; urgency=low
 
   * Include patch from Alexander Kurtz to solve failure to build from
