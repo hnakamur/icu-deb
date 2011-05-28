@@ -1,2 +1,0 @@
-# libicudata.so.44.0 contains static data only
-lib32icu44: shared-lib-without-dependency-information

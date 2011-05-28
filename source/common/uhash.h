@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-*   Copyright (C) 1997-2009, International Business Machines
+*   Copyright (C) 1997-2010, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ******************************************************************************
 *   Date        Name        Description
@@ -130,6 +130,7 @@ typedef UBool U_CALLCONV UValueComparator(const UHashTok val1,
  * <TT>uhash_close</TT>, or <TT>uhash_put</TT> to delete
  * an existing key or value.
  * @param obj A key or value stored in a hashtable
+ * @see uhash_deleteUObject
  */
 typedef void U_CALLCONV UObjectDeleter(void* obj);
 
@@ -582,6 +583,9 @@ uhash_hashChars(const UHashTok key);
 U_CAPI int32_t U_EXPORT2 
 uhash_hashUCharsN(const UChar *key, int32_t length);
 
+U_CAPI int32_t U_EXPORT2 
+uhash_hashCharsN(const char *key, int32_t length);
+
 /**
  * Generate a case-insensitive hash code for a null-terminated char*
  * string.  If the string is not null-terminated do not use this
@@ -702,11 +706,11 @@ U_CAPI void U_EXPORT2
 uhash_deleteHashtable(void *obj);
 
 /**
- * Deleter for UVector objects.
+ * Deleter for UObject instances.
  * @param obj The object to be deleted
  */
 U_CAPI void U_EXPORT2 
-uhash_deleteUVector(void *obj);
+uhash_deleteUObject(void *obj);
 
 /**
  * Deleter for any key or value allocated using uprv_malloc.  Calls

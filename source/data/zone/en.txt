@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2010 International Business Machines
+// * Copyright (C) 2011 International Business Machines
 // * Corporation and others.  All Rights Reserved.
 // * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
 // * Source File:<path>/common/main/en.xml
@@ -10,13 +10,28 @@
  *  ICU <specials> source: <path>/xml/main/en.xml
  */
 en{
-    Version{"2.0.48.46"}
+    Version{"2.0.58.6"}
     zoneStrings{
+        "Africa:Sao_Tome"{
+            ec{"São Tomé"}
+        }
+        "America:Asuncion"{
+            ec{"Asunción"}
+        }
+        "America:Curacao"{
+            ec{"Curaçao"}
+        }
+        "America:St_Barthelemy"{
+            ec{"Saint Barthélemy"}
+        }
         "Antarctica:DumontDUrville"{
             ec{"Dumont d’Urville"}
         }
+        "Asia:Saigon"{
+            ec{"Ho Chi Minh City"}
+        }
         "Etc:Unknown"{
-            ec{"Unknown"}
+            ec{"Unknown City"}
         }
         "Europe:Dublin"{
             ld{"Irish Summer Time"}
@@ -25,6 +40,9 @@ en{
         "Europe:London"{
             ld{"British Summer Time"}
             sd{"BST"}
+        }
+        "Indian:Reunion"{
+            ec{"Réunion"}
         }
         "meta:Acre"{
             ld{"Acre Summer Time"}
@@ -202,6 +220,9 @@ en{
             ld{"Cape Verde Summer Time"}
             ls{"Cape Verde Time"}
         }
+        "meta:Casey"{
+            ls{"Casey Time"}
+        }
         "meta:Chamorro"{
             lg{"Chamorro Time"}
             ls{"Chamorro Standard Time"}
@@ -258,7 +279,7 @@ en{
             ls{"Davis Time"}
         }
         "meta:DumontDUrville"{
-            ls{"Dumont-d'Urville Time"}
+            ls{"Dumont-d’Urville Time"}
         }
         "meta:Dushanbe"{
             ld{"Dushanbe Summer Time"}
@@ -458,6 +479,9 @@ en{
             ld{"Macau Summer Time"}
             ls{"Macau Time"}
         }
+        "meta:Macquarie"{
+            ls{"Macquarie Island Time"}
+        }
         "meta:Magadan"{
             ld{"Magadan Summer Time"}
             ls{"Magadan Time"}
@@ -655,7 +679,7 @@ en{
             ls{"Tonga Time"}
         }
         "meta:Truk"{
-            ls{"Truk Time"}
+            ls{"Chuuk Time"}
         }
         "meta:Turkey"{
             ld{"Turkey Summer Time"}
@@ -669,8 +693,8 @@ en{
             ls{"Tuvalu Time"}
         }
         "meta:Uralsk"{
-            ld{"Ural'sk Summer Time"}
-            ls{"Ural'sk Time"}
+            ld{"Uralʹsk Summer Time"}
+            ls{"Uralʹsk Time"}
         }
         "meta:Uruguay"{
             ld{"Uruguay Summer Time"}
@@ -725,6 +749,7 @@ en{
             ls{"Yukon Standard Time"}
         }
         fallbackFormat{"{1} ({0})"}
+        fallbackRegionFormat{"{1} Time ({0})"}
         gmtFormat{"GMT{0}"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} Time"}

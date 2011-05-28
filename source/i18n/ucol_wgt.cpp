@@ -1,7 +1,7 @@
 /*  
 *******************************************************************************
 *
-*   Copyright (C) 1999-2010, International Business Machines
+*   Copyright (C) 1999-2011, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -69,7 +69,20 @@ setWeightByte(uint32_t weight, int32_t idx, uint32_t byte) {
     uint32_t mask; /* 0xffffffff except a 00 "hole" for the index-th byte */
 
     idx*=8;
-    mask=((uint32_t)0xffffffff)>>idx;
+    if(idx<32) {
+        mask=((uint32_t)0xffffffff)>>idx;
+    } else {
+        // Do not use uint32_t>>32 because on some platforms that does not shift at all
+        // while we need it to become 0.
+        // PowerPC: 0xffffffff>>32 = 0           (wanted)
+        // x86:     0xffffffff>>32 = 0xffffffff  (not wanted)
+        //
+        // ANSI C99 6.5.7 Bitwise shift operators:
+        // "If the value of the right operand is negative
+        // or is greater than or equal to the width of the promoted left operand,
+        // the behavior is undefined."
+        mask=0;
+    }
     idx=32-idx;
     mask|=0xffffff00<<idx;
     return (uint32_t)((weight&mask)|(byte<<idx));
@@ -120,7 +133,7 @@ lengthenRange(WeightRange *range, uint32_t maxByte, uint32_t countBytes) {
 
 /* for uprv_sortArray: sort ranges in weight order */
 static int32_t U_CALLCONV
-compareRanges(const void *context, const void *left, const void *right) {
+compareRanges(const void * /*context*/, const void *left, const void *right) {
     uint32_t l, r;
 
     l=((const WeightRange *)left)->start;
@@ -508,7 +521,7 @@ ucol_nextWeight(WeightRange ranges[], int32_t *pRangeCount) {
     }
 }
 
-#ifdef UCOL_DEBUG
+#if 0 // #ifdef UCOL_DEBUG
 
 static void
 testAlloc(uint32_t lowerLimit, uint32_t upperLimit, uint32_t n, UBool enumerate) {

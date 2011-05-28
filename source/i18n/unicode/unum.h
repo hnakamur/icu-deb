@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2010, International Business Machines Corporation and others.
+* Copyright (C) 1997-2011, International Business Machines Corporation and others.
 * All Rights Reserved.
 * Modification History:
 *
@@ -134,19 +134,34 @@ typedef void* UNumberFormat;
  */
 typedef enum UNumberFormatStyle {
     /**
-     * Decimal format defined by pattern 
+     * Decimal format defined by a pattern string.
      * @stable ICU 3.0
      */
     UNUM_PATTERN_DECIMAL=0,
-    /** Decimal format */
+    /**
+     * Decimal format ("normal" style).
+     * @stable ICU 2.0
+     */
     UNUM_DECIMAL=1,
-    /** Currency format */
+    /**
+     * Currency format with a currency symbol, e.g., "$1.00".
+     * @stable ICU 2.0
+     */
     UNUM_CURRENCY,
-    /** Percent format */
+    /**
+     * Percent format
+     * @stable ICU 2.0
+     */
     UNUM_PERCENT,
-    /** Scientific format */
+    /**
+     * Scientific format
+     * @stable ICU 2.1
+     */
     UNUM_SCIENTIFIC,
-    /** Spellout rule-based format */
+    /**
+     * Spellout rule-based format
+     * @stable ICU 2.0
+     */
     UNUM_SPELLOUT,
     /** 
      * Ordinal rule-based format 
@@ -159,18 +174,40 @@ typedef enum UNumberFormatStyle {
      */
     UNUM_DURATION,
     /** 
-     * Numbering system rule-based format 
-     * @draft ICU 4.2
+     * Numbering system rule-based format
+     * @stable ICU 4.2
      */
     UNUM_NUMBERING_SYSTEM,
     /** 
-     * Rule-based format defined by pattern 
+     * Rule-based format defined by a pattern string.
      * @stable ICU 3.0
      */
     UNUM_PATTERN_RULEBASED,
-    /** Default format */
+    /**
+     * Currency format with an ISO currency code, e.g., "USD1.00".
+     * @draft ICU 4.8
+     */
+    UNUM_CURRENCY_ISO,
+    /**
+     * Currency format with a pluralized currency name,
+     * e.g., "1.00 US dollar" and "3.00 US dollars".
+     * @draft ICU 4.8
+     */
+    UNUM_CURRENCY_PLURAL,
+    /**
+     * One more than the highest number format style constant.
+     * @draft ICU 4.8
+     */
+    UNUM_FORMAT_STYLE_COUNT,
+    /**
+     * Default format
+     * @stable ICU 2.0
+     */
     UNUM_DEFAULT = UNUM_DECIMAL,
-    /** (Alias for UNUM_PATTERN_DECIMAL) */
+    /**
+     * Alias for UNUM_PATTERN_DECIMAL
+     * @stable ICU 3.0
+     */
     UNUM_IGNORE = UNUM_PATTERN_DECIMAL
 } UNumberFormatStyle;
 
@@ -189,6 +226,11 @@ typedef enum UNumberFormatRoundingMode {
     UNUM_FOUND_HALFEVEN,
     UNUM_ROUND_HALFDOWN,
     UNUM_ROUND_HALFUP,
+    /** 
+      * ROUND_UNNECESSARY reports an error if formatted result is not exact.
+      * @draft ICU 4.8
+      */
+    UNUM_ROUND_UNNECESSARY,
     /**
      * Half-even rounding
      * @stable, ICU 3.8
@@ -205,6 +247,18 @@ typedef enum UNumberFormatPadPosition {
     UNUM_PAD_BEFORE_SUFFIX,
     UNUM_PAD_AFTER_SUFFIX
 } UNumberFormatPadPosition;
+
+/**
+ * Constants for specifying currency spacing
+ * @draft ICU 4.8
+ */
+enum UCurrencySpacing {
+    UNUM_CURRENCY_MATCH,
+    UNUM_CURRENCY_SURROUNDING_MATCH,
+    UNUM_CURRENCY_INSERT,
+    UNUM_CURRENCY_SPACING_COUNT
+};
+typedef enum UCurrencySpacing UCurrencySpacing; /**< @draft ICU 4.8 */
 
 /**
  * Create and return a new UNumberFormat for formatting and parsing
@@ -266,7 +320,7 @@ U_NAMESPACE_BEGIN
  *
  * @see LocalPointerBase
  * @see LocalPointer
- * @draft ICU 4.4
+ * @stable ICU 4.4
  */
 U_DEFINE_LOCAL_OPEN_POINTER(LocalUNumberFormatPointer, UNumberFormat, unum_close);
 
@@ -396,9 +450,9 @@ unum_formatDouble(    const    UNumberFormat*  fmt,
 * @see unum_parseInt64
 * @see unum_parseDouble
 * @see UFieldPosition
-* @draft ICU 4.4 
+* @stable ICU 4.4 
 */
-U_DRAFT int32_t U_EXPORT2 
+U_STABLE int32_t U_EXPORT2 
 unum_formatDecimal(    const    UNumberFormat*  fmt,
             const char *    number,
             int32_t         length,
@@ -533,9 +587,9 @@ unum_parseDouble(    const   UNumberFormat*  fmt,
 * @see unum_format
 * @see unum_formatInt64
 * @see unum_formatDouble
-* @draft ICU 4.4
+* @stable ICU 4.4
 */
-U_DRAFT int32_t U_EXPORT2 
+U_STABLE int32_t U_EXPORT2 
 unum_parseDecimal(const   UNumberFormat*  fmt,
                  const   UChar*          text,
                          int32_t         textLength,
@@ -896,8 +950,44 @@ typedef enum UNumberFormatSymbol {
    * @stable ICU 3.6
    */
   UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL = 17,  
+  /** One
+   * @draft ICU 4.6
+   */
+  UNUM_ONE_DIGIT_SYMBOL = 18,
+  /** Two
+   * @draft ICU 4.6
+   */
+  UNUM_TWO_DIGIT_SYMBOL = 19,
+  /** Three
+   * @draft ICU 4.6
+   */
+  UNUM_THREE_DIGIT_SYMBOL = 20,
+  /** Four
+   * @draft ICU 4.6
+   */
+  UNUM_FOUR_DIGIT_SYMBOL = 21,
+  /** Five
+   * @draft ICU 4.6
+   */
+  UNUM_FIVE_DIGIT_SYMBOL = 22,
+  /** Six
+   * @draft ICU 4.6
+   */
+  UNUM_SIX_DIGIT_SYMBOL = 23,
+  /** Seven
+    * @draft ICU 4.6
+   */
+  UNUM_SEVEN_DIGIT_SYMBOL = 24,
+  /** Eight
+   * @draft ICU 4.6
+   */
+  UNUM_EIGHT_DIGIT_SYMBOL = 25,
+  /** Nine
+   * @draft ICU 4.6
+   */
+  UNUM_NINE_DIGIT_SYMBOL = 26,
   /** count symbol constants */
-  UNUM_FORMAT_SYMBOL_COUNT = 18
+  UNUM_FORMAT_SYMBOL_COUNT = 27
 } UNumberFormatSymbol;
 
 /**

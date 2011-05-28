@@ -1,6 +1,6 @@
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2010, International Business Machines Corporation and
+ * Copyright (c) 1997-2011, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -35,6 +35,8 @@ public:
 
     void TestAdditionalProperties();
     void TestBinaryValues();
+    void TestConsistency();
+    void TestPatternProperties();
 
 private:
 
@@ -49,5 +51,8 @@ private:
 
     UnicodeSet derivedProps[30];
     U_NAMESPACE_QUALIFIER Hashtable *unknownPropertyNames;
-};
 
+    UBool compareUSets(const UnicodeSet &a, const UnicodeSet &b,
+                       const char *a_name, const char *b_name,
+                       UBool diffIsError);
+};

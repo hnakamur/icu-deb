@@ -2,10 +2,10 @@ Description: supply manual page for program that doesn't have one
 Author: Jay Berkenbilt <qjb@debian.org>
 Bug: http://bugs.icu-project.org/trac/ticket/7409
 
-Index: icu-4.4.1/source/tools/gencfu/Makefile.in
+Index: icu-4.8/source/tools/gencfu/Makefile.in
 ===================================================================
---- icu-4.4.1.orig/source/tools/gencfu/Makefile.in	2010-05-01 10:02:43.357327385 -0400
-+++ icu-4.4.1/source/tools/gencfu/Makefile.in	2010-05-01 10:02:43.805827494 -0400
+--- icu-4.8.orig/source/tools/gencfu/Makefile.in	2011-05-28 10:35:25.778883322 -0400
++++ icu-4.8/source/tools/gencfu/Makefile.in	2011-05-28 10:35:31.462882785 -0400
 @@ -17,7 +17,7 @@
  
  SECTION = 1
@@ -26,10 +26,10 @@ Index: icu-4.4.1/source/tools/gencfu/Makefile.in
  
  dist-local:
  
-Index: icu-4.4.1/source/tools/gencfu/gencfu.1.in
+Index: icu-4.8/source/tools/gencfu/gencfu.1.in
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ icu-4.4.1/source/tools/gencfu/gencfu.1.in	2010-05-01 10:02:43.805827494 -0400
++++ icu-4.8/source/tools/gencfu/gencfu.1.in	2011-05-28 10:35:31.462882785 -0400
 @@ -0,0 +1,91 @@
 +.\" Hey, Emacs! This is -*-nroff-*- you know...
 +.\"

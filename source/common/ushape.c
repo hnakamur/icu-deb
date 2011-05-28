@@ -1,7 +1,7 @@
 /*
  ******************************************************************************
  *
- *   Copyright (C) 2000-2010, International Business Machines
+ *   Copyright (C) 2000-2011, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  ******************************************************************************
@@ -316,17 +316,10 @@ _shapeToArabicDigitsWithContext(UChar *s, int32_t length,
                                 UChar digitBase,
                                 UBool isLogical, UBool lastStrongWasAL) {
     const UBiDiProps *bdp;
-    UErrorCode errorCode;
-
     int32_t i;
     UChar c;
 
-    errorCode=U_ZERO_ERROR;
-    bdp=ubidi_getSingleton(&errorCode);
-    if(U_FAILURE(errorCode)) {
-        return;
-    }
-
+    bdp=ubidi_getSingleton();
     digitBase-=0x30;
 
     /* the iteration direction depends on the type of input */
@@ -1476,7 +1469,7 @@ u_shapeArabic(const UChar *source, int32_t sourceLength,
     }
     
     /* Does Options contain the new Seen Tail Unicode code point option */
-    if ( (options&SHAPE_TAIL_TYPE_MASK) == SHAPE_TAIL_NEW_UNICODE){
+    if ( (options&U_SHAPE_TAIL_TYPE_MASK) == U_SHAPE_TAIL_NEW_UNICODE){
         tailChar = NEW_TAIL_CHAR;
     }else {
         tailChar = OLD_TAIL_CHAR;

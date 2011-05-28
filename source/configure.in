@@ -1,19 +1,44 @@
 # -*-autoconf-*-
-AC_COPYRIGHT([ Copyright (c) 1999-2010, International Business Machines Corporation and others. All Rights Reserved. ])
+AC_COPYRIGHT([ Copyright (c) 1999-2011, International Business Machines Corporation and others. All Rights Reserved. ])
 # configure.in for ICU
 # Stephen F. Booth, heavily modified by Yves and others
 
 # Check for autoconf version
-AC_PREREQ(2.63)
-
+AC_PREREQ(2.67)
 
 # Process this file with autoconf to produce a configure script
-AC_INIT
+AC_INIT([ICU])
+
+#TODO: IcuBug:8502
+#AC_INIT([ICU],
+#        m4_esyscmd_s([sed -n 's/^[ 	]*#[ 	]*define[ 	]*U_ICU_VERSION[ 	]*"\([^"]*\)".*/\1/p' "./common/unicode/uvernum.h]"),
+#        [http://icu-project.org/bugs],
+#        [International Components for Unicode],
+#        [http://icu-project.org])
+
 AC_CONFIG_SRCDIR([common/unicode/utypes.h])
 
 AC_CONFIG_HEADERS(common/icucfg.h)
 PACKAGE="icu"
 AC_SUBST(PACKAGE)
+
+# Use custom echo test for newline option
+# Current autoconf (2.65) gives incorrect echo newline option
+# for icu-config
+# This may be removed later - mow (June 17, 2010)
+ICU_ECHO_C= ICU_ECHO_N= ICU_ECHO_T=
+case `/bin/sh -c "echo -n x"` in
+-n*)
+  case `/bin/sh -c "echo 'x\c'"` in
+  *c*) ICU_ECHO_T=' ';;     # ECHO_T is single tab character.
+  *)   ICU_ECHO_C='\c';;
+  esac;;
+*)
+  ICU_ECHO_N='-n';;
+esac
+AC_SUBST(ICU_ECHO_N)
+AC_SUBST(ICU_ECHO_C)
+AC_SUBST(ICU_ECHO_T)
 
 AC_MSG_CHECKING(for ICU version numbers)
 
@@ -26,18 +51,17 @@ getuversion() {
 }
 VERSION=`geticuversion $srcdir/common/unicode/uvernum.h`
 if test x"$VERSION" = x; then
-    VERSION=`geticuversion $srcdir/common/unicode/*.h`
-    if test x"$VERSION" = x; then
-        AC_MSG_ERROR([Cannot determine ICU version number from uvernum.h header file])
-    fi
+   as_fn_error $? "Cannot determine ICU version number from uvernum.h header file" "$LINENO" 5
 fi
+
+#TODO: IcuBug:8502
+#if test "$VERSION" != "$PACKAGE_VERSION"; then
+#   AC_MSG_ERROR([configure was generated for $PACKAGE_VERSION but uvernum.h has $VERSION - please rerun autoconf])
+#fi
 
 UNICODE_VERSION=`getuversion $srcdir/common/unicode/uchar.h`
 if test x"$UNICODE_VERSION" = x; then
-    UNICODE_VERSION=`getuversion $srcdir/common/unicode/*.h`
-    if test x"$UNICODE_VERSION" = x; then
-        AC_MSG_ERROR([Cannot determine Unicode version number from uchar.h header file])
-    fi
+    AC_MSG_ERROR([Cannot determine Unicode version number from uchar.h header file])
 fi
 # Compute a reasonable library version from the release version. This is
 # very bad, but that's wanted... We want to make sure that the LIB_VERSION
@@ -59,14 +83,74 @@ AC_SUBST(CPPFLAGS)
 # This variable is needed on z/OS because the C++ compiler only recognizes .C
 _CXX_CXXSUFFIX=cpp
 export _CXX_CXXSUFFIX
+
+# Check whether to build debug libraries
+AC_MSG_CHECKING([whether to build debug libraries])
+enabled=no
+ENABLE_DEBUG=0
+AC_ARG_ENABLE(debug,
+    [  --enable-debug          build debug libraries [default=no]],
+    [ case "${enableval}" in
+         yes|"") enabled=yes; ENABLE_DEBUG=1 ;;
+         *) ;;   
+    esac],  
+)
+AC_MSG_RESULT($enabled)
+AC_SUBST(ENABLE_DEBUG)
+
+# Check whether to build release libraries
+AC_MSG_CHECKING([whether to build release libraries])
+enabled=yes
+ENABLE_RELEASE=1
+AC_ARG_ENABLE(release,
+    [  --enable-release        build release libraries [default=yes]],
+    [ case "${enableval}" in
+         no) enabled=no; ENABLE_RELEASE=0 ;;
+         *) ;;   
+    esac],  
+)
+AC_MSG_RESULT($enabled)
+AC_SUBST(ENABLE_RELEASE)
+
+# Don't use the default C/CXXFLags
+: ${CFLAGS=""}
+: ${CXXFLAGS=""}
+
 # Checks for programs
 AC_PROG_CC
 AC_PROG_CXX
+
+# Ensure that if CXXFLAGS/CFLAGS were not set when calling configure, set it correctly based on (enable/disable) debug or release option
+# The release mode use is the default one for autoconf
+if test "$GCC" = yes; then
+    if test "$CFLAGS" = ""; then
+        if test "$ENABLE_DEBUG" = 1; then
+            CFLAGS=-g
+        fi
+        if test "$ENABLE_RELEASE" = 1; then
+            CFLAGS="$CFLAGS -O2"
+        fi
+    fi
+    if test "$CXXFLAGS" = ""; then
+        if test "$ENABLE_DEBUG" = 1; then
+            CXXFLAGS=-g
+        fi
+        if test "$ENABLE_RELEASE" = 1; then
+            CXXFLAGS="$CXXFLAGS -O2"
+        fi
+    fi
+fi
+
 AC_PROG_CPP
 
 AC_PROG_INSTALL
 
 AC_SUBST(cross_compiling)
+
+dnl use the pld hack to get ac_fn_cxx_try_link defined globally and not local
+AC_LANG_PUSH([C++])
+AC_LINK_IFELSE([AC_LANG_PROGRAM()])
+AC_LANG_POP([C++])
 
 # make sure install is relative to srcdir - if a script
 if test "$srcdir" = "."; then
@@ -175,34 +259,6 @@ AC_ARG_ENABLE(static,
 )
 AC_MSG_RESULT($enabled)
 AC_SUBST(ENABLE_STATIC)
-
-# Check whether to build debug libraries
-AC_MSG_CHECKING([whether to build debug libraries])
-enabled=no
-ENABLE_DEBUG=0
-AC_ARG_ENABLE(debug,
-    [  --enable-debug          build debug libraries [default=no]],
-    [ case "${enableval}" in
-         yes|"") enabled=yes; ENABLE_DEBUG=1 ;;
-         *) ;;
-    esac],
-)
-AC_MSG_RESULT($enabled)
-AC_SUBST(ENABLE_DEBUG)
-
-# Check whether to build release libraries
-AC_MSG_CHECKING([whether to build release libraries])
-enabled=yes
-ENABLE_RELEASE=1
-AC_ARG_ENABLE(release,
-    [  --enable-release        build release libraries [default=yes]],
-    [ case "${enableval}" in
-         no) enabled=no; ENABLE_RELEASE=0 ;;
-         *) ;;
-    esac],
-)
-AC_MSG_RESULT($enabled)
-AC_SUBST(ENABLE_RELEASE)
 
 # Check whether to enable auto cleanup of libraries
 AC_MSG_CHECKING([whether to enable auto cleanup of libraries])
@@ -1212,8 +1268,7 @@ ICUDATA_CHAR=$U_ENDIAN_CHAR
 # set ICUDATA_CHAR to 'e' for any EBCDIC (which should be big endian) platform.
 case "${host}" in
 	*-*-solaris*) 	platform=U_SOLARIS ;;
-	*-*-linux*) 	platform=U_LINUX ;;
-	*-pc-gnu) 	platform=U_HURD ;;
+	*-*-linux*|*-*-gnu|*-*-k*bsd*-gnu|*-*-kopensolaris*-gnu)        platform=U_LINUX ;;
 	*-*-*bsd*|*-*-dragonfly*) 	platform=U_BSD ;;
 	*-*-aix*) 	platform=U_AIX ;;
 	*-*-hpux*) 	platform=U_HPUX ;;
@@ -1241,6 +1296,12 @@ platform_make_fragment='$(top_srcdir)/config/'"$platform_make_fragment_name"
 AC_SUBST(platform_make_fragment_name)
 AC_SUBST(platform_make_fragment)
 
+U_USING_CYGWIN_MSVC=0
+if test "${icu_cv_host_frag}" = "mh-cygwin-msvc"; then
+U_USING_CYGWIN_MSVC=1
+fi
+AC_SUBST(U_USING_CYGWIN_MSVC)
+
 if test "${FORCE_LIBS}" != ""; then
    echo " *** Overriding automatically chosen [LIBS=$LIBS], using instead [FORCE_LIBS=${FORCE_LIBS}]"  1>&6
    LIBS=${FORCE_LIBS}
@@ -1262,6 +1323,7 @@ AC_CONFIG_FILES([icudefs.mk \
 		Makefile \
 		data/pkgdataMakefile \
 		config/Makefile.inc \
+		config/icu.pc \
 		config/pkgdataMakefile \
 		data/Makefile \
 		stubdata/Makefile \
@@ -1279,18 +1341,12 @@ AC_CONFIG_FILES([icudefs.mk \
 		tools/toolutil/Makefile \
 		tools/makeconv/Makefile \
 		tools/genrb/Makefile \
-		tools/genuca/Makefile \
 		tools/genccode/Makefile \
 		tools/gencmn/Makefile \
 		tools/gencnval/Makefile \
 		tools/genctd/Makefile \
-		tools/gennames/Makefile \
 		tools/gentest/Makefile \
 		tools/gennorm2/Makefile \
-		tools/genprops/Makefile \
-		tools/gencase/Makefile \
-		tools/genbidi/Makefile \
-		tools/genpname/Makefile \
 		tools/genbrk/Makefile \
 		tools/gensprep/Makefile \
 		tools/icuinfo/Makefile \
@@ -1310,10 +1366,12 @@ AC_CONFIG_FILES([icudefs.mk \
 		test/letest/Makefile \
 		test/perf/Makefile \
 		test/perf/collationperf/Makefile \
+		test/perf/dicttrieperf/Makefile \
 		test/perf/ubrkperf/Makefile \
 		test/perf/charperf/Makefile \
 		test/perf/convperf/Makefile \
 		test/perf/normperf/Makefile \
+		test/perf/DateFmtPerf/Makefile \
 		test/perf/strsrchperf/Makefile \
 		test/perf/unisetperf/Makefile \
 		test/perf/usetperf/Makefile \

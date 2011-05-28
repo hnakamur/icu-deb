@@ -2,13 +2,13 @@ Source: icu
 Section: libs
 Priority: optional
 Maintainer: Jay Berkenbilt <qjb@debian.org>
-Standards-Version: 3.9.1
+Standards-Version: 3.9.2
 Build-Depends: cdbs, debhelper (>= 5), doxygen (>= 1.7.1), gcc-multilib [amd64 kfreebsd-amd64 ppc64] | gcc-4.1 (<< 4.1.2) [amd64 kfreebsd-amd64 ppc64],
  g++-multilib [amd64 kfreebsd-amd64 ppc64] | g++-4.1 (<< 4.1.2) [amd64 kfreebsd-amd64 ppc64],
  libc6-dev-i386 [amd64], libc0.1-dev-i386 [kfreebsd-amd64], libc6-dev-powerpc [ppc64]
 Homepage: http://www.icu-project.org
 
-Package: libicu44
+Package: libicu48
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
@@ -17,11 +17,11 @@ Description: International Components for Unicode
  Unicode and locale support.  This package contains the runtime
  libraries for ICU.
 
-Package: libicu44-dbg
+Package: libicu48-dbg
 Section: debug
 Priority: extra
 Architecture: any
-Depends: ${misc:Depends}, libicu44 (= ${binary:Version})
+Depends: ${misc:Depends}, libicu48 (= ${binary:Version})
 Description: International Components for Unicode
  ICU is a C++ and C library that provides robust and full-featured
  Unicode and locale support.  This package contains debugging symbols
@@ -30,7 +30,7 @@ Description: International Components for Unicode
 Package: libicu-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends}, libicu44 (= ${binary:Version}), libc6-dev | libc-dev
+Depends: ${misc:Depends}, libicu48 (= ${binary:Version}), libc6-dev | libc-dev
 Suggests: icu-doc
 Description: Development files for International Components for Unicode
  ICU is a C++ and C library that provides robust and full-featured
@@ -38,7 +38,7 @@ Description: Development files for International Components for Unicode
  files for ICU along with programs used to manipulate data files found
  in the ICU sources.
 
-Package: lib32icu44
+Package: lib32icu48
 Section: libs
 Architecture: amd64 ppc64 kfreebsd-amd64
 Depends: ${misc:Depends}, ${shlibs:Depends}
@@ -50,7 +50,7 @@ Description: International Components for Unicode (32-bit)
 Package: lib32icu-dev
 Section: libdevel
 Architecture: amd64 ppc64 kfreebsd-amd64
-Depends: ${misc:Depends}, libicu-dev (= ${binary:Version}), lib32icu44 (= ${binary:Version})
+Depends: ${misc:Depends}, libicu-dev (= ${binary:Version}), lib32icu48 (= ${binary:Version})
 Suggests: icu-doc
 Description: Development files for International Components for Unicode (32-bit)
  ICU is a C++ and C library that provides robust and full-featured

@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2001-2010, International Business Machines
+*   Copyright (C) 2001-2011, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -21,19 +21,10 @@
 
 #if !UCONFIG_NO_NORMALIZATION
 
-#ifdef XP_CPLUSPLUS
-#include "unicode/uniset.h"
-#endif
-
-#include "unicode/uiter.h"
-#include "unicode/unorm.h"
-#include "unicode/uset.h"
-#include "utrie2.h"
-#include "ustr_imp.h"
 #include "udataswp.h"
 
 /*
- * This new implementation of the normalization code loads its data from
+ * The 2001-2010 implementation of the normalization code loads its data from
  * unorm.icu, which is generated with the gennorm tool.
  * The format of that file is described at the end of this file.
  */
@@ -163,59 +154,13 @@ enum {
     _NORM_DECOMP_LENGTH_MASK=0x7f
 };
 
-/* Constants for options flags for normalization. @draft ICU 2.6 */
+/** Constants for options flags for normalization. */
 enum {
-    /** Options bit 0, do not decompose Hangul syllables. @draft ICU 2.6 */
+    /** Options bit 0, do not decompose Hangul syllables. */
     UNORM_NX_HANGUL=1,
-    /** Options bit 1, do not decompose CJK compatibility characters. @draft ICU 2.6 */
+    /** Options bit 1, do not decompose CJK compatibility characters. */
     UNORM_NX_CJK_COMPAT=2
 };
-
-/**
- * Is the normalizer data loaded?
- * This is used internally before other internal normalizer functions
- * are called.
- * It saves this check in each of many normalization calls that
- * are made for, e.g., collation.
- *
- * @param pErrorCode as usual
- * @return boolean value for whether the normalization data is loaded
- *
- * @internal
- */
-U_CAPI UBool U_EXPORT2
-unorm_haveData(UErrorCode *pErrorCode);
-
-/**
- * Internal API, used by enumeration of canonically equivalent strings
- * @internal
- */
-U_CFUNC UBool U_EXPORT2
-unorm_isCanonSafeStart(UChar32 c);
-
-/**
- * Internal API, used by enumeration of canonically equivalent strings
- * @internal
- */
-U_CAPI UBool U_EXPORT2
-unorm_getCanonStartSet(UChar32 c, USerializedSet *fillSet);
-
-/**
- * Enumerate each normalization data trie and add the
- * start of each range of same properties to the set.
- * @internal
- */
-U_CAPI void U_EXPORT2
-unorm_addPropertyStarts(const USetAdder *sa, UErrorCode *pErrorCode);
-
-/**
- * Swap unorm.icu. See udataswp.h.
- * @internal
- */
-U_CAPI int32_t U_EXPORT2
-unorm_swap(const UDataSwapper *ds,
-           const void *inData, int32_t length, void *outData,
-           UErrorCode *pErrorCode);
 
 /**
  * Description of the format of unorm.icu version 2.3.
