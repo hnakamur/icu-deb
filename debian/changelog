@@ -1,3 +1,11 @@
+icu (4.8-1) experimental; urgency=low
+
+  * New upstream release
+  * Upstream release includes fix to RegexMatch crash (Closes: #606886)
+  * Updated standards to 3.9.2; no changes required
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 28 May 2011 11:30:22 -0400
+
 icu (4.4.2-2) unstable; urgency=low
 
   * Apply patch to fix Malayam rendering.  (Closes: #591615)

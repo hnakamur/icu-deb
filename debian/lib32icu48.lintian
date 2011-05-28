@@ -1,0 +1,2 @@
+# libicudata.so.48.0 contains static data only
+lib32icu48: shared-lib-without-dependency-information

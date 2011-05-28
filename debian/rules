@@ -6,7 +6,7 @@ DEB_HOST_ARCH_CPU	?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 # than for use by cdbs), we adopt the convention of starting local
 # variables' names with l_.
 
-l_SONAME := 44
+l_SONAME := 48
 l_CFLAGS := -g -Wall
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	l_CFLAGS += -O0

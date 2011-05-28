@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-* Copyright (c) 2003-2010, International Business Machines
+* Copyright (c) 2003-2011, International Business Machines
 * Corporation and others.  All Rights Reserved.
 **********************************************************************
 * Author: Alan Liu
@@ -8,6 +8,8 @@
 * Since: ICU 2.8
 **********************************************************************
 */
+
+#include <typeinfo>  // for 'typeid' to work
 
 #include "olsontz.h"
 
@@ -22,6 +24,7 @@
 #include "uvector.h"
 #include <float.h> // DBL_MAX
 #include "uresimp.h" // struct UResourceBundle
+#include "zonemeta.h"
 
 #ifdef U_DEBUG_TZ
 # include <stdio.h>
@@ -49,7 +52,7 @@ static UBool arrayEqual(const void *a1, const void *a2, int32_t size) {
     if (a1 == NULL && a2 == NULL) {
         return TRUE;
     }
-    if (a1 != NULL && a2 == NULL || a1 == NULL && a2 != NULL) {
+    if ((a1 != NULL && a2 == NULL) || (a1 == NULL && a2 != NULL)) {
         return FALSE;
     }
     if (a1 == a2) {
@@ -91,6 +94,8 @@ UOBJECT_DEFINE_RTTI_IMPLEMENTATION(OlsonTimeZone)
  * constructor fails so the resultant object is well-behaved.
  */
 void OlsonTimeZone::constructEmpty() {
+    canonicalID = NULL;
+
     transitionCountPre32 = transitionCount32 = transitionCountPost32 = 0;
     transitionTimesPre32 = transitionTimes32 = transitionTimesPost32 = NULL;
 
@@ -111,8 +116,9 @@ void OlsonTimeZone::constructEmpty() {
  */
 OlsonTimeZone::OlsonTimeZone(const UResourceBundle* top,
                              const UResourceBundle* res,
+                             const UnicodeString& tzid,
                              UErrorCode& ec) :
-  finalZone(NULL), transitionRulesInitialized(FALSE)
+  BasicTimeZone(tzid), finalZone(NULL), transitionRulesInitialized(FALSE)
 {
     clearTransitionRules();
     U_DEBUG_TZ_MSG(("OlsonTimeZone(%s)\n", ures_getKey((UResourceBundle*)res)));
@@ -243,6 +249,9 @@ OlsonTimeZone::OlsonTimeZone(const UResourceBundle* top,
             ec = U_ZERO_ERROR;
         }
         ures_close(&r);
+
+        // initialize canonical ID
+        canonicalID = ZoneMeta::getCanonicalCLDRID(tzid, ec);
     }
 
     if (U_FAILURE(ec)) {
@@ -262,6 +271,8 @@ OlsonTimeZone::OlsonTimeZone(const OlsonTimeZone& other) :
  * Assignment operator
  */
 OlsonTimeZone& OlsonTimeZone::operator=(const OlsonTimeZone& other) {
+    canonicalID = other.canonicalID;
+
     transitionTimesPre32 = other.transitionTimesPre32;
     transitionTimes32 = other.transitionTimes32;
     transitionTimesPost32 = other.transitionTimesPost32;
@@ -299,7 +310,7 @@ OlsonTimeZone::~OlsonTimeZone() {
  */
 UBool OlsonTimeZone::operator==(const TimeZone& other) const {
     return ((this == &other) ||
-            (getDynamicClassID() == other.getDynamicClassID() &&
+            (typeid(*this) == typeid(other) &&
             TimeZone::operator==(other) &&
             hasSameRules(other)));
 }
@@ -592,10 +603,10 @@ OlsonTimeZone::hasSameRules(const TimeZone &other) const {
     if (this == &other) {
         return TRUE;
     }
-    if (other.getDynamicClassID() != OlsonTimeZone::getStaticClassID()) {
+    const OlsonTimeZone* z = dynamic_cast<const OlsonTimeZone*>(&other);
+    if (z == NULL) {
         return FALSE;
     }
-    const OlsonTimeZone* z = (const OlsonTimeZone*) &other;
 
     // [sic] pointer comparison: typeMapData points into
     // memory-mapped or DLL space, so if two zones have the same
@@ -606,9 +617,9 @@ OlsonTimeZone::hasSameRules(const TimeZone &other) const {
     
     // If the pointers are not equal, the zones may still
     // be equal if their rules and transitions are equal
-    if (finalZone == NULL && z->finalZone != NULL
-        || finalZone != NULL && z->finalZone == NULL
-        || finalZone != NULL && z->finalZone != NULL && *finalZone != *z->finalZone) {
+    if ((finalZone == NULL && z->finalZone != NULL)
+        || (finalZone != NULL && z->finalZone == NULL)
+        || (finalZone != NULL && z->finalZone != NULL && *finalZone != *z->finalZone)) {
         return FALSE;
     }
 

@@ -1,8 +1,0 @@
-libicudata 44 lib32icu44 (>= 4.4.1-1)
-libicui18n 44 lib32icu44 (>= 4.4.1-1)
-libicuio 44 lib32icu44 (>= 4.4.1-1)
-libicule 44 lib32icu44 (>= 4.4.1-1)
-libiculx 44 lib32icu44 (>= 4.4.1-1)
-libicutest 44 lib32icu44 (>= 4.4.1-1)
-libicutu 44 lib32icu44 (>= 4.4.1-1)
-libicuuc 44 lib32icu44 (>= 4.4.1-1)

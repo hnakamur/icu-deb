@@ -4,8 +4,10 @@ Bug: http://bugs.icu-project.org/trac/ticket/8198
 Bug-RedHat: https://bugzilla.redhat.com/show_bug.cgi?id=654200
 Bug-Debian: http://bugs.debian.org/591615
 
---- icu-4.4.2.orig/source/layout/IndicReordering.cpp	2010-11-25 11:45:17.685233897 -0500
-+++ icu-4.4.2/source/layout/IndicReordering.cpp	2010-11-25 11:45:24.481733521 -0500
+Index: icu-4.8/source/layout/IndicReordering.cpp
+===================================================================
+--- icu-4.8.orig/source/layout/IndicReordering.cpp	2011-05-28 10:35:25.626882145 -0400
++++ icu-4.8/source/layout/IndicReordering.cpp	2011-05-28 10:35:32.142882786 -0400
 @@ -129,10 +129,6 @@
      le_int32    fSMIndex;
      FeatureMask fSMFeatures;

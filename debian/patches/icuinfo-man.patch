@@ -2,10 +2,10 @@ Description: supply manual page for program that doesn't have one
 Author: Jay Berkenbilt <qjb@debian.org>
 Bug: http://bugs.icu-project.org/trac/ticket/7665
 
-Index: icu-4.4.1/source/tools/icuinfo/Makefile.in
+Index: icu-4.8/source/tools/icuinfo/Makefile.in
 ===================================================================
---- icu-4.4.1.orig/source/tools/icuinfo/Makefile.in	2010-05-01 10:04:47.329327314 -0400
-+++ icu-4.4.1/source/tools/icuinfo/Makefile.in	2010-05-01 10:07:41.557326811 -0400
+--- icu-4.8.orig/source/tools/icuinfo/Makefile.in	2011-05-28 10:35:25.670883855 -0400
++++ icu-4.8/source/tools/icuinfo/Makefile.in	2011-05-28 10:35:31.918881490 -0400
 @@ -14,8 +14,15 @@
  ## Build directory information
  subdir = tools/icuinfo
@@ -23,7 +23,7 @@ Index: icu-4.4.1/source/tools/icuinfo/Makefile.in
  
  ## Target information
  TARGET = icuinfo$(EXEEXT)
-@@ -42,7 +49,8 @@
+@@ -40,7 +47,8 @@
  
  ## List of phony targets
  .PHONY : all all-local install install-local clean clean-local		\
@@ -33,7 +33,7 @@ Index: icu-4.4.1/source/tools/icuinfo/Makefile.in
  
  ## Clear suffix list
  .SUFFIXES :
-@@ -55,12 +63,16 @@
+@@ -53,12 +61,16 @@
  dist: dist-local
  check: all check-local
  
@@ -52,7 +52,7 @@ Index: icu-4.4.1/source/tools/icuinfo/Makefile.in
  dist-local:
  
  clean-local:
-@@ -102,6 +114,9 @@
+@@ -100,6 +112,9 @@
  plugin-check: $(PLUGIN) $(PLUGINFILE)
  	$(INVOKE) ICU_PLUGINS="$(CURR_FULL_DIR)" ./$(TARGET) -v -L
  
@@ -62,10 +62,10 @@ Index: icu-4.4.1/source/tools/icuinfo/Makefile.in
  
  ifeq (,$(MAKECMDGOALS))
  -include $(DEPS)
-Index: icu-4.4.1/source/tools/icuinfo/icuinfo.1.in
+Index: icu-4.8/source/tools/icuinfo/icuinfo.1.in
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ icu-4.4.1/source/tools/icuinfo/icuinfo.1.in	2010-05-01 10:16:41.913327100 -0400
++++ icu-4.8/source/tools/icuinfo/icuinfo.1.in	2011-05-28 10:35:31.918881490 -0400
 @@ -0,0 +1,76 @@
 +.\" Hey, Emacs! This is -*-nroff-*- you know...
 +.\"

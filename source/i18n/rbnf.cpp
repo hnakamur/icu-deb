@@ -1,9 +1,11 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2009, International Business Machines Corporation
+* Copyright (C) 1997-2011, International Business Machines Corporation
 * and others. All Rights Reserved.
 *******************************************************************************
 */
+
+#include <typeinfo>  // for 'typeid' to work
 
 #include "unicode/rbnf.h"
 
@@ -23,7 +25,7 @@
 
 #include "cmemory.h"
 #include "cstring.h"
-#include "util.h"
+#include "patternprops.h"
 #include "uresimp.h"
 
 // debugging
@@ -311,9 +313,9 @@ private:
     void inc(void) { ++p; ch = 0xffff; }
     UBool checkInc(UChar c) { if (p < e && (ch == c || *p == c)) { inc(); return TRUE; } return FALSE; }
     UBool check(UChar c) { return p < e && (ch == c || *p == c); }
-    void skipWhitespace(void) { while (p < e && uprv_isRuleWhiteSpace(ch != 0xffff ? ch : *p)) inc();}
+    void skipWhitespace(void) { while (p < e && PatternProps::isWhiteSpace(ch != 0xffff ? ch : *p)) inc();}
     UBool inList(UChar c, const UChar* list) const {
-        if (*list == SPACE && uprv_isRuleWhiteSpace(c)) return TRUE;
+        if (*list == SPACE && PatternProps::isWhiteSpace(c)) return TRUE;
         while (*list && *list != c) ++list; return *list == c;
     }
     void parseError(const char* msg);
@@ -872,7 +874,7 @@ RuleBasedNumberFormat::operator==(const Format& other) const
         return TRUE;
     }
 
-    if (other.getDynamicClassID() == getStaticClassID()) {
+    if (typeid(*this) == typeid(other)) {
         const RuleBasedNumberFormat& rhs = (const RuleBasedNumberFormat&)other;
         if (locale == rhs.locale &&
             lenient == rhs.lenient &&
@@ -1329,7 +1331,7 @@ RuleBasedNumberFormat::init(const UnicodeString& rules, LocalizationInfo* locali
                 lpEnd = description.length() - 1;
             }
             int lpStart = lp + u_strlen(gLenientParse);
-            while (uprv_isRuleWhiteSpace(description.charAt(lpStart))) {
+            while (PatternProps::isWhiteSpace(description.charAt(lpStart))) {
                 ++lpStart;
             }
 
@@ -1465,7 +1467,7 @@ RuleBasedNumberFormat::stripWhitespace(UnicodeString& description)
     while (start != -1 && start < description.length()) {
         // seek to the first non-whitespace character...
         while (start < description.length()
-            && uprv_isRuleWhiteSpace(description.charAt(start))) {
+            && PatternProps::isWhiteSpace(description.charAt(start))) {
             ++start;
         }
 
@@ -1550,10 +1552,8 @@ RuleBasedNumberFormat::getCollator() const
         UErrorCode status = U_ZERO_ERROR;
 
         Collator* temp = Collator::createInstance(locale, status);
-        if (U_SUCCESS(status) &&
-            temp->getDynamicClassID() == RuleBasedCollator::getStaticClassID()) {
-
-            RuleBasedCollator* newCollator = (RuleBasedCollator*)temp;
+        RuleBasedCollator* newCollator;
+        if (U_SUCCESS(status) && (newCollator = dynamic_cast<RuleBasedCollator*>(temp)) != NULL) {
             if (lenientParseRules) {
                 UnicodeString rules(newCollator->getRules());
                 rules.append(*lenientParseRules);
