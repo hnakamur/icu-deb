@@ -1,3 +1,10 @@
+icu (4.8.1-1) experimental; urgency=low
+
+  * New upstream release
+  * Remove 32-bit source directory on clean.  (Closes: #630514)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 03 Sep 2011 10:14:57 -0400
+
 icu (4.8-1) experimental; urgency=low
 
   * New upstream release
