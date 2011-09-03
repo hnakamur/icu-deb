@@ -61,6 +61,7 @@ clean::
 	$(RM) debian/compat *.cdbs-config_list
 	$(RM) -rf debian/tmp32
 	$(RM) debian/stamp-configure debian/stamp-configure32
+	$(RM) -rf $(DEB_SRCDIR)-build32
 
 post-patches::
 	chmod a+x $(DEB_SRCDIR)/configure
