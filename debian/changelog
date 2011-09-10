@@ -1,3 +1,10 @@
+icu (4.8.1-2) experimental; urgency=low
+
+  * Fix 64-bit kfreebsd configure problem.  Thanks Petr Salinger.
+    (Closes: #630517)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 10 Sep 2011 08:17:58 -0400
+
 icu (4.8.1-1) experimental; urgency=low
 
   * New upstream release
