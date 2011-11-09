@@ -1,3 +1,11 @@
+icu (4.8.1.1-1) unstable; urgency=low
+
+  * New upstream release
+  * Add simple patch to define PATH_MAX when not defined.  Not an ideal
+    solution, but it will do for now.  (Closes: #643661)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 09 Nov 2011 09:59:08 -0500
+
 icu (4.8.1-2) experimental; urgency=low
 
   * Fix 64-bit kfreebsd configure problem.  Thanks Petr Salinger.

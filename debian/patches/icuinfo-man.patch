@@ -2,10 +2,10 @@ Description: supply manual page for program that doesn't have one
 Author: Jay Berkenbilt <qjb@debian.org>
 Bug: http://bugs.icu-project.org/trac/ticket/7665
 
-Index: icu-4.8/source/tools/icuinfo/Makefile.in
+Index: icu-4.8.1.1/source/tools/icuinfo/Makefile.in
 ===================================================================
---- icu-4.8.orig/source/tools/icuinfo/Makefile.in	2011-05-28 10:35:25.670883855 -0400
-+++ icu-4.8/source/tools/icuinfo/Makefile.in	2011-05-28 10:35:31.918881490 -0400
+--- icu-4.8.1.1.orig/source/tools/icuinfo/Makefile.in	2011-11-09 09:56:31.243396717 -0500
++++ icu-4.8.1.1/source/tools/icuinfo/Makefile.in	2011-11-09 09:56:44.527396529 -0500
 @@ -14,8 +14,15 @@
  ## Build directory information
  subdir = tools/icuinfo
@@ -62,10 +62,10 @@ Index: icu-4.8/source/tools/icuinfo/Makefile.in
  
  ifeq (,$(MAKECMDGOALS))
  -include $(DEPS)
-Index: icu-4.8/source/tools/icuinfo/icuinfo.1.in
+Index: icu-4.8.1.1/source/tools/icuinfo/icuinfo.1.in
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ icu-4.8/source/tools/icuinfo/icuinfo.1.in	2011-05-28 10:35:31.918881490 -0400
++++ icu-4.8.1.1/source/tools/icuinfo/icuinfo.1.in	2011-11-09 09:56:44.527396529 -0500
 @@ -0,0 +1,76 @@
 +.\" Hey, Emacs! This is -*-nroff-*- you know...
 +.\"
