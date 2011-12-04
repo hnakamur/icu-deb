@@ -1,0 +1,12 @@
+--- icu-4.8.1.1/source/config/mh-linux.orig	2011-10-18 17:13:00.000000000 -0600
++++ icu-4.8.1.1/source/config/mh-linux	2011-12-04 02:52:33.000000000 -0700
+@@ -21,7 +21,8 @@
+ LD_RPATH_PRE = -Wl,-rpath,
+ 
+ ## These are the library specific LDFLAGS
+-LDFLAGSICUDT=-nodefaultlibs -nostdlib
++#LDFLAGSICUDT=-nodefaultlibs -nostdlib
++LDFLAGSICUDT=
+ 
+ ## Compiler switch to embed a library name
+ # The initial tab in the next line is to prevent icu-config from reading it.
