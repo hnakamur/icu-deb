@@ -4,3 +4,4 @@ icuinfo-man.patch
 malayalam-rendering.patch
 kfreebsd-configure.patch
 pathmax.patch
+link-stdlibs.patch
