@@ -1,3 +1,11 @@
+icu (4.8.1.1-2) unstable; urgency=low
+
+  * debian/patches/icudata-stdlibs.patch: Link stdlibs to libicudata so we
+    get reasonably sane ELF headers on armhf.  Thanks Adam Conrad
+    <adconrad@ubuntu.com>.  (Closes: #653457)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 04 Jan 2012 09:52:11 -0500
+
 icu (4.8.1.1-1) unstable; urgency=low
 
   * New upstream release

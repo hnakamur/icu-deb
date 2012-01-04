@@ -1,6 +1,3 @@
 # libicu48 installs multiple shared libraries, none of which is
 # actually called libicu.so.48, but all of which are libicu*.so.48.
 libicu48: package-name-doesnt-match-sonames
-# libicudata.so.48.0 contains static data only
-libicu48: shared-lib-without-dependency-information
-libicu48: shlib-without-PT_GNU_STACK-section usr/lib/libicudata.so.48.0
