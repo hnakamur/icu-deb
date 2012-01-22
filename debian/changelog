@@ -1,3 +1,9 @@
+icu (4.4.1-8) stable-security; urgency=high
+
+  * Add patch to address CVE-2011-4599, a potential buffer overflow.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 21 Jan 2012 20:04:26 -0500
+
 icu (4.4.1-7) testing-proposed-updates; urgency=high
 
   * Apply patch to fix Malayam rendering.  (Closes: #591615)
