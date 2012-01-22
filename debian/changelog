@@ -1,3 +1,10 @@
+icu (4.8.1.1-3) unstable; urgency=high
+
+  * Add patch to address CVE-2011-4599, a potential buffer overflow.
+    (Closes: #654883)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 21 Jan 2012 19:44:44 -0500
+
 icu (4.8.1.1-2) unstable; urgency=low
 
   * debian/patches/icudata-stdlibs.patch: Link stdlibs to libicudata so we
