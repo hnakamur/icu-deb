@@ -5,3 +5,4 @@ icuinfo-man.patch
 malayalam-rendering.patch
 kfreebsd-configure.patch
 pathmax.patch
+CVE-2011-4599.patch
