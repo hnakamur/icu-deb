@@ -5,3 +5,4 @@ pkgdata-buffers.patch
 arm-assembler.patch
 doc-gif.patch
 malayalam-rendering.patch
+CVE-2011-4599.patch
