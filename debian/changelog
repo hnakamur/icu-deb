@@ -1,3 +1,13 @@
+icu (4.2.1-3ubuntu0.10.10.1) maverick-security; urgency=low
+
+  * SECURITY UPDATE: denial of service and possible code execution via
+    out of bounds access
+    - debian/patches/CVE-2011-4599.patch: add bounds checks in
+      source/common/uloc.c.
+    - CVE-2011-4599
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 25 Jan 2012 15:11:21 -0500
+
 icu (4.2.1-3) unstable; urgency=low
 
   * Change install-doc target to not fail if there are subdirectories of
