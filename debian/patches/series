@@ -2,3 +2,4 @@ kfreebsd.patch
 gencfu-man.patch
 pkgdata.patch
 install-doc.patch
+CVE-2011-4599.patch
