@@ -1,3 +1,13 @@
+icu (4.4.2-2ubuntu0.11.04.1) natty-security; urgency=low
+
+  * SECURITY UPDATE: denial of service and possible code execution via
+    out of bounds access
+    - debian/patches/CVE-2011-4599.patch: add bounds checks in
+      source/common/uloc.c.
+    - CVE-2011-4599
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 25 Jan 2012 14:39:39 -0500
+
 icu (4.4.2-2) unstable; urgency=low
 
   * Apply patch to fix Malayam rendering.  (Closes: #591615)
