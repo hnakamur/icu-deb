@@ -1,3 +1,10 @@
+icu (4.8.1.1-4) unstable; urgency=low
+
+  * Add patch to add CCMP support for Indic.  (Closes: #655101)
+  * Update standards version.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 11 Mar 2012 18:30:29 -0400
+
 icu (4.8.1.1-3) unstable; urgency=high
 
   * Add patch to address CVE-2011-4599, a potential buffer overflow.
