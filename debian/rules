@@ -55,10 +55,8 @@ override DEB_MAKE_CHECK_TARGET = check
 # Include cdbs rules files.
 include /usr/share/cdbs/1/rules/debhelper.mk
 
-# As 0.4.21, cdbs creates but doesn't remove debian/compat.  It
-# creates it conditionally, so this doesn't have a trivial fix.
 clean::
-	$(RM) debian/compat *.cdbs-config_list
+	$(RM) *.cdbs-config_list
 	$(RM) -rf debian/tmp32
 	$(RM) debian/stamp-configure debian/stamp-configure32
 	$(RM) -rf $(DEB_SRCDIR)-build32
