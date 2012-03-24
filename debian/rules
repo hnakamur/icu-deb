@@ -1,5 +1,10 @@
 #!/usr/bin/make -f
 
+# Get (hardening) build flags, CDBS doesn't handle this automatically because
+# no class is used.
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+
 DEB_HOST_ARCH_CPU	?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 
 # To distinguish variables that are truly local to this file (rather
@@ -7,21 +12,24 @@ DEB_HOST_ARCH_CPU	?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 # variables' names with l_.
 
 l_SONAME := 48
-l_CFLAGS := -g -Wall
+CFLAGS += -g -Wall
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	l_CFLAGS += -O0
+	CFLAGS += -O0
 else
-	l_CFLAGS += -O2
+	CFLAGS += -O2
 endif
 
 # Turn off optimization on armel to avoid some internal compiler
 # errors.  This can be removed once bug 484053 is resolved.
 ifeq ($(shell dpkg --print-architecture),armel)
-l_CFLAGS := $(filter-out -O%,$(l_CFLAGS)) -O0
+CFLAGS := $(filter-out -O%,$(CFLAGS)) -O0
 endif
 
+# Use local settings for CXXFLAGS as well.
+CXXFLAGS = $(CFLAGS)
+
 # common configure cruft
-l_CONFIGURE = CC="gcc" CXX="g++" CPPFLAGS="" LDFLAGS="" \
+l_CONFIGURE = CC="gcc" CXX="g++" \
 	./configure \
 	--build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr \
 	--includedir="\$${prefix}/include" \
@@ -70,14 +78,13 @@ endif
 configure/libicu$(l_SONAME) configure/libicu-dev:: debian/stamp-configure
 debian/stamp-configure:
 	cd $(DEB_SRCDIR) && \
-		CFLAGS="$(l_CFLAGS)" CXXFLAGS="$(l_CFLAGS)" \
 		$(l_CONFIGURE)
 	touch debian/stamp-configure
 
 configure/lib32icu$(l_SONAME) configure/lib32icu-dev:: debian/stamp-configure32
 debian/stamp-configure32:
 	cd $(DEB_SRCDIR)-build32 && \
-		CFLAGS="$(l_CFLAGS) -m32" CXXFLAGS="$(l_CFLAGS) -m32" \
+		CFLAGS="$(CFLAGS) -m32" CXXFLAGS="$(CXXFLAGS) -m32" \
 		$(l_CONFIGURE) --libdir=/usr/lib32
 	touch debian/stamp-configure32
 
