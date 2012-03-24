@@ -1,3 +1,11 @@
+icu (4.8.1.1-5) unstable; urgency=low
+
+  * Enable security hardening flags.  Thanks to Simon Ruderich for doing
+    100% of the work, sending a clean patch, and providing clear
+    instructions on how to verify.  (Closes: #663601)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Fri, 23 Mar 2012 22:45:55 -0400
+
 icu (4.8.1.1-4) unstable; urgency=low
 
   * Add patch to add CCMP support for Indic.  (Closes: #655101)
