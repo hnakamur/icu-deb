@@ -1,3 +1,10 @@
+icu (4.8.1.1-6) unstable; urgency=low
+
+  * Remove 32-bit packages built on 64-bit architectures, and enable
+    Multiarch.  (Closes: #665416)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 22 Apr 2012 08:40:16 -0400
+
 icu (4.8.1.1-5) unstable; urgency=low
 
   * Enable security hardening flags.  Thanks to Simon Ruderich for doing
