@@ -1,6 +1,9 @@
 #!/usr/bin/make -f
 
-export DEB_BUILD_HARDENING=1
+# Enable all hardening options.
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
 
 DEB_CONFIGURE_USER_FLAGS = --libdir="\$${prefix}/lib/$(DEB_HOST_MULTIARCH)" \
 	--disable-samples --enable-static --enable-weak-threads
@@ -10,21 +13,13 @@ DEB_CONFIGURE_USER_FLAGS = --libdir="\$${prefix}/lib/$(DEB_HOST_MULTIARCH)" \
 # variables' names with l_.
 
 l_SONAME := 48
-CFLAGS += -g -Wall
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
-else
-	CFLAGS += -O2
-endif
 
 # Turn off optimization on armel to avoid some internal compiler
 # errors.  This can be removed once bug 484053 is resolved.
 ifeq ($(shell dpkg --print-architecture),armel)
 CFLAGS := $(filter-out -O%,$(CFLAGS)) -O0
+CXXFLAGS := $(filter-out -O%,$(CXXFLAGS)) -O0
 endif
-
-# Use local settings for CXXFLAGS as well.
-CXXFLAGS = $(CFLAGS)
 
 # Include cdbs rules files.
 include /usr/share/cdbs/1/rules/debhelper.mk

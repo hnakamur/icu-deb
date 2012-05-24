@@ -1,3 +1,4 @@
+doxygen.patch
 icudata-stdlibs.patch
 gencfu-man.patch
 gennorm2-man.patch
