@@ -1,3 +1,10 @@
+icu (4.8.1.1-7) unstable; urgency=low
+
+  * Switch hardening back to dpkg-buildoptions.
+  * Fix doc install for newer doxygen.  (Closes: #674382)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Thu, 24 May 2012 13:55:13 -0400
+
 icu (4.8.1.1-6) unstable; urgency=low
 
   * Remove 32-bit packages built on 64-bit architectures, and enable
