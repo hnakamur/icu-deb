@@ -1,3 +1,10 @@
+icu (4.8.1.1-8) unstable; urgency=low
+
+  * Switch hardening back to hardening-wrapper again since otherwise some
+    things sneak into icu-config's output.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 05 Jun 2012 14:27:27 -0400
+
 icu (4.8.1.1-7) unstable; urgency=low
 
   * Switch hardening back to dpkg-buildoptions.
