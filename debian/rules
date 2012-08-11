@@ -29,7 +29,7 @@ DEB_SRCDIR = source
 DEB_COMPRESS_EXCLUDE = html examples
 DEB_INSTALL_EXAMPLES_libicu-dev = \
 	source/samples/*
-
+DEB_DH_BUILDDEB_ARGS = -- -Zxz
 DEB_DBG_PACKAGE_libicu$(l_SONAME) = libicu$(l_SONAME)-dbg
 
 override DEB_MAKE_CHECK_TARGET = check
