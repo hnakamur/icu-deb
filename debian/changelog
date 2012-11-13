@@ -1,3 +1,9 @@
+icu (4.8.1.1-9ubuntu1) raring; urgency=low
+
+  * debian/libicu-dev.install: Install .pc files (LP: #1037588).
+
+ -- Thomas Bechtold <thomasbechtold@jpberlin.de>  Tue, 13 Nov 2012 12:16:57 +0100
+
 icu (4.8.1.1-9) unstable; urgency=low
 
   * debian/rules: Use xz compression for binary packages.
