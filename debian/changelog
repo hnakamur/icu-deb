@@ -1,3 +1,10 @@
+icu (4.8.1.1-10) unstable; urgency=low
+
+  * Include pkg-config files in dev package.  Thanks Tommi Vainikainen.
+    (Closes: #687339)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 17 Nov 2012 14:37:40 -0500
+
 icu (4.8.1.1-9) unstable; urgency=low
 
   * debian/rules: Use xz compression for binary packages.
