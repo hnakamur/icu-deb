@@ -1,3 +1,9 @@
+icu (4.8.1.1-10ubuntu1) raring; urgency=low
+
+  * Fix crash on rendering incremental Malayalam text input (LP: #1130284).
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Wed, 13 Mar 2013 16:13:05 +0000
+
 icu (4.8.1.1-10) unstable; urgency=low
 
   * Include pkg-config files in dev package.  Thanks Tommi Vainikainen.
