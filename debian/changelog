@@ -1,3 +1,10 @@
+icu (4.8.1.1-11) unstable; urgency=medium
+
+  * Fix crash on rendering incremental Malayalam text input.  Thanks Colin
+    Watson. (Closes: #702982)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 16 Mar 2013 14:58:15 -0400
+
 icu (4.8.1.1-10) unstable; urgency=low
 
   * Include pkg-config files in dev package.  Thanks Tommi Vainikainen.
