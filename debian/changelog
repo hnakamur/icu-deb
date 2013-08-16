@@ -1,3 +1,9 @@
+icu (4.8.1.1-12ubuntu1) saucy; urgency=low
+
+  * Multi-arch libicu-dev. (Closes: #699763)
+
+ -- Dmitrijs Ledkovs <dmitrij.ledkov@ubuntu.com>  Fri, 16 Aug 2013 18:14:41 +0100
+
 icu (4.8.1.1-12) unstable; urgency=high
 
   * Add patch to address CVE-2013-0900, a threading race condition.

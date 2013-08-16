@@ -2,7 +2,11 @@
 
 export DEB_BUILD_HARDENING=1
 
+# platform.h is different between big & little but it's easier to have
+# single dir, than split them between two (e.g. like python), as this
+# meens icu-config & pkg-config continue to work
 DEB_CONFIGURE_USER_FLAGS = --libdir="\$${prefix}/lib/$(DEB_HOST_MULTIARCH)" \
+	--includedir="\$${prefix}/include/$(DEB_HOST_MULTIARCH)" \
 	--disable-samples --enable-static --enable-weak-threads
 
 # To distinguish variables that are truly local to this file (rather
