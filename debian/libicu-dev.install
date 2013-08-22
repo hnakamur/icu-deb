@@ -3,7 +3,4 @@ usr/lib/*/lib*.a
 usr/lib/*/icu
 usr/lib/*/pkgconfig/*.pc
 usr/include
-usr/bin
-usr/sbin
 usr/share/icu
-usr/share/man

@@ -2,7 +2,13 @@
 
 export DEB_BUILD_HARDENING=1
 
+# Install all ICU headers files in the architecture-specific location.
+# While most files are platform-independent, platform.h is different
+# between big and little endina systems, and it's easier to have all
+# header files in a single directory so that icu-config and pkg-config
+# continue to work.
 DEB_CONFIGURE_USER_FLAGS = --libdir="\$${prefix}/lib/$(DEB_HOST_MULTIARCH)" \
+	--includedir="\$${prefix}/include/$(DEB_HOST_MULTIARCH)" \
 	--disable-samples --enable-static --enable-weak-threads
 
 # To distinguish variables that are truly local to this file (rather
