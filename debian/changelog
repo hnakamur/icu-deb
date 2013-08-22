@@ -1,3 +1,13 @@
+icu (4.8.1.1-13) unstable; urgency=low
+
+  * Multi-arch libicu-dev.  Thanks Dmitrijs Ledkovs
+    <dmitrij.ledkov@ubuntu.com>!  (Closes: #699763)
+  * Mark doxygen as architecture-independent build dependency.
+    (Closes: #706795)
+  * Depend on autotools-dev to update config.guess
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 21 Aug 2013 20:01:15 -0400
+
 icu (4.8.1.1-12) unstable; urgency=high
 
   * Add patch to address CVE-2013-0900, a threading race condition.
