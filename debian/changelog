@@ -1,3 +1,10 @@
+icu (52~m1-2) experimental; urgency=low
+
+  * Updated year in copyright file
+  * Standards version 3.9.4 (no changes required)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sun, 15 Sep 2013 09:02:30 -0400
+
 icu (52~m1-1) experimental; urgency=low
 
   * New upstream release
