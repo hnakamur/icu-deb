@@ -1,5 +1,5 @@
 /********************************************************************************
-* Copyright (C) 2008-2011, International Business Machines Corporation and
+* Copyright (C) 2008-2013, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -262,6 +262,11 @@ public:
      * @param status    output param set to success/failure code on exit
      * @return          a date time interval formatter which the caller owns.
      * @stable ICU 4.0
+	 * <p>
+	 * <h4>Sample code</h4>
+	 * \snippet samples/dtitvfmtsample/dtitvfmtsample.cpp dtitvfmtPreDefined1
+	 * \snippet samples/dtitvfmtsample/dtitvfmtsample.cpp dtitvfmtPreDefined
+	 * <p>
      */
 
     static DateIntervalFormat* U_EXPORT2 createInstance(
@@ -323,6 +328,11 @@ public:
      * @param status    output param set to success/failure code on exit
      * @return          a date time interval formatter which the caller owns.
      * @stable ICU 4.0
+	 * <p>
+	 * <h4>Sample code</h4>
+	 * \snippet samples/dtitvfmtsample/dtitvfmtsample.cpp dtitvfmtPreDefined1
+	 * \snippet samples/dtitvfmtsample/dtitvfmtsample.cpp dtitvfmtCustomized
+	 * <p>
      */
     static DateIntervalFormat* U_EXPORT2 createInstance(
                                               const UnicodeString& skeleton,
@@ -492,7 +502,7 @@ public:
     /**
      * Returns a reference to the TimeZone used by this DateIntervalFormat's calendar.
      * @return the time zone associated with the calendar of DateIntervalFormat.
-     * @draft ICU 4.8
+     * @stable ICU 4.8
      */
     virtual const TimeZone& getTimeZone(void) const;
 
@@ -500,14 +510,14 @@ public:
      * Sets the time zone for the calendar used by this DateIntervalFormat object. The
      * caller no longer owns the TimeZone object and should not delete it after this call.
      * @param zoneToAdopt the TimeZone to be adopted.
-     * @draft ICU 4.8
+     * @stable ICU 4.8
      */
     virtual void adoptTimeZone(TimeZone* zoneToAdopt);
 
     /**
      * Sets the time zone for the calendar used by this DateIntervalFormat object.
      * @param zone the new time zone.
-     * @draft ICU 4.8
+     * @stable ICU 4.8
      */
     virtual void setTimeZone(const TimeZone& zone);
 

@@ -2,10 +2,10 @@ Description: supply manual page for program that doesn't have one
 Author: Jay Berkenbilt <qjb@debian.org>
 Bug: http://bugs.icu-project.org/trac/ticket/7554
 
-Index: icu-4.8.1.1/source/tools/gennorm2/Makefile.in
+Index: icu-52~m1/source/tools/gennorm2/Makefile.in
 ===================================================================
---- icu-4.8.1.1.orig/source/tools/gennorm2/Makefile.in	2011-11-09 09:56:31.287396715 -0500
-+++ icu-4.8.1.1/source/tools/gennorm2/Makefile.in	2011-11-09 09:56:44.295396533 -0500
+--- icu-52~m1.orig/source/tools/gennorm2/Makefile.in	2013-09-14 18:53:23.432040469 -0400
++++ icu-52~m1/source/tools/gennorm2/Makefile.in	2013-09-14 18:53:23.428040469 -0400
 @@ -16,8 +16,13 @@
  
  TARGET_STUB_NAME = gennorm2
@@ -21,7 +21,7 @@ Index: icu-4.8.1.1/source/tools/gennorm2/Makefile.in
  
  ## Target information
  TARGET = $(BINDIR)/$(TARGET_STUB_NAME)$(EXEEXT)
-@@ -47,12 +52,16 @@
+@@ -44,12 +49,16 @@
  dist: dist-local
  check: all check-local
  
@@ -40,7 +40,7 @@ Index: icu-4.8.1.1/source/tools/gennorm2/Makefile.in
  dist-local:
  
  clean-local:
-@@ -73,6 +82,11 @@
+@@ -70,6 +79,11 @@
  	$(POST_BUILD_STEP)
  
  
@@ -52,10 +52,10 @@ Index: icu-4.8.1.1/source/tools/gennorm2/Makefile.in
  ifeq (,$(MAKECMDGOALS))
  -include $(DEPS)
  else
-Index: icu-4.8.1.1/source/tools/gennorm2/gennorm2.8.in
+Index: icu-52~m1/source/tools/gennorm2/gennorm2.8.in
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ icu-4.8.1.1/source/tools/gennorm2/gennorm2.8.in	2011-11-09 09:56:44.295396533 -0500
++++ icu-52~m1/source/tools/gennorm2/gennorm2.8.in	2013-09-14 18:53:23.428040469 -0400
 @@ -0,0 +1,71 @@
 +.\" Hey, Emacs! This is -*-nroff-*- you know...
 +.\"

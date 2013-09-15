@@ -15,7 +15,7 @@ DEB_CONFIGURE_USER_FLAGS = --libdir="\$${prefix}/lib/$(DEB_HOST_MULTIARCH)" \
 # than for use by cdbs), we adopt the convention of starting local
 # variables' names with l_.
 
-l_SONAME := 48
+l_SONAME := 52
 
 # Turn off optimization on armel to avoid some internal compiler
 # errors.  This can be removed once bug 484053 is resolved.
@@ -42,3 +42,11 @@ override DEB_MAKE_CHECK_TARGET = check
 
 clean::
 	$(RM) *.cdbs-config_list
+
+# The libicudata library contains no symbols, so its debug library is
+# useless and triggers lintian warnings.  Just remove it.
+binary-predeb/libicu$(l_SONAME)-dbg::
+	for i in `find debian/libicu$(l_SONAME)-dbg/usr/lib/debug -type f -print`; do \
+	   if ! nm -a $$i | grep -q debug; then rm $$i; fi; \
+	done
+	-find debian/libicu$(l_SONAME)-dbg/usr/lib/debug -type d -empty -exec rmdir {} \;

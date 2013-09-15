@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1999-2011, International Business Machines
+*   Copyright (C) 1999-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -19,6 +19,7 @@
 #include "unicode/ustring.h"
 #include "unicode/uchar.h"
 #include "unicode/ubidi.h"
+#include "unicode/utf16.h"
 #include "ubidi_props.h"
 #include "ubidiimp.h"
 #include "uassert.h"
@@ -1663,7 +1664,7 @@ adjustWSLevels(UBiDi *pBiDi) {
     }
 }
 
-U_DRAFT void U_EXPORT2
+U_CAPI void U_EXPORT2
 ubidi_setContext(UBiDi *pBiDi,
                  const UChar *prologue, int32_t proLength,
                  const UChar *epilogue, int32_t epiLength,
@@ -2363,9 +2364,11 @@ ubidi_getCustomizedClass(UBiDi *pBiDi, UChar32 c)
     if( pBiDi->fnClassCallback == NULL ||
         (dir = (*pBiDi->fnClassCallback)(pBiDi->coClassCallback, c)) == U_BIDI_CLASS_DEFAULT )
     {
-        return ubidi_getClass(pBiDi->bdp, c);
-    } else {
-        return dir;
+        dir = ubidi_getClass(pBiDi->bdp, c);
     }
+    if(dir > 18) {
+        // TODO: Implement Unicode 6.3 BiDi isolates in the ICU BiDi code.
+        dir = ON;
+    }
+    return dir;
 }
-

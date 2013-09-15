@@ -1,6 +1,6 @@
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2010, International Business Machines Corporation and
+ * Copyright (c) 1997-2013, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -15,11 +15,34 @@
 #include "unicode/fmtable.h"
 #include "unicode/testlog.h"
 
+
+#if U_NO_DEFAULT_INCLUDE_UTF_HEADERS
+/* deprecated  - make tests pass with U_NO_DEFAULT_INCLUDE_UTF_HEADERS */
+#include "unicode/utf_old.h" 
+#endif
+
+/**
+ * \def ICU_USE_THREADS
+ *
+ * Enables multi-threaded testing. Moved here from uconfig.h.
+ * Default: enabled
+ *
+ * This switch used to allow thread support (use of mutexes) to be compiled out of ICU.
+ */
+#ifdef ICU_USE_THREADS
+    /* Use the predefined value. */
+#elif defined(APP_NO_THREADS)
+    /* APP_NO_THREADS is an old symbol. We'll honour it if present. */
+#   define ICU_USE_THREADS 0
+#else
+#   define ICU_USE_THREADS 1
+#endif
+
 U_NAMESPACE_USE
 
-#ifdef OS390
+#if U_PLATFORM == U_PF_OS390
 // avoid collision with math.h/log()
-// this must be after including utypes.h so that OS390 is actually defined
+// this must be after including utypes.h so that U_PLATFORM is actually defined
 #pragma map(IntlTest::log( const UnicodeString &message ),"logos390")
 #endif
 
@@ -28,21 +51,23 @@ U_NAMESPACE_USE
 //string-concatenation operator (moved from findword test by rtg)
 UnicodeString UCharToUnicodeString(UChar c);
 UnicodeString Int64ToUnicodeString(int64_t num);
-//UnicodeString operator+(const UnicodeString& left, int64_t num); // Some compilers don't allow this because of the long type.
+//UnicodeString operator+(const UnicodeString& left, int64_t num);
 UnicodeString operator+(const UnicodeString& left, long num);
 UnicodeString operator+(const UnicodeString& left, unsigned long num);
 UnicodeString operator+(const UnicodeString& left, double num);
-UnicodeString operator+(const UnicodeString& left, char num); 
-UnicodeString operator+(const UnicodeString& left, short num);  
-UnicodeString operator+(const UnicodeString& left, int num);      
-UnicodeString operator+(const UnicodeString& left, unsigned char num);  
-UnicodeString operator+(const UnicodeString& left, unsigned short num);  
-UnicodeString operator+(const UnicodeString& left, unsigned int num);      
+UnicodeString operator+(const UnicodeString& left, char num);
+UnicodeString operator+(const UnicodeString& left, short num);
+UnicodeString operator+(const UnicodeString& left, int num);
+UnicodeString operator+(const UnicodeString& left, unsigned char num);
+UnicodeString operator+(const UnicodeString& left, unsigned short num);
+UnicodeString operator+(const UnicodeString& left, unsigned int num);
 UnicodeString operator+(const UnicodeString& left, float num);
 #if !UCONFIG_NO_FORMATTING
 UnicodeString toString(const Formattable& f); // liu
 UnicodeString toString(int32_t n);
 #endif
+UnicodeString toString(UBool b);
+
 //-----------------------------------------------------------------------------
 
 // Use the TESTCASE macro in subclasses of IntlTest.  Define the
@@ -97,6 +122,9 @@ UnicodeString toString(int32_t n);
         break; \
     }
 
+#define TEST_ASSERT_TRUE(x) \
+  assertTrue(#x, (x), FALSE, FALSE, __FILE__, __LINE__)
+
 class IntlTest : public TestLog {
 public:
 
@@ -109,6 +137,7 @@ public:
     virtual UBool setNoErrMsg( UBool no_err_msg = TRUE );
     virtual UBool setQuick( UBool quick = TRUE );
     virtual UBool setLeaks( UBool leaks = TRUE );
+    virtual UBool setNotime( UBool no_time = TRUE );
     virtual UBool setWarnOnMissingData( UBool warn_on_missing_data = TRUE );
     virtual int32_t setThreadCount( int32_t count = 1);
 
@@ -151,6 +180,13 @@ public:
     void errln(const char *fmt, ...);
     void dataerr(const char *fmt, ...);
     void dataerrln(const char *fmt, ...);
+
+    /**
+     * logs an error (even if status==U_ZERO_ERROR), but
+     * calls dataerrln() or errln() depending on the type of error.
+     * Does not report the status code.
+     * @param status parameter for selecting whether errln or dataerrln is called.
+     */
     void errcheckln(UErrorCode status, const char *fmt, ...);
 
     // Print ALL named errors encountered so far
@@ -175,10 +211,30 @@ public:
     static float random();
 
     /**
-     * Ascertain the version of ICU. Useful for 
-     * time bomb testing
+     * Returns true if u_getVersion() < major.minor.
      */
-    UBool isICUVersionAtLeast(const UVersionInfo x);
+    static UBool isICUVersionBefore(int major, int minor) {
+        return isICUVersionBefore(major, minor, 0);
+    }
+
+    /**
+     * Returns true if u_getVersion() < major.minor.milli.
+     */
+    static UBool isICUVersionBefore(int major, int minor, int milli);
+
+    /**
+     * Returns true if u_getVersion() >= major.minor.
+     */
+    static UBool isICUVersionAtLeast(int major, int minor) {
+        return isICUVersionAtLeast(major, minor, 0);
+    }
+
+    /**
+     * Returns true if u_getVersion() >= major.minor.milli.
+     */
+    static UBool isICUVersionAtLeast(int major, int minor, int milli) {
+        return !isICUVersionBefore(major, minor, milli);
+    }
 
     enum { kMaxProps = 16 };
 
@@ -187,13 +243,21 @@ public:
 
 protected:
     /* JUnit-like assertions. Each returns TRUE if it succeeds. */
-    UBool assertTrue(const char* message, UBool condition, UBool quiet=FALSE, UBool possibleDataError=FALSE);
+    UBool assertTrue(const char* message, UBool condition, UBool quiet=FALSE, UBool possibleDataError=FALSE, const char *file=NULL, int line=0);
     UBool assertFalse(const char* message, UBool condition, UBool quiet=FALSE);
+    /**
+     * @param possibleDataError - if TRUE, use dataerrln instead of errcheckln on failure
+     * @return TRUE on success, FALSE on failure.
+     */
     UBool assertSuccess(const char* message, UErrorCode ec, UBool possibleDataError=FALSE);
     UBool assertEquals(const char* message, const UnicodeString& expected,
                        const UnicodeString& actual, UBool possibleDataError=FALSE);
     UBool assertEquals(const char* message, const char* expected,
                        const char* actual);
+    UBool assertEquals(const char* message, UBool expected,
+                       UBool actual);
+    UBool assertEquals(const char* message, int32_t expected, int32_t actual);
+    UBool assertEquals(const char* message, int64_t expected, int64_t actual);
 #if !UCONFIG_NO_FORMATTING
     UBool assertEquals(const char* message, const Formattable& expected,
                        const Formattable& actual);
@@ -207,6 +271,9 @@ protected:
                        const UnicodeString& actual);
     UBool assertEquals(const UnicodeString& message, const char* expected,
                        const char* actual);
+    UBool assertEquals(const UnicodeString& message, UBool expected, UBool actual);
+    UBool assertEquals(const UnicodeString& message, int32_t expected, int32_t actual);
+    UBool assertEquals(const UnicodeString& message, int64_t expected, int64_t actual);
 
     virtual void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL ); // overide !
 
@@ -224,6 +291,7 @@ protected:
     UBool       quick;
     UBool       leaks;
     UBool       warn_on_missing_data;
+    UBool       no_time;
     int32_t     threadCount;
 
 private:
@@ -251,7 +319,12 @@ protected:
 
     static UnicodeString &prettify(const UnicodeString &source, UnicodeString &target);
     static UnicodeString prettify(const UnicodeString &source, UBool parseBackslash=FALSE);
+    // digits=-1 determines the number of digits automatically
     static UnicodeString &appendHex(uint32_t number, int32_t digits, UnicodeString &target);
+    static UnicodeString toHex(uint32_t number, int32_t digits=-1);
+    static inline UnicodeString toHex(int32_t number, int32_t digits=-1) {
+        return toHex((uint32_t)number, digits);
+    }
 
 public:
     static void setICU_DATA();       // Set up ICU_DATA if necessary.

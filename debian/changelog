@@ -1,3 +1,16 @@
+icu (52~m1-1) experimental; urgency=low
+
+  * New upstream release
+  * Fixed debian/watch file based on new version numbering
+  * Various bugs have been fixed upstream.  (Closes: #712501, #690156)
+  * Avoid packaging debugging library for libicudata since it has no
+    debugging symbols in it.  (Closes: #698696)
+  * Clarify some ambiguous language in the copyright file, and address the
+    issue of derived data from an IETF RFC that does not actually appear
+    in the sources.  (Closes: #721590)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 14 Sep 2013 20:52:27 -0400
+
 icu (4.8.1.1-13) unstable; urgency=low
 
   * Multi-arch libicu-dev.  Thanks Dmitrijs Ledkovs

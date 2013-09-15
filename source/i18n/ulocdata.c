@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *                                                                            *
-* Copyright (C) 2003-2011, International Business Machines                   *
+* Copyright (C) 2003-2013, International Business Machines                   *
 *                Corporation and others. All Rights Reserved.                *
 *                                                                            *
 ******************************************************************************
@@ -102,7 +102,8 @@ ulocdata_getExemplarSet(ULocaleData *uld, USet *fillIn,
 
     static const char* const exemplarSetTypes[] = { "ExemplarCharacters", 
                                                     "AuxExemplarCharacters", 
-                                                    "ExemplarCharactersIndex"};
+                                                    "ExemplarCharactersIndex",
+                                                    "ExemplarCharactersPunctuation"};
     const UChar *exemplarChars = NULL;
     int32_t len = 0;
     UErrorCode localStatus = U_ZERO_ERROR;
@@ -239,7 +240,7 @@ ulocdata_getPaperSize(const char* localeID, int32_t *height, int32_t *width, UEr
 
 }
 
-U_DRAFT void U_EXPORT2
+U_CAPI void U_EXPORT2
 ulocdata_getCLDRVersion(UVersionInfo versionArray, UErrorCode *status) {
     UResourceBundle *rb = NULL;
     rb = ures_openDirect(NULL, "supplementalData", status);
@@ -247,7 +248,7 @@ ulocdata_getCLDRVersion(UVersionInfo versionArray, UErrorCode *status) {
     ures_close(rb);
 }
 
-U_DRAFT int32_t U_EXPORT2
+U_CAPI int32_t U_EXPORT2
 ulocdata_getLocaleDisplayPattern(ULocaleData *uld,
                                  UChar *result,
                                  int32_t resultCapacity,
@@ -295,7 +296,7 @@ ulocdata_getLocaleDisplayPattern(ULocaleData *uld,
 }
 
 
-U_DRAFT int32_t U_EXPORT2
+U_CAPI int32_t U_EXPORT2
 ulocdata_getLocaleSeparator(ULocaleData *uld,
                             UChar *result,
                             int32_t resultCapacity,
@@ -304,6 +305,10 @@ ulocdata_getLocaleSeparator(ULocaleData *uld,
     int32_t len = 0;
     const UChar *separator = NULL;
     UErrorCode localStatus = U_ZERO_ERROR;
+    UChar *p0, *p1;
+    static const UChar sub0[4] = { 0x007b, 0x0030, 0x007d , 0x0000 }; /* {0} */
+    static const UChar sub1[4] = { 0x007b, 0x0031, 0x007d , 0x0000 }; /* {1} */
+    static const int32_t subLen = 3;
 
     if (U_FAILURE(*status))
         return 0;
@@ -336,6 +341,20 @@ ulocdata_getLocaleSeparator(ULocaleData *uld,
 
     if (U_FAILURE(*status)){
         return 0;
+    }
+
+    /* For backwards compatibility, if we have a pattern, return the portion between {0} and {1} */
+    p0=u_strstr(separator, sub0);
+    p1=u_strstr(separator, sub1);
+    if (p0!=NULL && p1!=NULL && p0<=p1) {
+        separator = (const UChar *)p0 + subLen;
+        len = p1 - separator;
+        /* Desired separator is no longer zero-terminated; handle that if necessary */
+        if (len < resultCapacity) {
+            u_strncpy(result, separator, len);
+            result[len] = 0;
+            return len;
+        }
     }
 
     u_strncpy(result, separator, resultCapacity);

@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2008-2011, International Business Machines Corporation and
+* Copyright (C) 2008-2013, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 *
@@ -26,17 +26,19 @@
 #if !UCONFIG_NO_FORMATTING
 
 #include "unicode/format.h"
+#include "unicode/upluralrules.h"
 
 /**
  * Value returned by PluralRules::getUniqueKeywordValue() when there is no
  * unique value to return.
- * @draft ICU 4.8
+ * @stable ICU 4.8
  */
 #define UPLRULES_NO_UNIQUE_VALUE ((double)-0.00123456777)
 
 U_NAMESPACE_BEGIN
 
 class Hashtable;
+class NumberInfo;
 class RuleChain;
 class RuleParser;
 class PluralKeywordEnumeration;
@@ -88,19 +90,80 @@ class PluralKeywordEnumeration;
  * is_relation   = expr 'is' ('not')? value
  * in_relation   = expr ('not')? 'in' range_list
  * within_relation = expr ('not')? 'within' range
- * expr          = 'n' ('mod' value)?
+ * expr          = ('n' | 'i' | 'f' | 'v' | 'j') ('mod' value)?
  * range_list    = (range | value) (',' range_list)*
- * value         = digit+
+ * value         = digit+  ('.' digit+)?
  * digit         = 0|1|2|3|4|5|6|7|8|9
  * range         = value'..'value
  * \endcode
  * </pre></p>
  * <p>
+ * <p>
+ * The i, f, and v values are defined as follows:
+ * </p>
+ * <ul>
+ * <li>i to be the integer digits.</li>
+ * <li>f to be the visible fractional digits, as an integer.</li>
+ * <li>v to be the number of visible fraction digits.</li>
+ * <li>j is defined to only match integers. That is j is 3 fails if v != 0 (eg for 3.1 or 3.0).</li>
+ * </ul>
+ * <p>
+ * Examples are in the following table:
+ * </p>
+ * <table border='1' style="border-collapse:collapse">
+ * <tbody>
+ * <tr>
+ * <th>n</th>
+ * <th>i</th>
+ * <th>f</th>
+ * <th>v</th>
+ * </tr>
+ * <tr>
+ * <td>1.0</td>
+ * <td>1</td>
+ * <td align="right">0</td>
+ * <td>1</td>
+ * </tr>
+ * <tr>
+ * <td>1.00</td>
+ * <td>1</td>
+ * <td align="right">0</td>
+ * <td>2</td>
+ * </tr>
+ * <tr>
+ * <td>1.3</td>
+ * <td>1</td>
+ * <td align="right">3</td>
+ * <td>1</td>
+ * </tr>
+ * <tr>
+ * <td>1.03</td>
+ * <td>1</td>
+ * <td align="right">3</td>
+ * <td>2</td>
+ * </tr>
+ * <tr>
+ * <td>1.23</td>
+ * <td>1</td>
+ * <td align="right">23</td>
+ * <td>2</td>
+ * </tr>
+ * </tbody>
+ * </table>
+ * <p>
+ * The difference between 'in' and 'within' is that 'in' only includes integers in the specified range, while 'within'
+ * includes all values. Using 'within' with a range_list consisting entirely of values is the same as using 'in' (it's
+ * not an error).
+ * </p>
+
  * An "identifier" is a sequence of characters that do not have the
  * Unicode Pattern_Syntax or Pattern_White_Space properties.
  * <p>
  * The difference between 'in' and 'within' is that 'in' only includes
- * integers in the specified range, while 'within' includes all values.</p>
+ * integers in the specified range, while 'within' includes all values.
+ * Using 'within' with a range_list consisting entirely of values is the 
+ * same as using 'in' (it's not an error).
+ *</p>
  * <p>
  * Keywords
  * could be defined by users or from ICU locale data. There are 6
@@ -183,8 +246,9 @@ public:
     static PluralRules* U_EXPORT2 createDefaultRules(UErrorCode& status);
 
     /**
-     * Provides access to the predefined <code>PluralRules</code> for a given
+     * Provides access to the predefined cardinal-number <code>PluralRules</code> for a given
      * locale.
+     * Same as forLocale(locale, UPLURAL_TYPE_CARDINAL, status).
      *
      * @param locale  The locale for which a <code>PluralRules</code> object is
      *                returned.
@@ -198,6 +262,60 @@ public:
      * @stable ICU 4.0
      */
     static PluralRules* U_EXPORT2 forLocale(const Locale& locale, UErrorCode& status);
+
+#ifndef U_HIDE_DRAFT_API
+    /**
+     * Provides access to the predefined <code>PluralRules</code> for a given
+     * locale and the plural type.
+     *
+     * @param locale  The locale for which a <code>PluralRules</code> object is
+     *                returned.
+     * @param type    The plural type (e.g., cardinal or ordinal).
+     * @param status  Output param set to success/failure code on exit, which
+     *                must not indicate a failure before the function call.
+     * @return        The predefined <code>PluralRules</code> object pointer for
+     *                this locale. If there's no predefined rules for this locale,
+     *                the rules for the closest parent in the locale hierarchy
+     *                that has one will  be returned.  The final fallback always
+     *                returns the default 'other' rules.
+     * @draft ICU 50
+     */
+    static PluralRules* U_EXPORT2 forLocale(const Locale& locale, UPluralType type, UErrorCode& status);
+
+    /**
+     * Return a StringEnumeration over the locales for which there is plurals data.
+     * @return a StringEnumeration over the locales available.
+     * @internal
+     */
+    static StringEnumeration* U_EXPORT2 getAvailableLocales(void);
+
+    /**
+     * Returns the 'functionally equivalent' locale with respect to plural rules. 
+     * Calling PluralRules.forLocale with the functionally equivalent locale, and with 
+     * the provided locale, returns rules that behave the same. <br/>
+     * All locales with the same functionally equivalent locale have plural rules that 
+     * behave the same. This is not exaustive; there may be other locales whose plural 
+     * rules behave the same that do not have the same equivalent locale.
+     * 
+     * @param locale        the locale to check
+     * @param isAvailable   if not NULL the boolean will be set to TRUE if locale is directly
+     *                      defined (without fallback) as having plural rules.
+     * @param status        The error code.
+     * @return              the functionally-equivalent locale
+     * @internal
+     */
+    static Locale getFunctionalEquivalent(const Locale &locale, UBool *isAvailable,
+                                          UErrorCode &status);
+
+    /**
+     * Returns whether or not there are overrides.
+     * @param locale       the locale to check.
+     * @return
+     * @internal
+     */
+    static UBool hasOverride(const Locale &locale);
+
+#endif /* U_HIDE_DRAFT_API */
 
     /**
      * Given a number, returns the keyword of the first rule that applies to
@@ -220,6 +338,11 @@ public:
      * @stable ICU 4.0
      */
     UnicodeString select(double number) const;
+    
+    /**
+      * @internal
+      */
+    UnicodeString select(const NumberInfo &number) const;
 
     /**
      * Returns a list of all rule keywords used in this <code>PluralRules</code>
@@ -241,7 +364,7 @@ public:
      * @return        The unique value that generates the keyword, or
      *                UPLRULES_NO_UNIQUE_VALUE if the keyword is undefined or there is no
      *                unique value that generates this keyword.
-     * @draft ICU 4.8
+     * @stable ICU 4.8
      */
     double getUniqueKeywordValue(const UnicodeString& keyword);
 
@@ -261,7 +384,7 @@ public:
      * @return             The count of values available, or -1.  This count
      *                     can be larger than destCapacity, but no more than
      *                     destCapacity values will be written.
-     * @draft ICU 4.8
+     * @stable ICU 4.8
      */
     int32_t getAllKeywordValues(const UnicodeString &keyword,
                                 double *dest, int32_t destCapacity,
@@ -283,7 +406,7 @@ public:
      *                     only destCapacity are written, and destCapacity is returned as the count,
      *                     rather than setting a U_BUFFER_OVERFLOW_ERROR.
      *                     (The actual number of keyword values could be unlimited.)
-     * @draft ICU 4.8
+     * @stable ICU 4.8
      */
     int32_t getSamples(const UnicodeString &keyword,
                        double *dest, int32_t destCapacity,
@@ -305,7 +428,6 @@ public:
      * Returns keyword for default plural form.
      *
      * @return         keyword for default plural form.
-     * @internal 4.0
      * @stable ICU 4.0
      */
     UnicodeString getKeywordOther() const;
@@ -360,7 +482,7 @@ private:
     void getNextLocale(const UnicodeString& localeData, int32_t* curIndex, UnicodeString& localeName);
     void addRules(RuleChain& rules);
     int32_t getNumberValue(const UnicodeString& token) const;
-    UnicodeString getRuleFromResource(const Locale& locale, UErrorCode& status);
+    UnicodeString getRuleFromResource(const Locale& locale, UPluralType type, UErrorCode& status);
 
     static const int32_t MAX_SAMPLES = 3;
 

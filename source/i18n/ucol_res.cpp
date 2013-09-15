@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-*   Copyright (C) 1996-2011, International Business Machines
+*   Copyright (C) 1996-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
 *   file name:  ucol_res.cpp
@@ -44,6 +44,7 @@
 #include "putilimp.h"
 #include "utracimp.h"
 #include "cmemory.h"
+#include "uassert.h"
 #include "uenumimp.h"
 #include "ulist.h"
 
@@ -54,6 +55,7 @@ static void ucol_setReorderCodesFromParser(UCollator *coll, UColTokenParser *par
 // static UCA. There is only one. Collators don't use it.
 // It is referenced only in ucol_initUCA and ucol_cleanup
 static UCollator* _staticUCA = NULL;
+static UInitOnce  gStaticUCAInitOnce = U_INITONCE_INITIALIZER;
 // static pointer to udata memory. Inited in ucol_initUCA
 // used for cleanup in ucol_cleanup
 static UDataMemory* UCA_DATA_MEM = NULL;
@@ -70,6 +72,7 @@ ucol_res_cleanup(void)
         ucol_close(_staticUCA);
         _staticUCA = NULL;
     }
+    gStaticUCAInitOnce.reset();
     return TRUE;
 }
 
@@ -93,59 +96,48 @@ isAcceptableUCA(void * /*context*/,
         //pInfo->formatVersion[2]==UCA_FORMAT_VERSION_2 && // Too harsh
         //pInfo->formatVersion[3]==UCA_FORMAT_VERSION_3 && // Too harsh
         ) {
-        UVersionInfo UCDVersion;
-        u_getUnicodeVersion(UCDVersion);
-        return (UBool)(pInfo->dataVersion[0]==UCDVersion[0]
-            && pInfo->dataVersion[1]==UCDVersion[1]);
-            //&& pInfo->dataVersion[2]==ucaDataInfo.dataVersion[2]
-            //&& pInfo->dataVersion[3]==ucaDataInfo.dataVersion[3]);
+        return TRUE;
+        // Note: In ICU 51 and earlier,
+        // we used to check that the UCA data version (pInfo->dataVersion)
+        // matches the UCD version (u_getUnicodeVersion())
+        // but that complicated version updates, and
+        // a mismatch is "only" a problem for handling canonical equivalence.
+        // It need not be a fatal error.
     } else {
         return FALSE;
     }
 }
 U_CDECL_END
 
+static void U_CALLCONV ucol_initStaticUCA(UErrorCode &status) {
+    U_ASSERT(_staticUCA == NULL);
+    U_ASSERT(UCA_DATA_MEM == NULL);
+    ucln_i18n_registerCleanup(UCLN_I18N_UCOL_RES, ucol_res_cleanup);
+
+    UDataMemory *result = udata_openChoice(U_ICUDATA_COLL, UCA_DATA_TYPE, UCA_DATA_NAME, isAcceptableUCA, NULL, &status);
+    if(U_FAILURE(status)){
+        udata_close(result);
+        return;
+    }
+
+    _staticUCA = ucol_initCollator((const UCATableHeader *)udata_getMemory(result), NULL, NULL, &status);
+    if(U_SUCCESS(status)){
+        // Initalize variables for implicit generation
+        uprv_uca_initImplicitConstants(&status);
+        UCA_DATA_MEM = result;
+
+    }else{
+        ucol_close(_staticUCA);
+        _staticUCA = NULL;
+        udata_close(result);
+    }
+}
+
+
 /* do not close UCA returned by ucol_initUCA! */
 UCollator *
 ucol_initUCA(UErrorCode *status) {
-    if(U_FAILURE(*status)) {
-        return NULL;
-    }
-    UBool needsInit;
-    UMTX_CHECK(NULL, (_staticUCA == NULL), needsInit);
-
-    if(needsInit) {
-        UDataMemory *result = udata_openChoice(U_ICUDATA_COLL, UCA_DATA_TYPE, UCA_DATA_NAME, isAcceptableUCA, NULL, status);
-
-        if(U_SUCCESS(*status)){
-            UCollator *newUCA = ucol_initCollator((const UCATableHeader *)udata_getMemory(result), NULL, NULL, status);
-            if(U_SUCCESS(*status)){
-                // Initalize variables for implicit generation
-                uprv_uca_initImplicitConstants(status);
-
-                umtx_lock(NULL);
-                if(_staticUCA == NULL) {
-                    UCA_DATA_MEM = result;
-                    _staticUCA = newUCA;
-                    newUCA = NULL;
-                    result = NULL;
-                }
-                umtx_unlock(NULL);
-
-                ucln_i18n_registerCleanup(UCLN_I18N_UCOL_RES, ucol_res_cleanup);
-                if(newUCA != NULL) {
-                    ucol_close(newUCA);
-                    udata_close(result);
-                }
-            }else{
-                ucol_close(newUCA);
-                udata_close(result);
-            }
-        }
-        else {
-            udata_close(result);
-        }
-    }
+    umtx_initOnce(gStaticUCAInitOnce, &ucol_initStaticUCA, *status);
     return _staticUCA;
 }
 
@@ -154,6 +146,7 @@ ucol_forgetUCA(void)
 {
     _staticUCA = NULL;
     UCA_DATA_MEM = NULL;
+    gStaticUCAInitOnce.reset();
 }
 
 /****************************************************************************/
@@ -434,7 +427,8 @@ ucol_openRulesForImport( const UChar        *rules,
         goto cleanup;
     }
 
-    if(src.resultLen > 0 || src.removeSet != NULL) { /* we have a set of rules, let's make something of it */
+     /* if we have a set of rules, let's make something of it */
+    if(src.resultLen > 0 || src.removeSet != NULL) {
         /* also, if we wanted to remove some contractions, we should make a tailoring */
         table = ucol_assembleTailoringTable(&src, status);
         if(U_SUCCESS(*status)) {
@@ -452,6 +446,8 @@ ucol_openRulesForImport( const UChar        *rules,
             }
             result->hasRealData = TRUE;
             result->freeImageOnClose = TRUE;
+        } else {
+            goto cleanup;
         }
     } else { /* no rules, but no error either */
         // must be only options
@@ -470,11 +466,12 @@ ucol_openRulesForImport( const UChar        *rules,
         }
         uprv_memcpy(opts, src.opts, sizeof(UColOptionSet));
         ucol_setOptionsFromHeader(result, opts, status);
-        ucol_setReorderCodesFromParser(result, &src, status);
         result->freeOptionsOnClose = TRUE;
         result->hasRealData = FALSE;
         result->freeImageOnClose = FALSE;
     }
+
+    ucol_setReorderCodesFromParser(result, &src, status);
 
     if(U_SUCCESS(*status)) {
         UChar *newRules;
@@ -754,7 +751,7 @@ ucol_openAvailableLocales(UErrorCode *status) {
     if (U_FAILURE(*status)) {
         return NULL;
     }
-    StringEnumeration *s = Collator::getAvailableLocales();
+    StringEnumeration *s = icu::Collator::getAvailableLocales();
     if (s == NULL) {
         *status = U_MEMORY_ALLOCATION_ERROR;
         return NULL;
@@ -947,6 +944,9 @@ ucol_getLocaleByType(const UCollator *coll, ULocDataLocaleType type, UErrorCode 
     UTRACE_ENTRY(UTRACE_UCOL_GETLOCALE);
     UTRACE_DATA1(UTRACE_INFO, "coll=%p", coll);
 
+    if(coll->delegate!=NULL) {
+      return ((const Collator*)coll->delegate)->getLocale(type, *status).getName();
+    }
     switch(type) {
     case ULOC_ACTUAL_LOCALE:
         result = coll->actualLocale;

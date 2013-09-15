@@ -32,6 +32,7 @@
 
 #include "unicode/locid.h"
 #include "unicode/uloc.h"
+#include "putilimp.h"
 #include "mutex.h"
 #include "umutex.h"
 #include "uassert.h"
@@ -39,6 +40,7 @@
 #include "cstring.h"
 #include "uhash.h"
 #include "ucln_cmn.h"
+#include "ustr_imp.h"
 
 #define LENGTHOF(array) (int32_t)(sizeof(array)/sizeof((array)[0]))
 
@@ -48,12 +50,12 @@ U_CDECL_END
 
 U_NAMESPACE_BEGIN
 
-static U_NAMESPACE_QUALIFIER Locale *gLocaleCache         = NULL;
+static Locale *gLocaleCache = NULL;
 
 // gDefaultLocaleMutex protects all access to gDefaultLocalesHashT and gDefaultLocale.
-static UMTX                          gDefaultLocaleMutex  = 0;
-static UHashtable                   *gDefaultLocalesHashT = NULL;
-static U_NAMESPACE_QUALIFIER Locale *gDefaultLocale       = NULL;
+static UMutex gDefaultLocaleMutex = U_MUTEX_INITIALIZER;
+static UHashtable *gDefaultLocalesHashT = NULL;
+static Locale *gDefaultLocale = NULL;
 
 U_NAMESPACE_END
 
@@ -97,7 +99,7 @@ U_CDECL_BEGIN
 //
 static void U_CALLCONV
 deleteLocale(void *obj) {
-    delete (U_NAMESPACE_QUALIFIER Locale *) obj;
+    delete (icu::Locale *) obj;
 }
 
 static UBool U_CALLCONV locale_cleanup(void)
@@ -445,6 +447,8 @@ Locale::operator==( const   Locale& other) const
     return (uprv_strcmp(other.fullName, fullName) == 0);
 }
 
+#define ISASCIIALPHA(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= 'A' && (c) <= 'Z'))
+
 /*This function initializes a Locale from a C locale ID*/
 Locale& Locale::init(const char* localeID, UBool canonicalize)
 {
@@ -525,36 +529,36 @@ Locale& Locale::init(const char* localeID, UBool canonicalize)
             fieldLen[fieldIdx-1] = length - (int32_t)(field[fieldIdx-1] - fullName);
         }
 
-        if (fieldLen[0] >= (int32_t)(sizeof(language))
-            || (fieldLen[1] == 4 && fieldLen[2] >= (int32_t)(sizeof(country)))
-            || (fieldLen[1] != 4 && fieldLen[1] >= (int32_t)(sizeof(country))))
+        if (fieldLen[0] >= (int32_t)(sizeof(language)))
         {
-            break; // error: one of the fields is too long
+            break; // error: the language field is too long
         }
 
-        variantField = 2; /* Usually the 2nd one, except when a script is used. */
+        variantField = 1; /* Usually the 2nd one, except when a script or country is also used. */
         if (fieldLen[0] > 0) {
             /* We have a language */
             uprv_memcpy(language, fullName, fieldLen[0]);
             language[fieldLen[0]] = 0;
         }
-        if (fieldLen[1] == 4) {
+        if (fieldLen[1] == 4 && ISASCIIALPHA(field[1][0]) &&
+                ISASCIIALPHA(field[1][1]) && ISASCIIALPHA(field[1][2]) &&
+                ISASCIIALPHA(field[1][3])) {
             /* We have at least a script */
             uprv_memcpy(script, field[1], fieldLen[1]);
             script[fieldLen[1]] = 0;
-            variantField = 3;
-            if (fieldLen[2] > 0) {
-                /* We have a country */
-                uprv_memcpy(country, field[2], fieldLen[2]);
-                country[fieldLen[2]] = 0;
-            }
+            variantField++;
         }
-        else if (fieldLen[1] > 0) {
-            /* We have a country and no script */
-            uprv_memcpy(country, field[1], fieldLen[1]);
-            country[fieldLen[1]] = 0;
+
+        if (fieldLen[variantField] == 2 || fieldLen[variantField] == 3) {
+            /* We have a country */
+            uprv_memcpy(country, field[variantField], fieldLen[variantField]);
+            country[fieldLen[variantField]] = 0;
+            variantField++;
+        } else if (fieldLen[variantField] == 0) {
+            variantField++; /* script or country empty but variant in next field (i.e. en__POSIX) */
         }
-        if (variantField > 0 && fieldLen[variantField] > 0) {
+
+        if (fieldLen[variantField] > 0) {
             /* We have a variant */
             variantBegin = (int32_t)(field[variantField] - fullName);
         }
@@ -572,9 +576,7 @@ Locale& Locale::init(const char* localeID, UBool canonicalize)
 int32_t
 Locale::hashCode() const
 {
-    UHashTok hashKey;
-    hashKey.pointer = fullName;
-    return uhash_hashChars(hashKey);
+    return ustr_hashCharsN(fullName, uprv_strlen(fullName));
 }
 
 void
@@ -915,9 +917,7 @@ public:
         }
     }
 
-    virtual ~KeywordEnumeration() {
-        uprv_free(keywords);
-    }
+    virtual ~KeywordEnumeration();
 
     virtual StringEnumeration * clone() const
     {
@@ -966,6 +966,10 @@ public:
 };
 
 const char KeywordEnumeration::fgClassID = '\0';
+
+KeywordEnumeration::~KeywordEnumeration() {
+    uprv_free(keywords);
+}
 
 StringEnumeration *
 Locale::createKeywords(UErrorCode &status) const
