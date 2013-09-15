@@ -4,10 +4,10 @@ Bug: http://bugs.icu-project.org/trac/ticket/8198
 Bug-RedHat: https://bugzilla.redhat.com/show_bug.cgi?id=654200
 Bug-Debian: http://bugs.debian.org/591615
 
-Index: icu-4.8.1.1/source/layout/IndicReordering.cpp
+Index: icu-52~m1/source/layout/IndicReordering.cpp
 ===================================================================
---- icu-4.8.1.1.orig/source/layout/IndicReordering.cpp	2011-11-09 09:56:31.211396717 -0500
-+++ icu-4.8.1.1/source/layout/IndicReordering.cpp	2011-11-09 09:56:44.739396527 -0500
+--- icu-52~m1.orig/source/layout/IndicReordering.cpp	2013-09-14 18:53:23.656040472 -0400
++++ icu-52~m1/source/layout/IndicReordering.cpp	2013-09-14 18:53:23.656040472 -0400
 @@ -129,10 +129,6 @@
      le_int32    fSMIndex;
      FeatureMask fSMFeatures;
@@ -76,7 +76,7 @@ Index: icu-4.8.1.1/source/layout/IndicReordering.cpp
      le_int32 getOutputIndex()
      {
          return fOutIndex;
-@@ -765,7 +734,6 @@
+@@ -770,7 +739,6 @@
                  lastConsonant -= 1;
              }
  
@@ -84,7 +84,7 @@ Index: icu-4.8.1.1/source/layout/IndicReordering.cpp
              IndicClassTable::CharClass charClass = CC_RESERVED;
              IndicClassTable::CharClass nextClass = CC_RESERVED;
              le_int32 baseConsonant = lastConsonant;
-@@ -773,11 +741,9 @@
+@@ -778,11 +746,9 @@
              le_int32 postBaseLimit = classTable->scriptFlags & SF_POST_BASE_LIMIT_MASK;
              le_bool  seenVattu = FALSE;
              le_bool  seenBelowBaseForm = FALSE;
@@ -96,7 +96,7 @@ Index: icu-4.8.1.1/source/layout/IndicReordering.cpp
  
              if (postBase < markStart && classTable->isNukta(chars[postBase])) {
                  charClass = CC_NUKTA;
-@@ -791,22 +757,14 @@
+@@ -796,22 +762,14 @@
  
                  hasBelowBaseForm = IndicClassTable::hasBelowBaseForm(charClass) && !hasNukta;
                  hasPostBaseForm  = IndicClassTable::hasPostBaseForm(charClass)  && !hasNukta;
@@ -120,7 +120,7 @@ Index: icu-4.8.1.1/source/layout/IndicReordering.cpp
                      // consonants with nuktas are never vattus
                      seenVattu = IndicClassTable::isVattu(charClass) && !hasNukta;
  
-@@ -839,14 +797,12 @@
+@@ -844,14 +802,12 @@
              }
  
              // write any pre-base consonants
@@ -137,7 +137,7 @@ Index: icu-4.8.1.1/source/layout/IndicReordering.cpp
  
                  charClass = classTable->getCharClass(ch);
                  nextClass = classTable->getCharClass(chars[i + 1]);
-@@ -897,7 +853,7 @@
+@@ -902,7 +858,7 @@
              }
  
              // write below-base consonants
@@ -146,7 +146,7 @@ Index: icu-4.8.1.1/source/layout/IndicReordering.cpp
                  for (i = bcSpan + 1; i < postBase; i += 1) {
                      output.writeChar(chars[i], i, tagArray1);
                  }
-@@ -927,7 +883,7 @@
+@@ -932,7 +888,7 @@
  
              // write post-base consonants
              // FIXME: does this put the right tags on post-base consonants?
@@ -155,7 +155,7 @@ Index: icu-4.8.1.1/source/layout/IndicReordering.cpp
                  if (postBase <= lastConsonant) {
                      for (i = postBase; i <= lastConsonant; i += 1) {
                          output.writeChar(chars[i], i, tagArray3);
-@@ -1195,7 +1151,7 @@
+@@ -1200,7 +1156,7 @@
  }
  
  

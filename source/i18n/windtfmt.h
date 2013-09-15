@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 2005-2011, International Business Machines
+*   Copyright (C) 2005-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -14,7 +14,7 @@
 
 #include "unicode/utypes.h"
 
-#ifdef U_WINDOWS
+#if U_PLATFORM_HAS_WIN32_API
 
 #if !UCONFIG_NO_FORMATTING
 
@@ -121,7 +121,7 @@ private:
     UnicodeString *fDateTimeMsg;
     DateFormat::EStyle fTimeStyle;
     DateFormat::EStyle fDateStyle;
-    const Locale *fLocale;
+    Locale fLocale;
     int32_t fLCID;
     UnicodeString fZoneID;
     TIME_ZONE_INFORMATION *fTZI;
@@ -135,6 +135,6 @@ U_NAMESPACE_END
 
 #endif /* #if !UCONFIG_NO_FORMATTING */
 
-#endif // #ifdef U_WINDOWS
+#endif // U_PLATFORM_HAS_WIN32_API
 
 #endif // __WINDTFMT

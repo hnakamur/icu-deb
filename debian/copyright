@@ -108,10 +108,40 @@ Additional Copyrights
 =====================
 
 Some files are copyright by the following additional copyright
-holders:
+holders, though in all cases, the copyright is held jointly with IBM
+and is subject ICU license above:
 
  * Google Inc.
- * The Internet Society
  * Yahoo! Inc.
- * National Electronics and Computer Technology Center
- * Massachusetts Institute of Technology
+
+Some files in source/data/sprep contain data that was programmatically
+extracted from RFC 3454, but this programmatic extraction was done as
+a one-time activity and is not part of ICU's build process.  The
+non-free RFC 3454 document is not part of the sources.  The files
+generated from RFC 3454 could be considered derived works, so the RFC
+3454 copyright requires the inclusion of the original RFC 3454
+copyright notice:
+
+   This document and translations of it may be copied and furnished to
+   others, and derivative works that comment on or otherwise explain it
+   or assist in its implementation may be prepared, copied, published
+   and distributed, in whole or in part, without restriction of any
+   kind, provided that the above copyright notice and this paragraph are
+   included on all such copies and derivative works.  However, this
+   document itself may not be modified in any way, such as by removing
+   the copyright notice or references to the Internet Society or other
+   Internet organizations, except as needed for the purpose of
+   developing Internet standards in which case the procedures for
+   copyrights defined in the Internet Standards process must be
+   followed, or as required to translate it into languages other than
+   English.
+
+   The limited permissions granted above are perpetual and will not be
+   revoked by the Internet Society or its successors or assigns.
+
+   This document and the information contained herein is provided on an
+   "AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING
+   TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+   BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
+   HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.

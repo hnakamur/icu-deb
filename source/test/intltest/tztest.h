@@ -1,6 +1,6 @@
 
 /********************************************************************
- * Copyright (c) 1997-2011, International Business Machines
+ * Copyright (c) 1997-2013, International Business Machines
  * Corporation and others. All Rights Reserved.
  ********************************************************************/
  
@@ -95,6 +95,10 @@ public:
     virtual void TestDisplayNamesMeta();
 
     void TestGetRegion(void);
+    void TestGetUnknown();
+
+    void TestGetWindowsID(void);
+    void TestGetIDForWindowsID(void);
 
     static const UDate INTERVAL;
 

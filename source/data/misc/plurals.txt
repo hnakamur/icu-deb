@@ -1,104 +1,115 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2011 International Business Machines
-// * Corporation and others.  All Rights Reserved.
-// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
-// * Source File:<path>/plurals.xml
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/plurals.xml, ordinals.xml
 // *
 // ***************************************************************************
 plurals:table(nofallback){
     locales{
         af{"set2"}
         ak{"set3"}
-        am{"set3"}
-        ar{"set1"}
+        am{"set30"}
+        ar{"set0"}
         asa{"set2"}
-        az{""}
+        ast{"set2"}
+        az{"set2"}
         be{"set10"}
         bem{"set2"}
         bez{"set2"}
         bg{"set2"}
         bh{"set3"}
         bm{""}
-        bn{"set2"}
+        bn{"set30"}
         bo{""}
         br{"set19"}
         brx{"set2"}
-        bs{"set10"}
-        ca{"set2"}
+        bs{"set31"}
+        ca{"set26"}
         cgg{"set2"}
         chr{"set2"}
+        ckb{"set2"}
         cs{"set11"}
         cy{"set16"}
-        da{"set2"}
-        de{"set2"}
+        da{"set27"}
+        de{"set26"}
         dv{"set2"}
         dz{""}
         ee{"set2"}
         el{"set2"}
-        en{"set2"}
+        en{"set26"}
         eo{"set2"}
         es{"set2"}
-        et{"set2"}
+        et{"set26"}
         eu{"set2"}
-        fa{""}
+        fa{"set30"}
         ff{"set4"}
-        fi{"set2"}
-        fil{"set3"}
+        fi{"set26"}
+        fil{"set25"}
         fo{"set2"}
         fr{"set4"}
         fur{"set2"}
         fy{"set2"}
         ga{"set7"}
-        gl{"set2"}
+        gd{"set23"}
+        gl{"set26"}
         gsw{"set2"}
-        gu{"set2"}
+        gu{"set30"}
         guw{"set3"}
         gv{"set22"}
         ha{"set2"}
         haw{"set2"}
-        he{"set2"}
-        hi{"set3"}
-        hr{"set10"}
-        hu{""}
+        he{"set1"}
+        hi{"set30"}
+        hr{"set31"}
+        hu{"set2"}
+        hy{"set4"}
         id{""}
         ig{""}
         ii{""}
-        is{"set2"}
-        it{"set2"}
+        is{"set28"}
+        it{"set26"}
         iu{"set6"}
         ja{""}
+        jbo{""}
+        jgo{"set2"}
         jmc{"set2"}
         jv{""}
-        ka{""}
+        ka{"set2"}
         kab{"set4"}
         kaj{"set2"}
         kcg{"set2"}
         kde{""}
         kea{""}
         kk{"set2"}
+        kkj{"set2"}
         kl{"set2"}
         km{""}
-        kn{""}
+        kn{"set30"}
         ko{""}
+        ks{"set2"}
         ksb{"set2"}
         ksh{"set20"}
         ku{"set2"}
         kw{"set6"}
+        ky{"set2"}
         lag{"set17"}
         lb{"set2"}
         lg{"set2"}
+        lkt{""}
         ln{"set3"}
         lo{""}
         lt{"set9"}
         lv{"set5"}
         mas{"set2"}
         mg{"set3"}
+        mgo{"set2"}
         mk{"set15"}
         ml{"set2"}
         mn{"set2"}
         mo{"set8"}
-        mr{"set2"}
+        mr{"set30"}
         ms{""}
         mt{"set14"}
         my{""}
@@ -107,24 +118,27 @@ plurals:table(nofallback){
         nb{"set2"}
         nd{"set2"}
         ne{"set2"}
-        nl{"set2"}
+        nl{"set26"}
         nn{"set2"}
+        nnh{"set2"}
         no{"set2"}
+        nqo{""}
         nr{"set2"}
         nso{"set3"}
         ny{"set2"}
         nyn{"set2"}
         om{"set2"}
         or{"set2"}
-        pa{"set2"}
+        os{"set2"}
+        pa{"set3"}
         pap{"set2"}
         pl{"set12"}
         ps{"set2"}
-        pt{"set2"}
+        pt{"set29"}
         rm{"set2"}
         ro{"set8"}
         rof{"set2"}
-        ru{"set10"}
+        ru{"set32"}
         rwk{"set2"}
         sah{""}
         saq{"set2"}
@@ -132,7 +146,7 @@ plurals:table(nofallback){
         seh{"set2"}
         ses{""}
         sg{""}
-        sh{"set10"}
+        sh{"set31"}
         shi{"set18"}
         sk{"set11"}
         sl{"set13"}
@@ -144,12 +158,12 @@ plurals:table(nofallback){
         sn{"set2"}
         so{"set2"}
         sq{"set2"}
-        sr{"set10"}
+        sr{"set31"}
         ss{"set2"}
         ssy{"set2"}
         st{"set2"}
-        sv{"set2"}
-        sw{"set2"}
+        sv{"set27"}
+        sw{"set26"}
         syr{"set2"}
         ta{"set2"}
         te{"set2"}
@@ -158,33 +172,97 @@ plurals:table(nofallback){
         ti{"set3"}
         tig{"set2"}
         tk{"set2"}
-        tl{"set3"}
+        tl{"set25"}
         tn{"set2"}
         to{""}
-        tr{""}
+        tr{"set2"}
         ts{"set2"}
         tzm{"set21"}
-        uk{"set10"}
-        ur{"set2"}
+        uk{"set33"}
+        ur{"set26"}
         ve{"set2"}
         vi{""}
+        vo{"set2"}
         vun{"set2"}
         wa{"set3"}
         wae{"set2"}
         wo{""}
         xh{"set2"}
         xog{"set2"}
+        yi{"set26"}
         yo{""}
         zh{""}
-        zu{"set2"}
+        zu{"set30"}
+    }
+    locales_ordinals{
+        af{""}
+        am{""}
+        ar{""}
+        bg{""}
+        bn{"set41"}
+        ca{"set38"}
+        cs{""}
+        da{""}
+        de{""}
+        el{""}
+        en{"set36"}
+        es{""}
+        et{""}
+        eu{""}
+        fa{""}
+        fi{""}
+        fil{"set2"}
+        fr{"set2"}
+        gl{""}
+        gu{"set40"}
+        he{""}
+        hi{"set40"}
+        hr{""}
+        hu{"set34"}
+        id{""}
+        is{""}
+        it{"set37"}
+        ja{""}
+        kn{""}
+        ko{""}
+        lt{""}
+        lv{""}
+        ml{""}
+        mr{"set39"}
+        ms{"set2"}
+        nb{""}
+        nl{""}
+        pl{""}
+        pt{""}
+        ro{"set2"}
+        ru{""}
+        sk{""}
+        sl{""}
+        sr{""}
+        sv{"set35"}
+        sw{""}
+        ta{""}
+        te{""}
+        th{""}
+        tr{""}
+        uk{""}
+        ur{""}
+        vi{"set2"}
+        zh{""}
+        zu{"set42"}
     }
     rules{
-        set1{
+        set0{
             few{"n mod 100 in 3..10"}
             many{"n mod 100 in 11..99"}
             one{"n is 1"}
             two{"n is 2"}
             zero{"n is 0"}
+        }
+        set1{
+            many{"j not in 0..10 and j mod 10 is 0"}
+            one{"j is 1"}
+            two{"j is 2"}
         }
         set10{
             few{"n mod 10 in 2..4 and n mod 100 not in 12..14"}
@@ -192,21 +270,22 @@ plurals:table(nofallback){
             one{"n mod 10 is 1 and n mod 100 is not 11"}
         }
         set11{
-            few{"n in 2..4"}
-            one{"n is 1"}
+            few{"j in 2..4"}
+            many{"v is not 0"}
+            one{"j is 1"}
         }
         set12{
-            few{"n mod 10 in 2..4 and n mod 100 not in 12..14"}
+            few{"j mod 10 in 2..4 and j mod 100 not in 12..14"}
             many{
-                "n is not 1 and n mod 10 in 0..1 or n mod 10 in 5..9 or n mod 100 in "
+                "j is not 1 and j mod 10 in 0..1 or j mod 10 in 5..9 or j mod 100 in "
                 "12..14"
             }
-            one{"n is 1"}
+            one{"j is 1"}
         }
         set13{
-            few{"n mod 100 in 3..4"}
-            one{"n mod 100 is 1"}
-            two{"n mod 100 is 2"}
+            few{"j mod 100 in 3..4 or v is not 0"}
+            one{"j mod 100 is 1"}
+            two{"j mod 100 is 2"}
         }
         set14{
             few{"n is 0 or n mod 100 in 2..10"}
@@ -214,7 +293,7 @@ plurals:table(nofallback){
             one{"n is 1"}
         }
         set15{
-            one{"n mod 10 is 1 and n is not 11"}
+            one{"j mod 10 is 1 or f mod 10 is 1"}
         }
         set16{
             few{"n is 3"}
@@ -233,7 +312,7 @@ plurals:table(nofallback){
         }
         set19{
             few{"n mod 10 in 3..4,9 and n mod 100 not in 10..19,70..79,90..99"}
-            many{"n mod 1000000 is 0 and n is not 0"}
+            many{"n is not 0 and n mod 1000000 is 0"}
             one{"n mod 10 is 1 and n mod 100 not in 11,71,91"}
             two{"n mod 10 is 2 and n mod 100 not in 12,72,92"}
         }
@@ -248,17 +327,111 @@ plurals:table(nofallback){
             one{"n in 0..1 or n in 11..99"}
         }
         set22{
-            one{"n mod 10 in 1..2 or n mod 20 is 0"}
+            few{"n mod 100 in 0,20,40,60"}
+            one{"n mod 10 is 1"}
+            two{"n mod 10 is 2"}
+        }
+        set23{
+            few{"n in 3..10,13..19"}
+            one{"n in 1,11"}
+            two{"n in 2,12"}
+        }
+        set25{
+            one{"j in 0..1"}
+        }
+        set26{
+            one{"j is 1"}
+        }
+        set27{
+            one{"j is 1 or f is 1"}
+        }
+        set28{
+            one{
+                "j mod 10 is 1 and j mod 100 is not 11 or f mod 10 is 1 and f mod 100"
+                " is not 11"
+            }
+        }
+        set29{
+            one{"n is 1 or f is 1"}
         }
         set3{
             one{"n in 0..1"}
         }
+        set30{
+            one{"n within 0..1"}
+        }
+        set31{
+            few{
+                "j mod 10 in 2..4 and j mod 100 not in 12..14 or f mod 10 in 2..4 and"
+                " f mod 100 not in 12..14"
+            }
+            one{
+                "j mod 10 is 1 and j mod 100 is not 11 or f mod 10 is 1 and f mod 100"
+                " is not 11"
+            }
+        }
+        set32{
+            many{"j mod 10 is 0 or j mod 10 in 5..9 or j mod 100 in 11..14"}
+            one{"j mod 10 is 1 and j mod 100 is not 11"}
+        }
+        set33{
+            few{"j mod 10 in 2..4 and j mod 100 not in 12..14"}
+            many{"j mod 10 is 0 or j mod 10 in 5..9 or j mod 100 in 11..14"}
+            one{"j mod 10 is 1 and j mod 100 is not 11"}
+        }
+        set34{
+            one{"n in 1,5"}
+        }
+        set35{
+            one{"n mod 10 in 1,2 and n mod 100 not in 11,12"}
+        }
+        set36{
+            few{"n mod 10 is 3 and n mod 100 is not 13"}
+            one{"n mod 10 is 1 and n mod 100 is not 11"}
+            two{"n mod 10 is 2 and n mod 100 is not 12"}
+        }
+        set37{
+            many{"n in 11,8,80,800"}
+        }
+        set38{
+            few{"n is 4"}
+            one{"n in 1,3"}
+            two{"n is 2"}
+        }
+        set39{
+            few{"n is 4"}
+            one{"n is 1"}
+            two{"n in 2,3"}
+        }
         set4{
             one{"n within 0..2 and n is not 2"}
         }
+        set40{
+            few{"n is 4"}
+            many{"n is 6"}
+            one{"n is 1"}
+            two{"n in 2,3"}
+        }
+        set41{
+            few{"n is 4"}
+            many{"n is 6"}
+            one{"n in 1,5,7,8,9,10"}
+            two{"n in 2,3"}
+        }
+        set42{
+            few{"n in 2..9"}
+            many{"n in 10..19,100..199,1000..1999"}
+            one{"n is 1"}
+        }
         set5{
-            one{"n mod 10 is 1 and n mod 100 is not 11"}
-            zero{"n is 0"}
+            one{
+                "n mod 10 is 1 and n mod 100 is not 11 or v is 2 and f mod 10 is 1 an"
+                "d f mod 100 is not 11 or v is not 2 and f mod 10 is 1"
+            }
+            zero{
+                "n mod 10 is 0 or n mod 100 in 11..19 or v is 2 and f mod 100 in 11.."
+                "19"
+            }
         }
         set6{
             one{"n is 1"}
@@ -271,11 +444,12 @@ plurals:table(nofallback){
             two{"n is 2"}
         }
         set8{
-            few{"n is 0 OR n is not 1 AND n mod 100 in 1..19"}
-            one{"n is 1"}
+            few{"v is not 0 or n is 0 or n is not 1 and n mod 100 in 1..19"}
+            one{"j is 1"}
         }
         set9{
             few{"n mod 10 in 2..9 and n mod 100 not in 11..19"}
+            many{"f is not 0"}
             one{"n mod 10 is 1 and n mod 100 not in 11..19"}
         }
     }

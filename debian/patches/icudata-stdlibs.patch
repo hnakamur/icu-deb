@@ -1,7 +1,7 @@
-Index: icu-4.8.1.1/source/config/mh-linux
+Index: icu-52~m1/source/config/mh-linux
 ===================================================================
---- icu-4.8.1.1.orig/source/config/mh-linux	2011-10-18 19:13:00.000000000 -0400
-+++ icu-4.8.1.1/source/config/mh-linux	2012-01-04 09:50:49.856503236 -0500
+--- icu-52~m1.orig/source/config/mh-linux	2013-09-14 18:53:23.284040467 -0400
++++ icu-52~m1/source/config/mh-linux	2013-09-14 18:53:23.284040467 -0400
 @@ -21,7 +21,9 @@
  LD_RPATH_PRE = -Wl,-rpath,
  

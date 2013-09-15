@@ -4,10 +4,10 @@ Origin: other, https://ssl.icu-project.org/trac/ticket/9948
 Forwarded: https://ssl.icu-project.org/trac/ticket/9948
 Last-Update: 2013-03-13
 
-Index: b/source/layout/IndicClassTables.cpp
+Index: icu-52~m1/source/layout/IndicClassTables.cpp
 ===================================================================
---- a/source/layout/IndicClassTables.cpp
-+++ b/source/layout/IndicClassTables.cpp
+--- icu-52~m1.orig/source/layout/IndicClassTables.cpp	2013-09-14 18:53:23.844040474 -0400
++++ icu-52~m1/source/layout/IndicClassTables.cpp	2013-09-14 18:53:23.844040474 -0400
 @@ -273,7 +273,7 @@
  
  static const IndicClassTable kndaClassTable = {0x0C80, 0x0CEF, 4, KNDA_SCRIPT_FLAGS, kndaCharClasses, kndaSplitTable};
