@@ -1,3 +1,18 @@
+icu (4.8.1.1-8ubuntu0.1) quantal-security; urgency=low
+
+  * SECURITY UPDATE: denial of service and possible code execution via
+    race condition.
+    - debian/patches/CVE-2013-0900.patch: fix thread safety issue in
+      source/common/locid.cpp, source/common/unicode/locid.h.
+    - CVE-2013-0900
+  * SECURITY UPDATE: denial of service and possible code execution via
+    use after free.
+    - debian/patches/CVE-2013-2924.patch: check lengths in
+      source/i18n/csrucode.cpp.
+    - CVE-2013-2924
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 10 Oct 2013 10:33:37 -0400
+
 icu (4.8.1.1-8) unstable; urgency=low
 
   * Switch hardening back to hardening-wrapper again since otherwise some
