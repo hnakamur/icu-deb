@@ -8,3 +8,5 @@ kfreebsd-configure.patch
 pathmax.patch
 CVE-2011-4599.patch
 indic-ccmp.patch
+CVE-2013-0900.patch
+CVE-2013-2924.patch
