@@ -149,6 +149,11 @@ Cleanly installed Solaris can use this #define.
 #include "icucfg.h"
 #endif
 
+/* Define PATH_MAX if not provided */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 /* Define the extension for data files, again... */
 #define DATA_TYPE "dat"
 
