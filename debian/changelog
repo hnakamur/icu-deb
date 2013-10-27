@@ -1,3 +1,10 @@
+icu (4.8.1.1-13+nmu1) unstable; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Fix cve-2013-2924: use-after-free issue in csrucode.cpp (closes: #726477).
+
+ -- Michael Gilbert <mgilbert@debian.org>  Sun, 27 Oct 2013 03:49:58 +0000
+
 icu (4.8.1.1-13) unstable; urgency=low
 
   * Multi-arch libicu-dev.  Thanks Dmitrijs Ledkovs
