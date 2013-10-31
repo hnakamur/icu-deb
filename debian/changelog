@@ -1,3 +1,10 @@
+icu (4.8.1.1-13+nmu1ubuntu1) trusty; urgency=low
+
+  * Add icu-tools to icu-devtools Breaks & Replaces, to allow smooth
+    upgrades on ubuntu. Needed until after Trusty release.
+
+ -- Dmitrijs Ledkovs <xnox@ubuntu.com>  Thu, 31 Oct 2013 15:14:22 +0000
+
 icu (4.8.1.1-13+nmu1) unstable; urgency=high
 
   * Non-maintainer upload by the Security Team.
