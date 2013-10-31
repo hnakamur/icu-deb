@@ -17,7 +17,7 @@ TARGET_STUB_NAME = gencfu
 
 SECTION = 1
 
-# MAN_FILES = $(TARGET_STUB_NAME).$(SECTION)
+MAN_FILES = $(TARGET_STUB_NAME).$(SECTION)
 
 
 ## Extra files to remove for 'make clean'
@@ -58,8 +58,8 @@ install-local: all-local install-man
 	$(INSTALL) $(TARGET) $(DESTDIR)$(bindir)
 
 install-man: $(MAN_FILES)
-#	$(MKINSTALLDIRS) $(DESTDIR)$(mandir)/man$(SECTION)
-#	$(INSTALL_DATA) $? $(DESTDIR)$(mandir)/man$(SECTION)
+	$(MKINSTALLDIRS) $(DESTDIR)$(mandir)/man$(SECTION)
+	$(INSTALL_DATA) $? $(DESTDIR)$(mandir)/man$(SECTION)
 
 dist-local:
 
