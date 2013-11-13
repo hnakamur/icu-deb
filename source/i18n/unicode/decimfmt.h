@@ -41,7 +41,6 @@
 #include "unicode/curramt.h"
 #include "unicode/enumset.h"
 
-#ifndef U_HIDE_INTERNAL_API
 /**
  * \def UNUM_DECIMALFORMAT_INTERNAL_SIZE
  * @internal
@@ -49,7 +48,6 @@
 #if UCONFIG_FORMAT_FASTPATHS_49
 #define UNUM_DECIMALFORMAT_INTERNAL_SIZE 16
 #endif
-#endif  /* U_HIDE_INTERNAL_API */
 
 U_NAMESPACE_BEGIN
 
@@ -60,6 +58,7 @@ class Hashtable;
 class UnicodeSet;
 class FieldPositionHandler;
 class DecimalFormatStaticSets;
+class FixedDecimal;
 
 // explicit template instantiation. see digitlst.h
 #if defined (_MSC_VER)
@@ -1451,7 +1450,7 @@ public:
      * @see #setExponentSignAlwaysShown
      * @stable ICU 2.0
      */
-    virtual UBool isScientificNotation(void);
+    virtual UBool isScientificNotation(void) const;
 
     /**
      * Set whether or not scientific notation is used. When scientific notation
@@ -1508,7 +1507,7 @@ public:
      * @see #setExponentSignAlwaysShown
      * @stable ICU 2.0
      */
-    virtual UBool isExponentSignAlwaysShown(void);
+    virtual UBool isExponentSignAlwaysShown(void) const;
 
     /**
      * Set whether the exponent sign is always shown.  This has no effect
@@ -1852,6 +1851,32 @@ public:
      */
     static const char fgNumberPatterns[];
 
+#ifndef U_HIDE_INTERNAL_API
+    /**
+     *  Get a FixedDecimal corresponding to a double as it would be
+     *  formatted by this DecimalFormat.
+     *  Internal, not intended for public use.
+     *  @internal
+     */
+     FixedDecimal getFixedDecimal(double number, UErrorCode &status) const;
+
+    /**
+     *  Get a FixedDecimal corresponding to a formattable as it would be
+     *  formatted by this DecimalFormat.
+     *  Internal, not intended for public use.
+     *  @internal
+     */
+     FixedDecimal getFixedDecimal(const Formattable &number, UErrorCode &status) const;
+
+    /**
+     *  Get a FixedDecimal corresponding to a DigitList as it would be
+     *  formatted by this DecimalFormat. Note: the DigitList may be modified.
+     *  Internal, not intended for public use.
+     *  @internal
+     */
+     FixedDecimal getFixedDecimal(DigitList &number, UErrorCode &status) const;
+#endif  /* U_HIDE_INTERNAL_API */
+
 public:
 
     /**
@@ -1982,7 +2007,7 @@ private:
                    const UnicodeString* negSuffix,
                    const UnicodeString* posPrefix,
                    const UnicodeString* posSuffix,
-                   UBool currencyParsing,
+                   UBool complexCurrencyParsing,
                    int8_t type,
                    ParsePosition& parsePosition,
                    DigitList& digits, UBool* status,
@@ -2006,18 +2031,26 @@ private:
                          UBool isNegative,
                          UBool isPrefix,
                          const UnicodeString* affixPat,
-                         UBool currencyParsing,
+                         UBool complexCurrencyParsing,
                          int8_t type,
                          UChar* currency) const;
 
-    static int32_t compareSimpleAffix(const UnicodeString& affix,
+    static UnicodeString& trimMarksFromAffix(const UnicodeString& affix, UnicodeString& trimmedAffix);
+
+    UBool equalWithSignCompatibility(UChar32 lhs, UChar32 rhs) const;
+
+    int32_t compareSimpleAffix(const UnicodeString& affix,
                                       const UnicodeString& input,
                                       int32_t pos,
-                                      UBool lenient);
+                                      UBool lenient) const;
 
     static int32_t skipPatternWhiteSpace(const UnicodeString& text, int32_t pos);
 
     static int32_t skipUWhiteSpace(const UnicodeString& text, int32_t pos);
+
+    static int32_t skipUWhiteSpaceAndMarks(const UnicodeString& text, int32_t pos);
+
+    static int32_t skipBidiMarks(const UnicodeString& text, int32_t pos);
 
     int32_t compareComplexAffix(const UnicodeString& affixPat,
                                 const UnicodeString& input,

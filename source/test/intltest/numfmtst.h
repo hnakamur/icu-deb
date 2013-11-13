@@ -169,6 +169,12 @@ class NumberFormatTest: public CalendarTimeZoneTest {
 
     void TestCompatibleCurrencies();
     void TestBug9936();
+    void TestParseNegativeWithFaLocale();
+    void TestParseNegativeWithAlternateMinusSign();
+
+    void TestCustomCurrencySignAndSeparator();
+
+    void TestParseSignsAndMarks();
 
  private:
     UBool testFormattableAsUFormattable(const char *file, int line, Formattable &f);

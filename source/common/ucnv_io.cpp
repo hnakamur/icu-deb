@@ -173,7 +173,7 @@ static const char DATA_NAME[] = "cnvalias";
 static const char DATA_TYPE[] = "icu";
 
 static UDataMemory *gAliasData=NULL;
-static UInitOnce    gAliasDataInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gAliasDataInitOnce = U_INITONCE_INITIALIZER;
 
 enum {
     tocLengthIndex=0,
@@ -1335,6 +1335,7 @@ ucnv_swapAliases(const UDataSwapper *ds,
 }
 
 #endif
+
 
 /*
  * Hey, Emacs, please set the following:

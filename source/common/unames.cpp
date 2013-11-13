@@ -29,6 +29,8 @@
 #include "udataswp.h"
 #include "uprops.h"
 
+U_NAMESPACE_BEGIN
+
 /* prototypes ------------------------------------------------------------- */
 
 #define LENGTHOF(array) (int32_t)(sizeof(array)/sizeof((array)[0]))
@@ -103,7 +105,7 @@ typedef struct {
 
 static UDataMemory *uCharNamesData=NULL;
 static UCharNames *uCharNames=NULL;
-static UInitOnce  gCharNamesInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gCharNamesInitOnce = U_INITONCE_INITIALIZER;
 
 /*
  * Maximum length of character names (regular & 1.0).
@@ -2083,6 +2085,8 @@ uchar_swapNames(const UDataSwapper *ds,
 
     return headerSize+(int32_t)offset;
 }
+
+U_NAMESPACE_END
 
 /*
  * Hey, Emacs, please set the following:

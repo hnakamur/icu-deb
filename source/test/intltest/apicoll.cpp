@@ -2270,6 +2270,29 @@ void CollationAPITest::TestClone() {
     delete c2;
 }
 
+void CollationAPITest::TestIterNumeric() {
+    // Regression test for ticket #9915.
+    // The collation code sometimes masked the continuation marker away
+    // but later tested the result for isContinuation().
+    // This test case failed because the third bytes of the computed numeric-collation primaries
+    // were permutated with the script reordering table.
+    // It should have been possible to reproduce this with the root collator
+    // and characters with appropriate 3-byte primary weights.
+    // The effectiveness of this test depends completely on the collation elements
+    // and on the implementation code.
+    IcuTestErrorCode errorCode(*this, "TestIterNumeric");
+    RuleBasedCollator coll(UnicodeString("[reorder Hang Hani]"), errorCode);
+    if(errorCode.logDataIfFailureAndReset("RuleBasedCollator constructor")) {
+        return;
+    }
+    coll.setAttribute(UCOL_NUMERIC_COLLATION, UCOL_ON, errorCode);
+    UCharIterator iter40, iter72;
+    uiter_setUTF8(&iter40, "\x34\x30", 2);
+    uiter_setUTF8(&iter72, "\x37\x32", 2);
+    UCollationResult result = coll.compare(iter40, iter72, errorCode);
+    assertEquals("40<72", (int32_t)UCOL_LESS, (int32_t)result);
+}
+
  void CollationAPITest::dump(UnicodeString msg, RuleBasedCollator* c, UErrorCode& status) {
     const char* bigone = "One";
     const char* littleone = "one";
@@ -2307,6 +2330,7 @@ void CollationAPITest::runIndexedTest( int32_t index, UBool exec, const char* &n
     TESTCASE_AUTO(TestSubclass);
     TESTCASE_AUTO(TestNULLCharTailoring);
     TESTCASE_AUTO(TestClone);
+    TESTCASE_AUTO(TestIterNumeric);
     TESTCASE_AUTO_END;
 }
 

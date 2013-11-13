@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2013, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
+* Copyright (C) 1997-2013, International Business Machines Corporation and
+* others. All Rights Reserved.
 *******************************************************************************
 *
 * File TIMEZONE.CPP
@@ -111,14 +111,14 @@ static const int32_t       GMT_ID_LENGTH = 3;
 static const int32_t       UNKNOWN_ZONE_ID_LENGTH = 11;
 
 static icu::TimeZone* DEFAULT_ZONE = NULL;
-static UInitOnce gDefaultZoneInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gDefaultZoneInitOnce = U_INITONCE_INITIALIZER;
 
 static icu::TimeZone* _GMT = NULL;
 static icu::TimeZone* _UNKNOWN_ZONE = NULL;
-static UInitOnce gStaticZonesInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gStaticZonesInitOnce = U_INITONCE_INITIALIZER;
 
 static char TZDATA_VERSION[16];
-static UInitOnce gTZDataVersionInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gTZDataVersionInitOnce = U_INITONCE_INITIALIZER;
 
 static int32_t* MAP_SYSTEM_ZONES = NULL;
 static int32_t* MAP_CANONICAL_SYSTEM_ZONES = NULL;
@@ -128,9 +128,9 @@ static int32_t LEN_SYSTEM_ZONES = 0;
 static int32_t LEN_CANONICAL_SYSTEM_ZONES = 0;
 static int32_t LEN_CANONICAL_SYSTEM_LOCATION_ZONES = 0;
 
-static UInitOnce gSystemZonesInitOnce = U_INITONCE_INITIALIZER;
-static UInitOnce gCanonicalZonesInitOnce = U_INITONCE_INITIALIZER;
-static UInitOnce gCanonicalLocationZonesInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gSystemZonesInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gCanonicalZonesInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gCanonicalLocationZonesInitOnce = U_INITONCE_INITIALIZER;
 
 U_CDECL_BEGIN
 static UBool U_CALLCONV timeZone_cleanup(void)
@@ -1617,7 +1617,7 @@ TimeZone::getIDForWindowsID(const UnicodeString& winid, const char* region, Unic
     char winidKey[MAX_WINDOWS_ID_SIZE];
     int32_t winKeyLen = winid.extract(0, winid.length(), winidKey, sizeof(winidKey) - 1, US_INV);
 
-    if (winKeyLen == 0 || winKeyLen >= sizeof(winidKey)) {
+    if (winKeyLen == 0 || winKeyLen >= (int32_t)sizeof(winidKey)) {
         ures_close(zones);
         return id;
     }
@@ -1634,7 +1634,6 @@ TimeZone::getIDForWindowsID(const UnicodeString& winid, const char* region, Unic
     int32_t len = 0;
     UBool gotID = FALSE;
     if (region) {
-        int32_t tzidsLen = 0;
         const UChar *tzids = ures_getStringByKey(zones, region, &len, &tmperr); // use tmperr, because
                                                                                 // regional mapping is optional
         if (U_SUCCESS(tmperr)) {

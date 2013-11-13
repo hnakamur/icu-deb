@@ -1,3 +1,10 @@
+icu (52.1-1) experimental; urgency=low
+
+  * New upstream release
+  * Standards version 3.9.5 (no changes required)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 13 Nov 2013 16:20:40 -0500
+
 icu (52~m1-2) experimental; urgency=low
 
   * Updated year in copyright file
@@ -17,6 +24,21 @@ icu (52~m1-1) experimental; urgency=low
     in the sources.  (Closes: #721590)
 
  -- Jay Berkenbilt <qjb@debian.org>  Sat, 14 Sep 2013 20:52:27 -0400
+
+icu (4.8.1.1-14) unstable; urgency=high
+
+  * Acknowledge NMU.  Thanks.
+  * Update standards version to 3.9.5.  No changes required.
+  * No changes other than version numbers; uploading with urgency=high.
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 13 Nov 2013 16:19:32 -0500
+
+icu (4.8.1.1-13+nmu1) unstable; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Fix CVE-2013-2924: use-after-free issue in csrucode.cpp (closes: #726477).
+
+ -- Michael Gilbert <mgilbert@debian.org>  Sun, 27 Oct 2013 03:49:58 +0000
 
 icu (4.8.1.1-13) unstable; urgency=low
 

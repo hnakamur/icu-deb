@@ -791,14 +791,50 @@ en{
             hebrew{"Hebrew Calendar"}
             indian{"Indian National Calendar"}
             islamic{"Islamic Calendar"}
-            islamic-civil{"Islamic Calendar [tabular, civil epoch]"}
-            islamic-rgsa{"Islamic Calendar [Saudi Arabia, sighting]"}
-            islamic-tbla{"Islamic Calendar [tabular, astronomical epoch]"}
-            islamic-umalqura{"Islamic Calendar [Umm al-Qura]"}
+            islamic-civil{"Islamic Calendar (tabular, civil epoch)"}
+            islamic-rgsa{"Islamic Calendar (Saudi Arabia, sighting)"}
+            islamic-tbla{"Islamic Calendar (tabular, astronomical epoch)"}
+            islamic-umalqura{"Islamic Calendar (Umm al-Qura)"}
             iso8601{"ISO-8601 Calendar"}
             japanese{"Japanese Calendar"}
             persian{"Persian Calendar"}
             roc{"Minguo Calendar"}
+        }
+        colAlternate{
+            non-ignorable{"Sort Symbols"}
+            shifted{"Sort Ignoring Symbols"}
+        }
+        colBackwards{
+            no{"Sort Accents Normally"}
+            yes{"Sort Accents Reversed"}
+        }
+        colCaseFirst{
+            lower{"Sort Lowercase First"}
+            no{"Sort Normal Case Order"}
+            upper{"Sort Uppercase First"}
+        }
+        colCaseLevel{
+            no{"Sort Case Insensitive"}
+            yes{"Sort Case Sensitive"}
+        }
+        colHiraganaQuaternary{
+            no{"Sort Kana Separately"}
+            yes{"Sort Kana Differently"}
+        }
+        colNormalization{
+            no{"Sort Without Normalization"}
+            yes{"Sort Unicode Normalized"}
+        }
+        colNumeric{
+            no{"Sort Digits Individually"}
+            yes{"Sort Digits Numerically"}
+        }
+        colStrength{
+            identical{"Sort All"}
+            primary{"Sort Base Letters Only"}
+            quaternary{"Sort Accents/Case/Width/Kana"}
+            secondary{"Sort Accents"}
+            tertiary{"Sort Accents/Case/Width"}
         }
         collation{
             big5han{"Traditional Chinese Sort Order - Big5"}
@@ -933,13 +969,14 @@ en{
         VALENCIA{"Valencian"}
         WADEGILE{"Wade-Giles Romanization"}
     }
-    Version{"2.0.89.25"}
+    Version{"2.0.92.87"}
     codePatterns{
         language{"Language: {0}"}
         script{"Script: {0}"}
         territory{"Region: {0}"}
     }
     localeDisplayPattern{
+        keyTypePattern{"{0}: {1}"}
         pattern{"{0} ({1})"}
         separator{"{0}, {1}"}
     }

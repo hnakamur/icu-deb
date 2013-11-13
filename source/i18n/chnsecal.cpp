@@ -54,7 +54,7 @@ static icu::CalendarAstronomer *gChineseCalendarAstro = NULL;
 static icu::CalendarCache *gChineseCalendarWinterSolsticeCache = NULL;
 static icu::CalendarCache *gChineseCalendarNewYearCache = NULL;
 static icu::TimeZone *gChineseCalendarZoneAstroCalc = NULL;
-static UInitOnce gChineseCalendarZoneAstroCalcInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gChineseCalendarZoneAstroCalcInitOnce = U_INITONCE_INITIALIZER;
 
 /**
  * The start year of the Chinese calendar, the 61st year of the reign
@@ -838,7 +838,7 @@ ChineseCalendar::inDaylightTime(UErrorCode& status) const
 
 static UDate     gSystemDefaultCenturyStart       = DBL_MIN;
 static int32_t   gSystemDefaultCenturyStartYear   = -1;
-static UInitOnce gSystemDefaultCenturyInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gSystemDefaultCenturyInitOnce = U_INITONCE_INITIALIZER;
 
 
 UBool ChineseCalendar::haveDefaultCentury() const

@@ -51,7 +51,7 @@ U_NAMESPACE_USE
 //string-concatenation operator (moved from findword test by rtg)
 UnicodeString UCharToUnicodeString(UChar c);
 UnicodeString Int64ToUnicodeString(int64_t num);
-//UnicodeString operator+(const UnicodeString& left, int64_t num);
+//UnicodeString operator+(const UnicodeString& left, int64_t num); // Some compilers don't allow this because of the long type.
 UnicodeString operator+(const UnicodeString& left, long num);
 UnicodeString operator+(const UnicodeString& left, unsigned long num);
 UnicodeString operator+(const UnicodeString& left, double num);
@@ -125,6 +125,9 @@ UnicodeString toString(UBool b);
 #define TEST_ASSERT_TRUE(x) \
   assertTrue(#x, (x), FALSE, FALSE, __FILE__, __LINE__)
 
+#define TEST_ASSERT_STATUS(x) \
+  assertSuccess(#x, (x), FALSE, __FILE__, __LINE__)
+
 class IntlTest : public TestLog {
 public:
 
@@ -153,6 +156,36 @@ public:
 
     virtual void logln( void );
 
+    /**
+     * Replaces isICUVersionAtLeast and isICUVersionBefore
+     * log that an issue is known.
+     * Usually used this way:   
+     * <code>if( ... && logKnownIssue("12345", "some bug")) continue; </code>
+     * @param ticket ticket string, "12345" or "cldrbug:1234"
+     * @param message optional message string
+     * @return true if test should be skipped
+     */
+    UBool logKnownIssue( const char *ticket, const UnicodeString &message );
+    /**
+     * Replaces isICUVersionAtLeast and isICUVersionBefore
+     * log that an issue is known.
+     * Usually used this way:
+     * <code>if( ... && logKnownIssue("12345", "some bug")) continue; </code>
+     * @param ticket ticket string, "12345" or "cldrbug:1234"
+     * @return true if test should be skipped
+     */
+    UBool logKnownIssue( const char *ticket );
+    /**
+     * Replaces isICUVersionAtLeast and isICUVersionBefore
+     * log that an issue is known.
+     * Usually used this way:
+     * <code>if( ... && logKnownIssue("12345", "some bug")) continue; </code>
+     * @param ticket ticket string, "12345" or "cldrbug:1234"
+     * @param message optional message string
+     * @return true if test should be skipped
+     */
+    UBool logKnownIssue( const char *ticket, const char *fmt, ...);
+
     virtual void info( const UnicodeString &message );
 
     virtual void infoln( const UnicodeString &message );
@@ -160,7 +193,7 @@ public:
     virtual void infoln( void );
 
     virtual void err(void);
-    
+
     virtual void err( const UnicodeString &message );
 
     virtual void errln( const UnicodeString &message );
@@ -168,7 +201,7 @@ public:
     virtual void dataerr( const UnicodeString &message );
 
     virtual void dataerrln( const UnicodeString &message );
-    
+
     void errcheckln(UErrorCode status, const UnicodeString &message );
 
     // convenience functions: sprintf() + errln() etc.
@@ -191,6 +224,9 @@ public:
 
     // Print ALL named errors encountered so far
     void printErrors(); 
+
+    // print known issues. return TRUE if there were any.
+    UBool printKnownIssues();
         
     virtual void usage( void ) ;
 
@@ -210,32 +246,6 @@ public:
      */
     static float random();
 
-    /**
-     * Returns true if u_getVersion() < major.minor.
-     */
-    static UBool isICUVersionBefore(int major, int minor) {
-        return isICUVersionBefore(major, minor, 0);
-    }
-
-    /**
-     * Returns true if u_getVersion() < major.minor.milli.
-     */
-    static UBool isICUVersionBefore(int major, int minor, int milli);
-
-    /**
-     * Returns true if u_getVersion() >= major.minor.
-     */
-    static UBool isICUVersionAtLeast(int major, int minor) {
-        return isICUVersionAtLeast(major, minor, 0);
-    }
-
-    /**
-     * Returns true if u_getVersion() >= major.minor.milli.
-     */
-    static UBool isICUVersionAtLeast(int major, int minor, int milli) {
-        return !isICUVersionBefore(major, minor, milli);
-    }
-
     enum { kMaxProps = 16 };
 
     virtual void setProperty(const char* propline);
@@ -249,7 +259,7 @@ protected:
      * @param possibleDataError - if TRUE, use dataerrln instead of errcheckln on failure
      * @return TRUE on success, FALSE on failure.
      */
-    UBool assertSuccess(const char* message, UErrorCode ec, UBool possibleDataError=FALSE);
+    UBool assertSuccess(const char* message, UErrorCode ec, UBool possibleDataError=FALSE, const char *file=NULL, int line=0);
     UBool assertEquals(const char* message, const UnicodeString& expected,
                        const UnicodeString& actual, UBool possibleDataError=FALSE);
     UBool assertEquals(const char* message, const char* expected,
@@ -260,7 +270,7 @@ protected:
     UBool assertEquals(const char* message, int64_t expected, int64_t actual);
 #if !UCONFIG_NO_FORMATTING
     UBool assertEquals(const char* message, const Formattable& expected,
-                       const Formattable& actual);
+                       const Formattable& actual, UBool possibleDataError=FALSE);
     UBool assertEquals(const UnicodeString& message, const Formattable& expected,
                        const Formattable& actual);
 #endif
@@ -268,7 +278,7 @@ protected:
     UBool assertFalse(const UnicodeString& message, UBool condition, UBool quiet=FALSE);
     UBool assertSuccess(const UnicodeString& message, UErrorCode ec);
     UBool assertEquals(const UnicodeString& message, const UnicodeString& expected,
-                       const UnicodeString& actual);
+                       const UnicodeString& actual, UBool possibleDataError=FALSE);
     UBool assertEquals(const UnicodeString& message, const char* expected,
                        const char* actual);
     UBool assertEquals(const UnicodeString& message, UBool expected, UBool actual);
@@ -304,6 +314,7 @@ private:
     char*       testPath;           // specifies subtests
     
     char basePath[1024];
+    char currName[1024]; // current test name
 
     //FILE *testoutfp;
     void *testoutfp;
