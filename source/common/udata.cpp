@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1999-2012, International Business Machines
+*   Copyright (C) 1999-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -107,7 +107,7 @@ static UDataMemory *gCommonICUDataArray[10] = { NULL };
 static UBool gHaveTriedToLoadCommonData = FALSE;  /* See extendICUData(). */
 
 static UHashtable  *gCommonDataCache = NULL;  /* Global hash table of opened ICU data files.  */
-static UInitOnce    gCommonDataCacheInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gCommonDataCacheInitOnce = U_INITONCE_INITIALIZER;
 
 static UDataFileAccess  gDataFileAccess = UDATA_DEFAULT_ACCESS;
 
@@ -201,7 +201,7 @@ static UBool
 setCommonICUDataPointer(const void *pData, UBool /*warn*/, UErrorCode *pErrorCode) {
     UDataMemory tData;
     UDataMemory_init(&tData);
-    tData.pHeader = (const DataHeader *)pData;
+    UDataMemory_setData(&tData, pData);
     udata_checkCommonData(&tData, pErrorCode);
     return setCommonICUData(&tData, FALSE, pErrorCode);
 }

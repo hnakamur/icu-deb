@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2013, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
+* Copyright (C) 1997-2013, International Business Machines Corporation and
+* others. All Rights Reserved.
 *******************************************************************************
 *
 * File NUMFMT.CPP
@@ -95,8 +95,9 @@ static const UChar gSlash = 0x2f;
 // If the maximum base 10 exponent were 4, then the largest number would
 // be 99,999 which has 5 digits.
 // On IEEE754 systems gMaxIntegerDigits is 308 + possible denormalized 15 digits + rounding digit
-static const int32_t gMaxIntegerDigits = DBL_MAX_10_EXP + DBL_DIG + 1;
-static const int32_t gMinIntegerDigits = 127;
+// With big decimal, the max exponent is 999,999,999 and the max number of digits is the same, 999,999,999
+const int32_t icu::NumberFormat::gDefaultMaxIntegerDigits = 2000000000;
+const int32_t icu::NumberFormat::gDefaultMinIntegerDigits = 127;
 
 static const UChar * const gLastResortNumberPatterns[UNUM_FORMAT_STYLE_COUNT] = {
     NULL,  // UNUM_PATTERN_DECIMAL
@@ -140,11 +141,11 @@ static const char *gFormatKeys[UNUM_FORMAT_STYLE_COUNT] = {
 // Static hashtable cache of NumberingSystem objects used by NumberFormat
 static UHashtable * NumberingSystem_cache = NULL;
 static UMutex nscacheMutex = U_MUTEX_INITIALIZER;
-static UInitOnce gNSCacheInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gNSCacheInitOnce = U_INITONCE_INITIALIZER;
 
 #if !UCONFIG_NO_SERVICE
 static icu::ICULocaleService* gService = NULL;
-static UInitOnce gServiceInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gServiceInitOnce = U_INITONCE_INITIALIZER;
 #endif
 
 /**
@@ -215,7 +216,7 @@ SimpleNumberFormatFactory::getSupportedIDs(int32_t &count, UErrorCode& status) c
 // default constructor
 NumberFormat::NumberFormat()
 :   fGroupingUsed(TRUE),
-    fMaxIntegerDigits(gMaxIntegerDigits),
+    fMaxIntegerDigits(gDefaultMaxIntegerDigits),
     fMinIntegerDigits(1),
     fMaxFractionDigits(3), // invariant, >= minFractionDigits
     fMinFractionDigits(0),
@@ -433,24 +434,30 @@ NumberFormat::format(const StringPiece &decimalNum,
     return toAppendTo;
 }
 
-// -------------------------------------
+/**
+ *
 // Formats the number object and save the format
 // result in the toAppendTo string buffer.
 
 // utility to save/restore state, used in two overloads
 // of format(const Formattable&...) below.
-
+*
+* Old purpose of ArgExtractor was to avoid const. Not thread safe!
+*
+* keeping it around as a shim.
+*/
 class ArgExtractor {
-  NumberFormat *ncnf;
   const Formattable* num;
-  UBool setCurr;
   UChar save[4];
+  UBool fWasCurrency;
 
  public:
   ArgExtractor(const NumberFormat& nf, const Formattable& obj, UErrorCode& status);
   ~ArgExtractor();
 
   const Formattable* number(void) const;
+  const UChar *iso(void) const;
+  UBool wasCurrency(void) const;
 };
 
 inline const Formattable*
@@ -458,29 +465,34 @@ ArgExtractor::number(void) const {
   return num;
 }
 
-ArgExtractor::ArgExtractor(const NumberFormat& nf, const Formattable& obj, UErrorCode& status)
-    : ncnf((NumberFormat*) &nf), num(&obj), setCurr(FALSE) {
+inline UBool
+ArgExtractor::wasCurrency(void) const {
+  return fWasCurrency;
+}
+
+inline const UChar *
+ArgExtractor::iso(void) const {
+  return save;
+}
+
+ArgExtractor::ArgExtractor(const NumberFormat& /*nf*/, const Formattable& obj, UErrorCode& /*status*/)
+  : num(&obj), fWasCurrency(FALSE) {
 
     const UObject* o = obj.getObject(); // most commonly o==NULL
     const CurrencyAmount* amt;
     if (o != NULL && (amt = dynamic_cast<const CurrencyAmount*>(o)) != NULL) {
         // getISOCurrency() returns a pointer to internal storage, so we
         // copy it to retain it across the call to setCurrency().
-        const UChar* curr = amt->getISOCurrency();
-        u_strcpy(save, nf.getCurrency());
-        setCurr = (u_strcmp(curr, save) != 0);
-        if (setCurr) {
-            ncnf->setCurrency(curr, status);
-        }
+        //const UChar* curr = amt->getISOCurrency();
+        u_strcpy(save, amt->getISOCurrency());
         num = &amt->getNumber();
+        fWasCurrency=TRUE;
+    } else {
+      save[0]=0;
     }
 }
 
 ArgExtractor::~ArgExtractor() {
-    if (setCurr) {
-        UErrorCode ok = U_ZERO_ERROR;
-        ncnf->setCurrency(save, ok); // always restore currency
-    }
 }
 
 UnicodeString& NumberFormat::format(const DigitList &number,
@@ -526,6 +538,16 @@ NumberFormat::format(const Formattable& obj,
 
     ArgExtractor arg(*this, obj, status);
     const Formattable *n = arg.number();
+    const UChar *iso = arg.iso();
+
+    if(arg.wasCurrency() && u_strcmp(iso, getCurrency())) {
+      // trying to format a different currency.
+      // Right now, we clone.
+      LocalPointer<NumberFormat> cloneFmt((NumberFormat*)this->clone());
+      cloneFmt->setCurrency(iso, status);
+      // next line should NOT recurse, because n is numeric whereas obj was a wrapper around currency amount.
+      return cloneFmt->format(*n, appendTo, pos, status);
+    }
 
     if (n->isNumeric() && n->getDigitList() != NULL) {
         // Decimal Number.  We will have a DigitList available if the value was
@@ -571,6 +593,16 @@ NumberFormat::format(const Formattable& obj,
 
     ArgExtractor arg(*this, obj, status);
     const Formattable *n = arg.number();
+    const UChar *iso = arg.iso();
+
+    if(arg.wasCurrency() && u_strcmp(iso, getCurrency())) {
+      // trying to format a different currency.
+      // Right now, we clone.
+      LocalPointer<NumberFormat> cloneFmt((NumberFormat*)this->clone());
+      cloneFmt->setCurrency(iso, status);
+      // next line should NOT recurse, because n is numeric whereas obj was a wrapper around currency amount.
+      return cloneFmt->format(*n, appendTo, posIter, status);
+    }
 
     if (n->isNumeric() && n->getDigitList() != NULL) {
         // Decimal Number
@@ -1015,7 +1047,7 @@ int32_t NumberFormat::getMaximumIntegerDigits() const
 void
 NumberFormat::setMaximumIntegerDigits(int32_t newValue)
 {
-    fMaxIntegerDigits = uprv_max(0, uprv_min(newValue, gMaxIntegerDigits));
+    fMaxIntegerDigits = uprv_max(0, uprv_min(newValue, gDefaultMaxIntegerDigits));
     if(fMinIntegerDigits > fMaxIntegerDigits)
         fMinIntegerDigits = fMaxIntegerDigits;
 }
@@ -1037,7 +1069,7 @@ NumberFormat::getMinimumIntegerDigits() const
 void
 NumberFormat::setMinimumIntegerDigits(int32_t newValue)
 {
-    fMinIntegerDigits = uprv_max(0, uprv_min(newValue, gMinIntegerDigits));
+    fMinIntegerDigits = uprv_max(0, uprv_min(newValue, gDefaultMinIntegerDigits));
     if(fMinIntegerDigits > fMaxIntegerDigits)
         fMaxIntegerDigits = fMinIntegerDigits;
 }
@@ -1059,7 +1091,7 @@ NumberFormat::getMaximumFractionDigits() const
 void
 NumberFormat::setMaximumFractionDigits(int32_t newValue)
 {
-    fMaxFractionDigits = uprv_max(0, uprv_min(newValue, gMaxIntegerDigits));
+    fMaxFractionDigits = uprv_max(0, uprv_min(newValue, gDefaultMaxIntegerDigits));
     if(fMaxFractionDigits < fMinFractionDigits)
         fMinFractionDigits = fMaxFractionDigits;
 }
@@ -1081,7 +1113,7 @@ NumberFormat::getMinimumFractionDigits() const
 void
 NumberFormat::setMinimumFractionDigits(int32_t newValue)
 {
-    fMinFractionDigits = uprv_max(0, uprv_min(newValue, gMinIntegerDigits));
+    fMinFractionDigits = uprv_max(0, uprv_min(newValue, gDefaultMinIntegerDigits));
     if (fMaxFractionDigits < fMinFractionDigits)
         fMaxFractionDigits = fMinFractionDigits;
 }

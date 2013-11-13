@@ -38,10 +38,11 @@
 U_NAMESPACE_BEGIN
 
 class Hashtable;
-class NumberInfo;
+class FixedDecimal;
 class RuleChain;
-class RuleParser;
+class PluralRuleParser;
 class PluralKeywordEnumeration;
+class AndConstraint;
 
 /**
  * Defines rules for mapping non-negative numeric values onto a small set of
@@ -263,7 +264,6 @@ public:
      */
     static PluralRules* U_EXPORT2 forLocale(const Locale& locale, UErrorCode& status);
 
-#ifndef U_HIDE_DRAFT_API
     /**
      * Provides access to the predefined <code>PluralRules</code> for a given
      * locale and the plural type.
@@ -278,34 +278,17 @@ public:
      *                the rules for the closest parent in the locale hierarchy
      *                that has one will  be returned.  The final fallback always
      *                returns the default 'other' rules.
-     * @draft ICU 50
+     * @stable ICU 50
      */
     static PluralRules* U_EXPORT2 forLocale(const Locale& locale, UPluralType type, UErrorCode& status);
 
+#ifndef U_HIDE_INTERNAL_API
     /**
      * Return a StringEnumeration over the locales for which there is plurals data.
      * @return a StringEnumeration over the locales available.
      * @internal
      */
-    static StringEnumeration* U_EXPORT2 getAvailableLocales(void);
-
-    /**
-     * Returns the 'functionally equivalent' locale with respect to plural rules. 
-     * Calling PluralRules.forLocale with the functionally equivalent locale, and with 
-     * the provided locale, returns rules that behave the same. <br/>
-     * All locales with the same functionally equivalent locale have plural rules that 
-     * behave the same. This is not exaustive; there may be other locales whose plural 
-     * rules behave the same that do not have the same equivalent locale.
-     * 
-     * @param locale        the locale to check
-     * @param isAvailable   if not NULL the boolean will be set to TRUE if locale is directly
-     *                      defined (without fallback) as having plural rules.
-     * @param status        The error code.
-     * @return              the functionally-equivalent locale
-     * @internal
-     */
-    static Locale getFunctionalEquivalent(const Locale &locale, UBool *isAvailable,
-                                          UErrorCode &status);
+    static StringEnumeration* U_EXPORT2 getAvailableLocales(UErrorCode &status);
 
     /**
      * Returns whether or not there are overrides.
@@ -314,8 +297,7 @@ public:
      * @internal
      */
     static UBool hasOverride(const Locale &locale);
-
-#endif /* U_HIDE_DRAFT_API */
+#endif  /* U_HIDE_INTERNAL_API */
 
     /**
      * Given a number, returns the keyword of the first rule that applies to
@@ -338,11 +320,13 @@ public:
      * @stable ICU 4.0
      */
     UnicodeString select(double number) const;
-    
+
+#ifndef U_HIDE_INTERNAL_API
     /**
       * @internal
       */
-    UnicodeString select(const NumberInfo &number) const;
+    UnicodeString select(const FixedDecimal &number) const;
+#endif  /* U_HIDE_INTERNAL_API */
 
     /**
      * Returns a list of all rule keywords used in this <code>PluralRules</code>
@@ -432,6 +416,14 @@ public:
      */
     UnicodeString getKeywordOther() const;
 
+#ifndef U_HIDE_INTERNAL_API
+    /**
+     *
+     * @internal
+     */
+     UnicodeString getRules() const;
+#endif  /* U_HIDE_INTERNAL_API */
+
     /**
      * Compares the equality of two PluralRules objects.
      *
@@ -471,28 +463,14 @@ public:
 
 private:
     RuleChain  *mRules;
-    RuleParser *mParser;
-    double     *mSamples;
-    int32_t    *mSampleInfo;
-    int32_t    mSampleInfoCount;
 
     PluralRules();   // default constructor not implemented
-    int32_t getRepeatLimit() const;
-    void parseDescription(UnicodeString& ruleData, RuleChain& rules, UErrorCode &status);
-    void getNextLocale(const UnicodeString& localeData, int32_t* curIndex, UnicodeString& localeName);
-    void addRules(RuleChain& rules);
-    int32_t getNumberValue(const UnicodeString& token) const;
-    UnicodeString getRuleFromResource(const Locale& locale, UPluralType type, UErrorCode& status);
+    void            parseDescription(const UnicodeString& ruleData, UErrorCode &status);
+    int32_t         getNumberValue(const UnicodeString& token) const;
+    UnicodeString   getRuleFromResource(const Locale& locale, UPluralType type, UErrorCode& status);
+    RuleChain      *rulesForKeyword(const UnicodeString &keyword) const;
 
-    static const int32_t MAX_SAMPLES = 3;
-
-    int32_t getSamplesInternal(const UnicodeString &keyword, double *dest,
-                               int32_t destCapacity, UBool includeUnlimited,
-                               UErrorCode& status);
-    int32_t getKeywordIndex(const UnicodeString& keyword,
-                            UErrorCode& status) const;
-    void initSamples(UErrorCode& status);
-
+    friend class PluralRuleParser;
 };
 
 U_NAMESPACE_END

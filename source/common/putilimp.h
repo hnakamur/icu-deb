@@ -111,7 +111,7 @@ typedef size_t uintptr_t;
 #   define U_TZSET tzset
 #endif
 
-#ifdef U_TIMEZONE
+#if defined(U_TIMEZONE) || defined(U_HAVE_TIMEZONE)
     /* Use the predefined value. */
 #elif U_PLATFORM == U_PF_ANDROID
 #   define U_TIMEZONE timezone
@@ -125,6 +125,8 @@ typedef size_t uintptr_t;
 #elif U_PLATFORM == U_PF_BSD && !defined(__NetBSD__)
    /* not defined */
 #elif U_PLATFORM == U_PF_OS400
+   /* not defined */
+#elif U_PLATFORM == U_PF_IPHONE
    /* not defined */
 #else
 #   define U_TIMEZONE timezone
@@ -197,31 +199,30 @@ typedef size_t uintptr_t;
 
 /** @} */
 
-
 /**
  * \def U_HAVE_STD_ATOMICS
  * Defines whether the standard C++11 <atomic> is available.
+ * ICU will use this when avialable,
+ * otherwise will fall back to compiler or platform specific alternatives.
  * @internal
  */
 #ifdef U_HAVE_STD_ATOMICS
     /* Use the predefined value. */
-#elif defined(__cplusplus) && __cplusplus>=201103L
-    /* C++11, so we should have atomics, except for specific platforms or compilers. */
-#if __clang__ && defined(__APPLE__)
-    /* Apple Clang Atomics are not fully implemented yet. */
+#elif !defined(__cplusplus) || __cplusplus<201103L
+    /* Not C++11, disable use of atomics */
 #   define U_HAVE_STD_ATOMICS 0
 #elif __clang__ && __clang_major__==3 && __clang_minor__<=1
-    /* Clang 3.1. Atomics not fully implemented. */
+    /* Clang 3.1, has atomic variable initializer bug. */
 #   define U_HAVE_STD_ATOMICS 0
 #else 
-#   define U_HAVE_STD_ATOMICS 1
+    /* U_HAVE_ATOMIC is typically set by an autoconf test of #include <atomic>  */
+    /*   Can be set manually, or left undefined, on platforms without autoconf. */
+#   if defined(U_HAVE_ATOMIC) &&  U_HAVE_ATOMIC 
+#      define U_HAVE_STD_ATOMICS 1
+#   else
+#      define U_HAVE_STD_ATOMICS 0
+#   endif
 #endif
-
-#else
-    /* Not C++ 11 */
-#   define U_HAVE_STD_ATOMICS 0
-#endif
-
 
 
 /*===========================================================================*/

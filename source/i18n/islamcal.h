@@ -81,18 +81,21 @@ U_NAMESPACE_BEGIN
  * @author Steven R. Loomis
  * @internal
  */
-class IslamicCalendar : public Calendar {
+class U_I18N_API IslamicCalendar : public Calendar {
  public:
   //-------------------------------------------------------------------------
   // Constants...
   //-------------------------------------------------------------------------
+  
   /**
-   * Calendar type - civil or religious
+   * Calendar type - civil or religious or um alqura
    * @internal 
    */
-  enum ECivil {
+  enum ECalculationType {
     ASTRONOMICAL,
-    CIVIL
+    CIVIL,
+    UMALQURA,
+    TBLA
   };
   
   /**
@@ -176,7 +179,6 @@ class IslamicCalendar : public Calendar {
   }; 
 
 
-
   //-------------------------------------------------------------------------
   // Constructors...
   //-------------------------------------------------------------------------
@@ -188,10 +190,10 @@ class IslamicCalendar : public Calendar {
    * @param aLocale  The given locale.
    * @param success  Indicates the status of IslamicCalendar object construction.
    *                 Returns U_ZERO_ERROR if constructed successfully.
-   * @param beCivil  Whether the calendar should be civil (default-TRUE) or religious (FALSE)
+   * @param type     The Islamic calendar calculation type. The default value is CIVIL.
    * @internal
    */
-  IslamicCalendar(const Locale& aLocale, UErrorCode &success, ECivil beCivil = CIVIL);
+  IslamicCalendar(const Locale& aLocale, UErrorCode &success, ECalculationType type = CIVIL);
 
   /**
    * Copy Constructor
@@ -206,14 +208,13 @@ class IslamicCalendar : public Calendar {
   virtual ~IslamicCalendar();
 
   /**
-   * Determines whether this object uses the fixed-cycle Islamic civil calendar
-   * or an approximation of the religious, astronomical calendar.
+   * Sets Islamic calendar calculation type used by this instance.
    *
-   * @param beCivil   <code>CIVIL</code> to use the civil calendar,
-   *                  <code>ASTRONOMICAL</code> to use the astronomical calendar.
+   * @param type    The calendar calculation type, <code>CIVIL</code> to use the civil
+   *                calendar, <code>ASTRONOMICAL</code> to use the astronomical calendar.
    * @internal
    */
-  void setCivil(ECivil beCivil, UErrorCode &status);
+  void setCalculationType(ECalculationType type, UErrorCode &status);
     
   /**
    * Returns <code>true</code> if this object is using the fixed-cycle civil
@@ -239,7 +240,7 @@ class IslamicCalendar : public Calendar {
    * Return the day # on which the given year starts.  Days are counted
    * from the Hijri epoch, origin 0.
    */
-  int32_t yearStart(int32_t year);
+  int32_t yearStart(int32_t year) const;
 
   /**
    * Return the day # on which the given month starts.  Days are counted
@@ -280,7 +281,7 @@ class IslamicCalendar : public Calendar {
    * and <code>ASTRONOMICAL</code> if it approximates the true religious calendar using
    * astronomical calculations for the time of the new moon.
    */
-  ECivil civil;
+  ECalculationType cType;
 
   //----------------------------------------------------------------------
   // Calendar framework
@@ -363,7 +364,7 @@ class IslamicCalendar : public Calendar {
    * @return   The class ID for all objects of this class.
    * @internal
    */
-  U_I18N_API static UClassID U_EXPORT2 getStaticClassID(void);
+  /*U_I18N_API*/ static UClassID U_EXPORT2 getStaticClassID(void);
 
   /**
    * return the calendar type, "buddhist".
@@ -409,6 +410,14 @@ class IslamicCalendar : public Calendar {
    * @internal
    */
   virtual int32_t defaultCenturyStartYear() const;
+
+ private:
+  /**
+   * Initializes the 100-year window that dates with 2-digit years
+   * are considered to fall within so that its start date is 80 years
+   * before the current time.
+   */
+  static void  initializeSystemDefaultCentury(void);
 };
 
 U_NAMESPACE_END

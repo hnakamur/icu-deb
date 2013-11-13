@@ -38,6 +38,7 @@
 #include "putilimp.h" // for uprv_getRawUTCtime()
 #include "unicode/locid.h"
 #include "unicode/ctest.h" // for str_timeDelta
+#include "udbgutil.h"
 
 #ifdef XP_MAC_CONSOLE
 #include <console.h>
@@ -49,6 +50,8 @@ static char* _testDataPath=NULL;
 
 // Static list of errors found
 static UnicodeString errorList;
+static void *knownList = NULL; // known issues
+static UBool noKnownIssues = FALSE; // if TRUE, don't emit known issues
 
 //-----------------------------------------------------------------------------
 //convenience classes to ease porting code that uses the Java
@@ -215,7 +218,7 @@ UnicodeString toString(int32_t n) {
 
 
 UnicodeString toString(UBool b) {
-  return b ? UnicodeString("TRUE"):UnicodeString("false");
+  return b ? UnicodeString("TRUE"):UnicodeString("FALSE");
 }
 
 // stephen - cleaned up 05/05/99
@@ -547,6 +550,7 @@ IntlTest::IntlTest()
     LL_indentlevel = indentLevel_offset;
     numProps = 0;
     strcpy(basePath, "/");
+    currName[0]=0;
 }
 
 void IntlTest::setCaller( IntlTest* callingTest )
@@ -741,7 +745,9 @@ UBool IntlTest::runTestLoop( char* testname, char* par, char *baseName )
             strcpy(saveBaseLoc,name);
             strcat(saveBaseLoc,"/");
 
+            strcpy(currName, name); // set
             this->runIndexedTest( index, TRUE, name, par );
+            currName[0]=0; // reset
 
             UDate timeStop = uprv_getRawUTCtime();
             rval = TRUE; // at least one test has been called
@@ -890,7 +896,7 @@ void IntlTest::dataerr( const UnicodeString &message )
 
 void IntlTest::dataerrln( const UnicodeString &message )
 {
-    IncDataErrorCount();
+    int32_t errCount = IncDataErrorCount();
     UnicodeString msg;
     if (!warn_on_missing_data) {
         IncErrorCount();
@@ -899,7 +905,13 @@ void IntlTest::dataerrln( const UnicodeString &message )
         msg = UnicodeString("[DATA] " + message);
     }
 
-    if (!no_err_msg) LL_message( msg + " - (Are you missing data?)", TRUE );
+    if (!no_err_msg) {
+      if ( errCount == 1) {
+          LL_message( msg + " - (Are you missing data?)", TRUE ); // only show this message the first time
+      } else {
+          LL_message( msg , TRUE );
+      }
+    }
 }
 
 void IntlTest::errcheckln(UErrorCode status, const UnicodeString &message ) {
@@ -937,6 +949,41 @@ void IntlTest::logln(const char *fmt, ...)
     if( verbose ) {
         logln(UnicodeString(buffer, ""));
     }
+}
+
+UBool IntlTest::logKnownIssue(const char *ticket, const char *fmt, ...)
+{
+    char buffer[4000];
+    va_list ap;
+
+    va_start(ap, fmt);
+    /* sprintf it just to make sure that the information is valid */
+    vsprintf(buffer, fmt, ap);
+    va_end(ap);
+    return logKnownIssue(ticket, UnicodeString(buffer, ""));
+}
+
+UBool IntlTest::logKnownIssue(const char *ticket) {
+  return logKnownIssue(ticket, UnicodeString());
+}
+
+UBool IntlTest::logKnownIssue(const char *ticket, const UnicodeString &msg) {
+  if(noKnownIssues) return FALSE;
+
+  char fullpath[2048];
+  strcpy(fullpath, basePath);
+  strcat(fullpath, currName);
+  UnicodeString msg2 =msg;
+  UBool firstForTicket, firstForWhere;
+  knownList = udbg_knownIssue_openU(knownList, ticket, fullpath, msg2.getTerminatedBuffer(), &firstForTicket, &firstForWhere);
+
+  if(firstForTicket || firstForWhere) {
+    infoln(UnicodeString("(Known issue #","") + UnicodeString(ticket,"")+ UnicodeString(") \"","") + msg);
+  } else {
+    logln(UnicodeString("(Known issue #","") + UnicodeString(ticket,"")+ UnicodeString(") \"","") + msg);
+  }
+
+  return TRUE;
 }
 
 /* convenience functions that include sprintf formatting */
@@ -1016,6 +1063,17 @@ void IntlTest::errcheckln(UErrorCode status, const char *fmt, ...)
 void IntlTest::printErrors()
 {
      IntlTest::LL_message(errorList, TRUE);
+}
+
+UBool IntlTest::printKnownIssues()
+{
+  if(knownList != NULL) {
+    udbg_knownIssue_print(knownList);
+    udbg_knownIssue_close(knownList);
+    return TRUE;
+  } else {
+    return FALSE;
+  }
 }
 
 void IntlTest::LL_message( UnicodeString message, UBool newline )
@@ -1152,6 +1210,9 @@ main(int argc, char* argv[])
             else if (strcmp("utf-8", str) == 0 ||
                      strcmp("u", str) == 0)
                 utf8 = TRUE;
+            else if (strcmp("noknownissues", str) == 0 ||
+                     strcmp("K", str) == 0)
+                noKnownIssues = TRUE;
             else if (strcmp("leaks", str) == 0 ||
                      strcmp("l", str) == 0)
                 leaks = TRUE;
@@ -1266,6 +1327,7 @@ main(int argc, char* argv[])
     fprintf(stdout, "   Leaks (l)                : %s\n", (leaks?             "On" : "Off"));
     fprintf(stdout, "   utf-8 (u)                : %s\n", (utf8?              "On" : "Off"));
     fprintf(stdout, "   notime (T)               : %s\n", (no_time?             "On" : "Off"));
+    fprintf(stdout, "   noknownissues (K)        : %s\n", (noKnownIssues?      "On" : "Off"));
     fprintf(stdout, "   Warn on missing data (w) : %s\n", (warnOnMissingData? "On" : "Off"));
 #if (ICU_USE_THREADS==0)
     fprintf(stdout, "   Threads                  : Disabled\n");
@@ -1421,6 +1483,9 @@ main(int argc, char* argv[])
     }
 
     fprintf(stdout, "\n--------------------------------------\n");
+    if( major.printKnownIssues() ) {
+      fprintf(stdout, " To run suppressed tests, use the -K option. \n");
+    }
     if (major.getErrors() == 0) {
         /* Call it twice to make sure that the defaults were reset. */
         /* Call it before the OK message to verify proper cleanup. */
@@ -1724,15 +1789,19 @@ UBool IntlTest::assertFalse(const char* message, UBool condition, UBool quiet) {
     return !condition;
 }
 
-UBool IntlTest::assertSuccess(const char* message, UErrorCode ec, UBool possibleDataError) {
+UBool IntlTest::assertSuccess(const char* message, UErrorCode ec, UBool possibleDataError, const char *file, int line) {
+    if( file==NULL ) {
+      file = ""; // prevent failure if no file given
+    }
     if (U_FAILURE(ec)) {
         if (possibleDataError) {
-            dataerrln("FAIL: %s (%s)", message, u_errorName(ec));
+          dataerrln("FAIL: %s:%d: %s (%s)", file, line, message, u_errorName(ec));
         } else {
-            errcheckln(ec, "FAIL: %s (%s)", message, u_errorName(ec));
+          errcheckln(ec, "FAIL: %s:%d: %s (%s)", file, line, message, u_errorName(ec));
         }
-        
         return FALSE;
+    } else {
+      logln("OK: %s:%d: %s - (%s)", file, line, message, u_errorName(ec));
     }
     return TRUE;
 }
@@ -1832,11 +1901,18 @@ UBool IntlTest::assertEquals(const char* message,
 #if !UCONFIG_NO_FORMATTING
 UBool IntlTest::assertEquals(const char* message,
                              const Formattable& expected,
-                             const Formattable& actual) {
+                             const Formattable& actual,
+                             UBool possibleDataError) {
     if (expected != actual) {
-        errln((UnicodeString)"FAIL: " + message + "; got " +
-              toString(actual) +
-              "; expected " + toString(expected));
+        if (possibleDataError) {
+            dataerrln((UnicodeString)"FAIL: " + message + "; got " +
+                  toString(actual) +
+                  "; expected " + toString(expected));
+        } else {
+            errln((UnicodeString)"FAIL: " + message + "; got " +
+                  toString(actual) +
+                  "; expected " + toString(expected));
+        }
         return FALSE;
     }
 #ifdef VERBOSE_ASSERTIONS
@@ -1872,8 +1948,9 @@ UBool IntlTest::assertSuccess(const UnicodeString& message, UErrorCode ec) {
 
 UBool IntlTest::assertEquals(const UnicodeString& message,
                              const UnicodeString& expected,
-                             const UnicodeString& actual) {
-    return assertEquals(extractToAssertBuf(message), expected, actual);
+                             const UnicodeString& actual,
+                             UBool possibleDataError) {
+    return assertEquals(extractToAssertBuf(message), expected, actual, possibleDataError);
 }
 
 UBool IntlTest::assertEquals(const UnicodeString& message,
@@ -1895,17 +1972,6 @@ UBool IntlTest::assertEquals(const UnicodeString& message,
                              int64_t expected,
                              int64_t actual) {
     return assertEquals(extractToAssertBuf(message), expected, actual);
-}
-//--------------------------------------------------------------------
-// Time bomb - allows temporary behavior that expires at a given
-//             release
-//--------------------------------------------------------------------
-
-UBool IntlTest::isICUVersionBefore(int major, int minor, int milli) {
-    UVersionInfo iv;
-    UVersionInfo ov = { (uint8_t)major, (uint8_t)minor, (uint8_t)milli, 0 };
-    u_getVersion(iv);
-    return uprv_memcmp(iv, ov, U_MAX_VERSION_LENGTH) < 0;
 }
 
 #if !UCONFIG_NO_FORMATTING

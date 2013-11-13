@@ -33,7 +33,6 @@ U_NAMESPACE_BEGIN
 class CharString;
 class DigitList;
 
-#ifndef U_HIDE_INTERNAL_API
 /**
  * \def UNUM_INTERNAL_STACKARRAY_SIZE
  * @internal
@@ -43,7 +42,6 @@ class DigitList;
 #else
 #define UNUM_INTERNAL_STACKARRAY_SIZE 128
 #endif
-#endif  /* U_HIDE_INTERNAL_API */
 
 /**
  * Formattable objects can be passed to the Format class or
@@ -127,7 +125,7 @@ public:
      * Creates a Formattable object of an appropriate numeric type from a
      * a decimal number in string form.  The Formattable will retain the
      * full precision of the input in decimal format, even when it exceeds
-     * what can be represented by a double of int64_t.
+     * what can be represented by a double or int64_t.
      *
      * @param number  the unformatted (not localized) string representation
      *                     of the Decimal number.
@@ -600,6 +598,7 @@ public:
      */
     static UClassID U_EXPORT2 getStaticClassID();
 
+#ifndef U_HIDE_DRAFT_API
     /**
      * Convert the UFormattable to a Formattable.  Internally, this is a reinterpret_cast.
      * @param fmt a valid UFormattable
@@ -620,10 +619,20 @@ public:
 
     /**
      * Convert this object pointer to a UFormattable.
-     * @return this object as a UFormattable pointer.   This is an alias to the original UFormattable,
-     * and so is only valid while the original argument remains in scope.
+     * @return this object as a UFormattable pointer.   This is an alias to this object,
+     * and so is only valid while this object remains in scope.
+     * @draft ICU 52
      */
     inline UFormattable *toUFormattable();
+
+    /**
+     * Convert this object pointer to a UFormattable.
+     * @return this object as a UFormattable pointer.   This is an alias to this object,
+     * and so is only valid while this object remains in scope.
+     * @draft ICU 52
+     */
+    inline const UFormattable *toUFormattable() const;
+#endif  /* U_HIDE_DRAFT_API */
 
 #ifndef U_HIDE_DEPRECATED_API
     /**
@@ -663,6 +672,7 @@ public:
      * Internal function to return the CharString pointer.
      * @param status error code
      * @return pointer to the CharString - may become invalid if the object is modified
+     * @internal
      */
     CharString *internalGetCharString(UErrorCode &status);
 
@@ -722,12 +732,19 @@ inline UnicodeString& Formattable::getString(void) {
     return *fValue.fString;
 }
 
+#ifndef U_HIDE_DEPRECATED_API
 inline int32_t Formattable::getLong(UErrorCode* status) const {
     return getLong(*status);
 }
+#endif  /* U_HIDE_DEPRECATED_API */
 
+#ifndef U_HIDE_DRAFT_API
 inline UFormattable* Formattable::toUFormattable() {
-  return (UFormattable*)(this);
+  return reinterpret_cast<UFormattable*>(this);
+}
+
+inline const UFormattable* Formattable::toUFormattable() const {
+  return reinterpret_cast<const UFormattable*>(this);
 }
 
 inline Formattable* Formattable::fromUFormattable(UFormattable *fmt) {
@@ -737,7 +754,7 @@ inline Formattable* Formattable::fromUFormattable(UFormattable *fmt) {
 inline const Formattable* Formattable::fromUFormattable(const UFormattable *fmt) {
   return reinterpret_cast<const Formattable *>(fmt);
 }
-
+#endif  /* U_HIDE_DRAFT_API */
 
 U_NAMESPACE_END
 

@@ -1570,7 +1570,7 @@ void RBBITest::TestUnicodeFiles() {
 void RBBITest::runUnicodeTestData(const char *fileName, RuleBasedBreakIterator *bi) {
 #if !UCONFIG_NO_REGULAR_EXPRESSIONS
     // TODO(andy): Match line break behavior to Unicode 6.0 and remove this time bomb. Ticket #7270
-    UBool isTicket7270Fixed = isICUVersionAtLeast(52, 1);
+    UBool isTicket7270Fixed = !logKnownIssue("7270");
     UBool isLineBreak = 0 == strcmp(fileName, "LineBreakTest.txt");
     UErrorCode  status = U_ZERO_ERROR;
 
@@ -3186,6 +3186,12 @@ int32_t RBBILineMonkey::next(int32_t startPos) {
         //   HL (HY | BA) x
         if (fHL->contains(prevCharX2) && 
                 (fHY->contains(prevChar) || fBA->contains(prevChar))) {
+            continue;
+        }
+
+        // LB 21b
+        //   SY x HL
+        if (fSY->contains(prevChar) && fHL->contains(thisChar)) {
             continue;
         }
 
