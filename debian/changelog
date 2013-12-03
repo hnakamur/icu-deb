@@ -1,3 +1,9 @@
+icu (52.1-2) unstable; urgency=low
+
+  * Re-upload to unstable
+
+ -- Jay Berkenbilt <qjb@debian.org>  Tue, 03 Dec 2013 16:05:40 -0500
+
 icu (52.1-1) experimental; urgency=low
 
   * New upstream release
