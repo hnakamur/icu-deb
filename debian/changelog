@@ -1,3 +1,11 @@
+icu (52.1-2ubuntu1) trusty; urgency=medium
+
+  * Merge from Debian, remaining changes (LP: #1263706):
+    - Add icu-tools to icu-devtools Breaks & Replaces, to allow smooth
+      upgrades on ubuntu 13.10 -> 14.04. Drop after Trusty release.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Tue, 24 Dec 2013 14:43:58 +0000
+
 icu (52.1-2) unstable; urgency=low
 
   * Re-upload to unstable
