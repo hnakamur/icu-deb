@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 
-export DEB_BUILD_HARDENING=1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_CFLAGS_MAINT_APPEND = -Wall
+include /usr/share/dpkg/buildflags.mk
 
 # Install all ICU headers files in the architecture-specific location.
 # While most files are platform-independent, platform.h is different
