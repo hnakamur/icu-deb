@@ -17,7 +17,7 @@ DEB_CONFIGURE_USER_FLAGS = --libdir="\$${prefix}/lib/$(DEB_HOST_MULTIARCH)" \
 # than for use by cdbs), we adopt the convention of starting local
 # variables' names with l_.
 
-l_SONAME := 52
+l_SONAME := 53
 
 # Turn off optimization on armel to avoid some internal compiler
 # errors.  This can be removed once bug 484053 is resolved.

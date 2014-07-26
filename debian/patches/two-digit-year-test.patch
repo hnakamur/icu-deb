@@ -5,9 +5,9 @@ Bug-Debian: http://bugs.debian.org/746860
 
 Index: icu/source/test/intltest/dtfmttst.cpp
 ===================================================================
---- icu.orig/source/test/intltest/dtfmttst.cpp	2014-06-21 16:50:09.746088008 -0400
-+++ icu/source/test/intltest/dtfmttst.cpp	2014-06-21 16:50:09.742087988 -0400
-@@ -1128,8 +1128,8 @@
+--- icu.orig/source/test/intltest/dtfmttst.cpp
++++ icu/source/test/intltest/dtfmttst.cpp
+@@ -1131,8 +1131,8 @@ DateFormatTest::TestTwoDigitYear()
          dataerrln("FAIL: SimpleDateFormat constructor - %s", u_errorName(ec));
          return;
      }

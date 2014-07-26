@@ -3,10 +3,10 @@ Author: Harshula <harshula@debian.org>
 Bug: http://bugs.icu-project.org/trac/ticket/7601
 Bug-Debian: http://bugs.debian.org/655101
 
-Index: icu-52~m1/source/layout/IndicReordering.cpp
+Index: icu/source/layout/IndicReordering.cpp
 ===================================================================
---- icu-52~m1.orig/source/layout/IndicReordering.cpp	2013-09-14 18:53:23.752040473 -0400
-+++ icu-52~m1/source/layout/IndicReordering.cpp	2013-09-14 18:53:23.748040473 -0400
+--- icu.orig/source/layout/IndicReordering.cpp
++++ icu/source/layout/IndicReordering.cpp
 @@ -13,6 +13,7 @@
  
  U_NAMESPACE_BEGIN
@@ -15,7 +15,7 @@ Index: icu-52~m1/source/layout/IndicReordering.cpp
  #define loclFeatureTag LE_LOCL_FEATURE_TAG
  #define initFeatureTag LE_INIT_FEATURE_TAG
  #define nuktFeatureTag LE_NUKT_FEATURE_TAG
-@@ -35,6 +36,7 @@
+@@ -35,6 +36,7 @@ U_NAMESPACE_BEGIN
  #define caltFeatureTag LE_CALT_FEATURE_TAG
  #define kernFeatureTag LE_KERN_FEATURE_TAG
  
@@ -23,7 +23,7 @@ Index: icu-52~m1/source/layout/IndicReordering.cpp
  #define loclFeatureMask 0x80000000UL
  #define rphfFeatureMask 0x40000000UL
  #define blwfFeatureMask 0x20000000UL
-@@ -73,7 +75,7 @@
+@@ -73,7 +75,7 @@ U_NAMESPACE_BEGIN
  
  #define repositionedGlyphMask   0x00000002UL
  
@@ -32,7 +32,7 @@ Index: icu-52~m1/source/layout/IndicReordering.cpp
  #define positioningFormsMask ( kernFeatureMask | distFeatureMask | abvmFeatureMask | blwmFeatureMask )
  #define presentationFormsMask ( presFeatureMask | abvsFeatureMask | blwsFeatureMask | pstsFeatureMask | halnFeatureMask | caltFeatureMask )
  
-@@ -484,6 +486,7 @@
+@@ -484,6 +486,7 @@ public:
  #define tagArray0 (rphfFeatureMask | tagArray1)
  
  static const FeatureMap featureMap[] = {
@@ -40,7 +40,7 @@ Index: icu-52~m1/source/layout/IndicReordering.cpp
      {loclFeatureTag, loclFeatureMask},
      {initFeatureTag, initFeatureMask},
      {nuktFeatureTag, nuktFeatureMask},
-@@ -506,6 +509,7 @@
+@@ -506,6 +509,7 @@ static const FeatureMap featureMap[] = {
  static const le_int32 featureCount = LE_ARRAY_SIZE(featureMap);
  
  static const FeatureMap v2FeatureMap[] = {
