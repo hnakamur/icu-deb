@@ -1,3 +1,9 @@
+icu (53.1-1) experimental; urgency=medium
+
+  * New upstream release
+
+ -- Jay Berkenbilt <qjb@debian.org>  Sat, 26 Jul 2014 14:40:41 -0400
+
 icu (52.1-5) unstable; urgency=medium
 
   * Switch hardening back to dpkg-buildflags. It wasn't previously working
