@@ -1,3 +1,11 @@
+icu (52.1-6) unstable; urgency=medium
+
+  * Ensure that only flags intended to be set by users make it into
+    icu-config. Previously hardening flags were sneaking in there.
+    (Closes: #759792)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Mon, 29 Sep 2014 09:59:09 -0400
+
 icu (52.1-5) unstable; urgency=medium
 
   * Switch hardening back to dpkg-buildflags. It wasn't previously working
