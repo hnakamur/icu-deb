@@ -5,3 +5,4 @@ malayalam-rendering.patch
 indic-ccmp.patch
 mlym-crash.patch
 two-digit-year-test.patch
+icu-config.patch
