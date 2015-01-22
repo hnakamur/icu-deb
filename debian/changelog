@@ -1,3 +1,10 @@
+icu (52.1-7) unstable; urgency=high
+
+  * Patch to CVE-2014-6591, CVE-2014-6585 a font parsing bug.
+    (Closes: #775884)
+
+ -- Jay Berkenbilt <qjb@debian.org>  Wed, 21 Jan 2015 21:33:19 -0500
+
 icu (52.1-6) unstable; urgency=medium
 
   * Ensure that only flags intended to be set by users make it into

@@ -6,3 +6,4 @@ indic-ccmp.patch
 mlym-crash.patch
 two-digit-year-test.patch
 icu-config.patch
+CVE-2014-6591.patch
