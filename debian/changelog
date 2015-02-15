@@ -1,3 +1,16 @@
+icu (52.1-7.1) unstable; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Unfixed issue from the previous upload (closes: #776264)
+    - CVE-2014-6585: out-of-bounds read.
+  * Issues fixed in chromium 40.0.2214.91 (closes: #776265, #776719).
+    - CVE-2014-7923: memory corruption in regular expression comparison.
+    - CVE-2014-7926: memory corruption in regular expression comparison.
+    - CVE-2014-7940: uninitialized memory in i18n/icol.cpp.
+    - CVE-2014-9654: more regular expression handling issues.
+
+ -- Michael Gilbert <mgilbert@debian.org>  Sun, 15 Feb 2015 22:19:14 +0000
+
 icu (52.1-7) unstable; urgency=high
 
   * Patch to CVE-2014-6591, CVE-2014-6585 a font parsing bug.
