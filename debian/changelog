@@ -1,3 +1,57 @@
+icu (4.8.1.1-3ubuntu0.3) precise-security; urgency=medium
+
+  * SECURITY UPDATE: multiple issues via incorrect font file parsing
+    - debian/patches/layoutengine-security.patch: backport a whole new
+      layout engine to source/layout/*, as provided by upstream.
+    - CVE-2013-1569
+    - CVE-2013-2383
+    - CVE-2013-2384
+    - CVE-2013-2419
+  * SECURITY UPDATE: information disclosure via incorrect font file parsing
+    - debian/patches/CVE-2014-65xx.patch: add checks to
+      source/layout/ContextualSubstSubtables.cpp,
+      source/layout/CursiveAttachmentSubtables.cpp,
+      source/layout/Features.cpp,
+      source/layout/LETableReference.h,
+      source/layout/LigatureSubstSubtables.cpp,
+      source/layout/MultipleSubstSubtables.cpp.
+    - CVE-2014-6585
+    - CVE-2014-6591
+  * SECURITY UPDATE: denial of service or possible code execution in
+    regular expressions
+    - debian/patches/CVE-2014-7923.patch: add limits to
+      source/i18n/regexcmp.cpp, add test to
+      source/test/testdata/regextst.txt.
+    - CVE-2014-7923
+  * SECURITY UPDATE: denial of service or possible code execution in
+    regular expressions
+    - debian/patches/CVE-2014-7926.patch: fix incorrect optimization in
+      source/i18n/regexcmp.cpp, fix comment in source/i18n/regexcmp.h,
+      add test to source/test/testdata/regextst.txt.
+    - CVE-2014-7926
+  * SECURITY UPDATE: denial of service or possible code execution via
+    uninitialized memory in the collator implementation
+    - debian/patches/CVE-2014-7940.patch: properly handle memory in
+      source/i18n/ucol.cpp.
+    - CVE-2014-7940
+  * SECURITY UPDATE: denial of service via incorrect pattern size limits
+    - debian/patches/CVE-2014-9654.patch: fix case insensitive matches and
+      check limits in source/common/unicode/utypes.h,
+      source/common/utypes.c,
+      source/i18n/regexcmp.cpp, source/i18n/regexcmp.h,
+      source/i18n/regeximp.h, source/i18n/i18n.vcxproj.filters,
+      source/i18n/unicode/regex.h, source/i18n/regeximp.cpp,
+      source/i18n/rematch.cpp, source/i18n/i18n.vcxproj,
+      source/i18n/Makefile.in, added tests to
+      source/test/intltest/regextst.cpp, source/test/intltest/regextst.h,
+      source/test/testdata/regextst.txt.
+    - CVE-2014-9654
+  * debian/rules: added cdbs autotools rule and adjust DEB_SRCDIR so test
+    suite gets run during build.
+  * debian/patches/two-digit-year-test.patch: fix test suite failure.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 04 Mar 2015 11:14:58 -0500
+
 icu (4.8.1.1-3ubuntu0.1) precise-security; urgency=low
 
   * SECURITY UPDATE: denial of service and possible code execution via

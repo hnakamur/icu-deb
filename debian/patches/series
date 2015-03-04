@@ -8,3 +8,10 @@ pathmax.patch
 CVE-2011-4599.patch
 CVE-2013-0900.patch
 CVE-2013-2924.patch
+two-digit-year-test.patch
+layoutengine-security.patch
+CVE-2014-65xx.patch
+CVE-2014-7923.patch
+CVE-2014-7926.patch
+CVE-2014-7940.patch
+CVE-2014-9654.patch
