@@ -4,3 +4,9 @@ icuinfo-man.patch
 malayalam-rendering.patch
 indic-ccmp.patch
 mlym-crash.patch
+CVE-2014-65xx.patch
+CVE-2014-7923.patch
+CVE-2014-7926.patch
+CVE-2014-7940.patch
+CVE-2014-9654.patch
+two-digit-year-test.patch
