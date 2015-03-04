@@ -46,6 +46,7 @@ public:
     virtual void Bug8479();
     virtual void Bug7029();
     virtual void Bug9283();
+    virtual void TestBug11371();
     virtual void CheckInvBufSize();
     
     // The following functions are internal to the regexp tests.
