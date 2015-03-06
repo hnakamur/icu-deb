@@ -1,3 +1,11 @@
+icu (4.8.1.1-3ubuntu0.4) precise-security; urgency=medium
+
+  * SECURITY REGRESSION: libreoffice calc crash (LP: #1429043)
+    - back out layoutengine-security.patch and CVE-2014-65xx.patch patches
+      pending investigation.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 06 Mar 2015 11:36:47 -0500
+
 icu (4.8.1.1-3ubuntu0.3) precise-security; urgency=medium
 
   * SECURITY UPDATE: multiple issues via incorrect font file parsing
