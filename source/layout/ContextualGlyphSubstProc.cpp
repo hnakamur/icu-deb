@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -18,18 +18,13 @@ U_NAMESPACE_BEGIN
 
 UOBJECT_DEFINE_RTTI_IMPLEMENTATION(ContextualGlyphSubstitutionProcessor)
 
-ContextualGlyphSubstitutionProcessor::ContextualGlyphSubstitutionProcessor(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success)
-  : StateTableProcessor(morphSubtableHeader, success), entryTable(), contextualGlyphSubstitutionHeader(morphSubtableHeader, success)
+ContextualGlyphSubstitutionProcessor::ContextualGlyphSubstitutionProcessor(const MorphSubtableHeader *morphSubtableHeader)
+  : StateTableProcessor(morphSubtableHeader)
 {
-  contextualGlyphSubstitutionHeader.orphan();
-  substitutionTableOffset = SWAPW(contextualGlyphSubstitutionHeader->substitutionTableOffset);
+    contextualGlyphSubstitutionHeader = (const ContextualGlyphSubstitutionHeader *) morphSubtableHeader;
+    substitutionTableOffset = SWAPW(contextualGlyphSubstitutionHeader->substitutionTableOffset);
 
-  
-  entryTable = LEReferenceToArrayOf<ContextualGlyphSubstitutionStateEntry>(stateTableHeader, success, 
-                                                                           (const ContextualGlyphSubstitutionStateEntry*)(&stateTableHeader->stHeader),
-                                                                           entryTableOffset, LE_UNBOUNDED_ARRAY);
-  int16Table = LEReferenceToArrayOf<le_int16>(stateTableHeader, success, (const le_int16*)(&stateTableHeader->stHeader),
-                                              0, LE_UNBOUNDED_ARRAY); // rest of the table as le_int16s
+    entryTable = (const ContextualGlyphSubstitutionStateEntry *) ((char *) &stateTableHeader->stHeader + entryTableOffset);
 }
 
 ContextualGlyphSubstitutionProcessor::~ContextualGlyphSubstitutionProcessor()
@@ -43,26 +38,27 @@ void ContextualGlyphSubstitutionProcessor::beginStateTable()
 
 ByteOffset ContextualGlyphSubstitutionProcessor::processStateEntry(LEGlyphStorage &glyphStorage, le_int32 &currGlyph, EntryTableIndex index)
 {
-  LEErrorCode success = LE_NO_ERROR;
-  const ContextualGlyphSubstitutionStateEntry *entry = entryTable.getAlias(index, success);
-  ByteOffset newState = SWAPW(entry->newStateOffset);
-  le_int16 flags = SWAPW(entry->flags);
-  WordOffset markOffset = SWAPW(entry->markOffset);
-  WordOffset currOffset = SWAPW(entry->currOffset);
-  
-  if (markOffset != 0 && LE_SUCCESS(success)) {
-    LEGlyphID mGlyph = glyphStorage[markGlyph];
-    TTGlyphID newGlyph = SWAPW(int16Table.getObject(markOffset + LE_GET_GLYPH(mGlyph), success)); // whew. 
+    const ContextualGlyphSubstitutionStateEntry *entry = &entryTable[index];
+    ByteOffset newState = SWAPW(entry->newStateOffset);
+    le_int16 flags = SWAPW(entry->flags);
+    WordOffset markOffset = SWAPW(entry->markOffset);
+    WordOffset currOffset = SWAPW(entry->currOffset);
 
-    glyphStorage[markGlyph] = LE_SET_GLYPH(mGlyph, newGlyph);  
-  }
+    if (markOffset != 0) {
+        const le_int16 *table = (const le_int16 *) ((char *) &stateTableHeader->stHeader + markOffset * 2);
+        LEGlyphID mGlyph = glyphStorage[markGlyph];
+        TTGlyphID newGlyph = SWAPW(table[LE_GET_GLYPH(mGlyph)]);
 
-  if (currOffset != 0) {
-    LEGlyphID thisGlyph = glyphStorage[currGlyph];
-    TTGlyphID newGlyph = SWAPW(int16Table.getObject(currOffset + LE_GET_GLYPH(thisGlyph), success)); // whew. 
-    
-    glyphStorage[currGlyph] = LE_SET_GLYPH(thisGlyph, newGlyph);
-  }
+         glyphStorage[markGlyph] = LE_SET_GLYPH(mGlyph, newGlyph);
+    }
+
+    if (currOffset != 0) {
+        const le_int16 *table = (const le_int16 *) ((char *) &stateTableHeader->stHeader + currOffset * 2);
+        LEGlyphID thisGlyph = glyphStorage[currGlyph];
+        TTGlyphID newGlyph = SWAPW(table[LE_GET_GLYPH(thisGlyph)]);
+
+        glyphStorage[currGlyph] = LE_SET_GLYPH(thisGlyph, newGlyph);
+    }
 
     if (flags & cgsSetMark) {
         markGlyph = currGlyph;

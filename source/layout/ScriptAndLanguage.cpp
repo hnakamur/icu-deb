@@ -1,5 +1,5 @@
 /*
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2008 - All Rights Reserved
  *
  */
 
@@ -11,33 +11,29 @@
 
 U_NAMESPACE_BEGIN
 
-LEReferenceTo<LangSysTable> ScriptTable::findLanguage(const LETableReference& base, LETag languageTag, LEErrorCode &success, le_bool exactMatch) const
+const LangSysTable *ScriptTable::findLanguage(LETag languageTag, le_bool exactMatch) const
 {
     le_uint16 count = SWAPW(langSysCount);
     Offset langSysTableOffset = exactMatch? 0 : SWAPW(defaultLangSysTableOffset);
 
     if (count > 0) {
-      LEReferenceToArrayOf<TagAndOffsetRecord> langSysRecords(base, success, langSysRecordArray, count);
-      Offset foundOffset =
-        OpenTypeUtilities::getTagOffset(languageTag, langSysRecords, success);
-      
-      if (foundOffset != 0 && LE_SUCCESS(success)) {
-        langSysTableOffset = foundOffset;
-      }
-    }
-    
-    if (langSysTableOffset != 0) {
-      return LEReferenceTo<LangSysTable>(base, success, langSysTableOffset);
+        Offset foundOffset =
+            OpenTypeUtilities::getTagOffset(languageTag, langSysRecordArray, count);
+
+        if (foundOffset != 0) {
+            langSysTableOffset = foundOffset;
+        }
     }
 
-    return LEReferenceTo<LangSysTable>();
+    if (langSysTableOffset != 0) {
+        return (const LangSysTable *) ((char *)this + langSysTableOffset);
+    }
+
+    return NULL;
 }
 
-LEReferenceTo<ScriptTable> ScriptListTable::findScript(const LETableReference &base, LETag scriptTag, LEErrorCode &success) const
+const ScriptTable *ScriptListTable::findScript(LETag scriptTag) const
 {
-    if (LE_FAILURE(success) ) {
-      return LEReferenceTo<ScriptTable>(); // get out
-    }
     /*
      * There are some fonts that have a large, bogus value for scriptCount. To try
      * and protect against this, we use the offset in the first scriptRecord,
@@ -51,54 +47,38 @@ LEReferenceTo<ScriptTable> ScriptListTable::findScript(const LETableReference &b
      * to be unsorted.
      */
     le_uint16 count = SWAPW(scriptCount);
-
-    if (count == 0) {
-      return LEReferenceTo<ScriptTable>(); // no items, no search
-    }
-    
-    // attempt to construct a ref with at least one element
-    LEReferenceToArrayOf<ScriptRecord> oneElementTable(base, success, &scriptRecordArray[0], 1);
-    
-    if( LE_FAILURE(success) ) {
-      return LEReferenceTo<ScriptTable>(); // couldn't even read the first record - bad font.
-    }
-
     le_uint16 limit = ((SWAPW(scriptRecordArray[0].offset) - sizeof(ScriptListTable)) / sizeof(scriptRecordArray)) + ANY_NUMBER;
     Offset scriptTableOffset = 0;
-    
 
     if (count > limit) {
         // the scriptCount value is bogus; do a linear search
         // because limit may still be too large.
-        LEReferenceToArrayOf<ScriptRecord> scriptRecordArrayRef(base, success, &scriptRecordArray[0], limit);
-        for(le_int32 s = 0; (s < limit)&&LE_SUCCESS(success); s += 1) {
-          if (SWAPT(scriptRecordArrayRef(s,success).tag) == scriptTag) {
-            scriptTableOffset = SWAPW(scriptRecordArrayRef(s,success).offset);
-            break;
-          }
+        for(le_int32 s = 0; s < limit; s += 1) {
+            if (SWAPT(scriptRecordArray[s].tag) == scriptTag) {
+                scriptTableOffset = SWAPW(scriptRecordArray[s].offset);
+                break;
+            }
         }
     } else {
-      LEReferenceToArrayOf<ScriptRecord> scriptRecordArrayRef(base, success, &scriptRecordArray[0], count);
-      
-      scriptTableOffset = OpenTypeUtilities::getTagOffset(scriptTag, scriptRecordArrayRef, success);
+        scriptTableOffset = OpenTypeUtilities::getTagOffset(scriptTag, scriptRecordArray, count);
     }
 
     if (scriptTableOffset != 0) {
-      return LEReferenceTo<ScriptTable>(base, success, scriptTableOffset);
+        return (const ScriptTable *) ((char *)this + scriptTableOffset);
     }
 
-  return LEReferenceTo<ScriptTable>();
+    return NULL;
 }
 
-LEReferenceTo<LangSysTable>  ScriptListTable::findLanguage(const LETableReference &base, LETag scriptTag, LETag languageTag, LEErrorCode &success, le_bool exactMatch) const 
+const LangSysTable *ScriptListTable::findLanguage(LETag scriptTag, LETag languageTag, le_bool exactMatch) const
 {
-  const LEReferenceTo<ScriptTable> scriptTable = findScript(base, scriptTag, success);
+    const ScriptTable *scriptTable = findScript(scriptTag);
 
-  if (scriptTable.isEmpty()) {
-    return LEReferenceTo<LangSysTable>();
-  }
+    if (scriptTable == 0) {
+        return NULL;
+    }
 
-  return scriptTable->findLanguage(scriptTable, languageTag, success, exactMatch).reparent(base);
+    return scriptTable->findLanguage(languageTag, exactMatch);
 }
 
 U_NAMESPACE_END

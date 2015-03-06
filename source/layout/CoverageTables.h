@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -31,8 +31,6 @@ struct CoverageFormat1Table : CoverageTable
 
     le_int32 getGlyphCoverage(LEGlyphID glyphID) const;
 };
-LE_VAR_ARRAY(CoverageFormat1Table, glyphArray)
-
 
 struct CoverageFormat2Table : CoverageTable
 {
@@ -41,7 +39,6 @@ struct CoverageFormat2Table : CoverageTable
 
     le_int32 getGlyphCoverage(LEGlyphID glyphID) const;
 };
-LE_VAR_ARRAY(CoverageFormat2Table, rangeRecordArray)
 
 U_NAMESPACE_END
 #endif

@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -24,26 +24,22 @@ U_NAMESPACE_BEGIN
     of the derived classes, and implement it in the others by casting
     the "this" pointer to the type that has the implementation.
 */ 
-const LookupSegment *BinarySearchLookupTable::lookupSegment(const LETableReference &base, const LookupSegment *segments, LEGlyphID glyph, LEErrorCode &success) const
+const LookupSegment *BinarySearchLookupTable::lookupSegment(const LookupSegment *segments, LEGlyphID glyph) const
 {
-    
     le_int16  unity = SWAPW(unitSize);
     le_int16  probe = SWAPW(searchRange);
     le_int16  extra = SWAPW(rangeShift);
     TTGlyphID ttGlyph = (TTGlyphID) LE_GET_GLYPH(glyph);
-    LEReferenceTo<LookupSegment> entry(base, success, segments);
-    LEReferenceTo<LookupSegment> trial(entry, success, extra);
-
-    if(LE_FAILURE(success)) return NULL;
+    const LookupSegment *entry = segments;
+    const LookupSegment *trial = (const LookupSegment *) ((char *) entry + extra);
 
     if (SWAPW(trial->lastGlyph) <= ttGlyph) {
         entry = trial;
     }
 
-    while (probe > unity && LE_SUCCESS(success)) {
+    while (probe > unity) {
         probe >>= 1;
-        trial = entry; // copy
-        trial.addOffset(probe, success);
+        trial = (const LookupSegment *) ((char *) entry + probe);
 
         if (SWAPW(trial->lastGlyph) <= ttGlyph) {
             entry = trial;
@@ -51,29 +47,28 @@ const LookupSegment *BinarySearchLookupTable::lookupSegment(const LETableReferen
     }
 
     if (SWAPW(entry->firstGlyph) <= ttGlyph) {
-      return entry.getAlias();
+        return entry;
     }
 
     return NULL;
 }
 
-const LookupSingle *BinarySearchLookupTable::lookupSingle(const LETableReference &base, const LookupSingle *entries, LEGlyphID glyph, LEErrorCode &success) const
+const LookupSingle *BinarySearchLookupTable::lookupSingle(const LookupSingle *entries, LEGlyphID glyph) const
 {
     le_int16  unity = SWAPW(unitSize);
     le_int16  probe = SWAPW(searchRange);
     le_int16  extra = SWAPW(rangeShift);
     TTGlyphID ttGlyph = (TTGlyphID) LE_GET_GLYPH(glyph);
-    LEReferenceTo<LookupSingle> entry(base, success, entries);
-    LEReferenceTo<LookupSingle> trial(entry, success, extra);
+    const LookupSingle *entry = entries;
+    const LookupSingle *trial = (const LookupSingle *) ((char *) entry + extra);
 
     if (SWAPW(trial->glyph) <= ttGlyph) {
         entry = trial;
     }
 
-    while (probe > unity && LE_SUCCESS(success)) {
+    while (probe > unity) {
         probe >>= 1;
-        trial = entry;
-        trial.addOffset(probe, success);
+        trial = (const LookupSingle *) ((char *) entry + probe);
 
         if (SWAPW(trial->glyph) <= ttGlyph) {
             entry = trial;
@@ -81,7 +76,7 @@ const LookupSingle *BinarySearchLookupTable::lookupSingle(const LETableReference
     }
 
     if (SWAPW(entry->glyph) == ttGlyph) {
-      return entry.getAlias();
+        return entry;
     }
 
     return NULL;

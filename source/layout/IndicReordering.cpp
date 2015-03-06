@@ -1,6 +1,6 @@
 /*
 / *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2009 - All Rights Reserved
  *
  */
 
@@ -129,10 +129,6 @@ private:
     le_int32    fSMIndex;
     FeatureMask fSMFeatures;
 
-    LEUnicode   fPreBaseConsonant;
-    LEUnicode   fPreBaseVirama;
-    le_int32    fPBCIndex;
-    FeatureMask fPBCFeatures;
 
     void saveMatra(LEUnicode matra, le_int32 matraIndex, IndicClassTable::CharClass matraClass)
     {
@@ -179,8 +175,7 @@ public:
           fMpost(0), fMpostIndex(0), fLengthMark(0), fLengthMarkIndex(0), fAlLakuna(0), fAlLakunaIndex(0),
           fMatraFeatures(0), fMPreOutIndex(-1), fMPreFixups(mpreFixups),
           fVMabove(0), fVMpost(0), fVMIndex(0), fVMFeatures(0),
-          fSMabove(0), fSMbelow(0), fSMIndex(0), fSMFeatures(0),
-          fPreBaseConsonant(0), fPreBaseVirama(0), fPBCIndex(0), fPBCFeatures(0)
+          fSMabove(0), fSMbelow(0), fSMIndex(0), fSMFeatures(0)
     {
         // nothing else to do...
     }
@@ -199,8 +194,6 @@ public:
         
         fVMabove = fVMpost  = 0;
         fSMabove = fSMbelow = 0;
-
-        fPreBaseConsonant = fPreBaseVirama = 0;
     }
 
     void writeChar(LEUnicode ch, le_uint32 charIndex, FeatureMask charFeatures)
@@ -241,7 +234,7 @@ public:
 					le_uint32 saveAuxData = fGlyphStorage.getAuxData(i+inv_count,success);
                     const SplitMatra *splitMatra = classTable->getSplitMatra(matraClass);
                     int j;
-                    for (j = 0 ; j < SM_MAX_PIECES && *(splitMatra)[j] != 0 ; j++) {
+                    for (j = 0 ; *(splitMatra)[j] != 0 ; j++) {
                         LEUnicode piece = (*splitMatra)[j];
 						if ( j == 0 ) {
 							fOutChars[i+inv_count] = piece;
@@ -332,7 +325,7 @@ public:
                 const SplitMatra *splitMatra = classTable->getSplitMatra(matraClass);
                 int i;
 
-                for (i = 0; i < SM_MAX_PIECES && (*splitMatra)[i] != 0; i += 1) {
+                for (i = 0; i < 3 && (*splitMatra)[i] != 0; i += 1) {
                     LEUnicode piece = (*splitMatra)[i];
                     IndicClassTable::CharClass pieceClass = classTable->getCharClass(piece);
 
@@ -394,14 +387,6 @@ public:
                 break;
            }
         }
-    }
-
-    void notePreBaseConsonant(le_uint32 index,LEUnicode PBConsonant, LEUnicode PBVirama, FeatureMask features)
-    {
-        fPBCIndex = index;
-        fPreBaseConsonant = PBConsonant;
-        fPreBaseVirama = PBVirama;
-        fPBCFeatures = features;
     }
 
     void noteBaseConsonant()
@@ -483,22 +468,6 @@ public:
         }
     }
     
-    void writePreBaseConsonant()
-    {
-        // The TDIL spec says that consonant + virama + RRA should produce a rakar in Malayalam.  However,
-        // it seems that almost none of the fonts for Malayalam are set up to handle this.
-        // So, we're going to force the issue here by using the rakar as defined with RA in most fonts.
-
-        if (fPreBaseConsonant == 0x0d31) { // RRA
-            fPreBaseConsonant = 0x0d30; // RA
-        }
-        
-        if (fPreBaseConsonant != 0) {
-            writeChar(fPreBaseConsonant, fPBCIndex, fPBCFeatures);
-            writeChar(fPreBaseVirama,fPBCIndex-1,fPBCFeatures);
-        }
-    }
-
     le_int32 getOutputIndex()
     {
         return fOutIndex;
@@ -633,11 +602,6 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
     MPreFixups *mpreFixups = NULL;
     const IndicClassTable *classTable = IndicClassTable::getScriptClassTable(scriptCode);
 
-    if(classTable==NULL) {
-      success = LE_MEMORY_ALLOCATION_ERROR;
-      return 0;
-    }
-
     if (classTable->scriptFlags & SF_MPRE_FIXUP) {
         mpreFixups = new MPreFixups(charCount);
         if (mpreFixups == NULL) { 
@@ -770,7 +734,6 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
                 lastConsonant -= 1;
             }
 
-            
             IndicClassTable::CharClass charClass = CC_RESERVED;
             IndicClassTable::CharClass nextClass = CC_RESERVED;
             le_int32 baseConsonant = lastConsonant;
@@ -778,11 +741,9 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
             le_int32 postBaseLimit = classTable->scriptFlags & SF_POST_BASE_LIMIT_MASK;
             le_bool  seenVattu = FALSE;
             le_bool  seenBelowBaseForm = FALSE;
-            le_bool  seenPreBaseForm = FALSE;
             le_bool  hasNukta = FALSE;
             le_bool  hasBelowBaseForm = FALSE;
             le_bool  hasPostBaseForm = FALSE;
-            le_bool  hasPreBaseForm = FALSE;
 
             if (postBase < markStart && classTable->isNukta(chars[postBase])) {
                 charClass = CC_NUKTA;
@@ -796,22 +757,14 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
 
                 hasBelowBaseForm = IndicClassTable::hasBelowBaseForm(charClass) && !hasNukta;
                 hasPostBaseForm  = IndicClassTable::hasPostBaseForm(charClass)  && !hasNukta;
-                hasPreBaseForm = IndicClassTable::hasPreBaseForm(charClass) && !hasNukta;
 
                 if (IndicClassTable::isConsonant(charClass)) {
                     if (postBaseLimit == 0 || seenVattu ||
                         (baseConsonant > baseLimit && !classTable->isVirama(chars[baseConsonant - 1])) ||
-                        !(hasBelowBaseForm || hasPostBaseForm || hasPreBaseForm)) {
+                        !(hasBelowBaseForm || hasPostBaseForm)) {
                         break;
                     }
 
-                    // Note any pre-base consonants
-                    if ( baseConsonant == lastConsonant && lastConsonant > 0 && 
-                         hasPreBaseForm && classTable->isVirama(chars[baseConsonant - 1])) {
-                        output.notePreBaseConsonant(lastConsonant,chars[lastConsonant],chars[lastConsonant-1],tagArray2);
-                        seenPreBaseForm = TRUE;
-   
-                    }
                     // consonants with nuktas are never vattus
                     seenVattu = IndicClassTable::isVattu(charClass) && !hasNukta;
 
@@ -844,14 +797,12 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
             }
 
             // write any pre-base consonants
-            output.writePreBaseConsonant();
-
             le_bool supressVattu = TRUE;
 
             for (i = baseLimit; i < baseConsonant; i += 1) {
                 LEUnicode ch = chars[i];
-                // Don't put 'pstf' or 'blwf' on anything before the base consonant.
-                FeatureMask features = tagArray1 & ~( pstfFeatureMask | blwfFeatureMask );
+                // Don't put 'blwf' on first consonant.
+                FeatureMask features = (i == baseLimit? tagArray2 : tagArray1);
 
                 charClass = classTable->getCharClass(ch);
                 nextClass = classTable->getCharClass(chars[i + 1]);
@@ -902,7 +853,7 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
             }
 
             // write below-base consonants
-            if (baseConsonant != lastConsonant && !seenPreBaseForm) {
+            if (baseConsonant != lastConsonant) {
                 for (i = bcSpan + 1; i < postBase; i += 1) {
                     output.writeChar(chars[i], i, tagArray1);
                 }
@@ -932,7 +883,7 @@ le_int32 IndicReordering::reorder(const LEUnicode *chars, le_int32 charCount, le
 
             // write post-base consonants
             // FIXME: does this put the right tags on post-base consonants?
-            if (baseConsonant != lastConsonant && !seenPreBaseForm) {
+            if (baseConsonant != lastConsonant) {
                 if (postBase <= lastConsonant) {
                     for (i = postBase; i <= lastConsonant; i += 1) {
                         output.writeChar(chars[i], i, tagArray3);
@@ -1200,10 +1151,11 @@ le_int32 IndicReordering::v2process(const LEUnicode *chars, le_int32 charCount, 
 }
 
 
-void IndicReordering::getDynamicProperties( DynamicProperties *, const IndicClassTable *classTable ) {
+void IndicReordering::getDynamicProperties( DynamicProperties */*dProps*/, const IndicClassTable *classTable ) {
 
 
     LEUnicode currentChar;
+    LEUnicode virama;
     LEUnicode workChars[2];
     LEGlyphStorage workGlyphs;
 
@@ -1211,17 +1163,14 @@ void IndicReordering::getDynamicProperties( DynamicProperties *, const IndicClas
 
     //le_int32 offset = 0;
 
-#if 0
-// TODO:  Should this section of code have actually been doing something?
     // First find the relevant virama for the script we are dealing with
-    LEUnicode virama;
+
     for ( currentChar = classTable->firstChar ; currentChar <= classTable->lastChar ; currentChar++ ) {
         if ( classTable->isVirama(currentChar)) {
             virama = currentChar;
             break;
         }
     }
-#endif
 
     for ( currentChar = classTable->firstChar ; currentChar <= classTable->lastChar ; currentChar++ ) {
         if ( classTable->isConsonant(currentChar)) {

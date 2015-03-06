@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -31,7 +31,7 @@ public:
 
     virtual void endStateTable();
 
-    ContextualGlyphSubstitutionProcessor(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success);
+    ContextualGlyphSubstitutionProcessor(const MorphSubtableHeader *morphSubtableHeader);
     virtual ~ContextualGlyphSubstitutionProcessor();
 
     /**
@@ -53,11 +53,11 @@ private:
 
 protected:
     ByteOffset substitutionTableOffset;
-    LEReferenceToArrayOf<ContextualGlyphSubstitutionStateEntry> entryTable;
-    LEReferenceToArrayOf<le_int16> int16Table;
+    const ContextualGlyphSubstitutionStateEntry *entryTable;
+
     le_int32 markGlyph;
 
-    LEReferenceTo<ContextualGlyphSubstitutionHeader> contextualGlyphSubstitutionHeader;
+    const ContextualGlyphSubstitutionHeader *contextualGlyphSubstitutionHeader;
 
 };
 

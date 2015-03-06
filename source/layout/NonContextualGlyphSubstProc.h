@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -24,13 +24,13 @@ class LEGlyphStorage;
 class NonContextualGlyphSubstitutionProcessor : public SubtableProcessor
 {
 public:
-  virtual void process(LEGlyphStorage &glyphStorage, LEErrorCode &success) = 0;
+    virtual void process(LEGlyphStorage &glyphStorage) = 0;
 
-    static SubtableProcessor *createInstance(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success);
+    static SubtableProcessor *createInstance(const MorphSubtableHeader *morphSubtableHeader);
 
 protected:
     NonContextualGlyphSubstitutionProcessor();
-    NonContextualGlyphSubstitutionProcessor(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &status);
+    NonContextualGlyphSubstitutionProcessor(const MorphSubtableHeader *morphSubtableHeader);
 
     virtual ~NonContextualGlyphSubstitutionProcessor();
 

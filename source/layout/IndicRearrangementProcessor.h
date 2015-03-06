@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -33,7 +33,7 @@ public:
 
     void doRearrangementAction(LEGlyphStorage &glyphStorage, IndicRearrangementVerb verb) const;
 
-    IndicRearrangementProcessor(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success);
+    IndicRearrangementProcessor(const MorphSubtableHeader *morphSubtableHeader);
     virtual ~IndicRearrangementProcessor();
 
     /**
@@ -54,9 +54,8 @@ protected:
     le_int32 firstGlyph;
     le_int32 lastGlyph;
 
-    LEReferenceTo<IndicRearrangementSubtableHeader> indicRearrangementSubtableHeader;
-    LEReferenceToArrayOf<IndicRearrangementStateEntry> entryTable;
-    LEReferenceToArrayOf<le_int16> int16Table;
+    const IndicRearrangementStateEntry *entryTable;
+    const IndicRearrangementSubtableHeader *indicRearrangementSubtableHeader;
 
 };
 

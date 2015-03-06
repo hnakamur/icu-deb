@@ -1,5 +1,5 @@
 /*
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2008 - All Rights Reserved
  *
  */
 
@@ -15,7 +15,6 @@
 #include "OpenTypeTables.h"
 #include "Lookups.h"
 #include "GlyphLookupTables.h"
-#include "LETableReference.h"
 
 U_NAMESPACE_BEGIN
 
@@ -27,9 +26,9 @@ struct GlyphDefinitionTableHeader;
 
 struct GlyphPositioningTableHeader : public GlyphLookupTableHeader
 {
-  void    process(const LEReferenceTo<GlyphPositioningTableHeader> &base, LEGlyphStorage &glyphStorage, GlyphPositionAdjustments *glyphPositionAdjustments,
+    void    process(LEGlyphStorage &glyphStorage, GlyphPositionAdjustments *glyphPositionAdjustments,
                 le_bool rightToLeft, LETag scriptTag, LETag languageTag,
-                const LEReferenceTo<GlyphDefinitionTableHeader> &glyphDefinitionTableHeader, LEErrorCode &success,
+                const GlyphDefinitionTableHeader *glyphDefinitionTableHeader, LEErrorCode &success,
                 const LEFontInstance *fontInstance, const FeatureMap *featureMap, le_int32 featureMapCount, le_bool featureOrder) const;
 };
 

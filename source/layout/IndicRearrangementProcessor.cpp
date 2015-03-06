@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -18,14 +18,11 @@ U_NAMESPACE_BEGIN
 
 UOBJECT_DEFINE_RTTI_IMPLEMENTATION(IndicRearrangementProcessor)
 
-  IndicRearrangementProcessor::IndicRearrangementProcessor(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success)
-  : StateTableProcessor(morphSubtableHeader, success), 
-  indicRearrangementSubtableHeader(morphSubtableHeader, success),
-  entryTable(stateTableHeader, success, (const IndicRearrangementStateEntry*)(&stateTableHeader->stHeader),
-             entryTableOffset, LE_UNBOUNDED_ARRAY),
-  int16Table(stateTableHeader, success, (const le_int16*)entryTable.getAlias(), 0, LE_UNBOUNDED_ARRAY)
-  
+IndicRearrangementProcessor::IndicRearrangementProcessor(const MorphSubtableHeader *morphSubtableHeader)
+  : StateTableProcessor(morphSubtableHeader)
 {
+    indicRearrangementSubtableHeader = (const IndicRearrangementSubtableHeader *) morphSubtableHeader;
+    entryTable = (const IndicRearrangementStateEntry *) ((char *) &stateTableHeader->stHeader + entryTableOffset);
 }
 
 IndicRearrangementProcessor::~IndicRearrangementProcessor()
@@ -40,8 +37,7 @@ void IndicRearrangementProcessor::beginStateTable()
 
 ByteOffset IndicRearrangementProcessor::processStateEntry(LEGlyphStorage &glyphStorage, le_int32 &currGlyph, EntryTableIndex index)
 {
-  LEErrorCode success = LE_NO_ERROR; // todo- make a param?
-  const IndicRearrangementStateEntry *entry = entryTable.getAlias(index,success);
+    const IndicRearrangementStateEntry *entry = &entryTable[index];
     ByteOffset newState = SWAPW(entry->newStateOffset);
     IndicRearrangementFlags flags = (IndicRearrangementFlags) SWAPW(entry->flags);
 

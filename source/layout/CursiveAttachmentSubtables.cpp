@@ -1,5 +1,5 @@
 /*
- * (C) Copyright IBM Corp. 1998 - 2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998 - 2007 - All Rights Reserved
  *
  */
 
@@ -14,16 +14,13 @@
 
 U_NAMESPACE_BEGIN
 
-le_uint32 CursiveAttachmentSubtable::process(const LEReferenceTo<CursiveAttachmentSubtable> &base, GlyphIterator *glyphIterator, const LEFontInstance *fontInstance, LEErrorCode &success) const
+le_uint32 CursiveAttachmentSubtable::process(GlyphIterator *glyphIterator, const LEFontInstance *fontInstance) const
 {
     LEGlyphID glyphID       = glyphIterator->getCurrGlyphID();
-    le_int32  coverageIndex = getGlyphCoverage(base, glyphID, success);
+    le_int32  coverageIndex = getGlyphCoverage(glyphID);
     le_uint16 eeCount       = SWAPW(entryExitCount);
 
-    LEReferenceToArrayOf<EntryExitRecord>
-        entryExitRecordsArrayRef(base, success, entryExitRecords, coverageIndex);
-
-    if (coverageIndex < 0 || coverageIndex >= eeCount || LE_FAILURE(success)) {
+    if (coverageIndex < 0 || coverageIndex >= eeCount) {
         glyphIterator->setCursiveGlyph();
         return 0;
     }

@@ -1,5 +1,5 @@
 /*
- * (C) Copyright IBM Corp. and others 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2011 - All Rights Reserved
  */
 
 #ifndef __LAYOUTENGINE_H
@@ -63,12 +63,10 @@ class LEGlyphStorage;
  */
 class U_LAYOUT_API LayoutEngine : public UObject {
 public:
-#ifndef U_HIDE_INTERNAL_API
-    /** @internal Flag to request kerning. Use LE_Kerning_FEATURE_FLAG instead. */
+    /** @internal Flag to request kerning. */
     static const le_int32 kTypoFlagKern;
-    /** @internal Flag to request ligatures. Use LE_Ligatures_FEATURE_FLAG instead. */
-    static const le_int32 kTypoFlagLiga;	
-#endif  /* U_HIDE_INTERNAL_API */
+    /** @internal Flag to request ligatures. */
+    static const le_int32 kTypoFlagLiga;
 
 protected:
     /**
@@ -120,7 +118,6 @@ protected:
      */
     le_bool fFilterZeroWidth;
 
-#ifndef U_HIDE_INTERNAL_API
     /**
      * This constructs an instance for a given font, script and language. Subclass constructors
      * must call this constructor.
@@ -142,10 +139,7 @@ protected:
                  le_int32 languageCode,
                  le_int32 typoFlags,
                  LEErrorCode &success);
-#endif  /* U_HIDE_INTERNAL_API */
 
-    // Do not enclose the protected default constructor with #ifndef U_HIDE_INTERNAL_API
-    // or else the compiler will create a public default constructor.
     /**
      * This overrides the default no argument constructor to make it
      * difficult for clients to call it. Clients are expected to call
@@ -252,18 +246,12 @@ protected:
      * some other way must override this method.
      * 
      * @param tableTag - the four byte table tag.
-     * @param length - length to use
      *
      * @return the address of the table.
      *
      * @internal
      */
-    virtual const void *getFontTable(LETag tableTag, size_t &length) const;
-
-    /**
-     * @deprecated
-     */
-    virtual const void *getFontTable(LETag tableTag) const { size_t ignored; return getFontTable(tableTag, ignored); }
+    virtual const void *getFontTable(LETag tableTag) const;
 
     /**
      * This method does character to glyph mapping. The default implementation
@@ -292,7 +280,6 @@ protected:
      */
     virtual void mapCharsToGlyphs(const LEUnicode chars[], le_int32 offset, le_int32 count, le_bool reverse, le_bool mirror, LEGlyphStorage &glyphStorage, LEErrorCode &success);
 
-#ifndef U_HIDE_INTERNAL_API
     /**
      * This is a convenience method that forces the advance width of mark
      * glyphs to be zero, which is required for proper selection and highlighting.
@@ -327,7 +314,7 @@ protected:
      * @internal
      */
     static void adjustMarkGlyphs(const LEUnicode chars[], le_int32 charCount, le_bool reverse, LEGlyphStorage &glyphStorage, LEGlyphFilter *markFilter, LEErrorCode &success);
-#endif  /* U_HIDE_INTERNAL_API */
+
 
 public:
     /**

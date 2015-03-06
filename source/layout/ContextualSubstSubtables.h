@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2008 - All Rights Reserved
  *
  */
 
@@ -18,7 +18,6 @@
 #include "GlyphSubstitutionTables.h"
 #include "GlyphIterator.h"
 #include "LookupProcessor.h"
-#include "LETableReference.h"
 
 U_NAMESPACE_BEGIN
 
@@ -64,8 +63,6 @@ struct ContextualSubstitutionFormat1Subtable : ContextualSubstitutionSubtable
 
     le_uint32  process(const LookupProcessor *lookupProcessor, GlyphIterator *glyphIterator, const LEFontInstance *fontInstance, LEErrorCode& success) const;
 };
-LE_VAR_ARRAY(ContextualSubstitutionFormat1Subtable, subRuleSetTableOffsetArray)
-
 
 struct SubRuleSetTable
 {
@@ -73,7 +70,6 @@ struct SubRuleSetTable
     Offset  subRuleTableOffsetArray[ANY_NUMBER];
 
 };
-LE_VAR_ARRAY(SubRuleSetTable, subRuleTableOffsetArray)
 
 // NOTE: Multiple variable size arrays!!
 struct SubRuleTable
@@ -83,7 +79,6 @@ struct SubRuleTable
     TTGlyphID inputGlyphArray[ANY_NUMBER];
   //SubstitutionLookupRecord substLookupRecordArray[ANY_NUMBER];
 };
-LE_VAR_ARRAY(SubRuleTable, inputGlyphArray)
 
 struct ContextualSubstitutionFormat2Subtable : ContextualSubstitutionSubtable
 {
@@ -93,16 +88,12 @@ struct ContextualSubstitutionFormat2Subtable : ContextualSubstitutionSubtable
 
     le_uint32  process(const LookupProcessor *lookupProcessor, GlyphIterator *glyphIterator, const LEFontInstance *fontInstance, LEErrorCode& success) const;
 };
-LE_VAR_ARRAY(ContextualSubstitutionFormat2Subtable, subClassSetTableOffsetArray)
-
 
 struct SubClassSetTable
 {
     le_uint16  subClassRuleCount;
     Offset  subClassRuleTableOffsetArray[ANY_NUMBER];
 };
-LE_VAR_ARRAY(SubClassSetTable, subClassRuleTableOffsetArray)
-
 
 // NOTE: Multiple variable size arrays!!
 struct SubClassRuleTable
@@ -112,8 +103,6 @@ struct SubClassRuleTable
     le_uint16  classArray[ANY_NUMBER];
   //SubstitutionLookupRecord substLookupRecordArray[ANY_NUMBER];
 };
-LE_VAR_ARRAY(SubClassRuleTable, classArray)
-
 
 // NOTE: This isn't a subclass of GlyphSubstitutionSubtable 'cause
 // it has an array of coverage tables instead of a single coverage table...
@@ -129,7 +118,6 @@ struct ContextualSubstitutionFormat3Subtable
 
     le_uint32  process(const LookupProcessor *lookupProcessor, GlyphIterator *glyphIterator, const LEFontInstance *fontInstance, LEErrorCode& success) const;
 };
-LE_VAR_ARRAY(ContextualSubstitutionFormat3Subtable, coverageTableOffsetArray)
 
 struct ChainingContextualSubstitutionSubtable : ContextualSubstitutionBase
 {
@@ -143,8 +131,6 @@ struct ChainingContextualSubstitutionFormat1Subtable : ChainingContextualSubstit
 
     le_uint32  process(const LookupProcessor *lookupProcessor, GlyphIterator *glyphIterator, const LEFontInstance *fontInstance, LEErrorCode& success) const;
 };
-LE_VAR_ARRAY(ChainingContextualSubstitutionFormat1Subtable, chainSubRuleSetTableOffsetArray)
-
 
 struct ChainSubRuleSetTable
 {
@@ -152,7 +138,6 @@ struct ChainSubRuleSetTable
     Offset  chainSubRuleTableOffsetArray[ANY_NUMBER];
 
 };
-LE_VAR_ARRAY(ChainSubRuleSetTable, chainSubRuleTableOffsetArray)
 
 // NOTE: Multiple variable size arrays!!
 struct ChainSubRuleTable
@@ -166,7 +151,6 @@ struct ChainSubRuleTable
   //le_uint16  substCount;
   //SubstitutionLookupRecord substLookupRecordArray[ANY_NUMBER];
 };
-LE_VAR_ARRAY(ChainSubRuleTable, backtrackGlyphArray)
 
 struct ChainingContextualSubstitutionFormat2Subtable : ChainingContextualSubstitutionSubtable
 {
@@ -178,15 +162,12 @@ struct ChainingContextualSubstitutionFormat2Subtable : ChainingContextualSubstit
 
     le_uint32  process(const LookupProcessor *lookupProcessor, GlyphIterator *glyphIterator, const LEFontInstance *fontInstance, LEErrorCode& success) const;
 };
-LE_VAR_ARRAY(ChainingContextualSubstitutionFormat2Subtable, chainSubClassSetTableOffsetArray)
 
 struct ChainSubClassSetTable
 {
     le_uint16  chainSubClassRuleCount;
     Offset  chainSubClassRuleTableOffsetArray[ANY_NUMBER];
 };
-LE_VAR_ARRAY(ChainSubClassSetTable, chainSubClassRuleTableOffsetArray)
-
 
 // NOTE: Multiple variable size arrays!!
 struct ChainSubClassRuleTable
@@ -200,7 +181,6 @@ struct ChainSubClassRuleTable
   //le_uint16  substCount;
   //SubstitutionLookupRecord substLookupRecordArray[ANY_NUMBER];
 };
-LE_VAR_ARRAY(ChainSubClassRuleTable, backtrackClassArray)
 
 // NOTE: This isn't a subclass of GlyphSubstitutionSubtable 'cause
 // it has arrays of coverage tables instead of a single coverage table...
@@ -220,8 +200,6 @@ struct ChainingContextualSubstitutionFormat3Subtable
 
     le_uint32  process(const LookupProcessor *lookupProcessor, GlyphIterator *glyphIterator, const LEFontInstance *fontInstance, LEErrorCode& success) const;
 };
-LE_VAR_ARRAY(ChainingContextualSubstitutionFormat3Subtable, backtrackCoverageTableOffsetArray)
-
 
 U_NAMESPACE_END
 #endif

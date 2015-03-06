@@ -1,7 +1,7 @@
 
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2008 - All Rights Reserved
  *
  */
 
@@ -33,18 +33,15 @@ le_bool CharSubstitutionFilter::accept(LEGlyphID glyph) const
 
 UOBJECT_DEFINE_RTTI_IMPLEMENTATION(ArabicOpenTypeLayoutEngine)
 
-ArabicOpenTypeLayoutEngine::ArabicOpenTypeLayoutEngine(const LEFontInstance *fontInstance, le_int32 scriptCode, 
-                                                       le_int32 languageCode, le_int32 typoFlags,
-                                                       const LEReferenceTo<GlyphSubstitutionTableHeader> &gsubTable,
-                                                       LEErrorCode &success)
+ArabicOpenTypeLayoutEngine::ArabicOpenTypeLayoutEngine(const LEFontInstance *fontInstance, le_int32 scriptCode, le_int32 languageCode,
+                        le_int32 typoFlags, const GlyphSubstitutionTableHeader *gsubTable, LEErrorCode &success)
     : OpenTypeLayoutEngine(fontInstance, scriptCode, languageCode, typoFlags, gsubTable, success)
 {
     fFeatureMap = ArabicShaping::getFeatureMap(fFeatureMapCount);
     fFeatureOrder = TRUE;
 }
 
-ArabicOpenTypeLayoutEngine::ArabicOpenTypeLayoutEngine(const LEFontInstance *fontInstance, le_int32 scriptCode,
-                                                       le_int32 languageCode,
+ArabicOpenTypeLayoutEngine::ArabicOpenTypeLayoutEngine(const LEFontInstance *fontInstance, le_int32 scriptCode, le_int32 languageCode,
 						       le_int32 typoFlags, LEErrorCode &success)
     : OpenTypeLayoutEngine(fontInstance, scriptCode, languageCode, typoFlags, success)
 {
@@ -66,9 +63,8 @@ ArabicOpenTypeLayoutEngine::~ArabicOpenTypeLayoutEngine()
 // Input: characters
 // Output: characters, char indices, tags
 // Returns: output character count
-le_int32 ArabicOpenTypeLayoutEngine::characterProcessing(const LEUnicode chars[], le_int32 offset, le_int32 count,
-                                                         le_int32 max, le_bool rightToLeft, LEUnicode *&outChars, 
-                                                         LEGlyphStorage &glyphStorage, LEErrorCode &success)
+le_int32 ArabicOpenTypeLayoutEngine::characterProcessing(const LEUnicode chars[], le_int32 offset, le_int32 count, le_int32 max, le_bool rightToLeft,
+        LEUnicode *&outChars, LEGlyphStorage &glyphStorage, LEErrorCode &success)
 {
     if (LE_FAILURE(success)) {
         return 0;
@@ -116,30 +112,32 @@ void ArabicOpenTypeLayoutEngine::adjustGlyphPositions(const LEUnicode chars[], l
         return;
     }
 
-    if (!fGPOSTable.isEmpty()) {
+    if (fGPOSTable != NULL) {
         OpenTypeLayoutEngine::adjustGlyphPositions(chars, offset, count, reverse, glyphStorage, success);
-    } else if (!fGDEFTable.isEmpty()) {
-        GDEFMarkFilter filter(fGDEFTable, success);
+    } else if (fGDEFTable != NULL) {
+        GDEFMarkFilter filter(fGDEFTable);
+
         adjustMarkGlyphs(glyphStorage, &filter, success);
     } else {
-        LEReferenceTo<GlyphDefinitionTableHeader> gdefTable(CanonShaping::glyphDefinitionTable, CanonShaping::glyphDefinitionTableLen);
-        GDEFMarkFilter filter(gdefTable, success);
+        GlyphDefinitionTableHeader *gdefTable = (GlyphDefinitionTableHeader *) CanonShaping::glyphDefinitionTable;
+        GDEFMarkFilter filter(gdefTable);
 
         adjustMarkGlyphs(&chars[offset], count, reverse, glyphStorage, &filter, success);
     }
 }
 
 UnicodeArabicOpenTypeLayoutEngine::UnicodeArabicOpenTypeLayoutEngine(const LEFontInstance *fontInstance, le_int32 scriptCode, le_int32 languageCode, le_int32 typoFlags, LEErrorCode &success)
-  : ArabicOpenTypeLayoutEngine(fontInstance, scriptCode, languageCode, typoFlags | LE_CHAR_FILTER_FEATURE_FLAG, success)
+    : ArabicOpenTypeLayoutEngine(fontInstance, scriptCode, languageCode, typoFlags, success)
 {
     fGSUBTable = (const GlyphSubstitutionTableHeader *) CanonShaping::glyphSubstitutionTable;
     fGDEFTable = (const GlyphDefinitionTableHeader *) CanonShaping::glyphDefinitionTable;
-    /* OpenTypeLayoutEngine will allocate a substitution filter */
+
+    fSubstitutionFilter = new CharSubstitutionFilter(fontInstance);
 }
 
 UnicodeArabicOpenTypeLayoutEngine::~UnicodeArabicOpenTypeLayoutEngine()
 {
-    /* OpenTypeLayoutEngine will cleanup the substitution filter */
+    delete fSubstitutionFilter;
 }
 
 // "glyphs", "indices" -> glyphs, indices
@@ -210,7 +208,7 @@ void UnicodeArabicOpenTypeLayoutEngine::adjustGlyphPositions(const LEUnicode cha
         return;
     }
 
-    GDEFMarkFilter filter(fGDEFTable, success);
+    GDEFMarkFilter filter(fGDEFTable);
 
     adjustMarkGlyphs(&chars[offset], count, reverse, glyphStorage, &filter, success);
 }

@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -21,28 +21,22 @@ TrimmedArrayProcessor::TrimmedArrayProcessor()
 {
 }
 
-TrimmedArrayProcessor::TrimmedArrayProcessor(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success)
-  : NonContextualGlyphSubstitutionProcessor(morphSubtableHeader, success), firstGlyph(0), lastGlyph(0)
+TrimmedArrayProcessor::TrimmedArrayProcessor(const MorphSubtableHeader *morphSubtableHeader)
+  : NonContextualGlyphSubstitutionProcessor(morphSubtableHeader)
 {
-  LEReferenceTo<NonContextualGlyphSubstitutionHeader> header(morphSubtableHeader, success);
+    const NonContextualGlyphSubstitutionHeader *header = (const NonContextualGlyphSubstitutionHeader *) morphSubtableHeader;
 
-  if(LE_FAILURE(success)) return;
-
-  trimmedArrayLookupTable = LEReferenceTo<TrimmedArrayLookupTable>(morphSubtableHeader, success, (const TrimmedArrayLookupTable*)&header->table);
-
-  if(LE_FAILURE(success)) return;
-
-  firstGlyph = SWAPW(trimmedArrayLookupTable->firstGlyph);
-  lastGlyph = firstGlyph + SWAPW(trimmedArrayLookupTable->glyphCount);
+    trimmedArrayLookupTable = (const TrimmedArrayLookupTable *) &header->table;
+    firstGlyph = SWAPW(trimmedArrayLookupTable->firstGlyph);
+    lastGlyph = firstGlyph + SWAPW(trimmedArrayLookupTable->glyphCount);
 }
 
 TrimmedArrayProcessor::~TrimmedArrayProcessor()
 {
 }
 
-void TrimmedArrayProcessor::process(LEGlyphStorage &glyphStorage, LEErrorCode &success)
+void TrimmedArrayProcessor::process(LEGlyphStorage &glyphStorage)
 {
-  if(LE_FAILURE(success)) return;
     le_int32 glyphCount = glyphStorage.getGlyphCount();
     le_int32 glyph;
 

@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2010 - All Rights Reserved
  *
  */
 
@@ -12,51 +12,24 @@
 
 U_NAMESPACE_BEGIN
 
-le_int32 ClassDefinitionTable::getGlyphClass(const LETableReference& base, LEGlyphID glyphID, LEErrorCode &success) const
+le_int32 ClassDefinitionTable::getGlyphClass(LEGlyphID glyphID) const
 {
-  LEReferenceTo<ClassDefinitionTable> thisRef(base, success);
-  if (LE_FAILURE(success)) return 0;
-
-  switch(SWAPW(classFormat)) {
-    case 0:
-        return 0;
-
-    case 1:
-    {
-      const LEReferenceTo<ClassDefFormat1Table> f1Table(thisRef, success);
-      return f1Table->getGlyphClass(f1Table, glyphID, success);
-    }
-
-    case 2:
-    {
-      const LEReferenceTo<ClassDefFormat2Table> f2Table(thisRef, success);
-      return  f2Table->getGlyphClass(f2Table, glyphID, success);
-    }
-
-    default:
-        return 0;
-  }
-}
-
-le_bool ClassDefinitionTable::hasGlyphClass(const LETableReference &base, le_int32 glyphClass, LEErrorCode &success) const
-{
-    LEReferenceTo<ClassDefinitionTable> thisRef(base, success);
-    if (LE_FAILURE(success)) return 0;
-
     switch(SWAPW(classFormat)) {
     case 0:
         return 0;
 
     case 1:
     {
-      const LEReferenceTo<ClassDefFormat1Table> f1Table(thisRef, success);
-      return f1Table->hasGlyphClass(f1Table, glyphClass, success);
+        const ClassDefFormat1Table *f1Table = (const ClassDefFormat1Table *) this;
+
+        return f1Table->getGlyphClass(glyphID);
     }
 
     case 2:
     {
-      const LEReferenceTo<ClassDefFormat2Table> f2Table(thisRef, success);
-      return f2Table->hasGlyphClass(f2Table, glyphClass, success);
+        const ClassDefFormat2Table *f2Table = (const ClassDefFormat2Table *) this;
+
+        return f2Table->getGlyphClass(glyphID);
     }
 
     default:
@@ -64,32 +37,51 @@ le_bool ClassDefinitionTable::hasGlyphClass(const LETableReference &base, le_int
     }
 }
 
-le_int32 ClassDefFormat1Table::getGlyphClass(const LETableReference& base, LEGlyphID glyphID, LEErrorCode &success) const
+le_bool ClassDefinitionTable::hasGlyphClass(le_int32 glyphClass) const
 {
-    if(LE_FAILURE(success)) return 0;
+    switch(SWAPW(classFormat)) {
+    case 0:
+        return 0;
 
-    le_uint16 count = SWAPW(glyphCount);
-    LEReferenceToArrayOf<le_uint16> classValueArrayRef(base, success, &classValueArray[0], count);
+    case 1:
+    {
+        const ClassDefFormat1Table *f1Table = (const ClassDefFormat1Table *) this;
+
+        return f1Table->hasGlyphClass(glyphClass);
+    }
+
+    case 2:
+    {
+        const ClassDefFormat2Table *f2Table = (const ClassDefFormat2Table *) this;
+
+        return f2Table->hasGlyphClass(glyphClass);
+    }
+
+    default:
+        return 0;
+    }
+}
+
+le_int32 ClassDefFormat1Table::getGlyphClass(LEGlyphID glyphID) const
+{
     TTGlyphID ttGlyphID  = (TTGlyphID) LE_GET_GLYPH(glyphID);
     TTGlyphID firstGlyph = SWAPW(startGlyph);
-    TTGlyphID lastGlyph  = firstGlyph + count;
+    TTGlyphID lastGlyph  = firstGlyph + SWAPW(glyphCount);
 
-    if (LE_SUCCESS(success) && ttGlyphID >= firstGlyph && ttGlyphID < lastGlyph) {
-      return SWAPW( classValueArrayRef(ttGlyphID - firstGlyph, success) );
+    if (ttGlyphID >= firstGlyph && ttGlyphID < lastGlyph) {
+        return SWAPW(classValueArray[ttGlyphID - firstGlyph]);
     }
 
     return 0;
 }
 
-le_bool ClassDefFormat1Table::hasGlyphClass(const LETableReference &base, le_int32 glyphClass, LEErrorCode &success) const
+le_bool ClassDefFormat1Table::hasGlyphClass(le_int32 glyphClass) const
 {
-    if(LE_FAILURE(success)) return 0;
-    le_uint16 count = SWAPW(glyphCount);
-    LEReferenceToArrayOf<le_uint16> classValueArrayRef(base, success, &classValueArray[0], count);
+    le_uint16 count  = SWAPW(glyphCount);
     int i;
 
-    for (i = 0; LE_SUCCESS(success)&& (i < count); i += 1) {
-      if (SWAPW(classValueArrayRef(i,success)) == glyphClass) {
+    for (i = 0; i < count; i += 1) {
+        if (SWAPW(classValueArray[i]) == glyphClass) {
             return TRUE;
         }
     }
@@ -97,31 +89,27 @@ le_bool ClassDefFormat1Table::hasGlyphClass(const LETableReference &base, le_int
     return FALSE;
 }
 
-le_int32 ClassDefFormat2Table::getGlyphClass(const LETableReference& base, LEGlyphID glyphID, LEErrorCode &success) const
+le_int32 ClassDefFormat2Table::getGlyphClass(LEGlyphID glyphID) const
 {
-    if(LE_FAILURE(success)) return 0;
     TTGlyphID ttGlyph    = (TTGlyphID) LE_GET_GLYPH(glyphID);
     le_uint16 rangeCount = SWAPW(classRangeCount);
-    LEReferenceToArrayOf<GlyphRangeRecord> classRangeRecordArrayRef(base, success, &classRangeRecordArray[0], rangeCount);
     le_int32  rangeIndex =
-      OpenTypeUtilities::getGlyphRangeIndex(ttGlyph, classRangeRecordArrayRef, success);
+        OpenTypeUtilities::getGlyphRangeIndex(ttGlyph, classRangeRecordArray, rangeCount);
 
-    if (rangeIndex < 0 || LE_FAILURE(success)) {
+    if (rangeIndex < 0) {
         return 0;
     }
 
-    return SWAPW(classRangeRecordArrayRef(rangeIndex, success).rangeValue);
+    return SWAPW(classRangeRecordArray[rangeIndex].rangeValue);
 }
 
-le_bool ClassDefFormat2Table::hasGlyphClass(const LETableReference &base, le_int32 glyphClass, LEErrorCode &success) const
+le_bool ClassDefFormat2Table::hasGlyphClass(le_int32 glyphClass) const
 {
-    if(LE_FAILURE(success)) return 0;
     le_uint16 rangeCount = SWAPW(classRangeCount);
-    LEReferenceToArrayOf<GlyphRangeRecord> classRangeRecordArrayRef(base, success, &classRangeRecordArray[0], rangeCount);
     int i;
 
-    for (i = 0; i < rangeCount && LE_SUCCESS(success); i += 1) {
-      if (SWAPW(classRangeRecordArrayRef(i,success).rangeValue) == glyphClass) {
+    for (i = 0; i < rangeCount; i += 1) {
+        if (SWAPW(classRangeRecordArray[i].rangeValue) == glyphClass) {
             return TRUE;
         }
     }

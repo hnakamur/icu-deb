@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -12,35 +12,33 @@
 
 U_NAMESPACE_BEGIN
 
-const LEReferenceTo<LookupTable> LookupListTable::getLookupTable(const LEReferenceTo<LookupListTable> &base, le_uint16 lookupTableIndex, LEErrorCode &success) const
+const LookupTable *LookupListTable::getLookupTable(le_uint16 lookupTableIndex) const
 {
-  LEReferenceToArrayOf<Offset> lookupTableOffsetArrayRef(base, success, (const Offset*)&lookupTableOffsetArray, SWAPW(lookupCount));
+    if (lookupTableIndex >= SWAPW(lookupCount)) {
+        return 0;
+    }
 
-  if(LE_FAILURE(success) || lookupTableIndex>lookupTableOffsetArrayRef.getCount()) {
-    return LEReferenceTo<LookupTable>();
-  } else {
-    return LEReferenceTo<LookupTable>(base, success, SWAPW(lookupTableOffsetArrayRef.getObject(lookupTableIndex, success)));
-  }
+    Offset lookupTableOffset = lookupTableOffsetArray[lookupTableIndex];
+
+    return (const LookupTable *) ((char *) this + SWAPW(lookupTableOffset));
 }
 
-const LEReferenceTo<LookupSubtable> LookupTable::getLookupSubtable(const LEReferenceTo<LookupTable> &base, le_uint16 subtableIndex, LEErrorCode &success) const
+const LookupSubtable *LookupTable::getLookupSubtable(le_uint16 subtableIndex) const
 {
-  LEReferenceToArrayOf<Offset> subTableOffsetArrayRef(base, success, (const Offset*)&subTableOffsetArray, SWAPW(subTableCount));
+    if (subtableIndex >= SWAPW(subTableCount)) {
+        return 0;
+    }
 
-  if(LE_FAILURE(success) || subtableIndex>subTableOffsetArrayRef.getCount()) {
-    return LEReferenceTo<LookupSubtable>();
-  } else {
-    return LEReferenceTo<LookupSubtable>(base, success, SWAPW(subTableOffsetArrayRef.getObject(subtableIndex, success)));
-  }
+    Offset subtableOffset = subTableOffsetArray[subtableIndex];
+
+    return (const LookupSubtable *) ((char *) this + SWAPW(subtableOffset));
 }
 
-le_int32 LookupSubtable::getGlyphCoverage(const LEReferenceTo<LookupSubtable> &base, Offset tableOffset, LEGlyphID glyphID, LEErrorCode &success) const
+le_int32 LookupSubtable::getGlyphCoverage(Offset tableOffset, LEGlyphID glyphID) const
 {
-  const LEReferenceTo<CoverageTable> coverageTable(base, success, SWAPW(tableOffset));
+    const CoverageTable *coverageTable = (const CoverageTable *) ((char *) this + SWAPW(tableOffset));
 
-  if(LE_FAILURE(success)) return 0; 
-
-  return coverageTable->getGlyphCoverage(glyphID);
+    return coverageTable->getGlyphCoverage(glyphID);
 }
 
 U_NAMESPACE_END

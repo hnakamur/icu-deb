@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -21,13 +21,13 @@ U_NAMESPACE_BEGIN
 class GDEFMarkFilter : public UMemory, public LEGlyphFilter
 {
 private:
-    const LEReferenceTo<GlyphClassDefinitionTable> classDefTable;
+    const GlyphClassDefinitionTable *classDefTable;
 
     GDEFMarkFilter(const GDEFMarkFilter &other); // forbid copying of this class
     GDEFMarkFilter &operator=(const GDEFMarkFilter &other); // forbid copying of this class
 
 public:
-    GDEFMarkFilter(const LEReferenceTo<GlyphDefinitionTableHeader> &gdefTable, LEErrorCode &success);
+    GDEFMarkFilter(const GlyphDefinitionTableHeader *gdefTable);
     virtual ~GDEFMarkFilter();
 
     virtual le_bool accept(LEGlyphID glyph) const;

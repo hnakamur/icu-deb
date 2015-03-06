@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -25,9 +25,9 @@ class LEGlyphStorage;
 class SingleTableProcessor : public NonContextualGlyphSubstitutionProcessor
 {
 public:
-    virtual void process(LEGlyphStorage &glyphStorage, LEErrorCode &success);
+    virtual void process(LEGlyphStorage &glyphStorage);
 
-    SingleTableProcessor(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success);
+    SingleTableProcessor(const MorphSubtableHeader *morphSubtableHeader);
 
     virtual ~SingleTableProcessor();
 
@@ -49,7 +49,7 @@ private:
     SingleTableProcessor();
 
 protected:
-    LEReferenceTo<SingleTableLookupTable> singleTableLookupTable;
+    const SingleTableLookupTable *singleTableLookupTable;
 
 };
 

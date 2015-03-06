@@ -1,5 +1,5 @@
 /*
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2009 - All Rights Reserved
  *
  */
 
@@ -10,7 +10,6 @@
 #include "LEGlyphFilter.h"
 #include "LEFontInstance.h"
 #include "LayoutEngine.h"
-#include "LETableReference.h"
 
 #include "GlyphSubstitutionTables.h"
 #include "GlyphDefinitionTables.h"
@@ -64,7 +63,7 @@ public:
      * @internal
      */
     OpenTypeLayoutEngine(const LEFontInstance *fontInstance, le_int32 scriptCode, le_int32 languageCode,
-                            le_int32 typoFlags, const LEReferenceTo<GlyphSubstitutionTableHeader> &gsubTable, LEErrorCode &success);
+                            le_int32 typoFlags, const GlyphSubstitutionTableHeader *gsubTable, LEErrorCode &success);
 
     /**
      * This constructor is used when the font requires a "canned" GSUB table which can't be known
@@ -160,11 +159,6 @@ private:
      */
     static const LETag scriptTags[];
 
-    /**
-     * apply the typoflags. Only called by the c'tors.
-     */
-    void applyTypoFlags();
-
 protected:
     /**
      * A set of "default" features. The default characterProcessing method
@@ -204,22 +198,22 @@ protected:
      *
      * @internal
      */
-    LEReferenceTo<GlyphSubstitutionTableHeader> fGSUBTable;
+    const GlyphSubstitutionTableHeader *fGSUBTable;
 
     /**
      * The address of the GDEF table.
      *
      * @internal
      */
-    LEReferenceTo<GlyphDefinitionTableHeader> fGDEFTable;
+    const GlyphDefinitionTableHeader   *fGDEFTable;
 
     /**
      * The address of the GPOS table.
      *
      * @internal
      */
-    LEReferenceTo<GlyphPositioningTableHeader> fGPOSTable;
-    
+    const GlyphPositioningTableHeader  *fGPOSTable;
+
     /**
      * An optional filter used to inhibit substitutions
      * preformed by the GSUB table. This is used for some

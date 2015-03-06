@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2010 - All Rights Reserved
  *
  */
 
@@ -29,21 +29,16 @@ struct FeatureTable
     le_uint16   lookupCount;
     le_uint16   lookupListIndexArray[ANY_NUMBER];
 };
-LE_VAR_ARRAY(FeatureTable, lookupListIndexArray)
 
 struct FeatureListTable
 {
     le_uint16           featureCount;
     FeatureRecord       featureRecordArray[ANY_NUMBER];
 
-  LEReferenceTo<FeatureTable>  getFeatureTable(const LETableReference &base, le_uint16 featureIndex, LETag *featureTag, LEErrorCode &success) const;
+    const FeatureTable  *getFeatureTable(le_uint16 featureIndex, LETag *featureTag) const;
 
-#if 0
-  const LEReferenceTo<FeatureTable>  getFeatureTable(const LETableReference &base, LETag featureTag, LEErrorCode &success) const;
-#endif
+    const FeatureTable *getFeatureTable(LETag featureTag) const;
 };
-
-LE_VAR_ARRAY(FeatureListTable, featureRecordArray)
 
 U_NAMESPACE_END
 #endif

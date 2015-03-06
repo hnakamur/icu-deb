@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2004 - All Rights Reserved
  *
  */
 
@@ -22,8 +22,8 @@ NonContextualGlyphSubstitutionProcessor::NonContextualGlyphSubstitutionProcessor
 {
 }
 
-NonContextualGlyphSubstitutionProcessor::NonContextualGlyphSubstitutionProcessor(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success)
-  : SubtableProcessor(morphSubtableHeader, success)
+NonContextualGlyphSubstitutionProcessor::NonContextualGlyphSubstitutionProcessor(const MorphSubtableHeader *morphSubtableHeader)
+    : SubtableProcessor(morphSubtableHeader)
 {
 }
 
@@ -31,27 +31,26 @@ NonContextualGlyphSubstitutionProcessor::~NonContextualGlyphSubstitutionProcesso
 {
 }
 
-SubtableProcessor *NonContextualGlyphSubstitutionProcessor::createInstance(const LEReferenceTo<MorphSubtableHeader> &morphSubtableHeader, LEErrorCode &success)
+SubtableProcessor *NonContextualGlyphSubstitutionProcessor::createInstance(const MorphSubtableHeader *morphSubtableHeader)
 {
-  LEReferenceTo<NonContextualGlyphSubstitutionHeader> header(morphSubtableHeader, success);
+    const NonContextualGlyphSubstitutionHeader *header = (const NonContextualGlyphSubstitutionHeader *) morphSubtableHeader;
 
-  if(LE_FAILURE(success)) return NULL;
-
-  switch (SWAPW(header->table.format)) {
+    switch (SWAPW(header->table.format))
+    {
     case ltfSimpleArray:
-      return new SimpleArrayProcessor(morphSubtableHeader, success);
+        return new SimpleArrayProcessor(morphSubtableHeader);
 
     case ltfSegmentSingle:
-      return new SegmentSingleProcessor(morphSubtableHeader, success);
+        return new SegmentSingleProcessor(morphSubtableHeader);
 
     case ltfSegmentArray:
-      return new SegmentArrayProcessor(morphSubtableHeader, success);
+        return new SegmentArrayProcessor(morphSubtableHeader);
 
     case ltfSingleTable:
-      return new SingleTableProcessor(morphSubtableHeader, success);
+        return new SingleTableProcessor(morphSubtableHeader);
 
     case ltfTrimmedArray:
-      return new TrimmedArrayProcessor(morphSubtableHeader, success);
+        return new TrimmedArrayProcessor(morphSubtableHeader);
 
     default:
         return NULL;
