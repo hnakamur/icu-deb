@@ -50,6 +50,7 @@ public:
     // The following functions are internal to the regexp tests.
     virtual void assertUText(const char *expected, UText *actual, const char *file, int line);
     virtual void assertUTextInvariant(const char *invariant, UText *actual, const char *file, int line);
+    virtual void TestBug11371();
     virtual UBool doRegexLMTest(const char *pat, const char *text, UBool looking, UBool match, int32_t line);
     virtual UBool doRegexLMTestUTF8(const char *pat, const char *text, UBool looking, UBool match, int32_t line);
     virtual void regex_find(const UnicodeString &pat, const UnicodeString &flags,
