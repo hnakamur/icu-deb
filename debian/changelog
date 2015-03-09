@@ -1,3 +1,18 @@
+icu (4.8.1.1-3ubuntu0.5) precise-security; urgency=medium
+
+  * SECURITY UPDATE: multiple issues via font file parsing (LP: #1429043)
+    - debian/patches/layoutengine-security.patch: updated to fix ABI break
+      and re-enabled.
+    - debian/patches/CVE-2014-65xx.patch: re-enabled.
+    - CVE-2013-1569
+    - CVE-2013-2383
+    - CVE-2013-2384
+    - CVE-2013-2419
+    - CVE-2014-6585
+    - CVE-2014-6591
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Mon, 09 Mar 2015 13:43:14 -0400
+
 icu (4.8.1.1-3ubuntu0.4) precise-security; urgency=medium
 
   * SECURITY REGRESSION: libreoffice calc crash (LP: #1429043)
