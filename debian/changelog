@@ -1,3 +1,14 @@
+icu (52.1-8) unstable; urgency=high
+
+  * New maintainer (closes: #777694).
+  * Update Standars-Version to 3.9.6 .
+
+  [ Michael Gilbert <mgilbert@debian.org> ]
+  * Apply a more complete fix for CVE-2014-7940 (closes: #780503).
+    - Thanks to Marc Deslauriers.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 17 Mar 2015 11:14:15 +0000
+
 icu (52.1-7.1) unstable; urgency=high
 
   * Non-maintainer upload by the Security Team.
