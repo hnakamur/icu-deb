@@ -1,3 +1,11 @@
+icu (52.1-9) unstable; urgency=high
+
+  * Fix security bugs (closes: #784773):
+    - CVE-2014-8146 , a heap overflow,
+    - CVE-2014-8147 , an integer overflow.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 08 May 2015 20:35:32 +0000
+
 icu (52.1-8) unstable; urgency=high
 
   * New maintainer (closes: #777694).
