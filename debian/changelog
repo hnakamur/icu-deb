@@ -1,3 +1,16 @@
+icu (52.1-8ubuntu0.1) vivid-security; urgency=medium
+
+  * SECURITY UPDATE: heap overflow via incorrect isolateCount
+    - debian/patches/CVE-2015-8146.patch: check for valid isolateCount in
+      source/common/ubidi.c.
+    - CVE-2015-8146
+  * SECURITY UPDATE: integer overflow via incorrect state size
+    - debian/patches/CVE-2015-8147.patch: change state to int32_t in
+      source/common/ubidiimp.h.
+    - CVE-2015-8147
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 08 May 2015 08:29:07 -0400
+
 icu (52.1-8) unstable; urgency=high
 
   * New maintainer (closes: #777694).
