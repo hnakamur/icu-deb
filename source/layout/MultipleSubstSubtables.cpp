@@ -35,7 +35,12 @@ le_uint32 MultipleSubstitutionSubtable::process(const LETableReference &base, Gl
 
     le_int32 coverageIndex = getGlyphCoverage(base, glyph, success);
     le_uint16 seqCount = SWAPW(sequenceCount);
+    LEReferenceToArrayOf<Offset>
+        sequenceTableOffsetArrayRef(base, success, sequenceTableOffsetArray, seqCount);
 
+    if (LE_FAILURE(success)) {
+        return 0;
+    }
     if (coverageIndex >= 0 && coverageIndex < seqCount) {
         Offset sequenceTableOffset = SWAPW(sequenceTableOffsetArray[coverageIndex]);
         const SequenceTable *sequenceTable = (const SequenceTable *) ((char *) this + sequenceTableOffset);
