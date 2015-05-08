@@ -317,7 +317,12 @@ LE_TRACE_TR("INFO: new RTAO")
   }
   
   const T& operator()(le_uint32 i, LEErrorCode &success) const {
-    return *getAlias(i,success);
+    const T *ret = getAlias(i,success);
+    if (LE_FAILURE(success) || ret==NULL) {
+      return *(new T());
+    } else {
+      return *ret;
+    }
   }
 
   size_t getOffsetFor(le_uint32 i, LEErrorCode &success) const {
