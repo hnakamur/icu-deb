@@ -45,6 +45,7 @@ override DEB_MAKE_CHECK_TARGET = check
 
 clean::
 	$(RM) *.cdbs-config_list
+	$(RM) -f source/config.log
 
 # The libicudata library contains no symbols, so its debug library is
 # useless and triggers lintian warnings.  Just remove it.
