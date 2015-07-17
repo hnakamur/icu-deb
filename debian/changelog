@@ -1,3 +1,11 @@
+icu (52.1-10) unstable; urgency=high
+
+  * Fix security bugs:
+    - CVE-2015-4760 , missing boundary checks in layout engine,
+    - CVE-2014-6585 , finish null pointer checks.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 17 Jul 2015 18:46:28 +0000
+
 icu (52.1-9) unstable; urgency=high
 
   * Fix security bugs (closes: #784773):
