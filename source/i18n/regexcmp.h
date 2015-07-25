@@ -100,10 +100,16 @@ private:
                                int32_t LoopOp);
     UBool       compileInlineInterval();             // Generate inline code for a {min,max} quantifier
     void        literalChar(UChar32 c);              // Compile a literal char
-    void        fixLiterals(UBool split=FALSE);      // Fix literal strings.
+    void        fixLiterals(UBool split=FALSE);      // Generate code for pending literal characters.
     void        insertOp(int32_t where);             // Open up a slot for a new op in the
                                                      //   generated code at the specified location.
-    void        emitONE_CHAR(UChar32 c);             // Emit a ONE_CHAR op into the compiled code,
+    void        appendOp(int32_t op);                // Append a new op to the compiled pattern.
+    void        appendOp(int32_t type, int32_t val); // Build & append a new op to the compiled pattern.
+    int32_t     buildOp(int32_t type, int32_t val);  // Construct a new pcode instruction.
+    int32_t     allocateData(int32_t size);          // Allocate space in the matcher data area.
+                                                     //   Return index of the newly allocated data.
+    int32_t     allocateStackData(int32_t size);     // Allocate space in the match back-track stack frame.
+                                                     //   Return offset index in the frame.
                                                      //   taking case mode into account.
     int32_t     minMatchLength(int32_t start,
                                int32_t end);
@@ -162,10 +168,11 @@ private:
                                                      //   until last flag is scanned.
     UBool                         fSetModeFlag;      // true for (?ismx, false for (?-ismx
 
-
-    int32_t                       fStringOpStart;    // While a literal string is being scanned
-                                                     //   holds the start index within RegexPattern.
-                                                     //   fLiteralText where the string is being stored.
+    UnicodeString                 fLiteralChars;     // Literal chars or strings from the pattern are accumulated here.
+                                                     //   Once completed, meaning that some non-literal pattern
+                                                     //   construct is encountered, the appropriate opcodes
+                                                     //   to match the literal will be generated, and this
+                                                     //   string will be cleared.
 
     int64_t                       fPatternLength;    // Length of the input pattern string.
     

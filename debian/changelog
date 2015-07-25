@@ -1,3 +1,27 @@
+icu (4.8.1.1-12+deb7u3) wheezy-security; urgency=high
+
+  * Fix security bugs:
+    - CVE-2015-4760 , missing boundary checks in layout engine,
+    - CVE-2014-6585 , finish null pointer checks.
+  * Add myself as uploader.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 25 Jul 2015 15:16:27 +0000
+
+icu (4.8.1.1-12+deb7u2) stable-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+    - Thanks to Marc Deslauriers for many of the backports.
+  * Backport of icu's new layout engine.
+    - Fixes CVE-2013-1569, CVE-2013-2383, CVE-2013-2384, and CVE-2013-2419.
+  * CVE-2014-6585: out-of-bounds read.
+  * CVE-2014-6591: more out-of-bounds reads.
+  * CVE-2014-7923: memory corruption in regular expression comparison.
+  * CVE-2014-7926: memory corruption in regular expression comparison.
+  * CVE-2014-7940: uninitialized memory in i18n/icol.cpp.
+  * CVE-2014-9654: more regular expression handling issues.
+
+ -- Michael Gilbert <mgilbert@debian.org>  Sun, 15 Mar 2015 01:30:40 +0000
+
 icu (4.8.1.1-12+deb7u1) stable-security; urgency=high
 
   * Non-maintainer upload by the Security Team.
