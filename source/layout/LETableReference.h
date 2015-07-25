@@ -1,7 +1,7 @@
 /*
  * -*- c++ -*-
  *
- * (C) Copyright IBM Corp. and others 2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. and others 2015 - All Rights Reserved
  *
  * Range checking
  *
