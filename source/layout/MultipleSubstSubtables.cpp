@@ -1,6 +1,6 @@
 /*
  *
- * (C) Copyright IBM Corp. 1998-2013 - All Rights Reserved
+ * (C) Copyright IBM Corp. 1998-2015 - All Rights Reserved
  *
  */
 
@@ -38,6 +38,9 @@ le_uint32 MultipleSubstitutionSubtable::process(const LETableReference &base, Gl
     LEReferenceToArrayOf<Offset>
         sequenceTableOffsetArrayRef(base, success, sequenceTableOffsetArray, seqCount);
 
+    if (LE_FAILURE(success)) {
+        return 0;
+    }
     if (coverageIndex >= 0 && coverageIndex < seqCount) {
         Offset sequenceTableOffset = SWAPW(sequenceTableOffsetArray[coverageIndex]);
         const SequenceTable *sequenceTable = (const SequenceTable *) ((char *) this + sequenceTableOffset);
