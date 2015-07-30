@@ -1,3 +1,13 @@
+icu (52.1-8+deb8u2) jessie-security; urgency=high
+
+  * Fix security bugs:
+    - CVE-2014-8146 , a heap overflow,
+    - CVE-2014-8147 , an integer overflow,
+    - CVE-2015-4760 , missing boundary checks in layout engine,
+    - CVE-2014-6585 , finish null pointer checks.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 30 Jul 2015 20:45:16 +0000
+
 icu (52.1-8) unstable; urgency=high
 
   * New maintainer (closes: #777694).
