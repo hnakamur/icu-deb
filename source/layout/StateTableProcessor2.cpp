@@ -78,6 +78,7 @@ void StateTableProcessor2::process(LEGlyphStorage &glyphStorage, LEErrorCode &su
                 if (currGlyph == glyphCount || currGlyph == -1) {
                     // XXX: How do we handle EOT vs. EOL?
                     classCode = classCodeEOT;
+                    break;
                 } else {
                     LEGlyphID gid = glyphStorage[currGlyph];
                     TTGlyphID glyphCode = (TTGlyphID) LE_GET_GLYPH(gid);
@@ -109,7 +110,6 @@ void StateTableProcessor2::process(LEGlyphStorage &glyphStorage, LEErrorCode &su
                 if (currGlyph == glyphCount || currGlyph == -1) {
                     // XXX: How do we handle EOT vs. EOL?
                     classCode = classCodeEOT;
-                    break;
                     break;
                 } else {
                     LEGlyphID gid = glyphStorage[currGlyph];
