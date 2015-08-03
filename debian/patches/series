@@ -6,3 +6,4 @@ indic-ccmp.patch
 CVE-2014-6585.patch
 CVE-2015-4760.patch
 CVE-2015-1270.patch
+hurd-fix.diff
