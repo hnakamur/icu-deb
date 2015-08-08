@@ -260,42 +260,6 @@ void SimpleThread::sleep(int32_t millis)
     ::Sleep(millis);
 }
 
-//-----------------------------------------------------------------------------------
-//
-//   class SimpleThread   NULL  Implementation
-//
-//-----------------------------------------------------------------------------------
-#elif U_PLATFORM == U_PF_CLASSIC_MACOS
-
-// since the Mac has no preemptive threading (at least on MacOS 8), only
-// cooperative threading, threads are a no-op.  We have no yield() calls
-// anywhere in the ICU, so we are guaranteed to be thread-safe.
-
-#define HAVE_IMP
-
-SimpleThread::SimpleThread()
-{}
-
-SimpleThread::~SimpleThread()
-{}
-
-int32_t 
-SimpleThread::start()
-{ return 0; }
-
-void 
-SimpleThread::run()
-{}
-
-void 
-SimpleThread::sleep(int32_t millis)
-{}
-
-UBool  
-SimpleThread::isRunning() {
-    return FALSE;
-}
-
 #endif
 
 
