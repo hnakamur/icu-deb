@@ -15,3 +15,5 @@ CVE-2014-7940.patch
 CVE-2014-9654.patch
 layoutengine-security.patch
 CVE-2014-65xx.patch
+CVE-2015-2632.patch
+CVE-2015-4760.patch
