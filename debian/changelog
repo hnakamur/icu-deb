@@ -1,3 +1,26 @@
+icu (4.8.1.1-3ubuntu0.6) precise-security; urgency=medium
+
+  * SECURITY UPDATE: information disclosure via overflows
+    - debian/patches/CVE-2015-2632.patch: properly calculate index in
+      source/layout/Features.cpp, check for overflows in
+      source/layout/LETableReference.h.
+    - CVE-2015-2632
+  * SECURITY UPDATE: denial of service and possible code execution via
+    overflows
+    - debian/patches/CVE-2015-4760.patch: check bounds in
+      source/layout/ContextualGlyphInsertionProc2.cpp,
+      source/layout/ContextualGlyphSubstProc.cpp,
+      source/layout/ContextualGlyphSubstProc2.cpp,
+      source/layout/IndicRearrangementProcessor.cpp,
+      source/layout/IndicRearrangementProcessor2.cpp,
+      use unsigned flags in source/layout/LigatureSubstProc.cpp,
+      source/layout/StateTables.h, properly handle errors in
+      source/layout/StateTableProcessor.cpp,
+      source/layout/StateTableProcessor2.cpp.
+    - CVE-2015-4760
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 11 Sep 2015 09:29:59 -0400
+
 icu (4.8.1.1-3ubuntu0.5) precise-security; urgency=medium
 
   * SECURITY UPDATE: multiple issues via font file parsing (LP: #1429043)
