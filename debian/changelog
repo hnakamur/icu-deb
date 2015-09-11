@@ -1,3 +1,17 @@
+icu (55.1-4ubuntu1) wily; urgency=medium
+
+  * SECURITY UPDATE: denial of service via mishandling of converter names
+    with initial x- substrings
+    - debian/patches/CVE-2015-1270.patch: fix patch so it actually applies.
+    - CVE-2015-1270
+  * SECURITY UPDATE: information disclosure via overflows
+    - debian/patches/CVE-2015-2632.patch: properly calculate index in
+      source/layout/Features.cpp, check for overflows in
+      source/layout/LETableReference.h.
+    - CVE-2015-2632
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 11 Sep 2015 08:24:31 -0400
+
 icu (55.1-4) unstable; urgency=low
 
   [ Helmut Grohne <helmut@subdivi.de> ]
