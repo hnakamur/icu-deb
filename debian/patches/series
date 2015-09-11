@@ -12,3 +12,6 @@ CVE-2014-9654.patch
 two-digit-year-test.patch
 CVE-2015-8146.patch
 CVE-2015-8147.patch
+CVE-2015-1270.patch
+CVE-2015-2632.patch
+CVE-2015-4760.patch
