@@ -1,3 +1,9 @@
+icu (55.1-6) unstable; urgency=low
+
+  * Don't force libicu-dev to depend on g++ (closes: #799100, #799101).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 03 Nov 2015 19:07:10 +0100
+
 icu (55.1-5) unstable; urgency=high
 
   * Correct patch for CVE-2015-1270 (closes: #798647).
