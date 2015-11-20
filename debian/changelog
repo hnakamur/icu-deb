@@ -1,3 +1,10 @@
+icu (55.1-6ubuntu1) xenial; urgency=medium
+
+  * Merge from Debian unstable, remaining changes:
+    - debian/patches/CVE-2015-2632.patch
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 20 Nov 2015 09:02:03 -0500
+
 icu (55.1-6) unstable; urgency=low
 
   * Don't force libicu-dev to depend on g++ (closes: #799100, #799101).
@@ -9,6 +16,20 @@ icu (55.1-5) unstable; urgency=high
   * Correct patch for CVE-2015-1270 (closes: #798647).
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Fri, 11 Sep 2015 15:23:53 +0000
+
+icu (55.1-4ubuntu1) wily; urgency=medium
+
+  * SECURITY UPDATE: denial of service via mishandling of converter names
+    with initial x- substrings
+    - debian/patches/CVE-2015-1270.patch: fix patch so it actually applies.
+    - CVE-2015-1270
+  * SECURITY UPDATE: information disclosure via overflows
+    - debian/patches/CVE-2015-2632.patch: properly calculate index in
+      source/layout/Features.cpp, check for overflows in
+      source/layout/LETableReference.h.
+    - CVE-2015-2632
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 11 Sep 2015 08:24:31 -0400
 
 icu (55.1-4) unstable; urgency=low
 
