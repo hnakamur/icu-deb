@@ -1,3 +1,9 @@
+icu (55.1-7) unstable; urgency=high
+
+  * Fix CVE-2015-2632 vulnerability.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 03 Jan 2016 16:44:55 +0100
+
 icu (55.1-6) unstable; urgency=low
 
   * Don't force libicu-dev to depend on g++ (closes: #799100, #799101).
