@@ -1,3 +1,24 @@
+icu (57.1-1) experimental; urgency=low
+
+  * New major upstream release (closes: #804026).
+  * Update package names due to soname bump.
+  * Add icu-devtools debug package.
+  * Drop CVE-2015-2632.patch as this release contains it.
+  * Update patches.
+  * Keep rebuildable.
+  * Update Standars-Version to 3.9.7 .
+
+  [ Helmut Grohne <helmut@subdivi.de> ]
+  * Move icu-config to a M-A:no package (closes: #776821).
+    + Move icu-config from icu-devtools to libicu-dev.
+    + Declare relevant Breaks and Replaces.
+    + Remove Multi-Arch:same from libicu-dev.
+
+  [ Guido Günther <agx@sigxcpu.org> ]
+  * Add build and smoke autopkgtest (closes: #813338).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 27 Mar 2016 10:46:16 +0000
+
 icu (55.1-7) unstable; urgency=high
 
   * Fix CVE-2015-2632 vulnerability.
