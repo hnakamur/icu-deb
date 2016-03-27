@@ -1,51 +1,6 @@
---- ./source/test/intltest/simplethread.cpp.orig	2015-08-03 11:53:07.372942007 +0200
-+++ ./source/test/intltest/simplethread.cpp	2015-08-03 11:53:10.888854224 +0200
-@@ -260,42 +260,6 @@
-     ::Sleep(millis);
- }
- 
--//-----------------------------------------------------------------------------------
--//
--//   class SimpleThread   NULL  Implementation
--//
--//-----------------------------------------------------------------------------------
--#elif U_PLATFORM == U_PF_CLASSIC_MACOS
--
--// since the Mac has no preemptive threading (at least on MacOS 8), only
--// cooperative threading, threads are a no-op.  We have no yield() calls
--// anywhere in the ICU, so we are guaranteed to be thread-safe.
--
--#define HAVE_IMP
--
--SimpleThread::SimpleThread()
--{}
--
--SimpleThread::~SimpleThread()
--{}
--
--int32_t 
--SimpleThread::start()
--{ return 0; }
--
--void 
--SimpleThread::run()
--{}
--
--void 
--SimpleThread::sleep(int32_t millis)
--{}
--
--UBool  
--SimpleThread::isRunning() {
--    return FALSE;
--}
--
- #endif
- 
- 
 --- ./source/tools/toolutil/udbgutil.cpp.orig	2015-08-03 11:53:13.788781812 +0200
 +++ ./source/tools/toolutil/udbgutil.cpp	2015-08-03 11:53:14.736758140 +0200
-@@ -354,8 +354,6 @@
+@@ -366,8 +366,6 @@
      return "Linux";
  #elif U_PLATFORM == U_PF_ANDROID
      return "Android";

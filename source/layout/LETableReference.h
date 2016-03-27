@@ -281,7 +281,7 @@ public:
       if(count == LE_UNBOUNDED_ARRAY) { // not a known length
         count = getLength()/LETableVarSizer<T>::getSize(); // fit to max size
       }
-      LETableReference::verifyLength(0, LETableVarSizer<T>::getSize(), count, success);
+      LETableReference::verifyLength(0, LETableVarSizer<T>::getSize(), fCount, success);
     }
     if(LE_FAILURE(success)) {
       fCount=0;
@@ -296,7 +296,7 @@ LE_TRACE_TR("INFO: new RTAO")
       if(count == LE_UNBOUNDED_ARRAY) { // not a known length
         count = getLength()/LETableVarSizer<T>::getSize(); // fit to max size
       }
-      LETableReference::verifyLength(0, LETableVarSizer<T>::getSize(), count, success);
+      LETableReference::verifyLength(0, LETableVarSizer<T>::getSize(), fCount, success);
     }
     if(LE_FAILURE(success)) clear();
   }
@@ -307,7 +307,7 @@ LE_TRACE_TR("INFO: new RTAO")
       if(count == LE_UNBOUNDED_ARRAY) { // not a known length
         count = getLength()/LETableVarSizer<T>::getSize(); // fit to max size
       }
-      LETableReference::verifyLength(0, LETableVarSizer<T>::getSize(), count, success);
+      LETableReference::verifyLength(0, LETableVarSizer<T>::getSize(), fCount, success);
     }
     if(LE_FAILURE(success)) clear();
   }
