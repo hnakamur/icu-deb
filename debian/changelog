@@ -1,3 +1,21 @@
+icu (52.1-8+deb8u4) jessie-security; urgency=high
+
+  * Backport upstream fix for CVE-2014-9911: buffer overflow problem in
+    uresbund.cpp .
+  * Backport upstream fix for CVE-2015-2632: unspecified vulnerability allows
+    remote attackers to affect confidentiality via unknown vectors.
+  * Backport upstream fix for CVE-2015-4844: missing boundary checks in
+    layout engine.
+  * Backport upstream fix for CVE-2016-0494: integer signedness issue in
+    IndicRearrangementProcessor.
+  * Backport upstream fix for CVE-2016-6293: the uloc_acceptLanguageFromHTTP
+    function does not ensure that there is a '\0' character at the end of a
+    certain temporary array.
+  * Backport upstream fix for CVE-2016-7415: stack-based buffer overflow in
+    the Locale class via a long locale string (closes: #838694).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 10 Sep 2016 12:41:51 +0000
+
 icu (52.1-8+deb8u3) jessie-security; urgency=high
 
   * Fix CVE-2015-1270 - uninitialized memory read (closes: #798647).
