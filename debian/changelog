@@ -1,3 +1,10 @@
+icu (58.1-1) experimental; urgency=low
+
+  * New major upstream release.
+  * Drop old patches.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 22 Oct 2016 11:08:24 +0200
+
 icu (57.1-4) unstable; urgency=high
 
   * Backport upstream fix for CVE-2016-0494: integer signedness issue in
