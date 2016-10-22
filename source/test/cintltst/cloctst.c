@@ -1,3 +1,5 @@
+// Copyright (C) 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
  * Copyright (c) 1997-2016, International Business Machines Corporation and
@@ -1049,8 +1051,8 @@ static const DisplayNameBracketsItem displayNameBracketsItems[] = {
     { "en", "CC", "en_CC",      "Cocos (Keeling) Islands",  "English (Cocos [Keeling] Islands)"  },
     { "en", "MM", "my_MM",      "Myanmar (Burma)",          "Burmese (Myanmar [Burma])"          },
     { "en", "MM", "my_Mymr_MM", "Myanmar (Burma)",          "Burmese (Myanmar, Myanmar [Burma])" },
-    { "zh", "CC", "en_CC",      "\\u79D1\\u79D1\\u65AF\\uFF08\\u57FA\\u6797\\uFF09\\u7FA4\\u5C9B", "\\u82F1\\u6587\\uFF08\\u79D1\\u79D1\\u65AF\\uFF3B\\u57FA\\u6797\\uFF3D\\u7FA4\\u5C9B\\uFF09" },
-    { "zh", "CG", "fr_CG",      "\\u521A\\u679C\\uFF08\\u5E03\\uFF09",                             "\\u6CD5\\u6587\\uFF08\\u521A\\u679C\\uFF3B\\u5E03\\uFF3D\\uFF09" },
+    { "zh", "CC", "en_CC",      "\\u79D1\\u79D1\\u65AF\\uFF08\\u57FA\\u6797\\uFF09\\u7FA4\\u5C9B", "\\u82F1\\u8BED\\uFF08\\u79D1\\u79D1\\u65AF\\uFF3B\\u57FA\\u6797\\uFF3D\\u7FA4\\u5C9B\\uFF09" },
+    { "zh", "CG", "fr_CG",      "\\u521A\\u679C\\uFF08\\u5E03\\uFF09",                             "\\u6CD5\\u8BED\\uFF08\\u521A\\u679C\\uFF3B\\u5E03\\uFF3D\\uFF09" },
     { NULL, NULL, NULL,         NULL,                       NULL                                 }
 };
 
@@ -5822,6 +5824,13 @@ const char* const locale_to_langtag[][3] = {
     {"en@x=elmer",  "en-x-elmer",   "en-x-elmer"},
     {"@x=elmer;a=exta", "und-a-exta-x-elmer",   "und-a-exta-x-elmer"},
     {"en_US@attribute=attr1-attr2;calendar=gregorian", "en-US-u-attr1-attr2-ca-gregory", "en-US-u-attr1-attr2-ca-gregory"},
+    /* #12671 */
+    {"en@a=bar;attribute=baz",  "en-a-bar-u-baz",   "en-a-bar-u-baz"},
+    {"en@a=bar;attribute=baz;x=u-foo",  "en-a-bar-u-baz-x-u-foo",   "en-a-bar-u-baz-x-u-foo"},
+    {"en@attribute=baz",    "en-u-baz", "en-u-baz"},
+    {"en@attribute=baz;calendar=islamic-civil", "en-u-baz-ca-islamic-civil",    "en-u-baz-ca-islamic-civil"},
+    {"en@a=bar;calendar=islamic-civil;x=u-foo", "en-a-bar-u-ca-islamic-civil-x-u-foo",  "en-a-bar-u-ca-islamic-civil-x-u-foo"},
+    {"en@a=bar;attribute=baz;calendar=islamic-civil;x=u-foo",   "en-a-bar-u-baz-ca-islamic-civil-x-u-foo",  "en-a-bar-u-baz-ca-islamic-civil-x-u-foo"},
     {NULL,          NULL,           NULL}
 };
 
@@ -5887,7 +5896,6 @@ static const struct {
     const char  *locID;
     int32_t     len;
 } langtag_to_locale[] = {
-    {"ja-u-ijkl-efgh-abcd-ca-japanese-xx-yyy-zzz-kn",   "ja@attribute=abcd-efgh-ijkl;calendar=japanese;colnumeric=yes;xx=yyy-zzz",  FULL_LENGTH},
     {"en",                  "en",                   FULL_LENGTH},
     {"en-us",               "en_US",                FULL_LENGTH},
     {"und-US",              "_US",                  FULL_LENGTH},
@@ -5931,9 +5939,15 @@ static const struct {
     {"de-u-kn-co-phonebk",  "de@collation=phonebook;colnumeric=yes",    FULL_LENGTH},
     {"en-u-attr2-attr1-kn-kb",  "en@attribute=attr1-attr2;colbackwards=yes;colnumeric=yes", FULL_LENGTH},
     {"ja-u-ijkl-efgh-abcd-ca-japanese-xx-yyy-zzz-kn",   "ja@attribute=abcd-efgh-ijkl;calendar=japanese;colnumeric=yes;xx=yyy-zzz",  FULL_LENGTH},
-
     {"de-u-xc-xphonebk-co-phonebk-ca-buddhist-mo-very-lo-extensi-xd-that-de-should-vc-probably-xz-killthebuffer",
      "de@calendar=buddhist;collation=phonebook;de=should;lo=extensi;mo=very;vc=probably;xc=xphonebk;xd=that;xz=yes", 91},
+    /* #12761 */
+    {"en-a-bar-u-baz",      "en@a=bar;attribute=baz",   FULL_LENGTH},
+    {"en-a-bar-u-baz-x-u-foo",  "en@a=bar;attribute=baz;x=u-foo",   FULL_LENGTH},
+    {"en-u-baz",            "en@attribute=baz",     FULL_LENGTH},
+    {"en-u-baz-ca-islamic-civil",   "en@attribute=baz;calendar=islamic-civil",  FULL_LENGTH},
+    {"en-a-bar-u-ca-islamic-civil-x-u-foo", "en@a=bar;calendar=islamic-civil;x=u-foo",  FULL_LENGTH},
+    {"en-a-bar-u-baz-ca-islamic-civil-x-u-foo", "en@a=bar;attribute=baz;calendar=islamic-civil;x=u-foo",    FULL_LENGTH},
     {NULL,          NULL,           0}
 };
 
@@ -6145,6 +6159,8 @@ static void TestToLegacyType(void)
             }
         } else if (uprv_strcmp(legacyType, expected) != 0) {
             log_data_err("toLegacyType: keyword=%s, value=%s => %s, expected=%s\n", keyword, value, legacyType, expected);
+        } else {
+            log_verbose("toLegacyType: keyword=%s, value=%s => %s\n", keyword, value, legacyType);
         }
     }
 }

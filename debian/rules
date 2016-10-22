@@ -6,7 +6,7 @@ include /usr/share/dpkg/architecture.mk
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-l_SONAME=57
+l_SONAME=58
 
 override_dh_clean:
 	dh_clean
@@ -31,7 +31,7 @@ override_dh_auto_install:
 	dh_auto_install
 	$(MAKE) -C $(CURDIR)/source/ install-doc DESTDIR=$(CURDIR)/debian/tmp/
 	# delete extra license file
-	rm  $(CURDIR)/debian/tmp/usr/share/icu/57.1/LICENSE
+	rm -f $(CURDIR)/debian/tmp/usr/share/icu/$(l_SONAME).1/LICENSE
 
 override_dh_installdocs-indep:
 	dh_installdocs -i

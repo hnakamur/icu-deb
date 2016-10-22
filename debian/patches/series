@@ -1,10 +1,6 @@
 icudata-stdlibs.patch
 gennorm2-man.patch
 icuinfo-man.patch
-malayalam-rendering.patch
-indic-ccmp.patch
-CVE-2014-6585.patch
-CVE-2015-4760.patch
+#malayalam-rendering.patch
+#indic-ccmp.patch
 hurd-fix.diff
-CVE-2016-0494.patch
-CVE-2016-6293.patch
