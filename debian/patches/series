@@ -8,3 +8,4 @@ CVE-2015-4760.patch
 hurd-fix.diff
 CVE-2016-0494.patch
 CVE-2016-6293.patch
+CVE-2016-7415.patch
