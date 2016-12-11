@@ -1,3 +1,9 @@
+icu (58.2-1) experimental; urgency=low
+
+  * New upstream release.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 11 Dec 2016 14:02:13 +0000
+
 icu (58.1-1) experimental; urgency=low
 
   * New major upstream release.
