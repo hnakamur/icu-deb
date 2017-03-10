@@ -1922,6 +1922,8 @@ void NumberFormatTest::TestCurrencyAmount(void){
 void NumberFormatTest::TestSymbolsWithBadLocale(void) {
     Locale locDefault;
     Locale locBad("x-crazy_ZZ_MY_SPECIAL_ADMINISTRATION_REGION_NEEDS_A_SPECIAL_VARIANT_WITH_A_REALLY_REALLY_REALLY_REALLY_REALLY_REALLY_REALLY_LONG_NAME");
+    assertTrue("!locBad.isBogus()",
+                    !locBad.isBogus(), TRUE);
     UErrorCode status = U_ZERO_ERROR;
     UnicodeString intlCurrencySymbol((UChar)0xa4);
 
