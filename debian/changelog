@@ -1,3 +1,11 @@
+icu (57.1-4ubuntu0.1) yakkety-security; urgency=medium
+
+  * SECURITY UPDATE: stack-based buffer overflow via long locale string
+    - debian/patches/CVE-2016-7415.patch: use patch from 57.1-5.
+    - CVE-2016-7415
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 10 Mar 2017 11:38:08 -0500
+
 icu (57.1-4) unstable; urgency=high
 
   * Backport upstream fix for CVE-2016-0494: integer signedness issue in
