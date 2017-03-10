@@ -1,3 +1,21 @@
+icu (52.1-3ubuntu0.5) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: Multiple security issues. Synchronize security fixes
+    with Debian's 52.1-8+deb8u4 release. Thanks to Laszlo Boszormenyi for
+    the work this update is based on.
+    - debian/patches/CVE-2014-9911.patch
+    - debian/patches/CVE-2015-4844.patch
+    - debian/patches/CVE-2016-0494.patch
+    - debian/patches/CVE-2016-6293.patch
+    - debian/patches/CVE-2016-7415.patch
+    - CVE-2014-9911
+    - CVE-2015-4844
+    - CVE-2016-0494
+    - CVE-2016-6293
+    - CVE-2016-7415
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 10 Mar 2017 11:41:10 -0500
+
 icu (52.1-3ubuntu0.4) trusty-security; urgency=medium
 
   * SECURITY UPDATE: denial of service via mishandling of converter names
