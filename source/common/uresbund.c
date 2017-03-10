@@ -1704,7 +1704,7 @@ ures_getByKeyWithFallback(const UResourceBundle *resB,
             char path[256];
             char* myPath = path;
             const char* resPath = resB->fResPath;
-            int32_t len = resB->fResPathLen;
+            int32_t len = uprv_min(resB->fResPathLen, 256);
 
             while(res == RES_BOGUS && dataEntry->fParent != NULL) { /* Otherwise, we'll look in parents */
                 dataEntry = dataEntry->fParent;
@@ -1712,7 +1712,8 @@ ures_getByKeyWithFallback(const UResourceBundle *resB,
 
                 if(dataEntry->fBogus == U_ZERO_ERROR) {
                     uprv_strncpy(path, resPath, len);
-                    uprv_strcpy(path+len, inKey);
+                    uprv_strncpy(path+len, inKey, 256-len);
+                    path[255] = '\0';
                     myPath = path;
                     key = inKey;
                     do {
