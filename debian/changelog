@@ -1,3 +1,21 @@
+icu (4.8.1.1-3ubuntu0.7) precise-security; urgency=medium
+
+  * SECURITY UPDATE: Multiple security issues. Synchronize security fixes
+    with Debian's 4.8.1.1-12+deb7u6 release. Thanks to Roberto C. Sanchez
+    for the work this update is based on.
+    - debian/patches/CVE-2014-9911.patch
+    - debian/patches/CVE-2015-4844.patch
+    - debian/patches/CVE-2016-0494.patch
+    - debian/patches/CVE-2016-6293.patch
+    - debian/patches/CVE-2016-7415.patch
+    - CVE-2014-9911
+    - CVE-2015-4844
+    - CVE-2016-0494
+    - CVE-2016-6293
+    - CVE-2016-7415
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 10 Mar 2017 11:43:22 -0500
+
 icu (4.8.1.1-3ubuntu0.6) precise-security; urgency=medium
 
   * SECURITY UPDATE: information disclosure via overflows
