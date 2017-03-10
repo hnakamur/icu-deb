@@ -2212,7 +2212,7 @@ _uloc_strtod(const char *start, char **end) {
 typedef struct { 
     float q;
     int32_t dummy;  /* to avoid uninitialized memory copy from qsort */
-    char *locale;
+    char locale[ULOC_FULLNAME_CAPACITY+1];
 } _acceptLangItem;
 
 static int32_t U_CALLCONV
@@ -2267,7 +2267,6 @@ uloc_acceptLanguageFromHTTP(char *result, int32_t resultAvailable, UAcceptResult
     int32_t i;
     int32_t l = (int32_t)uprv_strlen(httpAcceptLanguage);
     int32_t jSize;
-    char *tempstr; /* Use for null pointer check */
 
     j = smallBuffer;
     jSize = sizeof(smallBuffer)/sizeof(smallBuffer[0]);
@@ -2309,16 +2308,19 @@ uloc_acceptLanguageFromHTTP(char *result, int32_t resultAvailable, UAcceptResult
         for(t=(paramEnd-1);(paramEnd>s)&&isspace(*t);t--)
             ;
         /* Check for null pointer from uprv_strndup */
-        tempstr = uprv_strndup(s,(int32_t)((t+1)-s));
-        if (tempstr == NULL) {
-            *status = U_MEMORY_ALLOCATION_ERROR;
-            return -1;
+        int32_t slen = ((t+1)-s);
+        if(slen > ULOC_FULLNAME_CAPACITY) {
+          *status = U_BUFFER_OVERFLOW_ERROR;
+          return -1; /* too big */
         }
-        j[n].locale = tempstr;
-        uloc_canonicalize(j[n].locale,tmp,sizeof(tmp)/sizeof(tmp[0]),status);
-        if(strcmp(j[n].locale,tmp)) {
-            uprv_free(j[n].locale);
-            j[n].locale=uprv_strdup(tmp);
+        uprv_strncpy(j[n].locale, s, slen);
+        j[n].locale[slen]=0; /* terminate */
+        int32_t clen = uloc_canonicalize(j[n].locale,tmp,sizeof(tmp)/sizeof(tmp[0]),status);
+        if(U_FAILURE(*status)) return -1;
+        if((clen!=slen) || (uprv_strncmp(j[n].locale, tmp, slen))) {
+            /* canonicalization had an effect- copy back */
+            uprv_strncpy(j[n].locale, tmp, clen);
+            j[n].locale[clen] = 0; /* terminate */
         }
 #if defined(ULOC_DEBUG)
         /*fprintf(stderr,"%d: s <%s> q <%g>\n", n, j[n].locale, j[n].q);*/
@@ -2375,9 +2377,6 @@ uloc_acceptLanguageFromHTTP(char *result, int32_t resultAvailable, UAcceptResult
     }
     res =  uloc_acceptLanguage(result, resultAvailable, outResult, 
         (const char**)strs, n, availableLocales, status);
-    for(i=0;i<n;i++) {
-        uprv_free(strs[i]);
-    }
     uprv_free(strs);
     if(j != smallBuffer) {
 #if defined(ULOC_DEBUG)
