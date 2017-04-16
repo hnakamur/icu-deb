@@ -1,3 +1,10 @@
+icu (57.1-6) unstable; urgency=high
+
+  * Backport upstream security fix for CVE-2017-7867 and CVE-2017-7868,
+    heap-buffer-overflow in utf8TextAccess (closes: #860314).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 16 Apr 2017 08:50:52 +0000
+
 icu (57.1-5) unstable; urgency=high
 
   * Backport upstream fix for CVE-2016-7415: stack-based buffer overflow in
