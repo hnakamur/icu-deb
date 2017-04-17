@@ -33,6 +33,7 @@ public:
     void FreezeTest();
     void Ticket5560();
     void Ticket6847();
+    void Ticket12888();
 
 private:
     struct m {                              // Map between native indices & code points.
