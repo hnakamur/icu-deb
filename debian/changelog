@@ -1,3 +1,15 @@
+icu (57.1-5ubuntu0.1) zesty-security; urgency=medium
+
+  * SECURITY UPDATE: out-of-bounds write in common/utext.cpp
+    (LP: #1684298)
+    - debian/patches/CVE-2017-786x.patch: properly handle chunk size in
+      source/common/utext.cpp, added test to
+      source/test/intltest/utxttest.cpp, source/test/intltest/utxttest.h.
+    - CVE-2017-7867
+    - CVE-2017-7868
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 02 May 2017 08:14:14 -0400
+
 icu (57.1-5) unstable; urgency=high
 
   * Backport upstream fix for CVE-2016-7415: stack-based buffer overflow in
