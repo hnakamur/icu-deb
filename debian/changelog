@@ -1,3 +1,15 @@
+icu (52.1-3ubuntu0.6) trusty-security; urgency=medium
+
+  * SECURITY UPDATE: out-of-bounds write in common/utext.cpp
+    (LP: #1684298)
+    - debian/patches/CVE-2017-786x.patch: properly handle chunk size in
+      source/common/utext.cpp, added test to
+      source/test/intltest/utxttest.cpp, source/test/intltest/utxttest.h.
+    - CVE-2017-7867
+    - CVE-2017-7868
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 02 May 2017 09:43:38 -0400
+
 icu (52.1-3ubuntu0.5) trusty-security; urgency=medium
 
   * SECURITY UPDATE: Multiple security issues. Synchronize security fixes
