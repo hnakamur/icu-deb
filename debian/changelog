@@ -1,3 +1,15 @@
+icu (57.1-4ubuntu0.2) yakkety-security; urgency=medium
+
+  * SECURITY UPDATE: out-of-bounds write in common/utext.cpp
+    (LP: #1684298)
+    - debian/patches/CVE-2017-786x.patch: properly handle chunk size in
+      source/common/utext.cpp, added test to
+      source/test/intltest/utxttest.cpp, source/test/intltest/utxttest.h.
+    - CVE-2017-7867
+    - CVE-2017-7868
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 02 May 2017 08:32:50 -0400
+
 icu (57.1-4ubuntu0.1) yakkety-security; urgency=medium
 
   * SECURITY UPDATE: stack-based buffer overflow via long locale string
