@@ -1,3 +1,0 @@
-# libicu58 installs multiple shared libraries, none of which is
-# actually called libicu.so.58, but all of which are libicu*.so.58.
-libicu58: package-name-doesnt-match-sonames
