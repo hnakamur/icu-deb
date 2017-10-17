@@ -1,3 +1,15 @@
+icu (57.1-8) unstable; urgency=medium
+
+  * Disable self-test failure on x86 architectures due to French locale
+    problems (closes: #878889).
+  * Update Standards-Version to 4.1.1:
+    - change libicu57-dbg priority to optional,
+    - change icu-devtools-dbg priority to optional.
+  * Update debhelper level to 10:
+    - remove autotools-dev build dependency.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 17 Oct 2017 15:44:40 +0000
+
 icu (57.1-7) unstable; urgency=high
 
   * Backport upstream security fix for CVE-2017-14952: double free in

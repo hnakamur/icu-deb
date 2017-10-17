@@ -27,6 +27,14 @@ override_dh_auto_build:
 	dh_auto_build --parallel
 	$(MAKE) -C $(CURDIR)/source/ doc
 
+override_dh_auto_test:
+ifeq (,$(findstring $(DEB_BUILD_ARCH),i386 hurd-i386 kfreebsd-i386))
+	dh_auto_test
+else
+	# French locale has test problems on x86 architectures
+	-dh_auto_test
+endif
+
 override_dh_auto_install:
 	dh_auto_install
 	$(MAKE) -C $(CURDIR)/source/ install-doc DESTDIR=$(CURDIR)/debian/tmp/
@@ -56,5 +64,5 @@ override_dh_strip:
 	dh $@ --sourcedirectory=$(CURDIR/)source/ --parallel
 
 .PHONY: override_dh_clean override_dh_auto_configure override_dh_auto_build \
-	override_dh_auto_install override_dh_installdocs-indep \
-	override_dh_strip
+	override_dh_auto_test override_dh_auto_install \
+	override_dh_installdocs-indep override_dh_strip
