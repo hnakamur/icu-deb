@@ -1,3 +1,10 @@
+icu (57.1-7) unstable; urgency=high
+
+  * Backport upstream security fix for CVE-2017-14952: double free in
+    createMetazoneMappings() (closes: #878840).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 17 Oct 2017 04:48:25 +0000
+
 icu (57.1-6) unstable; urgency=high
 
   * Backport upstream security fix for CVE-2017-7867 and CVE-2017-7868,
