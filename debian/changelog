@@ -1,3 +1,12 @@
+icu (55.1-7ubuntu0.3) xenial-security; urgency=medium
+
+  * SECURITY UPDATE: double free
+    - debian/patches/CVE-2017-14952.patch: fixes double free in
+      createMetaZoneMappings() source/i18n/zonemeta.cpp.
+    - CVE-2017-14952
+
+ -- Leonidas S. Barbosa <leo.barbosa@canonical.com>  Tue, 17 Oct 2017 09:14:31 -0300
+
 icu (55.1-7ubuntu0.2) xenial-security; urgency=medium
 
   * SECURITY UPDATE: out-of-bounds write in common/utext.cpp
