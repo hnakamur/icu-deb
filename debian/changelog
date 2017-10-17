@@ -1,3 +1,12 @@
+icu (57.1-5ubuntu0.2) zesty-security; urgency=medium
+
+  * SECURITY UPDATE: double free
+    - debian/patches/CVE-2017-14952.patch: fixes double free in
+      createMetaZoneMappings() source/i18n/zonemeta.cpp.
+    - CVE-2017-14952
+
+ -- Leonidas S. Barbosa <leo.barbosa@canonical.com>  Tue, 17 Oct 2017 09:15:41 -0300
+
 icu (57.1-5ubuntu0.1) zesty-security; urgency=medium
 
   * SECURITY UPDATE: out-of-bounds write in common/utext.cpp
