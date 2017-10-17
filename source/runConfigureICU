@@ -380,7 +380,7 @@ then
     then
         case $CC in
             gcc|*/gcc|*-gcc-*|*/*-gcc-*)
-                RELEASE_CFLAGS=-O3
+                RELEASE_CFLAGS=-O3 -fno-strict-overflow
                 ;;
         esac
     fi
@@ -392,7 +392,7 @@ then
     then
         case $CXX in
             g++|*/g++|*-g++-*|*/*-g++-*)
-                RELEASE_CXXFLAGS=-O3
+                RELEASE_CXXFLAGS=-O3 -fno-strict-overflow
                 ;;
         esac
     fi
