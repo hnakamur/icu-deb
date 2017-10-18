@@ -28,11 +28,11 @@ override_dh_auto_build:
 	$(MAKE) -C $(CURDIR)/source/ doc
 
 override_dh_auto_test:
-ifneq (,$(findstring $(DEB_BUILD_ARCH),i386))
-	echo Self-test is broken on i386
-	dh_auto_test || true
-else
+ifeq (,$(findstring $(DEB_BUILD_ARCH),i386 hurd-i386 kfreebsd-i386))
 	dh_auto_test
+else
+	# French locale has test problems on x86 architectures
+	-dh_auto_test
 endif
 
 override_dh_auto_install:
