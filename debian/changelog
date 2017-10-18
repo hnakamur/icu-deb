@@ -1,3 +1,18 @@
+icu (59.1-2) experimental; urgency=high
+
+  * Backport upstream security fix for CVE-2017-14952: double free in
+    createMetazoneMappings() .
+  * Disable self-test failure on x86 architectures due to French locale
+    problems.
+  * Make libicu59-dbg package 'Multi-Arch: same'.
+  * Update Standards-Version to 4.1.1:
+    - change libicu59-dbg priority to optional,
+    - change icu-devtools-dbg priority to optional.
+  * Update debhelper level to 10:
+    - remove autotools-dev build dependency.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 18 Oct 2017 21:12:22 +0000
+
 icu (59.1-1) experimental; urgency=low
 
   * New major upstream release.
