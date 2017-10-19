@@ -1,3 +1,16 @@
+icu (59.1-3) experimental; urgency=medium
+
+  * Refresh packaging:
+    - drop outdated -dbg packages,
+    - drop outdated NEWS file,
+    - build with all hardening.
+  * Fix spelling errors in upstream binaries and manpages.
+
+  [ Matthias Klose <doko@ubuntu.com> ]
+  * Fix build with glibc-2.26 (closes: #879233).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Thu, 19 Oct 2017 21:50:55 +0000
+
 icu (59.1-2) experimental; urgency=high
 
   * Backport upstream security fix for CVE-2017-14952: double free in
