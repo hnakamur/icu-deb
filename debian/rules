@@ -1,10 +1,14 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-include /usr/share/dpkg/architecture.mk
-
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
+
+include /usr/share/dpkg/architecture.mk
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
 
 l_SONAME=59
 
@@ -52,17 +56,9 @@ override_dh_installdocs-indep:
 		fi; \
 	done
 
-override_dh_strip:
-	dh_strip -plibicu$(l_SONAME) --dbg-package=libicu$(l_SONAME)-dbg
-	dh_strip -picu-devtools --dbg-package=icu-devtools-dbg
-	# libicudata library doesn't contain any debug symbols, remove that
-	for file in `find debian/libicu$(l_SONAME)-dbg/usr/lib/debug -type f -print`; do \
-		if ! nm -a $$file | grep -q debug; then rm $$file; fi; \
-	done
-
 %:
 	dh $@ --sourcedirectory=$(CURDIR)/source/ --parallel
 
 .PHONY: override_dh_clean override_dh_auto_configure override_dh_auto_build \
 	override_dh_auto_test override_dh_auto_install \
-	override_dh_installdocs-indep override_dh_strip
+	override_dh_installdocs-indep
