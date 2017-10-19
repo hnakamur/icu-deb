@@ -61,11 +61,7 @@
 #endif
 
 #if U_USE_STRTOD_L
-# if U_PLATFORM_USES_ONLY_WIN32_API || U_PLATFORM == U_PF_CYGWIN
 #   include <locale.h>
-# else
-#   include <xlocale.h>
-# endif
 #endif
 
 // ***************************************************************************
