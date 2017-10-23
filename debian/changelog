@@ -1,3 +1,13 @@
+icu (57.1-6ubuntu0.2) artful-security; urgency=medium
+
+  * SECURITY UPDATE: double free
+    - debian/patches/CVE-2017-14952.patch: fixes double free in
+      createMetaZoneMappings() source/i18n/zonemeta.cpp.
+    - CVE-2017-14952
+  * Disable self-test failure on x86 arch due to French locale
+
+ -- Leonidas S. Barbosa <leo.barbosa@canonical.com>  Mon, 23 Oct 2017 11:38:17 -0300
+
 icu (57.1-6) unstable; urgency=high
 
   * Backport upstream security fix for CVE-2017-7867 and CVE-2017-7868,
