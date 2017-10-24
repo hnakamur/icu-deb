@@ -56,6 +56,8 @@ void MorphSubtableHeader::process(const LEReferenceTo<MorphSubtableHeader> &base
 {
     SubtableProcessor *processor = NULL;
 
+    if (LE_FAILURE(success)) return;
+
     switch (SWAPW(coverage) & scfTypeMask)
     {
     case mstIndicRearrangement:
