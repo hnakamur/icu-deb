@@ -1,3 +1,10 @@
+icu (52.1-8+deb8u6) jessie; urgency=high
+
+  * Backport upstream security fix for CVE-2017-14952: double free in
+    createMetazoneMappings() (closes: #878840).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 24 Oct 2017 17:28:29 +0000
+
 icu (52.1-8+deb8u5) jessie-security; urgency=high
 
   * Backport upstream security fix for CVE-2017-7867 and CVE-2017-7868,
