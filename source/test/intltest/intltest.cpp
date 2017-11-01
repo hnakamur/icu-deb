@@ -720,7 +720,7 @@ void IntlTest::runIndexedTest( int32_t /*index*/, UBool /*exec*/, const char* & 
         default: name = ""; break;
     }
     */
-    this->errln("*** runIndexedTest needs to be overriden! ***");
+    this->errln("*** runIndexedTest needs to be overridden! ***");
 }
 
 
