@@ -443,7 +443,7 @@ void IntlCalendarTest::TestBuddhistFormat() {
     }
     delete fmt2;
     
-    CHECK(status, "Error occured testing Buddhist Calendar in English ");
+    CHECK(status, "Error occurred testing Buddhist Calendar in English ");
     
     status = U_ZERO_ERROR;
     // Now, try in Thai
@@ -563,7 +563,7 @@ void IntlCalendarTest::TestJapaneseFormat() {
 
     delete cal2;
     delete fmt2;
-    CHECK(status, "Error occured");
+    CHECK(status, "Error occurred");
     
     // Now, try in Japanese
     {
@@ -875,7 +875,7 @@ void IntlCalendarTest::TestPersianFormat() {
     }
     delete fmt2;
     
-    CHECK(status, "Error occured testing Persian Calendar in English "); 
+    CHECK(status, "Error occurred testing Persian Calendar in English "); 
 }
 
 
@@ -895,7 +895,7 @@ void IntlCalendarTest::simpleTest(const Locale& loc, const UnicodeString& expect
         }
 
         d = fmt2->parse(expect,status);
-        CHECK(status, "Error occured parsing " + UnicodeString(loc.getName()));
+        CHECK(status, "Error occurred parsing " + UnicodeString(loc.getName()));
         if(d != expectDate) {
             fmt2->format(d,tmp);
             errln(UnicodeString("Failed to parse " ) + escape(expect) + ", " + loc.getName() + " expect " + (double)expectDate + " got " + (double)d  + " " + escape(tmp));
