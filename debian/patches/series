@@ -7,3 +7,4 @@ hurd-fix.diff
 #CVE-2017-14952.patch
 spelling-fix.patch
 #glibc-2.26.diff
+issue13104.revert.diff

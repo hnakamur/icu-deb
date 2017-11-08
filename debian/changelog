@@ -1,3 +1,10 @@
+icu (60.1-1ubuntu2) bionic; urgency=medium
+
+  * Revert the upstream fix for #13104, requiring C++11 for some header files.
+    The archive still has packages not ready for C++11, e.g. firebird3.0.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 08 Nov 2017 11:34:56 +0100
+
 icu (60.1-1ubuntu1) bionic; urgency=medium
 
   * Merge with Debian; remaining changes:
