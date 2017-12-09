@@ -43,7 +43,9 @@ override_dh_auto_install:
 	dh_auto_install
 	$(MAKE) -C $(CURDIR)/source/ install-doc DESTDIR=$(CURDIR)/debian/tmp/
 	# delete extra license file
-	rm -f $(CURDIR)/debian/tmp/usr/share/icu/$(l_SONAME).?/LICENSE
+	rm $(CURDIR)/debian/tmp/usr/share/icu/$(l_SONAME).?/LICENSE
+	# remove not needed manpage
+	rm $(CURDIR)/debian/tmp/usr/share/man/man1/icu-config.1
 
 override_dh_installdocs-indep:
 	dh_installdocs -i
