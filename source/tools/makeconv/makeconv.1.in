@@ -51,7 +51,7 @@ be understood by
 .BR makeconv .
 The ICU ucm format is similar to the IBM NLTC upmap/tpmap/rpmap files.
 Comments in the
-.I convertible
+.I convertertable
 are handled as follows. If a comment (starting with a `#' sign) that
 is after some text does contain the fallback indicator `|' then only
 the text starting with the `#' sign, and ending before the `|' sign,

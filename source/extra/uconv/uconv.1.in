@@ -188,7 +188,7 @@ Run the given
 .IR transliteration
 on the transcoded Unicode data,
 and use the transliterated data as input for the transcoding to
-the the destination encoding.
+the destination encoding.
 .TP
 .BI "\-\-to\-callback" " callback"
 Use
@@ -278,7 +278,7 @@ is displayed when it is called with
 .PP
 .TP \w'\fBescape-unicode'u+3n
 .B substitute
-Write the the encoding's substitute sequence, or the Unicode
+Write the encoding's substitute sequence, or the Unicode
 replacement character
 .B U+FFFD
 when transcoding to Unicode.
@@ -357,7 +357,7 @@ is the hexadecimal value of the Unicode codepoint.
 That hexadecimal string is of variable length and can use from 4 to
 6 digits.
 This is the format universally used to denote a Unicode codepoint in
-the litterature, delimited by curly braces for easy recognition of those
+the literature, delimited by curly braces for easy recognition of those
 substitutions in the output.
 .SH EXAMPLES
 Convert data from a given

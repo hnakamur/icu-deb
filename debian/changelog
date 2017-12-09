@@ -1,3 +1,21 @@
+icu (60.2-1) experimental; urgency=high
+
+  * New upstream release.
+  * Build with ICU Layout Engine API (closes: #879820):
+    - add libicu-le-hb-dev build dependency,
+    - add libicu-le-hb-dev dependency to libicu-dev package,
+    - update layout extension tests,
+    - add libiculx to shlibs.
+  * Remove icu-config manpage.
+  * Backport fix for UTF-8->UTF-8 conversion overflow.
+  * Update Standards-Version to 4.1.2 .
+
+  [ Matthias Klose <doko@ubuntu.com> ]
+  * Revert the upstream fix for #13104, requiring C++11 for some header files.
+    The archive still has packages not ready for C++11, e.g. firebird3.0.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 09 Dec 2017 16:20:17 +0000
+
 icu (60.1-1) experimental; urgency=medium
 
   * New major upstream release.

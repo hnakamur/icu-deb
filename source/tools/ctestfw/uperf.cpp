@@ -323,10 +323,10 @@ void UPerfTest::setPath( char* pathVal )
     this->path = pathVal;
 }
 
-// call individual tests, to be overriden to call implementations
+// call individual tests, to be overridden to call implementations
 UPerfFunction* UPerfTest::runIndexedTest( int32_t /*index*/, UBool /*exec*/, const char* & /*name*/, char* /*par*/ )
 {
-    // to be overriden by a method like:
+    // to be overridden by a method like:
     /*
     switch (index) {
         case 0: name = "First Test"; if (exec) FirstTest( par ); break;
