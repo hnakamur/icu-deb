@@ -1,3 +1,11 @@
+icu (60.2-2) experimental; urgency=medium
+
+  * Backport Calendar buffer overrun compatibility fix.
+  * Remove outdated patches.
+  * Update debhelper level to 11 .
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Mon, 18 Dec 2017 19:32:35 +0000
+
 icu (60.2-1) experimental; urgency=high
 
   * New upstream release.

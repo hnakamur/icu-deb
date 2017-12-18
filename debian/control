@@ -3,7 +3,7 @@ Section: libs
 Priority: optional
 Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
 Standards-Version: 4.1.2
-Build-Depends: debhelper (>= 10), pkg-config, libicu-le-hb-dev
+Build-Depends: debhelper (>= 11), pkg-config, libicu-le-hb-dev
 Build-Depends-Indep: doxygen (>= 1.7.1)
 Build-Conflicts: clang
 Homepage: http://www.icu-project.org
