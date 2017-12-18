@@ -1,11 +1,9 @@
 icudata-stdlibs.patch
 gennorm2-man.patch
 icuinfo-man.patch
-#malayalam-rendering.patch
-#indic-ccmp.patch
 hurd-fix.diff
-#CVE-2017-14952.patch
 layout-test-fix.patch
 fix_UTF-8_to_UTF-8_conversion_overflow_part1.patch
 fix_UTF-8_to_UTF-8_conversion_overflow_part2.patch
 issue13104.revert.diff
+Calendar_buffer_overrun_fix_compatibility.patch
