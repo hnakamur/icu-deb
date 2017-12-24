@@ -12,6 +12,9 @@ include /usr/share/dpkg/buildflags.mk
 
 l_SONAME=60
 
+override_dh_auto_clean:
+	dh_auto_clean --no-parallel
+
 override_dh_clean:
 	dh_clean
 	find $(CURDIR)/source/ \( -name Makefile -o -name pkgdataMakefile \) \
@@ -61,6 +64,6 @@ override_dh_installdocs-indep:
 %:
 	dh $@ --sourcedirectory=$(CURDIR)/source/ --parallel
 
-.PHONY: override_dh_clean override_dh_auto_configure override_dh_auto_build \
-	override_dh_auto_test override_dh_auto_install \
-	override_dh_installdocs-indep
+.PHONY: override_dh_auto_clean override_dh_clean override_dh_auto_configure \
+	override_dh_auto_build override_dh_auto_test \
+	override_dh_auto_install override_dh_installdocs-indep

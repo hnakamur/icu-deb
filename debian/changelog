@@ -1,3 +1,9 @@
+icu (60.2-3) experimental; urgency=medium
+
+  * Don't distclean in parallel (closes: #884898).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sun, 24 Dec 2017 08:49:27 +0000
+
 icu (60.2-2) experimental; urgency=medium
 
   * Backport Calendar buffer overrun compatibility fix.
