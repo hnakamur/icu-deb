@@ -1,6 +1,6 @@
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 2005-2010, International Business Machines Corporation and
+ * Copyright (c) 2005-2011, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /************************************************************************
@@ -8,15 +8,14 @@
 *
 ************************************************************************/
 
-#include "unicode/utypes.h"
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unicode/utext.h>
-#include <unicode/utf8.h>
-#include <unicode/ustring.h>
-#include <unicode/uchriter.h>
+#include "unicode/utypes.h"
+#include "unicode/utext.h"
+#include "unicode/utf8.h"
+#include "unicode/ustring.h"
+#include "unicode/uchriter.h"
 #include "utxttest.h"
 
 static UBool  gFailed = FALSE;
@@ -825,7 +824,7 @@ void UTextTest::TestAccessNoClone(const UnicodeString &us, UText *ut, int cpCoun
         //   or whether the lead surrogate of the pair is extracted.
         //   It's a buffer overflow error in either case.
         TEST_ASSERT(buf[0] == us.charAt(0) ||
-                    buf[0] == 0x5555 && U_IS_SUPPLEMENTARY(us.char32At(0)));
+                    (buf[0] == 0x5555 && U_IS_SUPPLEMENTARY(us.char32At(0))));
         TEST_ASSERT(buf[1] == 0x5555);
         if (us.length() == 1) {
             TEST_ASSERT(status == U_STRING_NOT_TERMINATED_WARNING);
@@ -1911,7 +1910,7 @@ void UTextTest::Ticket6847() {
     utext_setNativeIndex(ut, 0);
     int32_t count = 0;
     UChar32 c = 0;
-    int32_t nativeIndex = UTEXT_GETNATIVEINDEX(ut);
+    int64_t nativeIndex = UTEXT_GETNATIVEINDEX(ut);
     TEST_ASSERT(nativeIndex == 0);
     while ((c = utext_next32(ut)) != U_SENTINEL) {
         TEST_ASSERT(c == 0x41);

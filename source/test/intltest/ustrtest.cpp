@@ -1,10 +1,11 @@
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2010, International Business Machines Corporation and
+ * Copyright (c) 1997-2011, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #include "ustrtest.h"
+#include "unicode/appendable.h"
 #include "unicode/std_string.h"
 #include "unicode/unistr.h"
 #include "unicode/uchar.h"
@@ -58,11 +59,14 @@ void UnicodeStringTest::runIndexedTest( int32_t index, UBool exec, const char* &
         case 13: name = "TestUnescape"; if (exec) TestUnescape(); break;
         case 14: name = "TestCountChar32"; if (exec) TestCountChar32(); break;
         case 15: name = "TestStringEnumeration"; if (exec) TestStringEnumeration(); break;
-        case 16: name = "TestCharString"; if (exec) TestCharString(); break;
-        case 17: name = "TestNameSpace"; if (exec) TestNameSpace(); break;
-        case 18: name = "TestUTF32"; if (exec) TestUTF32(); break;
-        case 19: name = "TestUTF8"; if (exec) TestUTF8(); break;
-        case 20: name = "TestReadOnlyAlias"; if (exec) TestReadOnlyAlias(); break;
+        case 16: name = "TestNameSpace"; if (exec) TestNameSpace(); break;
+        case 17: name = "TestUTF32"; if (exec) TestUTF32(); break;
+        case 18: name = "TestUTF8"; if (exec) TestUTF8(); break;
+        case 19: name = "TestReadOnlyAlias"; if (exec) TestReadOnlyAlias(); break;
+        case 20: name = "TestAppendable"; if (exec) TestAppendable(); break;
+        case 21: name = "TestUnicodeStringImplementsAppendable"; if (exec) TestUnicodeStringImplementsAppendable(); break;
+        case 22: name = "TestSizeofUnicodeString"; if (exec) TestSizeofUnicodeString(); break;
+        case 23: name = "TestStartsWithAndEndsWithNulTerminated"; if (exec) TestStartsWithAndEndsWithNulTerminated(); break;
 
         default: name = ""; break; //needed to end loop
     }
@@ -968,6 +972,17 @@ UnicodeStringTest::TestPrefixAndSuffix()
 }
 
 void
+UnicodeStringTest::TestStartsWithAndEndsWithNulTerminated() {
+    UnicodeString test("abcde");
+    const UChar ab[] = { 0x61, 0x62, 0 };
+    const UChar de[] = { 0x64, 0x65, 0 };
+    assertTrue("abcde.startsWith(ab, -1)", test.startsWith(ab, -1));
+    assertTrue("abcde.startsWith(ab, 0, -1)", test.startsWith(ab, 0, -1));
+    assertTrue("abcde.endsWith(de, -1)", test.endsWith(de, -1));
+    assertTrue("abcde.endsWith(de, 0, -1)", test.endsWith(de, 0, -1));
+}
+
+void
 UnicodeStringTest::TestFindAndReplace()
 {
     UnicodeString test1("One potato, two potato, three potato, four\n");
@@ -1006,6 +1021,16 @@ UnicodeStringTest::TestReverse()
     test.reverse();
     if(test.char32At(0)!=0x1ed0 || test.char32At(1)!=0xc4 || test.char32At(2)!=0x1d15f || test.char32At(4)!=0x2f999) {
         errln("reverse() failed with supplementary characters");
+    }
+
+    // Test case for ticket #8091:
+    // UnicodeString::reverse() failed to see a lead surrogate in the middle of
+    // an odd-length string that contains no other lead surrogates.
+    test=UNICODE_STRING_SIMPLE("ab\\U0001F4A9e").unescape();
+    UnicodeString expected=UNICODE_STRING_SIMPLE("e\\U0001F4A9ba").unescape();
+    test.reverse();
+    if(test!=expected) {
+        errln("reverse() failed with only lead surrogate in the middle");
     }
 }
 
@@ -1743,16 +1768,6 @@ UnicodeStringTest::TestStringEnumeration() {
     uenum_close(uten);
 }
 
-void
-UnicodeStringTest::TestCharString() {
-    static const char originalCStr[] =
-        "This is a large string that is meant to over flow the internal buffer of CharString. At the time of writing this test, the internal buffer is 128 bytes.";
-    CharString chStr(originalCStr);
-    if (strcmp(originalCStr, chStr) != 0) {
-        errln("CharString doesn't work with large strings.");
-    }
-}
-
 /*
  * Namespace test, to make sure that macros like UNICODE_STRING include the
  * namespace qualifier.
@@ -1831,6 +1846,14 @@ UnicodeStringTest::TestUTF32() {
     }
 }
 
+class TestCheckedArrayByteSink : public CheckedArrayByteSink {
+public:
+    TestCheckedArrayByteSink(char* outbuf, int32_t capacity)
+            : CheckedArrayByteSink(outbuf, capacity), calledFlush(FALSE) {}
+    virtual void Flush() { calledFlush = TRUE; }
+    UBool calledFlush;
+};
+
 void
 UnicodeStringTest::TestUTF8() {
     static const uint8_t utf8[] = {
@@ -1880,12 +1903,15 @@ UnicodeStringTest::TestUTF8() {
     UnicodeString us(FALSE, utf16, LENGTHOF(utf16));
 
     char buffer[64];
-    CheckedArrayByteSink sink(buffer, (int32_t)sizeof(buffer));
+    TestCheckedArrayByteSink sink(buffer, (int32_t)sizeof(buffer));
     us.toUTF8(sink);
     if( sink.NumberOfBytesWritten() != (int32_t)sizeof(expected_utf8) ||
         0 != uprv_memcmp(buffer, expected_utf8, sizeof(expected_utf8))
     ) {
         errln("UnicodeString::toUTF8() did not create the expected string.");
+    }
+    if(!sink.calledFlush) {
+        errln("UnicodeString::toUTF8(sink) did not sink.Flush().");
     }
 #if U_HAVE_STD_STRING
     // Initial contents for testing that toUTF8String() appends.
@@ -2001,5 +2027,85 @@ UnicodeStringTest::TestReadOnlyAlias() {
     temp.fastCopyFrom(bogusString.tempSubStringBetween(8, 18));
     if(!temp.isBogus()) {
         errln("UnicodeString.setToBogus().tempSubStringBetween(8, 18) failed");
+    }
+}
+
+void
+UnicodeStringTest::doTestAppendable(UnicodeString &dest, Appendable &app) {
+    static const UChar cde[3]={ 0x63, 0x64, 0x65 };
+    static const UChar fg[3]={ 0x66, 0x67, 0 };
+    if(!app.reserveAppendCapacity(12)) {
+        errln("Appendable.reserve(12) failed");
+    }
+    app.appendCodeUnit(0x61);
+    app.appendCodePoint(0x62);
+    app.appendCodePoint(0x50000);
+    app.appendString(cde, 3);
+    app.appendString(fg, -1);
+    UChar scratch[3];
+    int32_t capacity=-1;
+    UChar *buffer=app.getAppendBuffer(3, 3, scratch, 3, &capacity);
+    if(capacity<3) {
+        errln("Appendable.getAppendBuffer(min=3) returned capacity=%d<3", (int)capacity);
+        return;
+    }
+    static const UChar hij[3]={ 0x68, 0x69, 0x6a };
+    u_memcpy(buffer, hij, 3);
+    app.appendString(buffer, 3);
+    if(dest!=UNICODE_STRING_SIMPLE("ab\\U00050000cdefghij").unescape()) {
+        errln("Appendable.append(...) failed");
+    }
+    buffer=app.getAppendBuffer(0, 3, scratch, 3, &capacity);
+    if(buffer!=NULL || capacity!=0) {
+        errln("Appendable.getAppendBuffer(min=0) failed");
+    }
+    capacity=1;
+    buffer=app.getAppendBuffer(3, 3, scratch, 2, &capacity);
+    if(buffer!=NULL || capacity!=0) {
+        errln("Appendable.getAppendBuffer(scratch<min) failed");
+    }
+}
+
+class SimpleAppendable : public Appendable {
+public:
+    explicit SimpleAppendable(UnicodeString &dest) : str(dest) {}
+    virtual UBool appendCodeUnit(UChar c) { str.append(c); return TRUE; }
+    SimpleAppendable &reset() { str.remove(); return *this; }
+private:
+    UnicodeString &str;
+};
+
+void
+UnicodeStringTest::TestAppendable() {
+    UnicodeString dest;
+    SimpleAppendable app(dest);
+    doTestAppendable(dest, app);
+}
+
+void
+UnicodeStringTest::TestUnicodeStringImplementsAppendable() {
+    UnicodeString dest;
+    UnicodeStringAppendable app(dest);
+    doTestAppendable(dest, app);
+}
+
+void
+UnicodeStringTest::TestSizeofUnicodeString() {
+    // See the comments in unistr.h near the declaration of UnicodeString's fields.
+    size_t sizeofUniStr=sizeof(UnicodeString);
+    size_t expected;
+    switch(sizeof(void *)) {
+    case 4:
+        expected=32;
+        break;
+    case 8:
+        expected=40;
+        break;
+    default:
+        logln("This platform has neither 32-bit nor 64-bit pointers.");
+        return;
+    }
+    if(expected!=sizeofUniStr) {
+        errln("sizeof(UnicodeString)=%d, expected %d", (int)sizeofUniStr, (int)expected);
     }
 }

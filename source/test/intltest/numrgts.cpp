@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (c) 1997-2010, International Business Machines Corporation
+ * Copyright (c) 1997-2011, International Business Machines Corporation
  * and others. All Rights Reserved.
  ***********************************************************************/
  
@@ -168,6 +168,7 @@ NumberFormatRegressionTest::runIndexedTest( int32_t index, UBool exec, const cha
         CASE(58,Test4243011);
         CASE(59,Test4243108);
         CASE(60,TestJ691);
+        CASE(61,Test8199);
 
         default: name = ""; break;
     }
@@ -503,15 +504,14 @@ void NumberFormatRegressionTest::Test4086575(void)
       return;
     }
     failure(status, "NumberFormat::createInstance", Locale::getFrance());
-    
+
     // C++ workaround to make sure cast works
-    // Wouldn't dynamic_cast<DecimalFormat*> be great?
-    if(nf1->getDynamicClassID() != DecimalFormat::getStaticClassID()) {
+    DecimalFormat *nf = dynamic_cast<DecimalFormat *>(nf1);
+    if(nf == NULL) {
         errln("NumberFormat::createInstance returned incorrect type.");
         return;
     }
 
-    DecimalFormat *nf = (DecimalFormat*) nf1;
     UnicodeString temp;
     logln("nf toPattern1: " + nf->toPattern(temp));
     logln("nf toLocPattern1: " + nf->toLocalizedPattern(temp));
@@ -712,8 +712,8 @@ void NumberFormatRegressionTest::Test4090504 (void)
             df->setMaximumFractionDigits(i);
             //sb = new StringBuffer("");
             fp.setField(0);
-            logln("  getMaximumFractionDigits() = " + i);
-            logln("  formated: " + df->format(d, sb, fp));
+            logln(UnicodeString("  getMaximumFractionDigits() = ") + i);
+            logln(UnicodeString("  formated: ") + df->format(d, sb, fp));
         }
     /*} catch (Exception foo) {
         errln("Bug 4090504 regression test failed. Message : " + foo.getMessage());
@@ -842,11 +842,11 @@ void NumberFormatRegressionTest::Test4087244 (void) {
       delete nf;
       return;
     }
-    if (nf->getDynamicClassID() != DecimalFormat::getStaticClassID()) {
+    DecimalFormat *df = dynamic_cast<DecimalFormat *>(nf);
+    if(df == NULL) {
         errln("expected DecimalFormat!");
         return;
     }
-    DecimalFormat *df = (DecimalFormat*) nf;
     const DecimalFormatSymbols *sym = df->getDecimalFormatSymbols();
     UnicodeString decSep = sym->getSymbol(DecimalFormatSymbols::kDecimalSeparatorSymbol);
     UnicodeString monSep = sym->getSymbol(DecimalFormatSymbols::kMonetarySeparatorSymbol);
@@ -1032,11 +1032,11 @@ void NumberFormatRegressionTest::Test4071014 (void)
     UnicodeString tempString;
     /* user error :
     String expectedDefault = "-5.789,987";
-    String expectedCurrency = "5.789,98 DM";
+    String expectedCurrency = "5.789,98 DEM";
     String expectedPercent = "-578.998%";
     */
     UnicodeString expectedDefault("-5.789,988");
-    UnicodeString expectedCurrency("5.789,99\\u00A0DM");
+    UnicodeString expectedCurrency("5.789,99\\u00A0DEM");
     UnicodeString expectedPercent("-578.999\\u00A0%");
 
     expectedCurrency = expectedCurrency.unescape();
@@ -1104,7 +1104,7 @@ void NumberFormatRegressionTest::Test4071859 (void)
     String expectedPercent = "-578.998%";
     */
     UnicodeString expectedDefault("-5.789,988");
-    UnicodeString expectedCurrency("-IT\\u20A4\\u00A05.790", -1, US_INV);
+    UnicodeString expectedCurrency("-ITL\\u00A05.790", -1, US_INV);
     UnicodeString expectedPercent("-578.999%");
     expectedCurrency = expectedCurrency.unescape();
 
@@ -1242,7 +1242,7 @@ void NumberFormatRegressionTest::Test4074454(void)
         FieldPosition pos(FieldPosition::DONT_CARE);
         tempString = newFmt->format(3456.78, tempString, pos);
         if (tempString != UnicodeString("3,456.78 p'ieces"))
-            errln("Failed!  3456.78 p'ieces expected, but got : " + tempString);
+            dataerrln("Failed!  3456.78 p'ieces expected, but got : " + tempString);
     /*} catch (Exception foo) {
         errln("An exception was thrown for any inconsistent negative pattern.");
     }*/
@@ -1641,15 +1641,21 @@ void NumberFormatRegressionTest::Test4122840(void)
             NULL/*"java.text.resources.LocaleElements"*/, 
             locales[i], status);
         failure(status, "new ResourceBundle");
-        ResourceBundle numPat = rb->get("NumberPatterns", status);
-        failure(status, "new ResourceBundle(NumberPatterns)");
-        //
+        ResourceBundle numPat = rb->getWithFallback("NumberElements", status);
+        failure(status, "rb.get(NumberElements)");
+        numPat = numPat.getWithFallback("latn",status);
+        failure(status, "rb.get(latn)");
+        numPat = numPat.getWithFallback("patterns",status);
+        failure(status, "rb.get(patterns)");
+        numPat = numPat.getWithFallback("currencyFormat",status);
+        failure(status, "rb.get(currencyFormat)");
+       //
         // Get the currency pattern for this locale.  We have to fish it
         // out of the ResourceBundle directly, since DecimalFormat.toPattern
         // will return the localized symbol, not \00a4
         //
-        UnicodeString pattern = numPat.getStringEx(1, status);
-        failure(status, "rb->getStringArray");
+        UnicodeString pattern = numPat.getString(status);
+        failure(status, "rb->getString()");
 
         UChar fo[] = { 0x00A4 };
         UnicodeString foo(fo, 1, 1);
@@ -1907,12 +1913,12 @@ void NumberFormatRegressionTest::Test4145457() {
         delete nff;
         return;
     };
-    if(nff->getDynamicClassID() != DecimalFormat::getStaticClassID()) {
+    DecimalFormat *nf = dynamic_cast<DecimalFormat *>(nff);
+    if(nf == NULL) {
         errln("DecimalFormat needed to continue");
         return;
     }
 
-    DecimalFormat *nf = (DecimalFormat*)nff;
     DecimalFormatSymbols *sym = (DecimalFormatSymbols*) nf->getDecimalFormatSymbols();
     sym->setSymbol(DecimalFormatSymbols::kDecimalSeparatorSymbol, (UChar)/*'\''*/0x0027);
     nf->setDecimalFormatSymbols(*sym);
@@ -1988,12 +1994,12 @@ void NumberFormatRegressionTest::Test4147295(void)
         int minIntDig = sdf->getMinimumIntegerDigits();
         if (minIntDig != 0) {
             errln("Test failed");
-            errln(" Minimum integer digits : " + minIntDig);
+            errln(UnicodeString(" Minimum integer digits : ") + minIntDig);
             UnicodeString temp;
-            errln(" new pattern: " + sdf->toPattern(temp));
+            errln(UnicodeString(" new pattern: ") + sdf->toPattern(temp));
         } else {
             logln("Test passed");
-            logln(" Minimum integer digits : " + minIntDig);
+            logln(UnicodeString(" Minimum integer digits : ") + minIntDig);
         }
     }
     delete sdf;
@@ -2184,11 +2190,11 @@ void NumberFormatRegressionTest::Test4170798(void) {
         delete nf;
         return;
     };
-    if(nf->getDynamicClassID() != DecimalFormat::getStaticClassID()) {
+    DecimalFormat *df = dynamic_cast<DecimalFormat *>(nf);
+    if(df == NULL) {
         errln("DecimalFormat needed to continue");
         return;
     }
-    DecimalFormat *df = (DecimalFormat*) nf;
     df->setParseIntegerOnly(TRUE);
     Formattable n;
     ParsePosition pos(0);
@@ -2419,6 +2425,11 @@ void NumberFormatRegressionTest::Test4212072(void) {
                 errln(UnicodeString("FAIL: ") + type[j] + avail[i].getDisplayName(l) +
                       " -> \"" + pat +
                       "\" -> \"" + f2.toPattern(p) + "\"");
+            } else {
+                UnicodeString l, p;
+                logln(UnicodeString("PASS: ") + type[j] + avail[i].getDisplayName(l) +
+                      " -> \"" + pat +
+                      "\"");
             }
 
             // Test toLocalizedPattern/applyLocalizedPattern round trip
@@ -2482,7 +2493,7 @@ void NumberFormatRegressionTest::Test4216742(void) {
             } else {
                 double d = num.getType() == Formattable::kDouble ?
                     num.getDouble() : (double) num.getLong();
-                if (d > 0 != DATA[i] > 0) {
+                if ((d > 0) != (DATA[i] > 0)) {
                     errln(UnicodeString("\"") + str + "\" parse(x " +
                           fmt->getMultiplier() +
                           ") => " + toString(num));
@@ -2675,5 +2686,145 @@ void NumberFormatRegressionTest::TestJ691(void) {
 
     delete df;
 }
+
+//---------------------------------------------------------------------------
+//
+//   Error Checking / Reporting macros
+//
+//---------------------------------------------------------------------------
+#define TEST_CHECK_STATUS(status) \
+    if (U_FAILURE(status)) {\
+        errln("File %s, Line %d.  status=%s\n", __FILE__, __LINE__, u_errorName(status));\
+        return;\
+    }
+
+#define TEST_ASSERT(expr) \
+    if ((expr)==FALSE) {\
+        errln("File %s, line %d: Assertion Failed: " #expr "\n", __FILE__, __LINE__);\
+    }
+
+
+// Ticket 8199:  Parse failure for numbers in the range of 1E10 - 1E18
+
+void NumberFormatRegressionTest::Test8199(void) {
+    UErrorCode status = U_ZERO_ERROR;
+    NumberFormat *nf = NumberFormat::createInstance(Locale::getEnglish(), status);
+    if (nf == NULL) {
+        dataerrln("Fail: NumberFormat::createInstance(Locale::getEnglish(), status)");
+        return;
+    }
+    TEST_CHECK_STATUS(status);
+
+    // Note:  Retrieving parsed values from a Formattable as a reduced-precision type
+    //        should always truncate, no other rounding scheme.
+
+    UnicodeString numStr = "1000000000.6";   // 9 zeroes
+    Formattable val;
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kDouble == val.getType());
+    TEST_ASSERT(1000000000 == val.getInt64(status));
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(1000000000.6 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    numStr = "100000000000000001.1";   // approx 1E17, parses as a double rather
+                                       //   than int64 because of the fraction
+                                       //   even though int64 is more precise.
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kDouble == val.getType());
+    TEST_ASSERT(100000000000000001LL == val.getInt64(status));
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(100000000000000000.0 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    numStr = "1E17";  // Parses with the internal decimal number having non-zero exponent
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kInt64 == val.getType());
+    TEST_ASSERT(100000000000000000LL == val.getInt64());
+    TEST_ASSERT(1.0E17 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    numStr = "9223372036854775807";  // largest int64_t
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kInt64 == val.getType());
+    TEST_ASSERT(9223372036854775807LL == val.getInt64());
+    // In the following check, note that a substantial range of integers will
+    //    convert to the same double value.  There are also platform variations
+    //    in the rounding at compile time of double constants.
+    TEST_ASSERT(9223372036854775808.0 >= val.getDouble(status));
+    TEST_ASSERT(9223372036854774700.0 <= val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    numStr = "-9223372036854775808";  // smallest int64_t
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kInt64 == val.getType());
+    // TEST_ASSERT(-9223372036854775808LL == val.getInt64()); // Compiler chokes on constant.
+    TEST_ASSERT((int64_t)0x8000000000000000LL == val.getInt64());
+    TEST_ASSERT(-9223372036854775808.0 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    numStr = "9223372036854775808";  // largest int64_t + 1
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kDouble == val.getType());
+    TEST_ASSERT(9223372036854775807LL == val.getInt64(status));
+    TEST_ASSERT(status == U_INVALID_FORMAT_ERROR);
+    status = U_ZERO_ERROR;
+    TEST_ASSERT(9223372036854775810.0 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    numStr = "-9223372036854775809";  // smallest int64_t - 1
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kDouble == val.getType());
+    // TEST_ASSERT(-9223372036854775808LL == val.getInt64(status));  // spurious compiler warnings
+    TEST_ASSERT((int64_t)0x8000000000000000LL == val.getInt64(status));
+    TEST_ASSERT(status == U_INVALID_FORMAT_ERROR);
+    status = U_ZERO_ERROR;
+    TEST_ASSERT(-9223372036854775810.0 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    // Test values near the limit of where doubles can represent all integers.
+    // The implementation strategy of getInt64() changes at this boundary.
+    // Strings to be parsed include a decimal fraction to force them to be
+    //   parsed as doubles rather than ints.  The fraction is discarded
+    //   from the parsed double value because it is beyond what can be represented.
+
+    status = U_ZERO_ERROR;
+    numStr = "9007199254740991.1";  // largest 53 bit int
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    // printf("getInt64() returns %lld\n", val.getInt64(status));
+    TEST_ASSERT(Formattable::kDouble == val.getType());
+    TEST_ASSERT(9007199254740991LL == val.getInt64(status));
+    TEST_ASSERT(9007199254740991.0 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    status = U_ZERO_ERROR;
+    numStr = "9007199254740992.1";  // 54 bits for the int part.
+    nf->parse(numStr, val, status);
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kDouble == val.getType());
+    TEST_ASSERT(9007199254740992LL == val.getInt64(status));
+    TEST_ASSERT(9007199254740992.0 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    status = U_ZERO_ERROR;
+    numStr = "9007199254740993.1";  // 54 bits for the int part.  Double will round
+    nf->parse(numStr, val, status); //    the ones digit, putting it up to ...994
+    TEST_CHECK_STATUS(status);
+    TEST_ASSERT(Formattable::kDouble == val.getType());
+    TEST_ASSERT(9007199254740993LL == val.getInt64(status));
+    TEST_ASSERT(9007199254740994.0 == val.getDouble(status));
+    TEST_CHECK_STATUS(status);
+
+    delete nf;
+}
+
 
 #endif /* #if !UCONFIG_NO_FORMATTING */

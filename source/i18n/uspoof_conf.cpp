@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 2008-2009, International Business Machines
+*   Copyright (C) 2008-2011, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -18,7 +18,7 @@
 
 #include "unicode/utypes.h"
 #include "unicode/uspoof.h"
-#if !UCONFIG_NO_REGULAR_EXPRESSIONS 
+#if !UCONFIG_NO_REGULAR_EXPRESSIONS
 #if !UCONFIG_NO_NORMALIZATION
 
 #include "unicode/unorm.h"
@@ -106,8 +106,10 @@ SPUString *SPUStringPool::getByIndex(int32_t index) {
 // Conforms to the type signature for a USortComparator in uvector.h
 
 static int8_t U_CALLCONV SPUStringCompare(UHashTok left, UHashTok right) {
-    const SPUString *sL = static_cast<const SPUString *>(left.pointer);
-    const SPUString *sR = static_cast<const SPUString *>(right.pointer);
+	const SPUString *sL = const_cast<const SPUString *>(
+        static_cast<SPUString *>(left.pointer));
+ 	const SPUString *sR = const_cast<const SPUString *>(
+ 	    static_cast<SPUString *>(right.pointer));
     int32_t lenL = sL->fStr->length();
     int32_t lenR = sR->fStr->length();
     if (lenL < lenR) {
@@ -142,10 +144,10 @@ ConfusabledataBuilder::ConfusabledataBuilder(SpoofImpl *spImpl, UErrorCode &stat
     fSpoofImpl(spImpl),
     fInput(NULL),
     fSLTable(NULL),
-    fSATable(NULL), 
+    fSATable(NULL),
     fMLTable(NULL),
     fMATable(NULL),
-    fKeySet(NULL), 
+    fKeySet(NULL),
     fKeyVec(NULL),
     fValueVec(NULL),
     fStringTable(NULL),
@@ -217,6 +219,7 @@ void ConfusabledataBuilder::build(const char * confusables, int32_t confusablesL
     fInput = static_cast<UChar *>(uprv_malloc((inputLen+1) * sizeof(UChar)));
     if (fInput == NULL) {
         status = U_MEMORY_ALLOCATION_ERROR;
+        return;
     }
     u_strFromUTF8(fInput, inputLen+1, NULL, confusables, confusablesLen, &status);
 
@@ -230,19 +233,21 @@ void ConfusabledataBuilder::build(const char * confusables, int32_t confusablesL
     //   Capture Group 8:  A syntactically invalid line.  Anything that didn't match before.
     // Example Line from the confusables.txt source file:
     //   "1D702 ;	006E 0329 ;	SL	# MATHEMATICAL ITALIC SMALL ETA ... "
-    fParseLine = uregex_openC(
+    UnicodeString pattern(
         "(?m)^[ \\t]*([0-9A-Fa-f]+)[ \\t]+;"      // Match the source char
         "[ \\t]*([0-9A-Fa-f]+"                    // Match the replacement char(s)
            "(?:[ \\t]+[0-9A-Fa-f]+)*)[ \\t]*;"    //     (continued)
         "\\s*(?:(SL)|(SA)|(ML)|(MA))"             // Match the table type
         "[ \\t]*(?:#.*?)?$"                       // Match any trailing #comment
         "|^([ \\t]*(?:#.*?)?)$"       // OR match empty lines or lines with only a #comment
-        "|^(.*?)$",                   // OR match any line, which catches illegal lines.
-        0, NULL, &status);
-        
+        "|^(.*?)$", -1, US_INV);      // OR match any line, which catches illegal lines.
+    // TODO: Why are we using the regex C API here? C++ would just take UnicodeString...
+    fParseLine = uregex_open(pattern.getBuffer(), pattern.length(), 0, NULL, &status);
+
     // Regular expression for parsing a hex number out of a space-separated list of them.
     //   Capture group 1 gets the number, with spaces removed.
-    fParseHexNum = uregex_openC("\\s*([0-9A-F]+)", 0, NULL, &status);
+    pattern = UNICODE_STRING_SIMPLE("\\s*([0-9A-F]+)");
+    fParseHexNum = uregex_open(pattern.getBuffer(), pattern.length(), 0, NULL, &status);
 
     // Zap any Byte Order Mark at the start of input.  Changing it to a space is benign
     //   given the syntax of the input.
@@ -268,11 +273,11 @@ void ConfusabledataBuilder::build(const char * confusables, int32_t confusablesL
         //    put them into the appropriate mapping table.
         UChar32 keyChar = SpoofImpl::ScanHex(fInput, uregex_start(fParseLine, 1, &status),
                           uregex_end(fParseLine, 1, &status), status);
-                          
+
         int32_t mapStringStart = uregex_start(fParseLine, 2, &status);
         int32_t mapStringLength = uregex_end(fParseLine, 2, &status) - mapStringStart;
         uregex_setText(fParseHexNum, &fInput[mapStringStart], mapStringLength, &status);
-        
+
         UnicodeString  *mapString = new UnicodeString();
         if (mapString == NULL) {
             status = U_MEMORY_ALLOCATION_ERROR;
@@ -284,11 +289,11 @@ void ConfusabledataBuilder::build(const char * confusables, int32_t confusablesL
             mapString->append(c);
         }
         U_ASSERT(mapString->length() >= 1);
-        
+
         // Put the map (value) string into the string pool
         // This a little like a Java intern() - any duplicates will be eliminated.
         SPUString *smapString = stringPool->addString(mapString, status);
-        
+
         // Add the UChar32 -> string mapping to the appropriate table.
         UHashtable *table = uregex_start(fParseLine, 3, &status) >= 0 ? fSLTable :
                             uregex_start(fParseLine, 4, &status) >= 0 ? fSATable :
@@ -379,7 +384,7 @@ void ConfusabledataBuilder::build(const char * confusables, int32_t confusablesL
     outputData(status);
 
     // All of the intermediate allocated data belongs to the ConfusabledataBuilder
-    //  object  (this), and is deleted in the destructor. 
+    //  object  (this), and is deleted in the destructor.
     return;
 }
 
@@ -395,11 +400,11 @@ void ConfusabledataBuilder::build(const char * confusables, int32_t confusablesL
 void ConfusabledataBuilder::outputData(UErrorCode &status) {
 
     U_ASSERT(fSpoofImpl->fSpoofData->fDataOwned == TRUE);
-    
+
     //  The Key Table
     //     While copying the keys to the runtime array,
     //       also sanity check that they are sorted.
-    
+
     int32_t numKeys = fKeyVec->size();
     int32_t *keys =
         static_cast<int32_t *>(fSpoofImpl->fSpoofData->reserveSpace(numKeys*sizeof(int32_t), status));
@@ -440,7 +445,7 @@ void ConfusabledataBuilder::outputData(UErrorCode &status) {
     fSpoofImpl->fSpoofData->fCFUValues = values;
 
     // The Strings Table.
-    
+
     uint32_t stringsLength = fStringTable->length();
     // Reserve an extra space so the string will be nul-terminated.  This is
     // only a convenience, for when debugging; it is not needed otherwise.
@@ -455,7 +460,7 @@ void ConfusabledataBuilder::outputData(UErrorCode &status) {
     rawData->fCFUStringTable = (int32_t)((char *)strings - (char *)rawData);
     rawData->fCFUStringTableLen = stringsLength;
     fSpoofImpl->fSpoofData->fCFUStrings = strings;
-    
+
     // The String Lengths Table
     //    While copying into the runtime array do some sanity checks on the values
     //    Each complete entry contains two fields, an index and an offset.
@@ -489,7 +494,7 @@ void ConfusabledataBuilder::outputData(UErrorCode &status) {
 }
 
 
-    
+
 //  addKeyEntry   Construction of the confusable Key and Mapping Values tables.
 //                This is an intermediate point in the building process.
 //                We already have the mappings in the hash tables fSLTable, etc.
@@ -509,7 +514,7 @@ void ConfusabledataBuilder::addKeyEntry(
         //    is seen anywhere, so this no entry cases are very much expected.)
         return;
     }
-    
+
     // Check whether there is already an entry with the correct mapping.
     // If so, simply set the flag in the keyTable saying that the existing entry
     // applies to the table that we're doing now.
@@ -546,7 +551,7 @@ void ConfusabledataBuilder::addKeyEntry(
         adjustedMappingLength = 3;
     }
     newKey |= adjustedMappingLength << USPOOF_KEY_LENGTH_SHIFT;
-    
+
     int32_t newData = targetMapping->fStrTableIndex;
 
     fKeyVec->addElement(newKey, status);
@@ -594,5 +599,5 @@ UnicodeString ConfusabledataBuilder::getMapping(int32_t index) {
 }
 
 #endif
-#endif // !UCONFIG_NO_REGULAR_EXPRESSIONS 
+#endif // !UCONFIG_NO_REGULAR_EXPRESSIONS
 

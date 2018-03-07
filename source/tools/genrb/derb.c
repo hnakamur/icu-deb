@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1999-2009, International Business Machines
+*   Copyright (C) 1999-2011, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#if defined(U_WINDOWS) || defined(U_CYGWIN)
+#if defined(U_WINDOWS) || defined(U_CYGWIN) || defined(U_MINGW)
 #include <io.h>
 #include <fcntl.h>
 #define USE_FILENO_BINARY_MODE 1
@@ -272,7 +272,7 @@ main(int argc, char* argv[]) {
             const char *filename = 0;
             const char *ext = 0;
 
-            if (!locale || !tostdout) {
+            if (!locale[0] || !tostdout) {
                 filename = uprv_strrchr(arg, U_FILE_SEP_CHAR);
 
 #if U_FILE_SEP_CHAR != U_FILE_ALT_SEP_CHAR
@@ -293,7 +293,7 @@ main(int argc, char* argv[]) {
 
             if (tostdout) {
                 out = stdout;
-#if defined(U_WINDOWS) || defined(U_CYGWIN)
+#if defined(U_WINDOWS) || defined(U_CYGWIN) || defined(U_MINGW)
                 if (setmode(fileno(out), O_BINARY) == -1) {
                     fprintf(stderr, "%s: couldn't set standard output to binary mode\n", pname);
                     return 4;
@@ -345,7 +345,7 @@ main(int argc, char* argv[]) {
 
             printCString(out, converter, "\n// derb(8) by Vladimir Weinstein and Yves Arrouye\n\n", -1);
 
-            if (locale) {
+            if (locale[0]) {
                 printCString(out, converter, locale, -1);
             } else {
                 printCString(out, converter, filename, (int32_t)(ext - filename));

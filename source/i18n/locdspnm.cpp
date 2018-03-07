@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
-* Copyright (C) 2010, International Business Machines Corporation and         *
-* others. All Rights Reserved.                                                *
+* Copyright (C) 2010-2011, International Business Machines Corporation and
+* others. All Rights Reserved.
 *******************************************************************************
 */
 
@@ -120,7 +120,7 @@ ICUDataTable::get(const char* tableKey, const char* subTableKey, const char* ite
   const UChar *s = uloc_getTableStringWithFallback(path, locale.getName(),
                                                    tableKey, subTableKey, itemKey,
                                                    &len, &status);
-  if (U_SUCCESS(status)) {
+  if (U_SUCCESS(status) && len > 0) {
     return result.setTo(s, len);
   }
   return result.setTo(UnicodeString(itemKey, -1, US_INV));
@@ -145,7 +145,7 @@ ICUDataTable::getNoFallback(const char* tableKey, const char* subTableKey, const
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-UOBJECT_DEFINE_ABSTRACT_RTTI_IMPLEMENTATION(LocaleDisplayNames)
+UOBJECT_DEFINE_NO_RTTI_IMPLEMENTATION(LocaleDisplayNames)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -298,15 +298,11 @@ public:
   virtual UnicodeString& keyValueDisplayName(const char* key,
                                              const char* value,
                                              UnicodeString& result) const;
-  static UClassID U_EXPORT2 getStaticClassID();
-  virtual UClassID getDynamicClassID() const;
 private:
   UnicodeString& localeIdName(const char* localeId,
                               UnicodeString& result) const;
   UnicodeString& appendWithSep(UnicodeString& buffer, const UnicodeString& src) const;
 };
-
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(LocaleDisplayNamesImpl)
 
 LocaleDisplayNamesImpl::LocaleDisplayNamesImpl(const Locale& locale,
                                                UDialectHandling dialectHandling)
@@ -422,7 +418,7 @@ LocaleDisplayNamesImpl::localeDisplayName(const Locale& locale,
     while ((key = e->next((int32_t *)0, status)) != NULL) {
       locale.getKeywordValue(key, value, ULOC_KEYWORD_AND_VALUES_CAPACITY, status);
       appendWithSep(resultRemainder, keyDisplayName(key, temp))
-          .append("=")
+          .append((UChar)0x3d /* = */)
           .append(keyValueDisplayName(key, value, temp2));
     }
     delete e;

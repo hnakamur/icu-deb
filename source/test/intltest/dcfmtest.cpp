@@ -1,6 +1,6 @@
 /********************************************************************
  * COPYRIGHT:
- * Copyright (c) 2002-2010, International Business Machines Corporation and
+ * Copyright (c) 2002-2011, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -11,7 +11,8 @@
 //
 
 #include "intltest.h"
-#if !UCONFIG_NO_REGULAR_EXPRESSIONS
+
+#if !UCONFIG_NO_FORMATTING && !UCONFIG_NO_REGULAR_EXPRESSIONS
 
 #include "unicode/regex.h"
 #include "unicode/uchar.h"
@@ -212,9 +213,9 @@ void DecimalFormatTest::DataDrivenTests() {
     RegexMatcher    formatLineMat(UnicodeString(
             "(?i)\\s*format\\s+"
             "(\\S+)\\s+"                 // Capture group 1: pattern
-            "(ceiling|floor|down|up|halfeven|halfdown|halfup|default)\\s+"  // Capture group 2: Rounding Mode
+            "(ceiling|floor|down|up|halfeven|halfdown|halfup|default|unnecessary)\\s+"  // Capture group 2: Rounding Mode
             "\"([^\"]*)\"\\s+"           // Capture group 3: input
-            "\"([^\"]*)\""           // Capture group 4: expected output
+            "\"([^\"]*)\""               // Capture group 4: expected output
             "\\s*(?:#.*)?"),             // Trailing comment
          0, status);
 
@@ -233,7 +234,7 @@ void DecimalFormatTest::DataDrivenTests() {
     while (lineMat.find()) {
         lineNum++;
         if (U_FAILURE(status)) {
-            errln("File dcfmtest.txt, line %d: ICU Error \"%s\"", lineNum, u_errorName(status));
+            dataerrln("File dcfmtest.txt, line %d: ICU Error \"%s\"", lineNum, u_errorName(status));
         }
 
         status = U_ZERO_ERROR;
@@ -311,7 +312,7 @@ void DecimalFormatTest::execParseTest(int32_t lineNum,
     DecimalFormat format(pattern, symbols, status);
     Formattable   result;
     if (U_FAILURE(status)) {
-        errln("file dcfmtest.txt, line %d: %s error creating the formatter.",
+        dataerrln("file dcfmtest.txt, line %d: %s error creating the formatter.",
             lineNum, u_errorName(status));
         return;
     }
@@ -376,7 +377,7 @@ void DecimalFormatTest::execFormatTest(int32_t lineNum,
     // printf("Pattern = %s\n", UnicodeStringPiece(pattern).data());
     DecimalFormat fmtr(pattern, symbols, status);
     if (U_FAILURE(status)) {
-        errln("file dcfmtest.txt, line %d: %s error creating the formatter.",
+        dataerrln("file dcfmtest.txt, line %d: %s error creating the formatter.",
             lineNum, u_errorName(status));
         return;
     }
@@ -396,6 +397,8 @@ void DecimalFormatTest::execFormatTest(int32_t lineNum,
         fmtr.setRoundingMode(DecimalFormat::kRoundHalfUp);
     } else if (round=="default") {
         // don't set any value.
+    } else if (round=="unnecessary") {
+        fmtr.setRoundingMode(DecimalFormat::kRoundUnnecessary);
     } else {
         fmtr.setRoundingMode(DecimalFormat::kRoundFloor);
         errln("file dcfmtest.txt, line %d: Bad rounding mode \"%s\"",
@@ -408,12 +411,18 @@ void DecimalFormatTest::execFormatTest(int32_t lineNum,
 
     Formattable fmtbl;
     fmtbl.setDecimalNumber(spInput, status);
-    NumberFormat &nfmtr = fmtr;
+    //NumberFormat &nfmtr = fmtr;
     fmtr.format(fmtbl, result, NULL, status);
 
+    if ((status == U_FORMAT_INEXACT_ERROR) && (result == "") && (expected == "Inexact")) {
+        // Test succeeded.
+        status = U_ZERO_ERROR;
+        return;
+    }
     if (U_FAILURE(status)) {
         errln("file dcfmtest.txt, line %d: format() returned %s.",
             lineNum, u_errorName(status));
+        status = U_ZERO_ERROR;
         return;
     }
     
@@ -481,7 +490,7 @@ UChar *DecimalFormatTest::ReadAndConvertFile(const char *fileName, int32_t &ulen
     amtReadNoBOM = amtRead - 3;
     if (fileSize<3 || uprv_strncmp(fileBuf, "\xEF\xBB\xBF", 3) != 0) {
         // TODO:  restore this check.
-        // errln("Test data file %s is missing its BOM", fileName);
+        errln("Test data file %s is missing its BOM", fileName);
         fileBufNoBOM = fileBuf;
         amtReadNoBOM = amtRead;
     }

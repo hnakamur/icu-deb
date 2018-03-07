@@ -1,6 +1,6 @@
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2010, International Business Machines Corporation and
+ * Copyright (c) 1997-2011, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /*****************************************************************************
@@ -113,6 +113,7 @@ static void TestConvertExFromUTF8(void);
 static void TestConvertExFromUTF8_C5F0(void);
 static void TestConvertAlgorithmic(void);
        void TestDefaultConverterError(void);    /* defined in cctest.c */
+       void TestDefaultConverterSet(void);    /* defined in cctest.c */
 static void TestToUCountPending(void);
 static void TestFromUCountPending(void);
 static void TestDefaultName(void);
@@ -147,6 +148,7 @@ void addTestConvert(TestNode** root)
     addTest(root, &TestConvertExFromUTF8_C5F0,  "tsconv/ccapitst/TestConvertExFromUTF8_C5F0");
     addTest(root, &TestConvertAlgorithmic,      "tsconv/ccapitst/TestConvertAlgorithmic");
     addTest(root, &TestDefaultConverterError,   "tsconv/ccapitst/TestDefaultConverterError");
+    addTest(root, &TestDefaultConverterSet,     "tsconv/ccapitst/TestDefaultConverterSet");
 #if !UCONFIG_NO_FILE_IO
     addTest(root, &TestToUCountPending,         "tsconv/ccapitst/TestToUCountPending");
     addTest(root, &TestFromUCountPending,       "tsconv/ccapitst/TestFromUCountPending");
@@ -581,7 +583,7 @@ static void TestConvert()
         if (!ucs_file_in) 
         {
             log_data_err("Couldn't open the Unicode file [%s]... Exiting...\n", ucs_file_name);
-            return;
+            break;
         }
 
         /*Creates a converter and testing ucnv_openCCSID(u_int code_page, platform, errstatus*/
@@ -592,8 +594,8 @@ static void TestConvert()
         if (!myConverter || U_FAILURE(err))   
         {
             log_data_err("Error creating the ibm-949 converter - %s \n", u_errorName(err));
-
-            return;
+            fclose(ucs_file_in);
+            break;
         }
 
         /*testing for ucnv_getName()  */
@@ -883,7 +885,8 @@ static void TestConvert()
         if (BOM!=0xFEFF && BOM!=0xFFFE) 
         {
             log_err("File Missing BOM...Bailing!\n");
-            return;
+            fclose(ucs_file_in);
+            break;
         }
 
 
@@ -2476,11 +2479,13 @@ static const char *const badUTF8[]={
     "\xff"
 };
 
+#define ARG_CHAR_ARR_SIZE 8
+
 /* get some character that can be converted and convert it */
 static UBool getTestChar(UConverter *cnv, const char *converterName,
                          char charUTF8[4], int32_t *pCharUTF8Length,
-                         char char0[8], int32_t *pChar0Length,
-                         char char1[8], int32_t *pChar1Length) {
+                         char char0[ARG_CHAR_ARR_SIZE], int32_t *pChar0Length,
+                         char char1[ARG_CHAR_ARR_SIZE], int32_t *pChar1Length) {
     UChar utf16[U16_MAX_LENGTH];
     int32_t utf16Length;
 
@@ -2505,7 +2510,7 @@ static UBool getTestChar(UConverter *cnv, const char *converterName,
     utf16Source=utf16;
     target=char0;
     ucnv_fromUnicode(cnv,
-                     &target, char0+sizeof(char0),
+                     &target, char0+ARG_CHAR_ARR_SIZE,
                      &utf16Source, utf16+utf16Length,
                      NULL, FALSE, &errorCode);
     *pChar0Length=(int32_t)(target-char0);
@@ -2513,7 +2518,7 @@ static UBool getTestChar(UConverter *cnv, const char *converterName,
     utf16Source=utf16;
     target=char1;
     ucnv_fromUnicode(cnv,
-                     &target, char1+sizeof(char1),
+                     &target, char1+ARG_CHAR_ARR_SIZE,
                      &utf16Source, utf16+utf16Length,
                      NULL, FALSE, &errorCode);
     *pChar1Length=(int32_t)(target-char1);
@@ -2698,7 +2703,7 @@ static void TestConvertExFromUTF8_C5F0() {
     UErrorCode errorCode;
     int32_t i;
 
-    static const char bad_utf8[2]={ 0xC5, 0xF0 };
+    static const char bad_utf8[2]={ (char)0xC5, (char)0xF0 };
     /* Expect "&#65533;&#65533;" (2x U+FFFD as decimal NCRs) */
     static const char twoNCRs[16]={
         0x26, 0x23, 0x36, 0x35, 0x35, 0x33, 0x33, 0x3B,

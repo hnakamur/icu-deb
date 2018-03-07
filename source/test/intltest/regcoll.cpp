@@ -1,6 +1,6 @@
 /********************************************************************
  * COPYRIGHT:
- * Copyright (c) 1997-2009, International Business Machines Corporation and
+ * Copyright (c) 1997-2011, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -373,11 +373,11 @@ void CollationRegressionTest::Test4062418(/* char* par */)
 
     RuleBasedCollator *c = NULL;
 
-    c = (RuleBasedCollator *) Collator::createInstance(Locale::getFrance(), status);
+    c = (RuleBasedCollator *) Collator::createInstance(Locale::getCanadaFrench(), status);
 
     if (c == NULL || U_FAILURE(status))
     {
-        errln("Failed to create collator for Locale::getFrance()");
+        errln("Failed to create collator for Locale::getCanadaFrench()");
         delete c;
         return;
     }
@@ -453,11 +453,11 @@ void CollationRegressionTest::Test4066696(/* char* par */)
     UErrorCode status = U_ZERO_ERROR;
     RuleBasedCollator *c = NULL;
 
-    c = (RuleBasedCollator *)Collator::createInstance(Locale::getFrance(), status);
+    c = (RuleBasedCollator *)Collator::createInstance(Locale::getCanadaFrench(), status);
 
     if (c == NULL || U_FAILURE(status))
     {
-        errln("Failure creating collator for Locale::getFrance()");
+        errln("Failure creating collator for Locale::getCanadaFrench()");
         delete c;
         return;
     }
@@ -840,12 +840,12 @@ void CollationRegressionTest::Test4132736(/* char* par */)
 
     Collator *c = NULL;
 
-    c = Collator::createInstance(Locale::getFrance(), status);
+    c = Collator::createInstance(Locale::getCanadaFrench(), status);
     c->setStrength(Collator::TERTIARY);
 
     if (c == NULL || U_FAILURE(status))
     {
-        errln("Failed to create a collator for Locale::getFrance()");
+        errln("Failed to create a collator for Locale::getCanadaFrench()");
         delete c;
         return;
     }
@@ -1081,7 +1081,7 @@ void CollationRegressionTest::Test4146160(/* char* par */)
 // Ticket 7189
 //
 // nextSortKeyPart incorrect for EO_S1 collation
-static int32_t calcKeyIncremental(UCollator *coll, const UChar* text, int32_t len, uint8_t *keyBuf, int32_t keyBufLen, UErrorCode& status) {
+static int32_t calcKeyIncremental(UCollator *coll, const UChar* text, int32_t len, uint8_t *keyBuf, int32_t /*keyBufLen*/, UErrorCode& status) {
     UCharIterator uiter;
     uint32_t state[2] = { 0, 0 };
     int32_t keyLen;
@@ -1156,6 +1156,67 @@ void CollationRegressionTest::TestT7189() {
     }
     ucol_close(coll);
 }
+
+void CollationRegressionTest::TestCaseFirstCompression() {
+    RuleBasedCollator *col = (RuleBasedCollator *) en_us->clone();
+    UErrorCode status = U_ZERO_ERROR;
+
+    // default
+    caseFirstCompressionSub(col, "default");
+
+    // Upper first
+    col->setAttribute(UCOL_CASE_FIRST, UCOL_UPPER_FIRST, status);
+    if (U_FAILURE(status)) {
+        errln("Failed to set UCOL_UPPER_FIRST");
+        return;
+    }
+    caseFirstCompressionSub(col, "upper first");
+
+    // Lower first
+    col->setAttribute(UCOL_CASE_FIRST, UCOL_LOWER_FIRST, status);
+    if (U_FAILURE(status)) {
+        errln("Failed to set UCOL_LOWER_FIRST");
+        return;
+    }
+    caseFirstCompressionSub(col, "lower first");
+
+    delete col;
+}
+
+void CollationRegressionTest::caseFirstCompressionSub(Collator *col, UnicodeString opt) {
+    const int32_t maxLength = 50;
+
+    UChar str1[maxLength];
+    UChar str2[maxLength];
+
+    CollationKey key1, key2;
+
+    for (int32_t len = 1; len <= maxLength; len++) {
+        int32_t i = 0;
+        for (; i < len - 1; i++) {
+            str1[i] = str2[i] = (UChar)0x61; // 'a'
+        }
+        str1[i] = (UChar)0x41; // 'A'
+        str2[i] = (UChar)0x61; // 'a'
+
+        UErrorCode status = U_ZERO_ERROR;
+        col->getCollationKey(str1, len, key1, status);
+        col->getCollationKey(str2, len, key2, status);
+
+        UCollationResult cmpKey = key1.compareTo(key2, status);
+        UCollationResult cmpCol = col->compare(str1, len, str2, len, status);
+
+        if (U_FAILURE(status)) {
+            errln("Error in caseFirstCompressionSub");
+        } else if (cmpKey != cmpCol) {
+            errln((UnicodeString)"Inconsistent comparison(" + opt
+                + "): str1=" + UnicodeString(str1, len) + ", str2=" + UnicodeString(str2, len)
+                + ", cmpKey=" + cmpKey + ", cmpCol=" + cmpCol);
+        }
+    }
+}
+
+
 
 void CollationRegressionTest::compareArray(Collator &c,
                                            const UChar tests[][CollationRegressionTest::MAX_TOKEN_LEN],
@@ -1288,7 +1349,8 @@ void CollationRegressionTest::runIndexedTest(int32_t index, UBool exec, const ch
           case 28: name = "Test4139572"; if (exec) Test4139572(/* par */); break;
           case 29: name = "Test4141640"; if (exec) Test4141640(/* par */); break;
           case 30: name = "Test4146160"; if (exec) Test4146160(/* par */); break;
-		  case 31: name = "TestT7189";   if (exec) TestT7189(); break;
+          case 31: name = "TestT7189";   if (exec) TestT7189(); break;
+          case 32: name = "TestCaseFirstCompression"; if (exec) TestCaseFirstCompression(); break;
           default: name = ""; break;
       }
     } else {

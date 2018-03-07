@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2010, International Business Machines Corporation and    *
+* Copyright (C) 1997-2011, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 *
@@ -17,14 +17,15 @@
 
 #if !UCONFIG_NO_FORMATTING
 
+#include <math.h>
 #include "unicode/fmtable.h"
 #include "unicode/ustring.h"
 #include "unicode/measure.h"
 #include "unicode/curramt.h"
+#include "charstr.h"
 #include "cmemory.h"
 #include "cstring.h"
 #include "decNumber.h"
-#include "decnumstr.h"
 #include "digitlst.h"
 
 // *****************************************************************************
@@ -38,8 +39,7 @@ UOBJECT_DEFINE_RTTI_IMPLEMENTATION(Formattable)
 //-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.
 
 // NOTE: As of 3.0, there are limitations to the UObject API.  It does
-// not (yet) support cloning, operator=, nor operator==.  RTTI is also
-// restricted in that subtype testing is not (yet) implemented.  To
+// not (yet) support cloning, operator=, nor operator==.  To
 // work around this, I implement some simple inlines here.  Later
 // these can be modified or removed.  [alan]
 
@@ -60,9 +60,7 @@ static inline UObject* objectClone(const UObject* a) {
 
 // Return TRUE if *a is an instance of Measure.
 static inline UBool instanceOfMeasure(const UObject* a) {
-    // LATER: return a->instanceof(Measure::getStaticClassID());
-    return a->getDynamicClassID() ==
-        CurrencyAmount::getStaticClassID();
+    return dynamic_cast<const Measure*>(a) != NULL;
 }
 
 /**
@@ -258,7 +256,7 @@ Formattable::operator=(const Formattable& source)
             fDecimalNum = new DigitList(*source.fDecimalNum);
         }
         if (source.fDecimalStr != NULL) {
-            fDecimalStr = new DecimalNumberString(*source.fDecimalStr, status);
+            fDecimalStr = new CharString(*source.fDecimalStr, status);
             if (U_FAILURE(status)) {
                 delete fDecimalStr;
                 fDecimalStr = NULL;
@@ -430,6 +428,12 @@ Formattable::getLong(UErrorCode& status) const
 }
 
 // -------------------------------------
+// Maximum int that can be represented exactly in a double.  (53 bits)
+//    Larger ints may be rounded to a near-by value as not all are representable.
+// TODO:  move this constant elsewhere, possibly configure it for different
+//        floating point formats, if any non-standard ones are still in use.
+static const int64_t U_DOUBLE_MAX_EXACT_INT = 9007199254740992LL;
+
 int64_t
 Formattable::getInt64(UErrorCode& status) const
 {
@@ -442,21 +446,28 @@ Formattable::getInt64(UErrorCode& status) const
     case Formattable::kInt64: 
         return fValue.fInt64;
     case Formattable::kDouble:
-        if (fValue.fDouble >= U_INT64_MAX) {
+        if (fValue.fDouble > (double)U_INT64_MAX) {
             status = U_INVALID_FORMAT_ERROR;
             return U_INT64_MAX;
-        } else if (fValue.fDouble <= U_INT64_MIN) {
+        } else if (fValue.fDouble < (double)U_INT64_MIN) {
             status = U_INVALID_FORMAT_ERROR;
             return U_INT64_MIN;
+        } else if (fabs(fValue.fDouble) > U_DOUBLE_MAX_EXACT_INT && fDecimalNum != NULL) {
+            int64_t val = fDecimalNum->getInt64();
+            if (val != 0) {
+                return val;
+            } else {
+                status = U_INVALID_FORMAT_ERROR;
+                return fValue.fDouble > 0 ? U_INT64_MAX : U_INT64_MIN;
+            }
         } else {
             return (int64_t)fValue.fDouble;
-        }
+        } 
     case Formattable::kObject:
         if (fValue.fObject == NULL) {
             status = U_MEMORY_ALLOCATION_ERROR;
             return 0;
         }
-        // TODO Later replace this with instanceof call
         if (instanceOfMeasure(fValue.fObject)) {
             return ((const Measure*) fValue.fObject)->
                 getNumber().getInt64(status);
@@ -675,7 +686,7 @@ StringPiece Formattable::getDecimalNumber(UErrorCode &status) {
         return "";
     }
     if (fDecimalStr != NULL) {
-        return *fDecimalStr;
+        return fDecimalStr->toStringPiece();
     }
 
     if (fDecimalNum == NULL) {
@@ -707,14 +718,14 @@ StringPiece Formattable::getDecimalNumber(UErrorCode &status) {
         }
     }
 
-    fDecimalStr = new DecimalNumberString;
+    fDecimalStr = new CharString;
     if (fDecimalStr == NULL) {
         status = U_MEMORY_ALLOCATION_ERROR;
         return "";
     }
     fDecimalNum->getDecimal(*fDecimalStr, status);
 
-    return *fDecimalStr;
+    return fDecimalStr->toStringPiece();
 }
 
 
@@ -753,18 +764,13 @@ Formattable::setDecimalNumber(const StringPiece &numberString, UErrorCode &statu
     // Copy the input string and nul-terminate it.
     //    The decNumber library requires nul-terminated input.  StringPiece input
     //    is not guaranteed nul-terminated.  Too bad.
-    //    DecimalNumberStrings automatically adds the nul.
-    DecimalNumberString  s(numberString, status);
-    if (U_FAILURE(status)) {
-        return;
-    }
-    
+    //    CharString automatically adds the nul.
     DigitList *dnum = new DigitList();
     if (dnum == NULL) {
         status = U_MEMORY_ALLOCATION_ERROR;
         return;
     }
-    dnum->set(s, status);
+    dnum->set(CharString(numberString, status).toStringPiece(), status);
     if (U_FAILURE(status)) {
         delete dnum;
         return;   // String didn't contain a decimal number.

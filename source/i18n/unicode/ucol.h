@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (c) 1996-2010, International Business Machines Corporation and others.
+* Copyright (c) 1996-2011, International Business Machines Corporation and others.
 * All Rights Reserved.
 *******************************************************************************
 */
@@ -17,6 +17,7 @@
 #include "unicode/parseerr.h"
 #include "unicode/uloc.h"
 #include "unicode/uset.h"
+#include "unicode/uscript.h"
 
 /**
  * \file
@@ -131,6 +132,70 @@ typedef enum {
   UCOL_ATTRIBUTE_VALUE_COUNT
 
 } UColAttributeValue;
+
+/** 
+ * Enum containing the codes for reordering segments of the collation table that are not script
+ * codes. These reordering codes are to be used in conjunction with the script codes.
+ * @see ucol_getReorderCodes
+ * @see ucol_setReorderCodes
+ * @see ucol_getEquivalentReorderCodes
+ * @draft ICU 4.8
+ */
+ typedef enum {
+   /**
+    * A special reordering code that is used to specify the default
+    * reordering codes for a locale.
+    * @draft ICU 4.8
+    */   
+    UCOL_REORDER_CODE_DEFAULT       = -1,
+   /**
+    * A special reordering code that is used to specify no reordering codes.
+    * @draft ICU 4.8
+    */   
+    UCOL_REORDER_CODE_NONE          = USCRIPT_UNKNOWN,
+   /**
+    * A special reordering code that is used to specify all other codes used for
+    * reordering except for the codes lised as UColReorderCode values and those
+    * listed explicitly in a reordering.
+    * @draft ICU 4.8
+    */   
+    UCOL_REORDER_CODE_OTHERS        = USCRIPT_UNKNOWN,
+   /**
+    * Characters with the space property.
+    * @draft ICU 4.8
+    */    
+    UCOL_REORDER_CODE_SPACE         = 0x1000,
+   /**
+    * The first entry in the enumeration of reordering groups.
+    * @draft ICU 4.8
+    */    
+    UCOL_REORDER_CODE_FIRST         = UCOL_REORDER_CODE_SPACE,
+   /**
+    * Characters with the punctuation property.
+    * @draft ICU 4.8
+    */    
+    UCOL_REORDER_CODE_PUNCTUATION   = 0x1001,
+   /**
+    * Characters with the symbol property.
+    * @draft ICU 4.8
+    */    
+    UCOL_REORDER_CODE_SYMBOL        = 0x1002,
+   /**
+    * Characters with the currency property.
+    * @draft ICU 4.8
+    */    
+    UCOL_REORDER_CODE_CURRENCY      = 0x1003,
+   /**
+    * Characters with the digit property.
+    * @draft ICU 4.8
+    */    
+    UCOL_REORDER_CODE_DIGIT         = 0x1004,
+   /**
+    * The limit of the reorder codes.
+    * @draft ICU 4.8
+    */    
+    UCOL_REORDER_CODE_LIMIT         = 0x1005
+} UColReorderCode;
 
 /**
  * Base letter represents a primary difference.  Set comparison
@@ -391,7 +456,7 @@ U_NAMESPACE_BEGIN
  *
  * @see LocalPointerBase
  * @see LocalPointer
- * @draft ICU 4.4
+ * @stable ICU 4.4
  */
 U_DEFINE_LOCAL_OPEN_POINTER(LocalUCollatorPointer, UCollator, ucol_close);
 
@@ -520,6 +585,84 @@ ucol_getStrength(const UCollator *coll);
 U_STABLE void U_EXPORT2 
 ucol_setStrength(UCollator *coll,
                  UCollationStrength strength);
+
+/**
+ * Retrieves the reordering codes for this collator.
+ * These reordering codes are a combination of UScript codes and UColReorderCode entries.
+ * @param coll The UCollator to query.
+ * @param dest The array to fill with the script ordering.
+ * @param destCapacity The length of dest. If it is 0, then dest may be NULL and the function 
+ * will only return the length of the result without writing any of the result string (pre-flighting).
+ * @param pErrorCode Must be a valid pointer to an error code value, which must not indicate a 
+ * failure before the function call.
+ * @return The number of reordering codes written to the dest array.
+ * @see ucol_setReorderCodes
+ * @see ucol_getEquivalentReorderCodes
+ * @draft ICU 4.8
+ */
+U_DRAFT int32_t U_EXPORT2 
+ucol_getReorderCodes(const UCollator* coll,
+                    int32_t* dest,
+                    int32_t destCapacity,
+                    UErrorCode *pErrorCode);
+/** 
+ * Sets the reordering codes for this collator.
+ * Collation reordering allows scripts and some other defined blocks of characters 
+ * to be moved relative to each other as a block. This reordering is done on top of 
+ * the DUCET/CLDR standard collation order. Reordering can specify groups to be placed 
+ * at the start and/or the end of the collation order. These groups are specified using
+ * UScript codes and UColReorderCode entries.
+ * <p>By default, reordering codes specified for the start of the order are placed in the 
+ * order given after a group of "special" non-script blocks. These special groups of characters 
+ * are space, punctuation, symbol, currency, and digit. These special groups are represented with
+ * UColReorderCode entries. Script groups can be intermingled with 
+ * these special non-script blocks if those special blocks are explicitly specified in the reordering.
+ * <p>The special code OTHERS stands for any script that is not explicitly 
+ * mentioned in the list of reordering codes given. Anything that is after OTHERS
+ * will go at the very end of the reordering in the order given.
+ * <p>The special reorder code DEFAULT will reset the reordering for this collator
+ * to the default for this collator. The default reordering may be the DUCET/CLDR order or may be a reordering that
+ * was specified when this collator was created from resource data or from rules. The 
+ * DEFAULT code <b>must</b> be the sole code supplied when it used. If not
+ * that will result in an U_ILLEGAL_ARGUMENT_ERROR being set.
+ * <p>The special reorder code NONE will remove any reordering for this collator.
+ * The result of setting no reordering will be to have the DUCET/CLDR reordering used. The 
+ * NONE code <b>must</b> be the sole code supplied when it used.
+ * @param coll The UCollator to set.
+ * @param reorderCodes An array of script codes in the new order. This can be NULL if the 
+ * length is also set to 0. An empty array will clear any reordering codes on the collator.
+ * @param reorderCodesLength The length of reorderCodes.
+ * @param pErrorCode Must be a valid pointer to an error code value, which must not indicate a
+ * failure before the function call.
+ * @see ucol_getReorderCodes
+ * @see ucol_getEquivalentReorderCodes
+ * @draft ICU 4.8
+ */ 
+U_DRAFT void U_EXPORT2 
+ucol_setReorderCodes(UCollator* coll,
+                    const int32_t* reorderCodes,
+                    int32_t reorderCodesLength,
+                    UErrorCode *pErrorCode);
+
+/**
+ * Retrieves the reorder codes that are grouped with the given reorder code. Some reorder
+ * codes will be grouped and must reorder together.
+ * @param reorderCode The reorder code to determine equivalence for.
+ * @param dest The array to fill with the script ordering.
+ * @param destCapacity The length of dest. If it is 0, then dest may be NULL and the function
+ * will only return the length of the result without writing any of the result string (pre-flighting).
+ * @param pErrorCode Must be a valid pointer to an error code value, which must not indicate 
+ * a failure before the function call.
+ * @return The number of reordering codes written to the dest array.
+ * @see ucol_setReorderCodes
+ * @see ucol_getReorderCodes
+ * @draft ICU 4.8
+ */
+U_DRAFT int32_t U_EXPORT2 
+ucol_getEquivalentReorderCodes(int32_t reorderCode,
+                    int32_t* dest,
+                    int32_t destCapacity,
+                    UErrorCode *pErrorCode);
 
 /**
  * Get the display name for a UCollator.
@@ -729,6 +872,11 @@ ucol_normalizeShortDefinitionString(const char *source,
 /**
  * Get a sort key for a string from a UCollator.
  * Sort keys may be compared using <TT>strcmp</TT>.
+ *
+ * Like ICU functions that write to an output buffer, the buffer contents
+ * is undefined if the buffer capacity (resultLength parameter) is too small.
+ * Unlike ICU functions that write a string to an output buffer,
+ * the terminating zero byte is counted in the sort key length.
  * @param coll The UCollator containing the collation rules.
  * @param source The string to transform.
  * @param sourceLength The length of source, or -1 if null-terminated.
@@ -1175,4 +1323,3 @@ ucol_openBinary(const uint8_t *bin, int32_t length,
 #endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif
-

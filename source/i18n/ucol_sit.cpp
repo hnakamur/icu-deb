@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-*   Copyright (C) 2004-2010, International Business Machines
+*   Copyright (C) 2004-2011, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
 *   file name:  ucol_sit.cpp
@@ -239,7 +239,7 @@ _processVariableTop(CollatorSpec *spec, uint32_t value1, const char* string, UEr
             spec->variableTopString[i++] = readHexCodeUnit(&string, status);
         }
         spec->variableTopStringLen = i;
-        if(i == locElementCapacity && (*string != 0 || *string != '_')) {
+        if(i == locElementCapacity && *string != 0 && *string != '_') {
             *status = U_BUFFER_OVERFLOW_ERROR;
         }
     } else {
@@ -844,7 +844,8 @@ ucol_getContractionsAndExpansions( const UCollator *coll,
     int32_t rulesLen = 0;
     const UChar* rules = ucol_getRules(coll, &rulesLen);
     UColTokenParser src;
-    ucol_tok_initTokenList(&src, rules, rulesLen, coll->UCA, status);
+    ucol_tok_initTokenList(&src, rules, rulesLen, coll->UCA,
+                           ucol_tok_getRulesFromBundle, NULL, status);
 
     contContext c = { NULL, contractions, expansions, src.removeSet, addPrefixes, status };
 
