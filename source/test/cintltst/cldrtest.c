@@ -971,15 +971,6 @@ static void VerifyTranslation(void) {
             if (U_FAILURE(errorCode)) {
                 log_err("error uloc_getDisplayCountry returned %s\n", u_errorName(errorCode));
             }
-            else if ((uprv_strstr(currLoc, "ti_") != currLoc && uprv_strstr(currLoc, "sr_Latn_XK") != currLoc) || isICUVersionAtLeast(52, 0, 2)) {
-              /* TODO: FIX or REMOVE this test!  Was: restore DisplayCountry test for ti_* when cldrbug 3058 is fixed) - but CldrBug:3058 is wontfix */
-              /* For sr_Latn_XK we need to wait until the names get updated from sr[_Cyrl] later in CLDR 24 */
-              strIdx = findStringSetMismatch(currLoc, langBuffer, langSize, mergedExemplarSet, FALSE, &badChar);
-                if (strIdx >= 0) {
-                    log_err("getDisplayCountry(%s) at index %d returned characters not in the exemplar characters: %04X.\n",
-                        currLoc, strIdx, badChar);
-                }
-            }
             {
                 UResourceBundle* cal = ures_getByKey(currentLocale, "calendar", NULL, &errorCode);
                 UResourceBundle* greg = ures_getByKeyWithFallback(cal, "gregorian", NULL, &errorCode);
@@ -1004,7 +995,7 @@ static void VerifyTranslation(void) {
                         log_err("error ures_getStringByIndex(%d) returned %s\n", idx, u_errorName(errorCode));
                         continue;
                     }
-                    if (uprv_strstr(currLoc, "uz_Arab") != currLoc || isICUVersionAtLeast(52, 0, 2)) { /* TODO: FIX or REMOVE this test! */
+                    if (uprv_strstr(currLoc, "uz_Arab") != currLoc || !log_knownIssue("10405", "skipping exemplar check: %s", currLoc)) { /* TODO: FIX or REMOVE this test! */
                         strIdx = findStringSetMismatch(currLoc, fromBundleStr, langSize, mergedExemplarSet, TRUE, &badChar);
                         if (strIdx >= 0) {
                             log_err("getDayNames(%s, %d) at index %d returned characters not in the exemplar characters: %04X.\n",
@@ -1035,7 +1026,7 @@ static void VerifyTranslation(void) {
                         log_err("error ures_getStringByIndex(%d) returned %s\n", idx, u_errorName(errorCode));
                         continue;
                     }
-                    if (uprv_strstr(currLoc, "uz_Arab") != currLoc || isICUVersionAtLeast(52, 0, 2)) { /* TODO: FIX or REMOVE this test! */
+                    if (uprv_strstr(currLoc, "uz_Arab") != currLoc || !log_knownIssue("10405", "skipping exemplar check: %s", currLoc)) { /* TODO: FIX or REMOVE this test! */
                         strIdx = findStringSetMismatch(currLoc, fromBundleStr, langSize, mergedExemplarSet, TRUE, &badChar);
                         if (strIdx >= 0) {
                             log_err("getMonthNames(%s, %d) at index %d returned characters not in the exemplar characters: %04X.\n",
@@ -1078,18 +1069,43 @@ static void VerifyTranslation(void) {
                    log_err("ulocdata_getPaperSize did not return expected data for locale %s \n", currLoc);
                }
            }
-            /* test that the MeasurementSystem works API works */
+            /* test that the MeasurementSystem API works */
            {
-               UMeasurementSystem measurementSystem = ulocdata_getMeasurementSystem(currLoc, &errorCode);
-               if(U_FAILURE(errorCode)){
+               char fullLoc[ULOC_FULLNAME_CAPACITY];
+               UMeasurementSystem measurementSystem;
+               int32_t height = 0, width = 0;
+
+               uloc_addLikelySubtags(currLoc, fullLoc, ULOC_FULLNAME_CAPACITY, &errorCode);
+
+               errorCode = U_ZERO_ERROR;
+               measurementSystem = ulocdata_getMeasurementSystem(currLoc, &errorCode);
+               if (U_FAILURE(errorCode)) {
                    log_err("ulocdata_getMeasurementSystem failed for locale %s with error: %s \n", currLoc, u_errorName(errorCode));
-               }
-               if(strstr(currLoc, "_US")!=NULL || strstr(currLoc, "_MM")!=NULL || strstr(currLoc, "_LR")!=NULL){
-                   if(measurementSystem != UMS_US){
-                        log_err("ulocdata_getMeasurementSystem did not return expected data for locale %s \n", currLoc);
+               } else {
+                   if ( strstr(fullLoc, "_US")!=NULL || strstr(fullLoc, "_MM")!=NULL || strstr(fullLoc, "_LR")!=NULL ) {
+                       if(measurementSystem != UMS_US){
+                            log_err("ulocdata_getMeasurementSystem did not return expected data for locale %s \n", currLoc);
+                       }
+                   } else if (measurementSystem != UMS_SI) {
+                       log_err("ulocdata_getMeasurementSystem did not return expected data for locale %s \n", currLoc);
                    }
-               }else if(measurementSystem != UMS_SI){
-                   log_err("ulocdata_getMeasurementSystem did not return expected data for locale %s \n", currLoc);
+               }
+               
+               errorCode = U_ZERO_ERROR;
+               ulocdata_getPaperSize(currLoc, &height, &width, &errorCode);
+               if (U_FAILURE(errorCode)) {
+                   log_err("ulocdata_getPaperSize failed for locale %s with error: %s \n", currLoc, u_errorName(errorCode));
+               } else {
+                   if ( strstr(fullLoc, "_US")!=NULL || strstr(fullLoc, "_BZ")!=NULL || strstr(fullLoc, "_CA")!=NULL || strstr(fullLoc, "_CL")!=NULL ||
+                        strstr(fullLoc, "_CO")!=NULL || strstr(fullLoc, "_CR")!=NULL || strstr(fullLoc, "_GT")!=NULL || strstr(fullLoc, "_MX")!=NULL ||
+                        strstr(fullLoc, "_NI")!=NULL || strstr(fullLoc, "_PA")!=NULL || strstr(fullLoc, "_PH")!=NULL || strstr(fullLoc, "_PR")!=NULL ||
+                        strstr(fullLoc, "_SV")!=NULL || strstr(fullLoc, "_VE")!=NULL ) {
+                       if (height != 279 || width != 216) {
+                            log_err("ulocdata_getPaperSize did not return expected data for locale %s \n", currLoc);
+                       }
+                   } else if (height != 297 || width != 210) {
+                       log_err("ulocdata_getPaperSize did not return expected data for locale %s \n", currLoc);
+                   }
                }
            }
         }

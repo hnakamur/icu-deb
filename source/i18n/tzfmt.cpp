@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
-* Copyright (C) 2011-2013, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
+* Copyright (C) 2011-2013, International Business Machines Corporation and
+* others. All Rights Reserved.
 *******************************************************************************
 */
 
@@ -136,10 +136,10 @@ static const int32_t ALL_GENERIC_NAME_TYPES = UTZGNM_LOCATION | UTZGNM_LONG | UT
 
 // Time Zone ID/Short ID trie
 static TextTrieMap *gZoneIdTrie = NULL;
-static UInitOnce gZoneIdTrieInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gZoneIdTrieInitOnce = U_INITONCE_INITIALIZER;
 
 static TextTrieMap *gShortZoneIdTrie = NULL;
-static UInitOnce    gShortZoneIdTrieInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gShortZoneIdTrieInitOnce = U_INITONCE_INITIALIZER;
 
 static UMutex gLock = U_MUTEX_INITIALIZER;
 
@@ -743,6 +743,10 @@ TimeZoneFormat::format(UTimeZoneFormatStyle style, const TimeZone& tz, UDate dat
             case UTZFMT_STYLE_ISO_EXTENDED_LOCAL_FULL:
                 formatOffsetISO8601Extended(offset, FALSE, FALSE, FALSE, name, status);
                 break;
+
+            default:
+              // UTZFMT_STYLE_ZONE_ID, UTZFMT_STYLE_ZONE_ID_SHORT, UTZFMT_STYLE_EXEMPLAR_LOCATION
+              break;
             }
 
             if (timeType) {

@@ -36,7 +36,6 @@ static void TestAttribute(void);
 static void TestDefault(void);
 static void TestDefaultKeyword(void);
 static void TestBengaliSortKey(void);
-        int TestBufferSize();    /* defined in "colutil.c" */
 
 
 static char* U_EXPORT2 ucol_sortKeyToString(const UCollator *coll, const uint8_t *sortkey, char *buffer, uint32_t len) {
@@ -86,6 +85,7 @@ void addCollAPITest(TestNode** root)
     addTest(root, &TestOpenVsOpenRules, "tscoll/capitst/TestOpenVsOpenRules");
     addTest(root, &TestBengaliSortKey, "tscoll/capitst/TestBengaliSortKey");
     addTest(root, &TestGetKeywordValuesForLocale, "tscoll/capitst/TestGetKeywordValuesForLocale");
+    addTest(root, &TestStrcollNull, "tscoll/capitst/TestStrcollNull");
 }
 
 void TestGetSetAttr(void) {
@@ -650,11 +650,6 @@ void TestSafeClone() {
     const char sampleRuleChars[] = "&Z < CH";
     UChar sampleRule[sizeof(sampleRuleChars)];
 
-    if (TestBufferSize()) {
-        log_err("U_COL_SAFECLONE_BUFFERSIZE should be larger than sizeof(UCollator)\n");
-        return;
-    }
-
     u_uastrcpy(test1, "abCda");
     u_uastrcpy(test2, "abcda");
     u_uastrcpy(sampleRule, sampleRuleChars);
@@ -675,28 +670,30 @@ void TestSafeClone() {
     /* Check the various error & informational states: */
 
     /* Null status - just returns NULL */
-    if (0 != ucol_safeClone(someCollators[0], buffer[0], &bufferSize, 0))
+    if (NULL != ucol_safeClone(someCollators[0], buffer[0], &bufferSize, NULL))
     {
         log_err("FAIL: Cloned Collator failed to deal correctly with null status\n");
     }
     /* error status - should return 0 & keep error the same */
     err = U_MEMORY_ALLOCATION_ERROR;
-    if (0 != ucol_safeClone(someCollators[0], buffer[0], &bufferSize, &err) || err != U_MEMORY_ALLOCATION_ERROR)
+    if (NULL != ucol_safeClone(someCollators[0], buffer[0], &bufferSize, &err) || err != U_MEMORY_ALLOCATION_ERROR)
     {
         log_err("FAIL: Cloned Collator failed to deal correctly with incoming error status\n");
     }
     err = U_ZERO_ERROR;
 
-    /* Null buffer size pointer - just returns NULL & set error to U_ILLEGAL_ARGUMENT_ERROR*/
-    if (0 != ucol_safeClone(someCollators[0], buffer[0], 0, &err) || err != U_ILLEGAL_ARGUMENT_ERROR)
+    /* Null buffer size pointer is ok */
+    if (NULL == (col = ucol_safeClone(someCollators[0], buffer[0], NULL, &err)) || U_FAILURE(err))
     {
         log_err("FAIL: Cloned Collator failed to deal correctly with null bufferSize pointer\n");
     }
+    ucol_close(col);
     err = U_ZERO_ERROR;
 
     /* buffer size pointer is 0 - fill in pbufferSize with a size */
     bufferSize = 0;
-    if (0 != ucol_safeClone(someCollators[0], buffer[0], &bufferSize, &err) || U_FAILURE(err) || bufferSize <= 0)
+    if (NULL != ucol_safeClone(someCollators[0], buffer[0], &bufferSize, &err) ||
+            U_FAILURE(err) || bufferSize <= 0)
     {
         log_err("FAIL: Cloned Collator failed a sizing request ('preflighting')\n");
     }
@@ -706,14 +703,16 @@ void TestSafeClone() {
         log_err("FAIL: Pre-calculated buffer size is too small\n");
     }
     /* Verify we can use this run-time calculated size */
-    if (0 == (col = ucol_safeClone(someCollators[0], buffer[0], &bufferSize, &err)) || U_FAILURE(err))
+    if (NULL == (col = ucol_safeClone(someCollators[0], buffer[0], &bufferSize, &err)) || U_FAILURE(err))
     {
         log_err("FAIL: Collator can't be cloned with run-time size\n");
     }
     if (col) ucol_close(col);
     /* size one byte too small - should allocate & let us know */
-    --bufferSize;
-    if (0 == (col = ucol_safeClone(someCollators[0], 0, &bufferSize, &err)) || err != U_SAFECLONE_ALLOCATED_WARNING)
+    if (bufferSize > 1) {
+        --bufferSize;
+    }
+    if (NULL == (col = ucol_safeClone(someCollators[0], 0, &bufferSize, &err)) || err != U_SAFECLONE_ALLOCATED_WARNING)
     {
         log_err("FAIL: Cloned Collator failed to deal correctly with too-small buffer size\n");
     }
@@ -723,7 +722,7 @@ void TestSafeClone() {
 
 
     /* Null buffer pointer - return Collator & set error to U_SAFECLONE_ALLOCATED_ERROR */
-    if (0 == (col = ucol_safeClone(someCollators[0], 0, &bufferSize, &err)) || err != U_SAFECLONE_ALLOCATED_WARNING)
+    if (NULL == (col = ucol_safeClone(someCollators[0], 0, &bufferSize, &err)) || err != U_SAFECLONE_ALLOCATED_WARNING)
     {
         log_err("FAIL: Cloned Collator failed to deal correctly with null buffer pointer\n");
     }
@@ -731,7 +730,7 @@ void TestSafeClone() {
     err = U_ZERO_ERROR;
 
     /* Null Collator - return NULL & set U_ILLEGAL_ARGUMENT_ERROR */
-    if (0 != ucol_safeClone(0, buffer[0], &bufferSize, &err) || err != U_ILLEGAL_ARGUMENT_ERROR)
+    if (NULL != ucol_safeClone(NULL, buffer[0], &bufferSize, &err) || err != U_ILLEGAL_ARGUMENT_ERROR)
     {
         log_err("FAIL: Cloned Collator failed to deal correctly with null Collator pointer\n");
     }
@@ -768,14 +767,9 @@ void TestSafeClone() {
         bufferSize = U_COL_SAFECLONE_BUFFERSIZE;
         err = U_ZERO_ERROR;
         someClonedCollators[idx] = ucol_safeClone(someCollators[idx], buffer[idx], &bufferSize, &err);
-        if (someClonedCollators[idx] == NULL
-            || someClonedCollators[idx] < (UCollator *)buffer[idx]
-            || someClonedCollators[idx] > (UCollator *)(buffer[idx]+(U_COL_SAFECLONE_BUFFERSIZE-1)))
-        {
-            /* TODO: The use of U_COL_SAFECLONE_BUFFERSIZE will be deprecated per #9932.
-               In the meantime, just turn the following former error into a log message. */
-            log_verbose("NOTE: Cloned collator did not use provided buffer, index %d, status %s, clone NULL? %d\n",
-                                                        idx, myErrorName(err), someClonedCollators[idx] == NULL);
+        if (U_FAILURE(err)) {
+            log_err("FAIL: Unable to clone collator %d - %s\n", idx, u_errorName(err));
+            continue;
         }
         if (!ucol_equals(someClonedCollators[idx], someCollators[idx])) {
             log_err("FAIL: Cloned collator is not equal to original at index = %d.\n", idx);
@@ -1404,7 +1398,7 @@ void TestGetLocale() {
     { "sr_RS", "sr_Cyrl_RS", "sr" },
     { "sh_YU", "sr_Latn_RS", "sr_Latn" }, /* was sh, then aliased to hr, now sr_Latn via import per cldrbug 5647: */
     { "en_BE_FOO", "en_BE", "root" },
-    { "de_DE_NONEXISTANT", "de_DE", "de" }
+    { "sv_SE_NONEXISTANT", "sv_SE", "sv" }
   };
 
   /* test opening collators for different locales */
@@ -2413,5 +2407,106 @@ static void TestGetKeywordValuesForLocale(void) {
     }
 }
 
+static void TestStrcollNull(void) {
+    UErrorCode status = U_ZERO_ERROR;
+    UCollator *coll;
+
+    const UChar u16asc[] = {0x0049, 0x0042, 0x004D, 0};
+    const int32_t u16ascLen = 3;
+
+    const UChar u16han[] = {0x5c71, 0x5ddd, 0};
+    const int32_t u16hanLen = 2;
+
+    const char u8asc[] = {0x49, 0x42, 0x4D, 0};
+    const int32_t u8ascLen = 3;
+
+    const char u8han[] = {0xE5, 0xB1, 0xB1, 0xE5, 0xB7, 0x9D, 0};
+    const int32_t u8hanLen = 6;
+
+    coll = ucol_open(NULL, &status);
+    if (U_FAILURE(status)) {
+        log_err_status(status, "Default Collator creation failed.: %s\n", myErrorName(status));
+        return;
+    }
+
+    /* UChar API */
+    if (ucol_strcoll(coll, NULL, 0, NULL, 0) != 0) {
+        log_err("ERROR : ucol_strcoll NULL/0 and NULL/0");
+    }
+
+    if (ucol_strcoll(coll, NULL, -1, NULL, 0) != 0) {
+        /* No error arg, should return equal without crash */
+        log_err("ERROR : ucol_strcoll NULL/-1 and NULL/0");
+    }
+
+    if (ucol_strcoll(coll, u16asc, -1, NULL, 10) != 0) {
+        /* No error arg, should return equal without crash */
+        log_err("ERROR : ucol_strcoll u16asc/u16ascLen and NULL/10");
+    }
+
+    if (ucol_strcoll(coll, u16asc, -1, NULL, 0) <= 0) {
+        log_err("ERROR : ucol_strcoll u16asc/-1 and NULL/0");
+    }
+    if (ucol_strcoll(coll, NULL, 0, u16asc, -1) >= 0) {
+        log_err("ERROR : ucol_strcoll NULL/0 and u16asc/-1");
+    }
+    if (ucol_strcoll(coll, u16asc, u16ascLen, NULL, 0) <= 0) {
+        log_err("ERROR : ucol_strcoll u16asc/u16ascLen and NULL/0");
+    }
+
+    if (ucol_strcoll(coll, u16han, -1, NULL, 0) <= 0) {
+        log_err("ERROR : ucol_strcoll u16han/-1 and NULL/0");
+    }
+    if (ucol_strcoll(coll, NULL, 0, u16han, -1) >= 0) {
+        log_err("ERROR : ucol_strcoll NULL/0 and u16han/-1");
+    }
+    if (ucol_strcoll(coll, NULL, 0, u16han, u16hanLen) >= 0) {
+        log_err("ERROR : ucol_strcoll NULL/0 and u16han/u16hanLen");
+    }
+
+    /* UTF-8 API */
+    status = U_ZERO_ERROR;
+    if (ucol_strcollUTF8(coll, NULL, 0, NULL, 0, &status) != 0 || U_FAILURE(status)) {
+        log_err("ERROR : ucol_strcollUTF8 NULL/0 and NULL/0");
+    }
+    status = U_ZERO_ERROR;
+    ucol_strcollUTF8(coll, NULL, -1, NULL, 0, &status);
+    if (status != U_ILLEGAL_ARGUMENT_ERROR) {
+        log_err("ERROR: ucol_strcollUTF8 NULL/-1 and NULL/0, should return U_ILLEGAL_ARGUMENT_ERROR");
+    }
+    status = U_ZERO_ERROR;
+    ucol_strcollUTF8(coll, u8asc, u8ascLen, NULL, 10, &status);
+    if (status != U_ILLEGAL_ARGUMENT_ERROR) {
+        log_err("ERROR: ucol_strcollUTF8 u8asc/u8ascLen and NULL/10, should return U_ILLEGAL_ARGUMENT_ERROR");
+    }
+
+    status = U_ZERO_ERROR;
+    if (ucol_strcollUTF8(coll, u8asc, -1, NULL, 0, &status) <= 0  || U_FAILURE(status)) {
+        log_err("ERROR : ucol_strcollUTF8 u8asc/-1 and NULL/0");
+    }
+    status = U_ZERO_ERROR;
+    if (ucol_strcollUTF8(coll, NULL, 0, u8asc, -1, &status) >= 0  || U_FAILURE(status)) {
+        log_err("ERROR : ucol_strcollUTF8 NULL/0 and u8asc/-1");
+    }
+    status = U_ZERO_ERROR;
+    if (ucol_strcollUTF8(coll, u8asc, u8ascLen, NULL, 0, &status) <= 0 || U_FAILURE(status)) {
+        log_err("ERROR : ucol_strcollUTF8 u8asc/u8ascLen and NULL/0");
+    }
+
+    status = U_ZERO_ERROR;
+    if (ucol_strcollUTF8(coll, u8han, -1, NULL, 0, &status) <= 0 || U_FAILURE(status)) {
+        log_err("ERROR : ucol_strcollUTF8 u8han/-1 and NULL/0");
+    }
+    status = U_ZERO_ERROR;
+    if (ucol_strcollUTF8(coll, NULL, 0, u8han, -1, &status) >= 0 || U_FAILURE(status)) {
+        log_err("ERROR : ucol_strcollUTF8 NULL/0 and u8han/-1");
+    }
+    status = U_ZERO_ERROR;
+    if (ucol_strcollUTF8(coll, NULL, 0, u8han, u8hanLen, &status) >= 0 || U_FAILURE(status)) {
+        log_err("ERROR : ucol_strcollUTF8 NULL/0 and u8han/u8hanLen");
+    }
+
+    ucol_close(coll);
+}
 
 #endif /* #if !UCONFIG_NO_COLLATION */

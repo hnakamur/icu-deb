@@ -29,9 +29,13 @@
 
 // C++ API ----------------------------------------------------------------- ***
 
+U_NAMESPACE_BEGIN
+
 static icu::Locale*  availableLocaleList = NULL;
 static int32_t  availableLocaleListCount;
-static UInitOnce gInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gInitOnce = U_INITONCE_INITIALIZER;
+
+U_NAMESPACE_END
 
 U_CDECL_BEGIN
 
@@ -96,7 +100,7 @@ static const char _kIndexTag[]        = "InstalledLocales";
 
 static char** _installedLocales = NULL;
 static int32_t _installedLocalesCount = 0;
-static UInitOnce _installedLocalesInitOnce;
+static icu::UInitOnce _installedLocalesInitOnce;
 
 /* ### Get available **************************************************/
 
@@ -172,3 +176,4 @@ uloc_countAvailable()
     _load_installedLocales();
     return _installedLocalesCount;
 }
+

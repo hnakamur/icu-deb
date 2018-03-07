@@ -45,7 +45,6 @@
 #include "ustr_cnv.h"
 
 
-
 #if 0
 #include <stdio.h>
 extern void UCNV_DEBUG_LOG(char *what, char *who, void *p, int l);
@@ -167,7 +166,7 @@ static UMutex cnvCacheMutex = U_MUTEX_INITIALIZER;  /* Mutex for synchronizing c
 
 static const char **gAvailableConverters = NULL;
 static uint16_t gAvailableConverterCount = 0;
-static UInitOnce gAvailableConvertersInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gAvailableConvertersInitOnce = U_INITONCE_INITIALIZER;
 
 #if !U_CHARSET_IS_UTF8
 

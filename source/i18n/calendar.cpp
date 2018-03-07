@@ -6,7 +6,7 @@
 *
 * File CALENDAR.CPP
 *
-* Modification History:
+* Modification History: 
 *
 *   Date        Name        Description
 *   02/03/97    clhuang     Creation.
@@ -60,7 +60,7 @@
 
 #if !UCONFIG_NO_SERVICE
 static icu::ICULocaleService* gService = NULL;
-static UInitOnce gServiceInitOnce = U_INITONCE_INITIALIZER;
+static icu::UInitOnce gServiceInitOnce = U_INITONCE_INITIALIZER;
 #endif
 
 // INTERNAL - for cleanup
@@ -323,11 +323,19 @@ static Calendar *createStandardCalendar(ECalType calType, const Locale &loc, UEr
         case CALTYPE_PERSIAN:
             cal = new PersianCalendar(loc, status);
             break;
+        case CALTYPE_ISLAMIC_TBLA:
+            cal = new IslamicCalendar(loc, status, IslamicCalendar::TBLA);
+            break;
         case CALTYPE_ISLAMIC_CIVIL:
             cal = new IslamicCalendar(loc, status, IslamicCalendar::CIVIL);
             break;
+        case CALTYPE_ISLAMIC_RGSA:
+            // default any region specific not handled individually to islamic
         case CALTYPE_ISLAMIC:
             cal = new IslamicCalendar(loc, status, IslamicCalendar::ASTRONOMICAL);
+            break;
+        case CALTYPE_ISLAMIC_UMALQURA:
+            cal = new IslamicCalendar(loc, status, IslamicCalendar::UMALQURA);
             break;
         case CALTYPE_HEBREW:
             cal = new HebrewCalendar(loc, status);
@@ -355,10 +363,6 @@ static Calendar *createStandardCalendar(ECalType calType, const Locale &loc, UEr
         case CALTYPE_DANGI:
             cal = new DangiCalendar(loc, status);
             break;
-        case CALTYPE_ISLAMIC_UMALQURA:
-        case CALTYPE_ISLAMIC_TBLA:
-        case CALTYPE_ISLAMIC_RGSA:
-            // Need to add handling for these, meanwhile fall through to default
         default:
             status = U_UNSUPPORTED_ERROR;
     }
@@ -538,33 +542,33 @@ static void U_CALLCONV
 initCalendarService(UErrorCode &status)
 {
 #ifdef U_DEBUG_CALSVC
-    fprintf(stderr, "Spinning up Calendar Service\n");
+        fprintf(stderr, "Spinning up Calendar Service\n");
 #endif
     ucln_i18n_registerCleanup(UCLN_I18N_CALENDAR, calendar_cleanup);
     gService = new CalendarService();
     if (gService == NULL) {
-        status = U_MEMORY_ALLOCATION_ERROR;
+            status = U_MEMORY_ALLOCATION_ERROR;
         return;
-    }
+        }
 #ifdef U_DEBUG_CALSVC
-    fprintf(stderr, "Registering classes..\n");
+        fprintf(stderr, "Registering classes..\n");
 #endif
 
-    // Register all basic instances. 
+        // Register all basic instances. 
     gService->registerFactory(new BasicCalendarFactory(),status);
 
 #ifdef U_DEBUG_CALSVC
-    fprintf(stderr, "Done..\n");
+        fprintf(stderr, "Done..\n");
 #endif
 
-    if(U_FAILURE(status)) {
+        if(U_FAILURE(status)) {
 #ifdef U_DEBUG_CALSVC
-        fprintf(stderr, "err (%s) registering classes, deleting service.....\n", u_errorName(status));
+            fprintf(stderr, "err (%s) registering classes, deleting service.....\n", u_errorName(status));
 #endif
         delete gService;
         gService = NULL;
     }
-}
+        }
 
 static ICULocaleService* 
 getCalendarService(UErrorCode &status)
@@ -572,7 +576,6 @@ getCalendarService(UErrorCode &status)
     umtx_initOnce(gServiceInitOnce, &initCalendarService, status);
     return gService;
 }
-
 
 URegistryKey Calendar::registerFactory(ICUServiceFactory* toAdopt, UErrorCode& status)
 {
@@ -3693,3 +3696,4 @@ U_NAMESPACE_END
 
 
 //eof
+
