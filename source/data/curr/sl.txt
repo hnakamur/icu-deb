@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2009 International Business Machines
+// * Copyright (C) 2010 International Business Machines
 // * Corporation and others.  All Rights Reserved.
 // * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
 // * Source File:<path>/common/main/sl.xml
@@ -216,7 +216,7 @@ sl{
             "evro WIR",
         }
         CHF{
-            "Fr.",
+            "CHF",
             "švicarski frank",
         }
         CHW{
@@ -632,11 +632,11 @@ sl{
             "malavijska kvača",
         }
         MXN{
-            "MXN",
+            "MX$",
             "mehiški peso",
         }
         MXP{
-            "MX$",
+            "MXP" /** ===  */,
             "mehiški srebrni peso (1861-1992)",
         }
         MXV{
@@ -1079,6 +1079,10 @@ sl{
             "Z$",
             "zimbabvejski dolar",
         }
+        ZWL{
+            "ZWL",
+            "zimbabvejski dolar (2009)",
+        }
     }
-    Version{"2.0.42.82"}
+    Version{"2.0.47.69"}
 }

@@ -1,6 +1,6 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2009 International Business Machines
+// * Copyright (C) 2010 International Business Machines
 // * Corporation and others.  All Rights Reserved.
 // * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
 // * Source File:<path>/common/main/tr.xml
@@ -10,7 +10,7 @@
  *  ICU <specials> source: <path>/xml/main/tr.xml
  */
 tr{
-    Version{"2.0.42.82"}
+    Version{"2.0.47.65"}
     zoneStrings{
         "Africa:Ceuta"{
             ec{"Septe"}
@@ -148,6 +148,7 @@ tr{
         "meta:Africa_Southern"{
             lg{"Güney Afrika Saati"}
             ls{"Güney Afrika Standart Saati"}
+            sg{"SAT"}
         }
         "meta:Africa_Western"{
             ld{"Batı Afrika Yaz Saati"}
@@ -285,6 +286,7 @@ tr{
             ls{"Bakü Saati"}
         }
         "meta:Bangladesh"{
+            ld{"Bangladeş Yaz Saati"}
             ls{"Bangladeş Saati"}
         }
         "meta:Bering"{
@@ -308,7 +310,7 @@ tr{
             ls{"Brasilia Saati"}
         }
         "meta:Brunei"{
-            ls{"Brunei Saati"}
+            ls{"Bruney Sultanlığı Saati"}
         }
         "meta:Cape_Verde"{
             ld{"Cape Verde Yaz Saati"}
@@ -746,6 +748,12 @@ tr{
         }
         "meta:Tahiti"{
             ls{"Tahiti Saati"}
+        }
+        "meta:Taipei"{
+            ld{"Taipei Yaz Saati"}
+            lg{"Taipei Saati"}
+            ls{"Taipei Standart Saati"}
+            sg{"CT (Taipei)"}
         }
         "meta:Tajikistan"{
             ls{"Tacikistan Saati"}

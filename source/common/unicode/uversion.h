@@ -25,24 +25,6 @@
 #ifndef UVERSION_H
 #define UVERSION_H
 
-/**
- * IMPORTANT: When updating version, the following things need to be done:
- * source/common/unicode/uversion.h - this file: update major, minor,
- *        patchlevel, suffix, version, short version constants, namespace,
- *                                                             and copyright
- * source/common/common.vcproj - update 'Output file name' on the link tab so
- *                   that it contains the new major/minor combination
- * source/i18n/i18n.vcproj - same as for the common.vcproj
- * source/layout/layout.vcproj - same as for the common.vcproj
- * source/layoutex/layoutex.vcproj - same
- * source/stubdata/stubdata.vcproj - same as for the common.vcproj
- * source/io/io.vcproj - same as for the common.vcproj
- * source/data/makedata.mak - change U_ICUDATA_NAME so that it contains
- *                            the new major/minor combination
- * source/tools/genren/genren.pl - use this script according to the README
- *                    in that folder                                         
- */
-
 #include "unicode/umachine.h"
 
 /* Actual version info lives in uvernum.h */
@@ -179,7 +161,7 @@ u_versionFromString(UVersionInfo versionArray, const char *versionString);
  * @param versionString A Unicode string with dotted-decimal version
  *                      information, with up to four non-negative number
  *                      fields with values of up to 255 each.
- * @stable ICU 4.4
+ * @stable ICU 4.2
  */
 U_STABLE void U_EXPORT2
 u_versionFromUString(UVersionInfo versionArray, const UChar *versionString);

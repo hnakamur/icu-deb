@@ -1600,7 +1600,7 @@ public:
    * Calls u_strToUTF8WithSub().
    *
    * @param sink A ByteSink to which the UTF-8 version of the string is written.
-   * @stable ICU 4.4
+   * @stable ICU 4.2
    * @see toUTF8String
    */
   void toUTF8(ByteSink &sink) const;
@@ -1616,7 +1616,7 @@ public:
    * @param result A standard string (or a compatible object)
    *        to which the UTF-8 version of the string is appended.
    * @return The string object.
-   * @stable ICU 4.4
+   * @stable ICU 4.2
    * @see toUTF8
    */
   template<typename StringClass>
@@ -1641,7 +1641,7 @@ public:
    *                  function chaining. (See User Guide for details.)
    * @return The length of the UTF-32 string.
    * @see fromUTF32
-   * @stable ICU 4.4
+   * @stable ICU 4.2
    */
   int32_t toUTF32(UChar32 *utf32, int32_t capacity, UErrorCode &errorCode) const;
 
@@ -1728,9 +1728,10 @@ public:
 
   /**
    * Determine if this object contains a valid string.
-   * A bogus string has no value. It is different from an empty string.
-   * It can be used to indicate that no string value is available.
-   * getBuffer() and getTerminatedBuffer() return NULL, and
+   * A bogus string has no value. It is different from an empty string,
+   * although in both cases isEmpty() returns TRUE and length() returns 0.
+   * setToBogus() and isBogus() can be used to indicate that no string value is available.
+   * For a bogus string, getBuffer() and getTerminatedBuffer() return NULL, and
    * length() returns 0.
    *
    * @return TRUE if the string is valid, FALSE otherwise
@@ -3049,7 +3050,7 @@ public:
    * @return A UnicodeString with equivalent UTF-16 contents.
    * @see toUTF8
    * @see toUTF8String
-   * @stable ICU 4.4
+   * @stable ICU 4.2
    */
   static UnicodeString fromUTF8(const StringPiece &utf8);
 
@@ -3062,7 +3063,7 @@ public:
    * @param length Length of the input string, or -1 if NUL-terminated.
    * @return A UnicodeString with equivalent UTF-16 contents.
    * @see toUTF32
-   * @stable ICU 4.4
+   * @stable ICU 4.2
    */
   static UnicodeString fromUTF32(const UChar32 *utf32, int32_t length);
 
@@ -3082,7 +3083,7 @@ public:
    *
    * \\a => U+0007, \\b => U+0008, \\t => U+0009, \\n => U+000A,
    * \\v => U+000B, \\f => U+000C, \\r => U+000D, \\e => U+001B,
-   * \\" => U+0022, \\' => U+0027, \\? => U+003F, \\\\ => U+005C
+   * \\&quot; => U+0022, \\' => U+0027, \\? => U+003F, \\\\ => U+005C
    *
    * Anything else following a backslash is generically escaped.  For
    * example, "[a\\-z]" returns "[a-z]".

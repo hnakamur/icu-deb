@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2009, International Business Machines Corporation and         *
+* Copyright (C) 2009-2010, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 */
@@ -8,7 +8,7 @@
 #ifndef FPHDLIMP_H
 #define FPHDLIMP_H
 
-#if !UCONFIG_NO_FORMAT
+#if !UCONFIG_NO_FORMATTING
 
 #include "unicode/fieldpos.h"
 #include "unicode/fpositer.h"
@@ -45,7 +45,7 @@ class FieldPositionOnlyHandler : public FieldPositionHandler {
 // utility subclass FieldPositionIteratorHandler
 
 class FieldPositionIteratorHandler : public FieldPositionHandler {
-  FieldPositionIterator& iter;
+  FieldPositionIterator* iter; // can be NULL
   UVector32* vec;
   UErrorCode status;
 
@@ -57,7 +57,7 @@ class FieldPositionIteratorHandler : public FieldPositionHandler {
   void *operator new[](size_t s);
 
  public:
-  FieldPositionIteratorHandler(FieldPositionIterator& posIter, UErrorCode& status);
+  FieldPositionIteratorHandler(FieldPositionIterator* posIter, UErrorCode& status);
   ~FieldPositionIteratorHandler();
 
   virtual void addAttribute(int32_t id, int32_t start, int32_t limit);
@@ -67,6 +67,6 @@ class FieldPositionIteratorHandler : public FieldPositionHandler {
 
 U_NAMESPACE_END
 
-#endif /* !UCONFIG_NO_FORMAT */
+#endif /* !UCONFIG_NO_FORMATTING */
 
 #endif /* FPHDLIMP_H */

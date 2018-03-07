@@ -33,6 +33,7 @@
 
 //#define NUMFMTST_CACHE_DEBUG 1
 #include "stdio.h" /* for sprintf */
+// #include "iostream"   // for cout
 
 //#define NUMFMTST_DEBUG 1
 
@@ -106,6 +107,7 @@ void NumberFormatTest::runIndexedTest( int32_t index, UBool exec, const char* &n
         CASE(44,TestParseCurrencyInUCurr);
         CASE(45,TestFormatAttributes);
         CASE(46,TestFieldPositionIterator);
+        CASE(47,TestDecimal);
         default: name = ""; break;
     }
 }
@@ -782,7 +784,7 @@ void NumberFormatTest::TestCurrencyObject() {
                    1234.56, CharsToUnicodeString("\\u00A51,235")); // Yen
 
     expectCurrency(*fmt, Locale("fr", "CH", ""),
-                   1234.56, "Fr.1,234.55"); // 0.05 rounding
+                   1234.56, "CHF1,234.55"); // 0.05 rounding
 
     expectCurrency(*fmt, Locale::getUS(),
                    1234.56, "$1,234.56");
@@ -2570,26 +2572,26 @@ void NumberFormatTest::TestNonpositiveMultiplier() {
     expect(df, "1.2", -1.2);
     expect(df, "-1.2", 1.2);
 
-    // TODO: change all the following int64_t tests once BigInteger is ported
-    // (right now the big numbers get turned into doubles and lose tons of accuracy)
-    static const char* posOutOfRange = "9223372036854780000";
-    static const char* negOutOfRange = "-9223372036854780000";
-
-    expect(df, U_INT64_MIN, posOutOfRange);
-    expect(df, U_INT64_MIN+1, "9223372036854775807");
-    expect(df, (int64_t)-123, "123");
-    expect(df, (int64_t)123, "-123");
+    // Note:  the tests with the final parameter of FALSE will not round trip.
+    //        The initial numeric value will format correctly, after the multiplier.
+    //        Parsing the formatted text will be out-of-range for an int64, however.
+    //        The expect() function could be modified to detect this and fall back
+    //        to looking at the decimal parsed value, but it doesn't.
+    expect(df, U_INT64_MIN,    "9223372036854775808", FALSE);
+    expect(df, U_INT64_MIN+1,  "9223372036854775807");
+    expect(df, (int64_t)-123,                  "123");
+    expect(df, (int64_t)123,                  "-123");
     expect(df, U_INT64_MAX-1, "-9223372036854775806");
-    expect(df, U_INT64_MAX, "-9223372036854775807");
+    expect(df, U_INT64_MAX,   "-9223372036854775807");
 
     df.setMultiplier(-2);
     expect(df, -(U_INT64_MIN/2)-1, "-9223372036854775806");
-    expect(df, -(U_INT64_MIN/2), "-9223372036854775808");
-    expect(df, -(U_INT64_MIN/2)+1, negOutOfRange);
+    expect(df, -(U_INT64_MIN/2),   "-9223372036854775808");
+    expect(df, -(U_INT64_MIN/2)+1, "-9223372036854775810", FALSE);
 
     df.setMultiplier(-7);
-    expect(df, -(U_INT64_MAX/7)-1, posOutOfRange);
-    expect(df, -(U_INT64_MAX/7), "9223372036854775807");
+    expect(df, -(U_INT64_MAX/7)-1, "9223372036854775814", FALSE);
+    expect(df, -(U_INT64_MAX/7),   "9223372036854775807");
     expect(df, -(U_INT64_MAX/7)+1, "9223372036854775800");
 
     // TODO: uncomment (and fix up) all the following int64_t tests once BigInteger is ported
@@ -2909,7 +2911,7 @@ NumberFormatTest::TestCurrencyIsoPluralFormat() {
         {"ru_RU", "2", "RUB", "2,00\\u00A0\\u0440\\u0443\\u0431.", "2,00\\u00A0RUB", "2,00 \\u0420\\u043E\\u0441\\u0441\\u0438\\u0439\\u0441\\u043A\\u0438\\u0445 \\u0440\\u0443\\u0431\\u043B\\u044F"},
         {"ru_RU", "5", "RUB", "5,00\\u00A0\\u0440\\u0443\\u0431.", "5,00\\u00A0RUB", "5,00 \\u0420\\u043E\\u0441\\u0441\\u0438\\u0439\\u0441\\u043A\\u0438\\u0445 \\u0440\\u0443\\u0431\\u043B\\u0435\\u0439"},
         // test locale without currency information
-        {"ti_ET", "-1.23", "USD", "-US$1.23", "-USD1.23", "-1.23 USD"},
+        {"root", "-1.23", "USD", "-US$\\u00A01.23", "-USD\\u00A01.23", "-1.23 USD"},
         // test choice format
         {"es_AR", "1", "INR", "Rs\\u00A01,00", "INR\\u00A01,00", "1,00 rupia india"},
     };
@@ -3324,7 +3326,7 @@ NumberFormatTest::TestParseCurrencyInUCurr() {
         "Brazilian reals1.00",
         "British Pound Sterling1.00",
         "British pound sterling1.00",
-        "British pound sterlings1.00",
+        "British pounds sterling1.00",
         "Brunei Dollar1.00",
         "Brunei dollar1.00",
         "Brunei dollars1.00",
@@ -3538,7 +3540,7 @@ NumberFormatTest::TestParseCurrencyInUCurr() {
         "Finnish Markka1.00",
         "Finnish markka1.00",
         "Finnish markkas1.00",
-        "Fr.1.00",
+        "CHF1.00",
         "French Franc1.00",
         "French Gold Franc1.00",
         "French UIC-Franc1.00",
@@ -4555,7 +4557,7 @@ NumberFormatTest::TestParseCurrencyInUCurr() {
         "1.00 Brazilian reals random",
         "1.00 British Pound Sterling random",
         "1.00 British pound sterling random",
-        "1.00 British pound sterlings random",
+        "1.00 British pounds sterling random",
         "1.00 Brunei Dollar random",
         "1.00 Brunei dollar random",
         "1.00 Brunei dollars random",
@@ -5849,6 +5851,8 @@ void NumberFormatTest::TestFieldPositionIterator() {
   FieldPosition pos;
 
   DecimalFormat *decFmt = (DecimalFormat *) NumberFormat::createInstance(status);
+  if (failure(status, "NumberFormat::createInstance", TRUE)) return;
+
   double num = 1234.56;
   UnicodeString str1;
   UnicodeString str2;
@@ -5856,14 +5860,19 @@ void NumberFormatTest::TestFieldPositionIterator() {
   assertTrue((UnicodeString)"self==", iter1 == iter1);
   assertTrue((UnicodeString)"iter1==iter2", iter1 == iter2);
 
-  decFmt->format(num, str1, iter1, status);
+  decFmt->format(num, str1, &iter1, status);
   assertTrue((UnicodeString)"iter1 != iter2", iter1 != iter2);
-  decFmt->format(num, str2, iter2, status);
+  decFmt->format(num, str2, &iter2, status);
   assertTrue((UnicodeString)"iter1 == iter2 (2)", iter1 == iter2);
   iter1.next(pos);
   assertTrue((UnicodeString)"iter1 != iter2 (2)", iter1 != iter2);
   iter2.next(pos);
   assertTrue((UnicodeString)"iter1 == iter2 (3)", iter1 == iter2);
+
+  // should format ok with no iterator
+  str2.remove();
+  decFmt->format(num, str2, NULL, status);
+  assertEquals("null fpiter", str1, str2);
 
   delete decFmt;
 }
@@ -5872,8 +5881,9 @@ void NumberFormatTest::TestFormatAttributes() {
   Locale locale("en_US");
   UErrorCode status = U_ZERO_ERROR;
   DecimalFormat *decFmt = (DecimalFormat *) NumberFormat::createInstance(locale, NumberFormat::kCurrencyStyle, status);
+    if (failure(status, "NumberFormat::createInstance", TRUE)) return;
   double val = 12345.67;
-
+  
   {
     int32_t expected[] = {
       NumberFormat::kCurrencyField, 0, 1,
@@ -5886,7 +5896,7 @@ void NumberFormatTest::TestFormatAttributes() {
 
     FieldPositionIterator posIter;
     UnicodeString result;
-    decFmt->format(val, result, posIter, status);
+    decFmt->format(val, result, &posIter, status);
     expectPositions(posIter, expected, tupleCount, result);
   }
   {
@@ -5919,7 +5929,7 @@ void NumberFormatTest::TestFormatAttributes() {
 
     FieldPositionIterator posIter;
     UnicodeString result;
-    decFmt->format(val, result, posIter, status);
+    decFmt->format(val, result, &posIter, status);
     expectPositions(posIter, expected, tupleCount, result);
   }
   {
@@ -5954,6 +5964,153 @@ const char* attrString(int32_t attrId) {
     case NumberFormat::kSignField: return "sign";
     default: return "";
   }
+}
+
+//
+//   Test formatting & parsing of big decimals.
+//      API test, not a comprehensive test. 
+//      See DecimalFormatTest/DataDrivenTests
+//
+#define ASSERT_SUCCESS(status) {if (U_FAILURE(status)) errln("file %s, line %d: status: %s", \
+                                                __FILE__, __LINE__, u_errorName(status));}
+#define ASSERT_EQUALS(expected, actual) {if ((expected) != (actual)) \
+                  errln("file %s, line %d: %s != %s", __FILE__, __LINE__, #expected, #actual);}
+
+static UBool operator != (const char *s1, UnicodeString &s2) {
+    // This function lets ASSERT_EQUALS("literal", UnicodeString) work.
+    UnicodeString us1(s1);
+    return us1 != s2;
+}
+
+void NumberFormatTest::TestDecimal() {
+    {
+        UErrorCode  status = U_ZERO_ERROR;
+        Formattable f("12.345678999987654321E666", status);
+        ASSERT_SUCCESS(status);
+        StringPiece s = f.getDecimalNumber(status);
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS("1.2345678999987654321E+667", s);
+        //printf("%s\n", s.data());
+    }
+
+    {
+        UErrorCode status = U_ZERO_ERROR;
+        Formattable f1("this is not a number", status);
+        ASSERT_EQUALS(U_DECIMAL_NUMBER_SYNTAX_ERROR, status);
+    }
+
+    {
+        UErrorCode status = U_ZERO_ERROR;
+        Formattable f;
+        f.setDecimalNumber("123.45", status);
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS( Formattable::kDouble, f.getType());
+        ASSERT_EQUALS(123.45, f.getDouble());
+        ASSERT_EQUALS(123.45, f.getDouble(status));
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS("123.45", f.getDecimalNumber(status));
+        ASSERT_SUCCESS(status);
+
+        f.setDecimalNumber("4.5678E7", status);
+        int32_t n;
+        n = f.getLong();
+        ASSERT_EQUALS(45678000, n);
+
+        status = U_ZERO_ERROR;
+        f.setDecimalNumber("-123", status);
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS( Formattable::kLong, f.getType());
+        ASSERT_EQUALS(-123, f.getLong());
+        ASSERT_EQUALS(-123, f.getLong(status));
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS("-123", f.getDecimalNumber(status));
+        ASSERT_SUCCESS(status);
+
+        status = U_ZERO_ERROR;
+        f.setDecimalNumber("1234567890123", status);  // Number too big for 32 bits
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS( Formattable::kInt64, f.getType());
+        ASSERT_EQUALS(1234567890123LL, f.getInt64());
+        ASSERT_EQUALS(1234567890123LL, f.getInt64(status));
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS("1234567890123", f.getDecimalNumber(status));
+        ASSERT_SUCCESS(status);
+    }
+
+    {
+        UErrorCode status = U_ZERO_ERROR;
+        NumberFormat *fmtr = NumberFormat::createInstance(
+                Locale::getUS(), NumberFormat::kNumberStyle, status);
+        UnicodeString formattedResult;
+        StringPiece num("244444444444444444444444444444444444446.4");
+        fmtr->format(num, formattedResult, NULL, status);
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS("244,444,444,444,444,444,444,444,444,444,444,444,446.4", formattedResult);
+        //std::string ss; std::cout << formattedResult.toUTF8String(ss);
+        delete fmtr;
+    }
+
+    {
+        // Check formatting a DigitList.  DigitList is internal, but this is
+        // a critical interface that must work.
+        UErrorCode status = U_ZERO_ERROR;
+        NumberFormat *fmtr = NumberFormat::createInstance(
+                Locale::getUS(), NumberFormat::kNumberStyle, status);
+        ASSERT_SUCCESS(status);
+        UnicodeString formattedResult;
+        DigitList dl;
+        StringPiece num("123.4566666666666666666666666666666666621E+40");
+        dl.set(num, status);
+        ASSERT_SUCCESS(status);
+        fmtr->format(dl, formattedResult, NULL, status);
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS("1,234,566,666,666,666,666,666,666,666,666,666,666,621,000", formattedResult);
+
+        status = U_ZERO_ERROR;
+        num.set("666.666");
+        dl.set(num, status);
+        FieldPosition pos(NumberFormat::FRACTION_FIELD);
+        ASSERT_SUCCESS(status);
+        formattedResult.remove();
+        fmtr->format(dl, formattedResult, pos, status);
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS("666.666", formattedResult);
+        ASSERT_EQUALS(4, pos.getBeginIndex());
+        ASSERT_EQUALS(7, pos.getEndIndex());
+        delete fmtr;
+    }
+
+    {
+        // Check a parse with a formatter with a multiplier.
+        UErrorCode status = U_ZERO_ERROR;
+        NumberFormat *fmtr = NumberFormat::createInstance(
+                Locale::getUS(), NumberFormat::kPercentStyle, status);
+        ASSERT_SUCCESS(status);
+        UnicodeString input = "1.84%";
+        Formattable result;
+        fmtr->parse(input, result, status);
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS(0, strcmp("0.0184", result.getDecimalNumber(status).data()));
+        //std::cout << result.getDecimalNumber(status).data();
+        delete fmtr;
+    }
+    
+    {
+        // Check that a parse returns a decimal number with full accuracy
+        UErrorCode status = U_ZERO_ERROR;
+        NumberFormat *fmtr = NumberFormat::createInstance(
+                Locale::getUS(), NumberFormat::kNumberStyle, status);
+        ASSERT_SUCCESS(status);
+        UnicodeString input = "1.002200044400088880000070000";
+        Formattable result;
+        fmtr->parse(input, result, status);
+        ASSERT_SUCCESS(status);
+        ASSERT_EQUALS(0, strcmp("1.00220004440008888000007", result.getDecimalNumber(status).data()));
+        ASSERT_EQUALS(1.00220004440008888,   result.getDouble());
+        //std::cout << result.getDecimalNumber(status).data();
+        delete fmtr;
+    }
+
 }
 
 #endif /* #if !UCONFIG_NO_FORMATTING */

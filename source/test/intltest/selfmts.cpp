@@ -115,7 +115,7 @@ void SelectFormatTest::selectFormatUnitTest(/*char *par*/)
         }
     }
 
-    logln("SelectFormat Unit Test : Creaing format object for Testing applying various patterns");
+    logln("SelectFormat Unit Test : Creating format object for Testing applying various patterns");
     status = U_ZERO_ERROR;
     selFmt = new SelectFormat( SIMPLE_PATTERN , status); 
     //SelectFormat* selFmt1 = new SelectFormat( SIMPLE_PATTERN , status); 
@@ -151,7 +151,6 @@ void SelectFormatTest::selectFormatUnitTest(/*char *par*/)
         }
     }
 
-/*
     //Test with an invalid keyword
     logln("SelectFormat Unit test: Testing  format() with keyword method and with invalid keywords...");
     status = U_ZERO_ERROR;
@@ -161,18 +160,18 @@ void SelectFormatTest::selectFormatUnitTest(/*char *par*/)
         "-Keyword-_",       //Starts with a hyphen
         "_Keyword-_",       //Starts with a underscore
         "\\u00E9Keyword-_", //Starts with non-ASCII character
-        "Key*word-_"        //Contains a sepial character not allowed
-        "*Keyword-_"       //Starts with a sepial character not allowed
+        "Key*word-_",       //Contains a sepial character not allowed
+        "*Keyword-_"        //Starts with a sepial character not allowed
     };
 
     selFmt = new SelectFormat( SIMPLE_PATTERN , status); 
-    for (int i = 0; i< 6; i++ ){
+    for (int32_t i = 0; i< 6; i++ ){
+        status = U_ZERO_ERROR;
         selFmt->format( keywords[i], result , ignore , status);
         if (!U_FAILURE(status)) {
             errln("ERROR: SelectFormat Unit test failed in format() with keyWord and with an invalid keyword as : "+ keywords[i]);
         }
     }
-*/
 
     delete selFmt;
 }
@@ -192,29 +191,25 @@ void SelectFormatTest::selectFormatAPITest(/*char *par*/)
     for (int32_t i=0; i< numOfConstructors; ++i) {
         status[i] = U_ZERO_ERROR;
     }
-    selFmt[0]= new SelectFormat(status[0]);
+
+    selFmt[0]= new SelectFormat(SIMPLE_PATTERN, status[0]);
     if ( U_FAILURE(status[0]) ) {
-        errln("ERROR: SelectFormat API test constructor with status failed!");
-        return;
-    }
-    selFmt[1]= new SelectFormat(SIMPLE_PATTERN, status[1]);
-    if ( U_FAILURE(status[1]) ) {
         errln("ERROR: SelectFormat API test constructor with pattern and status failed!");
         return;
     }
 
     // =========== Test copy constructor
     logln("SelectFormat API test: Testing copy constructor and == operator ...");
-    SelectFormat fmt = *selFmt[1];
+    SelectFormat fmt = *selFmt[0];
     SelectFormat* dupPFmt = new SelectFormat(fmt);
-    if ((*selFmt[1]) != (*dupPFmt)) {
+    if ((*selFmt[0]) != (*dupPFmt)) {
         errln("ERROR: SelectFormat API test Failed in copy constructor or == operator!");
     }
     delete dupPFmt;
     
     // ======= Test clone && == operator.
     logln("SelectFormat API test: Testing clone and == operator ...");
-    if ( U_SUCCESS(status[0]) && U_SUCCESS(status[1]) ) {
+    if ( U_SUCCESS(status[0])  ) {
         selFmt[1] = (SelectFormat*)selFmt[0]->clone();
         if (selFmt[1]!=NULL) {
             if ( *selFmt[1] != *selFmt[0] ) {
