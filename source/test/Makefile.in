@@ -1,5 +1,5 @@
 ## Makefile.in for ICU tests
-## Copyright (c) 1999-2010, International Business Machines Corporation and
+## Copyright (c) 1999-2013, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
 ## Source directory information
@@ -15,6 +15,10 @@ subdir = test
 
 @ICUIO_TRUE@IOTEST = iotest
 
+# status dir
+STATUS_TMP = tmp
+STATUS_FULL = $(shell pwd)/$(STATUS_TMP)
+
 ## Files to remove for 'make clean'
 CLEANFILES = *~
 
@@ -24,7 +28,8 @@ SUBDIRS = testdata intltest $(IOTEST) cintltst
 .PHONY : everything all all-local all-recursive install install-local		\
 install-recursive clean clean-local clean-recursive distclean		\
 distclean-local distclean-recursive dist dist-recursive dist-local	\
-check check-recursive check-local xcheck xcheck-recursive xcheck-local
+check check-recursive check-local xcheck xcheck-recursive xcheck-local	\
+check-exhaustive check-exhaustive-recursive
 
 ## Clear suffix list
 .SUFFIXES :
@@ -41,6 +46,7 @@ clean: clean-recursive clean-local
 distclean : distclean-recursive distclean-local
 	$(RMV) hdrtst/Makefile
 	$(RMV) perf/convperf/Makefile
+	$(RMV) $(STATUS_TMP)
 
 dist: dist-recursive dist-local
 check: everything check-recursive check-local
@@ -48,6 +54,7 @@ check-recursive: all-recursive
 # the xcheck targets create a ../test-*.xml file in JUnit format.
 xcheck: everything xcheck-recursive xcheck-local
 xcheck-recursive: all-recursive
+check-exhaustive: everything check-exhaustive-recursive check-local
 
 ## Recursive targets
 all-recursive install-recursive clean-recursive distclean-recursive dist-recursive:
@@ -67,18 +74,30 @@ all-recursive install-recursive clean-recursive distclean-recursive dist-recursi
 	  $(MAKE) "$$target-local" || exit; \
 	fi
 
-xcheck-recursive check-recursive:
+xcheck-recursive check-recursive check-exhaustive-recursive:
+	@$(MKINSTALLDIRS) $(STATUS_TMP)
+	@mystatus=$(STATUS_FULL)/status.$$$$.deleteme ; \
+	$(RMV) "$$mystatus".* ; \
 	@goods=; \
 	bads=; \
 	target=`echo $@ | sed s/-recursive//`; \
 	list='$(SUBDIRS)'; for subdir in $$list; do \
 	  echo "$(MAKE)[$(MAKELEVEL)]: Making \`$$target' in \`$$subdir'"; \
 	  local_target="$$target"; \
-	  if (cd $$subdir && $(MAKE) $$local_target); then \
+	  if (cd $$subdir && $(MAKE) $$local_target TEST_STATUS_FILE="$$mystatus.$$subdir" ); then \
 	    goods="$$goods $$subdir"; \
           else \
             bads="$$bads $$subdir"; \
           fi; \
+	done; \
+	for subdir in $$list; do \
+	  if [ -f "$$mystatus.$$subdir" ]; then \
+	    echo "-------------" ; \
+	    echo "| SUBTEST SUMMARY: $$subdir" ; \
+	    cat "$$mystatus.$$subdir" ; \
+	    echo "| END SUMMARY:     $$subdir" ; \
+	    $(RMV) "$$mystatus.$$subdir" ; \
+	  fi; \
 	done; \
 	echo "---------------"; \
 	echo "ALL TESTS SUMMARY:"; \

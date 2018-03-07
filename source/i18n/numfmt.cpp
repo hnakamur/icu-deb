@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2011, International Business Machines Corporation and    *
+* Copyright (C) 1997-2013, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 *
@@ -35,6 +35,7 @@
 #include "unicode/curramt.h"
 #include "unicode/numsys.h"
 #include "unicode/rbnf.h"
+#include "unicode/localpointer.h"
 #include "charstr.h"
 #include "winnmfmt.h"
 #include "uresimp.h"
@@ -44,6 +45,7 @@
 #include "ucln_in.h"
 #include "cstring.h"
 #include "putilimp.h"
+#include "uassert.h"
 #include "umutex.h"
 #include "mutex.h"
 #include "digitlst.h"
@@ -53,7 +55,7 @@
 
 #ifdef FMT_DEBUG
 #include <stdio.h>
-static void debugout(UnicodeString s) {
+static inline void debugout(UnicodeString s) {
     char buf[2000];
     s.extract((int32_t) 0, s.length(), buf);
     printf("%s", buf);
@@ -137,11 +139,12 @@ static const char *gFormatKeys[UNUM_FORMAT_STYLE_COUNT] = {
 
 // Static hashtable cache of NumberingSystem objects used by NumberFormat
 static UHashtable * NumberingSystem_cache = NULL;
-
-static UMTX nscacheMutex = NULL;
+static UMutex nscacheMutex = U_MUTEX_INITIALIZER;
+static UInitOnce gNSCacheInitOnce = U_INITONCE_INITIALIZER;
 
 #if !UCONFIG_NO_SERVICE
-static U_NAMESPACE_QUALIFIER ICULocaleService* gService = NULL;
+static icu::ICULocaleService* gService = NULL;
+static UInitOnce gServiceInitOnce = U_INITONCE_INITIALIZER;
 #endif
 
 /**
@@ -150,16 +153,18 @@ static U_NAMESPACE_QUALIFIER ICULocaleService* gService = NULL;
 U_CDECL_BEGIN
 static void U_CALLCONV
 deleteNumberingSystem(void *obj) {
-    delete (U_NAMESPACE_QUALIFIER NumberingSystem *)obj;
+    delete (icu::NumberingSystem *)obj;
 }
 
 static UBool U_CALLCONV numfmt_cleanup(void) {
 #if !UCONFIG_NO_SERVICE
+    gServiceInitOnce.reset();
     if (gService) {
         delete gService;
         gService = NULL;
     }
 #endif
+    gNSCacheInitOnce.reset();
     if (NumberingSystem_cache) {
         // delete NumberingSystem_cache;
         uhash_close(NumberingSystem_cache);
@@ -360,6 +365,46 @@ NumberFormat::format(int64_t /* unused number */,
     }
     return toAppendTo;
 }
+
+// ------------------------------------------
+// These functions add the status code, just fall back to the non-status versions
+UnicodeString&
+NumberFormat::format(double number,
+                     UnicodeString& appendTo,
+                     FieldPosition& pos,
+                     UErrorCode &status) const {
+    if(U_SUCCESS(status)) {
+        return format(number,appendTo,pos);
+    } else {
+        return appendTo;
+    }
+}
+
+UnicodeString&
+NumberFormat::format(int32_t number,
+                     UnicodeString& appendTo,
+                     FieldPosition& pos,
+                     UErrorCode &status) const {
+    if(U_SUCCESS(status)) {
+        return format(number,appendTo,pos);
+    } else {
+        return appendTo;
+    }
+}
+
+UnicodeString&
+NumberFormat::format(int64_t number,
+                     UnicodeString& appendTo,
+                     FieldPosition& pos,
+                     UErrorCode &status) const {
+    if(U_SUCCESS(status)) {
+        return format(number,appendTo,pos);
+    } else {
+        return appendTo;
+    }
+}
+
+
 
 // -------------------------------------
 // Decimal Number format() default implementation 
@@ -623,27 +668,26 @@ NumberFormat::parse(const UnicodeString& text,
     }
 }
 
-Formattable& NumberFormat::parseCurrency(const UnicodeString& text,
-                                         Formattable& result,
-                                         ParsePosition& pos) const {
+CurrencyAmount* NumberFormat::parseCurrency(const UnicodeString& text,
+                                            ParsePosition& pos) const {
     // Default implementation only -- subclasses should override
+    Formattable parseResult;
     int32_t start = pos.getIndex();
-    parse(text, result, pos);
+    parse(text, parseResult, pos);
     if (pos.getIndex() != start) {
         UChar curr[4];
         UErrorCode ec = U_ZERO_ERROR;
         getEffectiveCurrency(curr, ec);
         if (U_SUCCESS(ec)) {
-            Formattable n(result);
-            CurrencyAmount *tempCurAmnt = new CurrencyAmount(n, curr, ec);  // Use for null testing.
-            if (U_FAILURE(ec) || tempCurAmnt == NULL) {
+            LocalPointer<CurrencyAmount> currAmt(new CurrencyAmount(parseResult, curr, ec));
+            if (U_FAILURE(ec)) {
                 pos.setIndex(start); // indicate failure
             } else {
-            	result.adoptObject(tempCurAmnt);
+                return currAmt.orphan();
             }
         }
     }
-    return result;
+    return NULL;
 }
 
 // -------------------------------------
@@ -755,11 +799,15 @@ NumberFormat::getAvailableLocales(int32_t& count)
 // -------------------------------------
 
 class ICUNumberFormatFactory : public ICUResourceBundleFactory {
+public:
+    virtual ~ICUNumberFormatFactory();
 protected:
     virtual UObject* handleCreate(const Locale& loc, int32_t kind, const ICUService* /* service */, UErrorCode& status) const {
         return NumberFormat::makeInstance(loc, (UNumberFormatStyle)kind, status);
     }
 };
+
+ICUNumberFormatFactory::~ICUNumberFormatFactory() {}
 
 // -------------------------------------
 
@@ -776,11 +824,7 @@ public:
     {
     }
 
-    virtual ~NFFactory()
-    {
-        delete _delegate;
-        delete _ids;
-    }
+    virtual ~NFFactory();
 
     virtual UObject* create(const ICUServiceKey& key, const ICUService* service, UErrorCode& status) const
     {
@@ -824,6 +868,12 @@ protected:
     }
 };
 
+NFFactory::~NFFactory()
+{
+    delete _delegate;
+    delete _ids;
+}
+
 class ICUNumberFormatService : public ICULocaleService {
 public:
     ICUNumberFormatService()
@@ -832,6 +882,8 @@ public:
         UErrorCode status = U_ZERO_ERROR;
         registerFactory(new ICUNumberFormatFactory(), status);
     }
+
+    virtual ~ICUNumberFormatService();
 
     virtual UObject* cloneInstance(UObject* instance) const {
         return ((NumberFormat*)instance)->clone();
@@ -850,31 +902,25 @@ public:
     }
 };
 
+ICUNumberFormatService::~ICUNumberFormatService() {}
+
 // -------------------------------------
+
+static void U_CALLCONV initNumberFormatService() {
+    U_ASSERT(gService == NULL);
+    ucln_i18n_registerCleanup(UCLN_I18N_NUMFMT, numfmt_cleanup);
+    gService = new ICUNumberFormatService();
+}
 
 static ICULocaleService*
 getNumberFormatService(void)
 {
-    UBool needInit;
-    UMTX_CHECK(NULL, (UBool)(gService == NULL), needInit);
-    if (needInit) {
-        ICULocaleService * newservice = new ICUNumberFormatService();
-        if (newservice) {
-            umtx_lock(NULL);
-            if (gService == NULL) {
-                gService = newservice;
-                newservice = NULL;
-            }
-            umtx_unlock(NULL);
-        }
-        if (newservice) {
-            delete newservice;
-        } else {
-            // we won the contention, this thread can register cleanup.
-            ucln_i18n_registerCleanup(UCLN_I18N_NUMFMT, numfmt_cleanup);
-        }
-    }
+    umtx_initOnce(gServiceInitOnce, &initNumberFormatService);
     return gService;
+}
+
+static UBool haveService() {
+    return !gServiceInitOnce.isReset() && (getNumberFormatService() != NULL);
 }
 
 // -------------------------------------
@@ -898,15 +944,15 @@ NumberFormat::registerFactory(NumberFormatFactory* toAdopt, UErrorCode& status)
 UBool U_EXPORT2
 NumberFormat::unregister(URegistryKey key, UErrorCode& status)
 {
-    if (U_SUCCESS(status)) {
-        UBool haveService;
-        UMTX_CHECK(NULL, gService != NULL, haveService);
-        if (haveService) {
-            return gService->unregister(key, status);
-        }
-        status = U_ILLEGAL_ARGUMENT_ERROR;
+    if (U_FAILURE(status)) {
+        return FALSE;
     }
-    return FALSE;
+    if (haveService()) {
+        return gService->unregister(key, status);
+    } else {
+        status = U_ILLEGAL_ARGUMENT_ERROR;
+        return FALSE;
+    }
 }
 
 // -------------------------------------
@@ -915,7 +961,7 @@ NumberFormat::getAvailableLocales(void)
 {
   ICULocaleService *service = getNumberFormatService();
   if (service) {
-    return service->getAvailableLocales();
+      return service->getAvailableLocales();
   }
   return NULL; // no way to return error condition
 }
@@ -923,19 +969,13 @@ NumberFormat::getAvailableLocales(void)
 // -------------------------------------
 
 NumberFormat* U_EXPORT2
-NumberFormat::createInstance(const Locale& loc, UNumberFormatStyle kind, UErrorCode& status)
-{
+NumberFormat::createInstance(const Locale& loc, UNumberFormatStyle kind, UErrorCode& status) {
 #if !UCONFIG_NO_SERVICE
-    UBool haveService;
-    UMTX_CHECK(NULL, gService != NULL, haveService);
-    if (haveService) {
+    if (haveService()) {
         return (NumberFormat*)gService->get(loc, kind, status);
     }
-    else
 #endif
-    {
-        return makeInstance(loc, kind, status);
-    }
+    return makeInstance(loc, kind, status);
 }
 
 
@@ -1082,6 +1122,22 @@ void NumberFormat::getEffectiveCurrency(UChar* result, UErrorCode& ec) const {
 // Creates the NumberFormat instance of the specified style (number, currency,
 // or percent) for the desired locale.
 
+static void U_CALLCONV nscacheInit() {
+    U_ASSERT(NumberingSystem_cache == NULL);
+    ucln_i18n_registerCleanup(UCLN_I18N_NUMFMT, numfmt_cleanup);
+    UErrorCode status = U_ZERO_ERROR;
+    NumberingSystem_cache = uhash_open(uhash_hashLong,
+                                       uhash_compareLong,
+                                       NULL,
+                                       &status);
+    if (U_FAILURE(status)) {
+        // Number Format code will run with no cache if creation fails.
+        NumberingSystem_cache = NULL;
+        return;
+    }
+    uhash_setValueDeleter(NumberingSystem_cache, deleteNumberingSystem);
+}
+
 UBool
 NumberFormat::isStyleSupported(UNumberFormatStyle style) {
     return gLastResortNumberPatterns[style] != NULL;
@@ -1090,8 +1146,15 @@ NumberFormat::isStyleSupported(UNumberFormatStyle style) {
 NumberFormat*
 NumberFormat::makeInstance(const Locale& desiredLocale,
                            UNumberFormatStyle style,
-                           UErrorCode& status)
-{
+                           UErrorCode& status) {
+  return makeInstance(desiredLocale, style, false, status);
+}
+
+NumberFormat*
+NumberFormat::makeInstance(const Locale& desiredLocale,
+                           UNumberFormatStyle style,
+                           UBool mustBeDecimalFormat,
+                           UErrorCode& status) {
     if (U_FAILURE(status)) return NULL;
 
     if (style < 0 || style >= UNUM_FORMAT_STYLE_COUNT) {
@@ -1110,37 +1173,68 @@ NumberFormat::makeInstance(const Locale& desiredLocale,
         return NULL;
     }
 
-#ifdef U_WINDOWS
-    char buffer[8];
-    int32_t count = desiredLocale.getKeywordValue("compat", buffer, sizeof(buffer), status);
+#if U_PLATFORM_USES_ONLY_WIN32_API
+    if (!mustBeDecimalFormat) {
+        char buffer[8];
+        int32_t count = desiredLocale.getKeywordValue("compat", buffer, sizeof(buffer), status);
 
-    // if the locale has "@compat=host", create a host-specific NumberFormat
-    if (U_SUCCESS(status) && count > 0 && uprv_strcmp(buffer, "host") == 0) {
-        Win32NumberFormat *f = NULL;
-        UBool curr = TRUE;
+        // if the locale has "@compat=host", create a host-specific NumberFormat
+        if (U_SUCCESS(status) && count > 0 && uprv_strcmp(buffer, "host") == 0) {
+            Win32NumberFormat *f = NULL;
+            UBool curr = TRUE;
 
-        switch (style) {
-        case UNUM_DECIMAL:
-            curr = FALSE;
-            // fall-through
+            switch (style) {
+            case UNUM_DECIMAL:
+                curr = FALSE;
+                // fall-through
 
-        case UNUM_CURRENCY:
-        case UNUM_CURRENCY_ISO: // do not support plural formatting here
-        case UNUM_CURRENCY_PLURAL:
-            f = new Win32NumberFormat(desiredLocale, curr, status);
+            case UNUM_CURRENCY:
+            case UNUM_CURRENCY_ISO: // do not support plural formatting here
+            case UNUM_CURRENCY_PLURAL:
+                f = new Win32NumberFormat(desiredLocale, curr, status);
 
-            if (U_SUCCESS(status)) {
-                return f;
+                if (U_SUCCESS(status)) {
+                    return f;
+                }
+
+                delete f;
+                break;
+            default:
+                break;
             }
-
-            delete f;
-            break;
-
-        default:
-            break;
         }
     }
 #endif
+    // Use numbering system cache hashtable
+    umtx_initOnce(gNSCacheInitOnce, &nscacheInit);
+
+    // Get cached numbering system
+    LocalPointer<NumberingSystem> ownedNs;
+    NumberingSystem *ns = NULL;
+    if (NumberingSystem_cache != NULL) {
+        // TODO: Bad hash key usage, see ticket #8504.
+        int32_t hashKey = desiredLocale.hashCode();
+
+        Mutex lock(&nscacheMutex);
+        ns = (NumberingSystem *)uhash_iget(NumberingSystem_cache, hashKey);
+        if (ns == NULL) {
+            ns = NumberingSystem::createInstance(desiredLocale,status);
+            uhash_iput(NumberingSystem_cache, hashKey, (void*)ns, &status);
+        }
+    } else {
+        ownedNs.adoptInstead(NumberingSystem::createInstance(desiredLocale,status));
+        ns = ownedNs.getAlias();
+    }
+
+    // check results of getting a numbering system
+    if (U_FAILURE(status)) {
+        return NULL;
+    }
+
+    if (mustBeDecimalFormat && ns->isAlgorithmic()) {
+        status = U_UNSUPPORTED_ERROR;
+        return NULL;
+    }
 
     LocalPointer<DecimalFormatSymbols> symbolsToAdopt;
     UnicodeString pattern;
@@ -1167,14 +1261,23 @@ NumberFormat::makeInstance(const Locale& desiredLocale,
         }
 
         UResourceBundle *resource = ownedResource.orphan();
-        resource = ures_getByKeyWithFallback(resource, gNumberElements, resource, &status);
-        // TODO : Get patterns on a per numbering system basis, for right now assumes "latn" for patterns
-        resource = ures_getByKeyWithFallback(resource, gLatn, resource, &status);
+        UResourceBundle *numElements = ures_getByKeyWithFallback(resource, gNumberElements, NULL, &status);
+        resource = ures_getByKeyWithFallback(numElements, ns->getName(), resource, &status);
         resource = ures_getByKeyWithFallback(resource, gPatterns, resource, &status);
         ownedResource.adoptInstead(resource);
 
         int32_t patLen = 0;
         const UChar *patResStr = ures_getStringByKeyWithFallback(resource, gFormatKeys[style], &patLen, &status);
+
+        // Didn't find a pattern specific to the numbering system, so fall back to "latn"
+        if ( status == U_MISSING_RESOURCE_ERROR && uprv_strcmp(gLatn,ns->getName())) {  
+            status = U_ZERO_ERROR;
+            resource = ures_getByKeyWithFallback(numElements, gLatn, resource, &status);
+            resource = ures_getByKeyWithFallback(resource, gPatterns, resource, &status);
+            patResStr = ures_getStringByKeyWithFallback(resource, gFormatKeys[style], &patLen, &status);
+        }
+
+        ures_close(numElements);
 
         // Creates the specified decimal format style of the desired locale.
         pattern.setTo(TRUE, patResStr, patLen);
@@ -1189,59 +1292,6 @@ NumberFormat::makeInstance(const Locale& desiredLocale,
         }
     }
 
-    // Use numbering system cache hashtable
-    UHashtable *cache;
-    UMTX_CHECK(&nscacheMutex, NumberingSystem_cache, cache);
-
-    // Check cache we got, create if non-existant
-    if (cache == NULL) {
-        cache = uhash_open(uhash_hashLong,
-                           uhash_compareLong,
-                           NULL,
-                           &status);
-
-        if (U_FAILURE(status)) {
-            // cache not created - out of memory
-            status = U_ZERO_ERROR;  // work without the cache
-            cache = NULL;
-        } else {
-            // cache created
-            uhash_setValueDeleter(cache, deleteNumberingSystem);
-
-            // set final NumberingSystem_cache value
-            Mutex lock(&nscacheMutex);
-            if (NumberingSystem_cache == NULL) {
-                NumberingSystem_cache = cache;
-                ucln_i18n_registerCleanup(UCLN_I18N_NUMFMT, numfmt_cleanup);
-            } else {
-                uhash_close(cache);
-                cache = NumberingSystem_cache;
-            }
-        }
-    }
-
-    // Get cached numbering system
-    LocalPointer<NumberingSystem> ownedNs;
-    NumberingSystem *ns = NULL;
-    if (cache != NULL) {
-        // TODO: Bad hash key usage, see ticket #8504.
-        int32_t hashKey = desiredLocale.hashCode();
-
-        Mutex lock(&nscacheMutex);
-        ns = (NumberingSystem *)uhash_iget(cache, hashKey);
-        if (ns == NULL) {
-            ns = NumberingSystem::createInstance(desiredLocale,status);
-            uhash_iput(cache, hashKey, (void*)ns, &status);
-        }
-    } else {
-        ownedNs.adoptInstead(NumberingSystem::createInstance(desiredLocale,status));
-        ns = ownedNs.getAlias();
-    }
-
-    // check results of getting a numbering system
-    if (U_FAILURE(status)) {
-        return NULL;
-    }
 
     NumberFormat *f;
     if (ns->isAlgorithmic()) {
@@ -1283,7 +1333,8 @@ NumberFormat::makeInstance(const Locale& desiredLocale,
         // replace single currency sign in the pattern with double currency sign
         // if the style is UNUM_CURRENCY_ISO
         if (style == UNUM_CURRENCY_ISO) {
-            pattern.findAndReplace(gSingleCurrencySign, gDoubleCurrencySign);
+            pattern.findAndReplace(UnicodeString(TRUE, gSingleCurrencySign, 1),
+                                   UnicodeString(TRUE, gDoubleCurrencySign, 2));
         }
 
         // "new DecimalFormat()" does not adopt the symbols if its memory allocation fails.
