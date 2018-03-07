@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 1999-2010 International Business Machines Corporation and
+*   Copyright (C) 1999-2011 International Business Machines Corporation and
 *   others. All Rights Reserved.
 ********************************************************************************
 *   Date        Name        Description
@@ -1044,7 +1044,18 @@ void UnicodeSetTest::TestPropertySet() {
 
         "[:Assigned:]",
         "A\\uE000\\uF8FF\\uFDC7\\U00010000\\U0010FFFD",
-        "\\u0888\\uFDD3\\uFFFE\\U00050005"
+        "\\u0888\\uFDD3\\uFFFE\\U00050005",
+
+        // Script_Extensions, new in Unicode 6.0
+        "[:scx=Arab:]",
+        "\\u061E\\u061F\\u0620\\u0621\\u063F\\u0640\\u0650\\u065E\\uFDF1\\uFDF2\\uFDF3",
+        "\\u061D\\u065F\\uFDEF\\uFDFE",
+
+        // U+FDF2 has Script=Arabic and also Arab in its Script_Extensions,
+        // so scx-sc is missing U+FDF2.
+        "[[:Script_Extensions=Arabic:]-[:Arab:]]",
+        "\\u0640\\u064B\\u0650\\u0655\\uFDFD",
+        "\\uFDF2"
     };
 
     static const int32_t DATA_LEN = sizeof(DATA)/sizeof(DATA[0]);
@@ -1377,7 +1388,7 @@ void UnicodeSetTest::TestEscapePattern() {
     const char exp[] =
         "[\\u200A-\\u200E\\uFEFF\\U0001D173-\\U0001D17A\\U000F0000-\\U000FFFFD]";
     // We test this with two passes; in the second pass we
-    // pre-unescape the pattern.  Since U+200E is rule whitespace,
+    // pre-unescape the pattern.  Since U+200E is Pattern_White_Space,
     // this fails -- which is what we expect.
     for (int32_t pass=1; pass<=2; ++pass) {
         UErrorCode ec = U_ZERO_ERROR;

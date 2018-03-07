@@ -1,6 +1,6 @@
 /*
 ********************************************************************************
-*   Copyright (C) 1997-2010, International Business Machines
+*   Copyright (C) 1997-2011, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
@@ -46,6 +46,7 @@ class DigitList;
 class ChoiceFormat;
 class CurrencyPluralInfo;
 class Hashtable;
+class UnicodeSet;
 class FieldPositionHandler;
 
 /**
@@ -350,7 +351,8 @@ class FieldPositionHandler;
  * DecimalFormatSymbols object.  During formatting, the
  * DecimalFormatSymbols-based digits are output.
  *
- * <p>During parsing, grouping separators are ignored.
+ * <p>During parsing, grouping separators are ignored if in lenient mode;
+ * otherwise, if present, they must be in appropriate positions.
  *
  * <p>For currency parsing, the formatter is able to parse every currency
  * style formats no matter which style the formatter is constructed with.
@@ -382,10 +384,10 @@ class FieldPositionHandler;
  * is set to 5.
  *
  * <li>If the number of actual fraction digits exceeds the <em>maximum
- * fraction digits</em>, then half-even rounding it performed to the
+ * fraction digits</em>, then rounding is performed to the
  * maximum fraction digits.  For example, 0.125 is formatted as "0.12"
  * if the maximum fraction digits is 2.  This behavior can be changed
- * by specifying a rounding increment and a rounding mode.
+ * by specifying a rounding increment and/or a rounding mode.
  *
  * <li>If the number of actual fraction digits is less than the
  * <em>minimum fraction digits</em>, then trailing zeros are added.
@@ -610,13 +612,17 @@ class FieldPositionHandler;
  * increment in the pattern itself.  "#,#50" specifies a rounding increment of
  * 50.  "#,##0.05" specifies a rounding increment of 0.05.
  *
+ * <p>In the absense of an explicit rounding increment numbers are
+ * rounded to their formatted width.
+ *
  * <ul>
  * <li>Rounding only affects the string produced by formatting.  It does
  * not affect parsing or change any numerical values.
  *
  * <li>A <em>rounding mode</em> determines how values are rounded; see
- * DecimalFormat::ERoundingMode.  Rounding increments specified in
- * patterns use the default mode, DecimalFormat::kRoundHalfEven.
+ * DecimalFormat::ERoundingMode.  The default rounding mode is
+ * DecimalFormat::kRoundHalfEven.  The rounding mode can only be set
+ * through the API; it can not be set with a pattern.
  *
  * <li>Some locales use rounding in their currency formats to reflect the
  * smallest currency denomination.
@@ -651,9 +657,13 @@ public:
                              towards the nearest even integer if equidistant */
         kRoundHalfDown, /**< Round towards the nearest integer, or
                              towards zero if equidistant */
-        kRoundHalfUp    /**< Round towards the nearest integer, or
+        kRoundHalfUp,   /**< Round towards the nearest integer, or
                              away from zero if equidistant */
-        // We don't support ROUND_UNNECESSARY
+        /**
+          *  Return U_FORMAT_INEXACT_ERROR if number does not format exactly. 
+          *  @draft ICU 4.8 
+          */
+        kRoundUnnecessary 
     };
 
     /**
@@ -728,14 +738,14 @@ public:
      * @param pattern           a non-localized pattern string
      * @param symbolsToAdopt    the set of symbols to be used.  The caller should not
      *                          delete this object after making this call.
-     * @param style             style of decimal format, kNumberStyle etc.
+     * @param style             style of decimal format
      * @param status            Output param set to success/failure code. If the
      *                          pattern is invalid this will be set to a failure code.
      * @internal ICU 4.2
      */
     DecimalFormat(  const UnicodeString& pattern,
                     DecimalFormatSymbols* symbolsToAdopt,
-                    NumberFormat::EStyles style,
+                    UNumberFormatStyle style,
                     UErrorCode& status);
 
     /**
@@ -852,7 +862,7 @@ public:
      *                  Can be NULL.
      * @param status    Output param filled with success/failure status.
      * @return          Reference to 'appendTo' parameter.
-     * @draft 4.4
+     * @stable 4.4
      */
     virtual UnicodeString& format(double number,
                                   UnicodeString& appendTo,
@@ -885,7 +895,7 @@ public:
      *                  Can be NULL.
      * @param status    Output param filled with success/failure status.
      * @return          Reference to 'appendTo' parameter.
-     * @draft 4.4
+     * @stable 4.4
      */
     virtual UnicodeString& format(int32_t number,
                                   UnicodeString& appendTo,
@@ -918,7 +928,7 @@ public:
      *                  Can be NULL.
      * @param status    Output param filled with success/failure status.
      * @return          Reference to 'appendTo' parameter.
-     * @draft 4.4
+     * @stable 4.4
      */
     virtual UnicodeString& format(int64_t number,
                                   UnicodeString& appendTo,
@@ -939,7 +949,7 @@ public:
      *                  Can be NULL.
      * @param status    Output param filled with success/failure status.
      * @return          Reference to 'appendTo' parameter.
-     * @draft 4.4
+     * @stable 4.4
      */
     virtual UnicodeString& format(const StringPiece &number,
                                   UnicodeString& appendTo,
@@ -1272,8 +1282,8 @@ public:
 
     /**
      * Get the rounding increment.
-     * @return A positive rounding increment, or 0.0 if rounding
-     * is not in effect.
+     * @return A positive rounding increment, or 0.0 if a rounding
+     * increment is not in effect.
      * @see #setRoundingIncrement
      * @see #getRoundingMode
      * @see #setRoundingMode
@@ -1282,9 +1292,9 @@ public:
     virtual double getRoundingIncrement(void) const;
 
     /**
-     * Set the rounding increment.  This method also controls whether
-     * rounding is enabled.
-     * @param newValue A positive rounding increment, or 0.0 to disable rounding.
+     * Set the rounding increment.  In the absence of a rounding increment,
+     *    numbers will be rounded to the number of digits displayed.
+     * @param newValue A positive rounding increment.
      * Negative increments are equivalent to 0.0.
      * @see #getRoundingIncrement
      * @see #getRoundingMode
@@ -1304,8 +1314,7 @@ public:
     virtual ERoundingMode getRoundingMode(void) const;
 
     /**
-     * Set the rounding mode.  This has no effect unless the rounding
-     * increment is greater than zero.
+     * Set the rounding mode.  
      * @param roundingMode A rounding mode
      * @see #setRoundingIncrement
      * @see #getRoundingIncrement
@@ -1975,9 +1984,10 @@ private:
 
     static int32_t compareSimpleAffix(const UnicodeString& affix,
                                       const UnicodeString& input,
-                                      int32_t pos);
+                                      int32_t pos,
+                                      UBool lenient);
 
-    static int32_t skipRuleWhiteSpace(const UnicodeString& text, int32_t pos);
+    static int32_t skipPatternWhiteSpace(const UnicodeString& text, int32_t pos);
 
     static int32_t skipUWhiteSpace(const UnicodeString& text, int32_t pos);
 
@@ -1990,6 +2000,9 @@ private:
     static int32_t match(const UnicodeString& text, int32_t pos, UChar32 ch);
 
     static int32_t match(const UnicodeString& text, int32_t pos, const UnicodeString& str);
+
+    static UBool matchSymbol(const UnicodeString &text, int32_t position, int32_t length, const UnicodeString &symbol,
+                             UnicodeSet *sset, UChar32 schar);
 
     /**
      * Get a decimal format symbol.
