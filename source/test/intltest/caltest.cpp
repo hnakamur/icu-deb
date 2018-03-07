@@ -11,6 +11,7 @@
 #include "caltest.h"
 #include "unicode/dtfmtsym.h"
 #include "unicode/gregocal.h"
+#include "hebrwcal.h"
 #include "unicode/smpdtfmt.h"
 #include "unicode/simpletz.h"
 #include "unicode/dbgutil.h"
@@ -221,6 +222,13 @@ void CalendarTest::runIndexedTest( int32_t index, UBool exec, const char* &name,
             Test3785();
           }
           break;
+        case 24:
+          name = "Test1624";
+          if(exec) {
+            logln("Test1624---"); logln("");
+            Test1624();
+          }
+          break;
         default: name = ""; break;
     }
 }
@@ -305,11 +313,13 @@ CalendarTest::TestGenericAPI()
         cal->after(*cal2, status) ||
         U_FAILURE(status)) errln("FAIL: equals/before/after failed after setTime(+1000)");
 
-    logln("cal1->roll(UCAL_SECOND)");
+    logln("cal->roll(UCAL_SECOND)");
     cal->roll(UCAL_SECOND, (UBool) TRUE, status);
     logln(UnicodeString("cal=")  +cal->getTime(status)  + UnicodeString(calToStr(*cal)));
-
+    cal->roll(UCAL_SECOND, (int32_t)0, status);
+    logln(UnicodeString("cal=")  +cal->getTime(status)  + UnicodeString(calToStr(*cal)));
     if (failure(status, "Calendar::roll")) return;
+
     if (!(eq=cal->equals(*cal2, status)) ||
         (b4=cal->before(*cal2, status)) ||
         (af=cal->after(*cal2, status)) ||
@@ -401,8 +411,17 @@ CalendarTest::TestGenericAPI()
         if (cal->isSet((UCalendarDateFields)i)) errln("FAIL: Calendar::clear/isSet failed " + fieldName((UCalendarDateFields)i));
     }
 
+    if(cal->getActualMinimum(Calendar::SECOND, status) != 0){
+        errln("Calendar is suppose to return 0 for getActualMinimum");
+    }
+
+    Calendar *cal3 = Calendar::createInstance(status);
+    cal3->roll(Calendar::SECOND, (int32_t)0, status);
+    if (failure(status, "Calendar::roll(EDateFields, int32_t, UErrorCode)")) return;
+
     delete cal;
     delete cal2;
+    delete cal3;
 
     int32_t count;
     const Locale* loc = Calendar::getAvailableLocales(count);
@@ -464,6 +483,33 @@ CalendarTest::TestGenericAPI()
     if (gc2 != *gc || !(gc2 == *gc)) errln("FAIL: GregorianCalendar assignment/operator==/operator!= failed");
     delete gc;
     delete z;
+
+    /* Code coverage for Calendar class. */
+    cal = Calendar::createInstance(status);
+    if (failure(status, "Calendar::createInstance")) {
+        return;
+    }else {
+        ((Calendar *)cal)->roll(UCAL_HOUR, (int32_t)100, status);
+        ((Calendar *)cal)->clear(UCAL_HOUR);
+        URegistryKey key = cal->registerFactory(NULL, status);
+        cal->unregister(key, status);
+    }
+    delete cal;
+
+    status = U_ZERO_ERROR;
+    cal = Calendar::createInstance(Locale("he_IL@calendar=hebrew"), status);
+    if (failure(status, "Calendar::createInstance")) {
+        return;
+    } else {
+        cal->roll(Calendar::MONTH, (int32_t)100, status);
+    }
+
+    StringEnumeration *en = Calendar::getKeywordValuesForLocale(NULL, Locale::getDefault(),FALSE, status);
+    if (en == NULL || U_FAILURE(status)) {
+        dataerrln("FAIL: getKeywordValuesForLocale for Calendar. : %s", u_errorName(status));
+    }
+    delete en;
+    delete cal;
 }
 
 // -------------------------------------
@@ -2031,36 +2077,68 @@ void CalendarTest::Test6703()
 void CalendarTest::Test3785()
 {
     UErrorCode status = U_ZERO_ERROR; 
-    UChar uzone[] = {'E', 'u', 'r', 'o', 'p', 'e', '/', 'P', 'a', 'r', 'i', 's', 0}; 
+    UnicodeString uzone = UNICODE_STRING_SIMPLE("Europe/Paris");
 
-    UDateFormat * df = udat_open(UDAT_NONE, UDAT_NONE, "en@calendar=islamic", uzone, 
-                               u_strlen(uzone), NULL, 0, &status);
-    if (NULL == df || U_FAILURE(status)) return;
+    LocalUDateFormatPointer df(udat_open(UDAT_NONE, UDAT_NONE, "en@calendar=islamic", uzone.getTerminatedBuffer(), 
+                                         uzone.length(), NULL, 0, &status));
+    if (df.isNull() || U_FAILURE(status)) return;
 
     UChar upattern[64];   
     u_uastrcpy(upattern, "EEE d MMMM y G, HH:mm:ss"); 
-    udat_applyPattern(df, FALSE, upattern, u_strlen(upattern));
+    udat_applyPattern(df.getAlias(), FALSE, upattern, u_strlen(upattern));
 
     UChar ubuffer[1024]; 
     UDate ud0 = 1337557623000.0;
 
     status = U_ZERO_ERROR; 
-    udat_format(df, ud0, ubuffer, 1024, NULL, &status); 
+    udat_format(df.getAlias(), ud0, ubuffer, 1024, NULL, &status); 
     if (U_FAILURE(status)) return; 
     //printf("formatted: '%s'\n", mkcstr(ubuffer));
 
     ud0 += 1000.0; // add one second
 
     status = U_ZERO_ERROR; 
-    udat_format(df, ud0, ubuffer, 1024, NULL, &status); 
+    udat_format(df.getAlias(), ud0, ubuffer, 1024, NULL, &status); 
     if (U_FAILURE(status)) return; 
     //printf("formatted: '%s'\n", mkcstr(ubuffer));
-
-    udat_close(df);
     return;
 }
 
+void CalendarTest::Test1624() {
+    UErrorCode status = U_ZERO_ERROR;
+    Locale loc("he_IL@calendar=hebrew");
+    HebrewCalendar hc(loc,status);
+    Calendar* cal = (Calendar *)&hc;
 
+    for (int32_t year = 5600; year < 5800; year++ ) {
+    
+        for (int32_t month = HebrewCalendar::TISHRI; month <= HebrewCalendar::ELUL; month++) {
+            // skip the adar 1 month if year is not a leap year
+            if (HebrewCalendar::isLeapYear(year) == FALSE && month == HebrewCalendar::ADAR_1) {
+                continue;
+            }
+            int32_t day = 15;
+            hc.set(year,month,day);
+            int32_t dayHC = hc.get(UCAL_DATE,status);
+            int32_t monthHC = hc.get(UCAL_MONTH,status);
+            int32_t yearHC = hc.get(UCAL_YEAR,status);
+
+            if (dayHC != day) {
+                errln(" ==> day %d incorrect, should be: %d\n",dayHC,day);
+                break;
+            }
+            if (monthHC != month) {
+                errln(" ==> month %d incorrect, should be: %d\n",monthHC,month);
+                break;
+            }
+            if (yearHC != year) {
+                errln(" ==> day %d incorrect, should be: %d\n",yearHC,year);
+                break;
+            }
+        }
+    }
+    return;
+}
 
 #endif /* #if !UCONFIG_NO_FORMATTING */
 

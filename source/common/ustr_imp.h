@@ -1,6 +1,6 @@
 /*  
 **********************************************************************
-*   Copyright (C) 1999-2008, International Business Machines
+*   Copyright (C) 1999-2010, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  ustr_imp.h
@@ -22,8 +22,25 @@
 /** Simple declaration for u_strToTitle() to avoid including unicode/ubrk.h. */
 #ifndef UBRK_TYPEDEF_UBREAK_ITERATOR
 #   define UBRK_TYPEDEF_UBREAK_ITERATOR
-    typedef void UBreakIterator;
+    typedef struct UBreakIterator UBreakIterator;
 #endif
+
+#ifndef U_COMPARE_IGNORE_CASE
+/* see also unorm.h */
+/**
+ * Option bit for unorm_compare:
+ * Perform case-insensitive comparison.
+ * @draft ICU 2.2
+ */
+#define U_COMPARE_IGNORE_CASE       0x10000
+#endif
+
+/**
+ * Internal option for unorm_cmpEquivFold() for strncmp style.
+ * If set, checks for both string length and terminating NUL.
+ * @internal
+ */
+#define _STRNCMP_STYLE 0x1000
 
 /**
  * Compare two strings in code point order or code unit order.
@@ -53,8 +70,7 @@ u_strcmpFold(const UChar *s1, int32_t length1,
  * Are the Unicode properties loaded?
  * This must be used before internal functions are called that do
  * not perform this check.
- * Generate a debug assertion failure if data is not loaded, to flag the fact
- *   that u_init() wasn't called first, before trying to access character properties.
+ * Generate a debug assertion failure if data is not loaded.
  * @internal
  */
 U_CFUNC UBool
