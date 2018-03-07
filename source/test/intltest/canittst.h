@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 2002-2006, International Business Machines Corporation and
+ * Copyright (c) 2002, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************
  *
@@ -17,19 +15,8 @@
 #ifndef _CANITTST
 #define _CANITTST
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_NORMALIZATION
-
-
-U_NAMESPACE_BEGIN
-
-class Transliterator;
-
-U_NAMESPACE_END
-
+#include "unicode/normlzr.h"
 #include "unicode/translit.h"
-#include "unicode/caniter.h"
 #include "intltest.h"
 #include "hash.h"
 
@@ -43,19 +30,15 @@ public:
     void TestCanonicalIterator(void);
     void TestExhaustive(void);
     void TestBasic();
-    void TestAPI();
     UnicodeString collectionToString(Hashtable *col);
     //static UnicodeString collectionToString(Collection col);
 private:
     void expectEqual(const UnicodeString &message, const UnicodeString &item, const UnicodeString &a, const UnicodeString &b);
-    void characterTest(UnicodeString &s, UChar32 ch, CanonicalIterator &it);
 
     Transliterator *nameTrans;
     Transliterator *hexTrans;
         
     UnicodeString getReadable(const UnicodeString &obj);
 };
-
-#endif /* #if !UCONFIG_NO_NORMALIZATION */
 
 #endif // _CANITTST

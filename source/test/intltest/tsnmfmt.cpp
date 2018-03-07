@@ -1,23 +1,13 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***********************************************************************
+/********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2012, International Business Machines Corporation
- * and others. All Rights Reserved.
- ***********************************************************************/
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
+ ********************************************************************/
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "unicode/decimfmt.h"
 #include "tsnmfmt.h"
-#include "putilimp.h"
-#include "cstring.h"
-#include <float.h>
-#include <stdlib.h>
 
-IntlTestNumberFormat::~IntlTestNumberFormat() {}
 
 static const char * formattableTypeName(Formattable::Type t)
 {
@@ -27,7 +17,6 @@ static const char * formattableTypeName(Formattable::Type t)
   case Formattable::kLong: return "kLong";
   case Formattable::kString: return "kString";
   case Formattable::kArray: return "kArray";
-  case Formattable::kInt64: return "kInt64";
   default: return "??unknown??";
   }
 }
@@ -96,64 +85,6 @@ IntlTestNumberFormat::testLocale(/* char* par, */const Locale& locale, const Uni
     fStatus = U_ZERO_ERROR;
     fFormat = NumberFormat::createPercentInstance(locale, fStatus);
     testFormat(/* par */);
-	
-    if (uprv_strcmp(locale.getName(), "en_US_POSIX") != 0) {
-        name = "Scientific test";
-        logln((UnicodeString)name + " (" + localeName + ")");
-        fStatus = U_ZERO_ERROR;
-        fFormat = NumberFormat::createScientificInstance(locale, fStatus);
-        testFormat(/* par */);
-    }
-}
-
-double IntlTestNumberFormat::randDouble()
-{
-    // Assume 8-bit (or larger) rand values.  Also assume
-    // that the system rand() function is very poor, which it always is.
-    // Call srand(currentTime) in intltest to make it truly random.
-    double d;
-    uint32_t i;
-    char* poke = (char*)&d;
-    do {
-        for (i=0; i < sizeof(double); ++i)
-        {
-            poke[i] = (char)(rand() & 0xFF);
-        }
-    } while (uprv_isNaN(d) || uprv_isInfinite(d)
-        || !((-DBL_MAX < d && d < DBL_MAX) || (d < -DBL_MIN && DBL_MIN < d)));
-
-    return d;
-}
-
-/*
- * Return a random uint32_t
- **/
-uint32_t IntlTestNumberFormat::randLong()
-{
-    // Assume 8-bit (or larger) rand values.  Also assume
-    // that the system rand() function is very poor, which it always is.
-    // Call srand(currentTime) in intltest to make it truly random.
-    uint32_t d;
-    uint32_t i;
-    char* poke = (char*)&d;
-    for (i=0; i < sizeof(uint32_t); ++i)
-    {
-        poke[i] = (char)(rand() & 0xFF);
-    }
-    return d;
-}
-
-
-/* Make sure that we don't get something too large and multiply into infinity.
-   @param smallerThanMax the requested maximum value smaller than DBL_MAX */
-double IntlTestNumberFormat::getSafeDouble(double smallerThanMax) {
-    double it;
-    double high = (DBL_MAX/smallerThanMax)/10.0;
-    double low = -high;
-    do {
-        it = randDouble();
-    } while (low > it || it > high);
-    return it;
 }
 
 void
@@ -161,7 +92,7 @@ IntlTestNumberFormat::testFormat(/* char* par */)
 {
     if (U_FAILURE(fStatus))
     { 
-        dataerrln((UnicodeString)"**** FAIL: createXxxInstance failed. - " + u_errorName(fStatus));
+        errln((UnicodeString)"**** FAIL: createXxxInstance failed.");
         if (fFormat != 0)
             errln("**** FAIL: Non-null format returned by createXxxInstance upon failure.");
         delete fFormat;
@@ -181,7 +112,7 @@ IntlTestNumberFormat::testFormat(/* char* par */)
     DecimalFormat *s = (DecimalFormat*)fFormat;
     logln((UnicodeString)"  Pattern " + s->toPattern(str));
 
-#if U_PF_OS390 <= U_PLATFORM && U_PLATFORM <= U_PF_OS400
+#ifdef OS390
     tryIt(-2.02147304840132e-68);
     tryIt(3.88057859588817e-68); // Test rounding when only some digits are shown because exponent is close to -maxfrac
     tryIt(-2.64651110485945e+65); // Overflows to +INF when shown as a percent
@@ -198,7 +129,7 @@ IntlTestNumberFormat::testFormat(/* char* par */)
     // These fail due to round-off
     // The least significant digit drops by one during each format-parse cycle.
     // Both numbers DON'T have a round-off problem when multiplied by 100! (shown as %)
-#if U_PLATFORM == U_PF_OS390
+#ifdef OS390
     tryIt(-9.18228054496402e+64);
     tryIt(-9.69413034454191e+64);
 #else
@@ -206,7 +137,7 @@ IntlTestNumberFormat::testFormat(/* char* par */)
     tryIt(-9.69413034454191e+273);
 #endif
 
-#if U_PLATFORM != U_PF_OS390
+#ifndef OS390
     tryIt(1.234e-200);
     tryIt(-2.3e-168);
 
@@ -221,8 +152,6 @@ IntlTestNumberFormat::testFormat(/* char* par */)
     tryIt(1.234e-50);
     tryIt(9.99999999999996);
     tryIt(9.999999999999996);
-	
-	tryIt(5.06e-27);
 
     tryIt((int32_t)INT32_MIN);
     tryIt((int32_t)INT32_MAX);
@@ -253,22 +182,19 @@ IntlTestNumberFormat::testFormat(/* char* par */)
         tryIt(d);
     }
 
-    double it = getSafeDouble(100000.0);
-
+    double it = randDouble() * 10000;
     tryIt(0.0);
     tryIt(it);
     tryIt((int32_t)0);
-    tryIt(uprv_floor(it));
-    tryIt((int32_t)randLong());
+    tryIt((int32_t)uprv_floor(it));
 
     // try again
-    it = getSafeDouble(100.0);
+    it = randDouble() * 10;
     tryIt(it);
-    tryIt(uprv_floor(it));
-    tryIt((int32_t)randLong());
+    tryIt((int32_t)uprv_floor(it));
 
     // try again with very large numbers
-    it = getSafeDouble(100000000000.0);
+    it = randDouble() * 10000000000.0;
     tryIt(it);
 
     // try again with very large numbers
@@ -289,38 +215,33 @@ IntlTestNumberFormat::tryIt(double aNumber)
 
     int32_t numberMatch = 0;
     int32_t stringMatch = 0;
-    UnicodeString errMsg;
+    UBool dump = FALSE;
     int32_t i;
     for (i=0; i<DEPTH; ++i)
     {
-        errMsg.truncate(0); // if non-empty, we failed this iteration
         UErrorCode status = U_ZERO_ERROR;
-        string[i] = "(n/a)"; // "format was never done" value
-        if (i == 0) {
+        if (i == 0)
             number[i].setDouble(aNumber);
-        } else {
+        else
             fFormat->parse(string[i-1], number[i], status);
-            if (U_FAILURE(status)) {
-                number[i].setDouble(1234.5); // "parse failed" value
-                errMsg = "**** FAIL: Parse of " + prettify(string[i-1]) + " failed.";
-                --i; // don't show empty last line: "1234.5 F> (n/a) P>"
-                break;
-            }
+        if (U_FAILURE(status))
+        {
+            errln("**** FAIL: Parse of " + string[i-1] + " failed.");
+            dump = TRUE;
+            break;
         }
         // Convert from long to double
         if (number[i].getType() == Formattable::kLong)
             number[i].setDouble(number[i].getLong());
-        else if (number[i].getType() == Formattable::kInt64)
-            number[i].setDouble((double)number[i].getInt64());
         else if (number[i].getType() != Formattable::kDouble)
         {
-            errMsg = ("**** FAIL: Parse of " + prettify(string[i-1])
+            errln("**** FAIL: Parse of " + string[i-1]
                 + " returned non-numeric Formattable, type " + UnicodeString(formattableTypeName(number[i].getType()))
                 + ", Locale=" + UnicodeString(fLocale.getName())
                 + ", longValue=" + number[i].getLong());
+            dump = TRUE;
             break;
         }
-        string[i].truncate(0);
         fFormat->format(number[i].getDouble(), string[i]);
         if (i > 0)
         {
@@ -328,14 +249,16 @@ IntlTestNumberFormat::tryIt(double aNumber)
                 numberMatch = i;
             else if (numberMatch > 0 && number[i] != number[i-1])
             {
-                errMsg = ("**** FAIL: Numeric mismatch after match.");
+                errln("**** FAIL: Numeric mismatch after match.");
+                dump = TRUE;
                 break;
             }
             if (stringMatch == 0 && string[i] == string[i-1])
                 stringMatch = i;
             else if (stringMatch > 0 && string[i] != string[i-1])
             {
-                errMsg = ("**** FAIL: String mismatch after match.");
+                errln("**** FAIL: String mismatch after match.");
+                dump = TRUE;
                 break;
             }
         }
@@ -347,17 +270,17 @@ IntlTestNumberFormat::tryIt(double aNumber)
 
     if (stringMatch > 2 || numberMatch > 2)
     {
-        errMsg = ("**** FAIL: No string and/or number match within 2 iterations.");
+        errln("**** FAIL: No string and/or number match within 2 iterations.");
+        dump = TRUE;
     }
 
-    if (errMsg.length() != 0)
+    if (dump)
     {
         for (int32_t k=0; k<=i; ++k)
         {
             logln((UnicodeString)"" + k + ": " + number[k].getDouble() + " F> " +
-                  prettify(string[k]) + " P> ");
+                  string[k] + " P> ");
         }
-        errln(errMsg);
     }
 }
 
@@ -371,18 +294,18 @@ IntlTestNumberFormat::tryIt(int32_t aNumber)
     fFormat->format(number, stringNum, status);
     if (U_FAILURE(status))
     {
-        errln(UnicodeString("**** FAIL: Formatting ") + aNumber);
+        errln("**** FAIL: Formatting " + aNumber);
         return;
     }
     fFormat->parse(stringNum, number, status);
     if (U_FAILURE(status))
     {
-        errln("**** FAIL: Parse of " + prettify(stringNum) + " failed.");
+        errln("**** FAIL: Parse of " + stringNum + " failed.");
         return;
     }
     if (number.getType() != Formattable::kLong)
     {
-        errln("**** FAIL: Parse of " + prettify(stringNum)
+        errln("**** FAIL: Parse of " + stringNum
             + " returned non-long Formattable, type " + UnicodeString(formattableTypeName(number.getType()))
             + ", Locale=" + UnicodeString(fLocale.getName())
             + ", doubleValue=" + number.getDouble()
@@ -391,7 +314,7 @@ IntlTestNumberFormat::tryIt(int32_t aNumber)
             );
     }
     if (number.getLong() != aNumber) {
-        errln("**** FAIL: Parse of " + prettify(stringNum) + " failed. Got:" + number.getLong()
+        errln("**** FAIL: Parse of " + stringNum + " failed. Got:" + number.getLong()
             + " Expected:" + aNumber);
     }
 }
@@ -414,31 +337,19 @@ void IntlTestNumberFormat::testAvailableLocales(/* char* par */)
         logln(all);
     }
     else
-        dataerrln((UnicodeString)"**** FAIL: Zero available locales or null array pointer");
+        errln((UnicodeString)"**** FAIL: Zero available locales or null array pointer");
 }
 
 void IntlTestNumberFormat::monsterTest(/* char* par */)
 {
     const char *SEP = "============================================================\n";
     int32_t count;
-    const Locale* allLocales = NumberFormat::getAvailableLocales(count);
-    Locale* locales = (Locale*)allLocales;
-    Locale quickLocales[6];
-    if (allLocales && count)
+    const Locale* locales = NumberFormat::getAvailableLocales(count);
+    if (locales && count)
     {
-        if (quick && count > 6) {
-            logln("quick test: testing just 6 locales!");
-            count = 6;
-            locales = quickLocales;
-            locales[0] = allLocales[0];
-            locales[1] = allLocales[1];
-            locales[2] = allLocales[2];
-            // In a quick test, make sure we test locales that use
-            // currency prefix, currency suffix, and choice currency
-            // logic.  Otherwise bugs in these areas can slip through.
-            locales[3] = Locale("ar", "AE", "");
-            locales[4] = Locale("cs", "CZ", "");
-            locales[5] = Locale("en", "IN", "");
+        if (quick && count > 3) {
+            logln("quick test: testing just 3 locales!");
+            count = 3;
         }
         for (int32_t i=0; i<count; ++i)
         {
@@ -450,5 +361,3 @@ void IntlTestNumberFormat::monsterTest(/* char* par */)
 
     logln(SEP);
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

@@ -1,15 +1,9 @@
-/*************************************************************************
+/**************************************************************************
 *
-*   © 2016 and later: Unicode, Inc. and others.
-*   License & terms of use: http://www.unicode.org/copyright.html#License
-*
-**************************************************************************
-**************************************************************************
-*
-*   Copyright (C) 2001-2006, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
-**************************************************************************
+***************************************************************************
 *
 *   ufortune - An ICU resources sample program
 *
@@ -39,7 +33,6 @@
                                /*   set conversions.                         */
 #include "unicode/ustring.h"
 
-#ifndef UFORTUNE_NOSETAPPDATA
 /*
  *  Resource Data Reference.  The data is packaged as a dll (or .so or
  *           whatever, depending on the platform) that exports a data
@@ -48,8 +41,6 @@
  *           be able to fetch resources from the data.
  */
 extern  const void U_IMPORT *fortune_resources_dat;
-#endif
-
 void u_write(const UChar *what, int len);
 
 
@@ -106,16 +97,15 @@ int main(int argc, char **argv)
         break;
     }
 
-    /* ICU's icuio package provides a convenient way to write Unicode
+    /* ICU's ustdio package provides a convenient way to write Unicode
      *    data to stdout.  The string data that we get from resources
-     *    will be UChar * strings, which icuio can handle nicely.
+     *    will be UChar * strings, which ustdio can handle nicely.
      */
     u_stdout = u_finit(stdout, NULL /*locale*/,  NULL /*codepage */);
     if (verbose) {
-        u_fprintf(u_stdout, "%s:  checking output via icuio.\n", programName);
+        u_fprintf(u_stdout, "%s:  checking output via ustdio.\n", programName);
     }
 
-#ifndef UFORTUNE_NOSETAPPDATA
     /* Tell ICU where our resource data is located in memory.
      *   The data lives in the Fortune_Resources dll, and we just
      *   pass the address of an exported symbol from that library
@@ -123,10 +113,9 @@ int main(int argc, char **argv)
      */
     udata_setAppData("fortune_resources", &fortune_resources_dat, &err);
     if (U_FAILURE(err)) {
-        fprintf(stderr, "%s: udata_setAppData failed with error \"%s\"\n", programName, u_errorName(err));
+        fprintf(stderr, "%s: ures_open failed with error \"%s\"\n", programName, u_errorName(err));
         exit(-1);
     }
-#endif
 
     /* Open our resources.
     */
@@ -189,11 +178,11 @@ int main(int argc, char **argv)
         exit(-1);
     }
     if (numFortunes <= 0) {
-        fprintf(stderr, "%s: no fortunes found.\n", programName);
+        fprintf(stderr, "%s: no fortunes found.\n");
         exit(-1);
     }
 
-    i = (int)time(NULL) % numFortunes;    /*  Use time to pick a somewhat-random fortune.  */
+    i = time(NULL) % numFortunes;    /*  Use time to pick a somewhat-random fortune.  */
     resString = ures_getStringByIndex(fortunes_r, i, &len, &err);
     if (U_FAILURE(err)) {
         fprintf(stderr, "%s: ures_getStringByIndex(%d) failed, %s\n", programName, i, u_errorName(err));

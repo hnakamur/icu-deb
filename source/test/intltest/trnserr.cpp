@@ -1,29 +1,29 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * Copyright (c) 2001-2009, International Business Machines
- * Corporation and others. All Rights Reserved.
- *********************************************************************
- *   This test program is intended for testing error conditions of the 
- *   transliterator APIs to make sure the exceptions are raised where
- *   necessary.
- *
- *   Date        Name        Description
- *   11/14/2001  hshih       Creation.
- * 
+ * COPYRIGHT: 
+ * Copyright (c) 2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
  ********************************************************************/
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
+/************************************************************************
+*   This test program is intended for testing error conditions of the 
+*   transliterator APIs to make sure the exceptions are raised where
+*   necessary.
+*
+*   Date        Name        Description
+*   11/14/2001  hshih       Creation.
+* 
+************************************************************************/
 
 #include "ittrans.h"
 #include "trnserr.h"
 #include "unicode/utypes.h"
 #include "unicode/translit.h"
 #include "unicode/uniset.h"
+#include "unicode/rbt.h"
+#include "unicode/unitohex.h"
+#include "unicode/hextouni.h"
 #include "unicode/unifilt.h"
-#include "cpdtrans.h"
+#include "unicode/cpdtrans.h"
+#include "unicode/nultrans.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,10 +40,9 @@ TransliteratorErrorTest::runIndexedTest(int32_t index, UBool exec,
     switch (index) {
         TESTCASE(0,TestTransliteratorErrors);
         TESTCASE(1, TestUnicodeSetErrors);
-        TESTCASE(2, TestRBTErrors);
-        TESTCASE(3, TestCoverage);
-        //TESTCASE(3, TestUniToHexErrors);
-        //TESTCASE(4, TestHexToUniErrors);
+        TESTCASE(2, TestUniToHexErrors);
+        TESTCASE(3, TestRBTErrors);
+        TESTCASE(4, TestHexToUniErrors);
         // TODO: Add a subclass to test clone().
         default: name = ""; break;
     }
@@ -65,13 +64,9 @@ void TransliteratorErrorTest::TestTransliteratorErrors() {
 
     Transliterator* t= Transliterator::createInstance(trans, UTRANS_FORWARD, parseError, status);
     if(t==0 || U_FAILURE(status)){
-        dataerrln("FAIL: construction of Latin-Greek - %s", u_errorName(status));
+        errln("FAIL: construction of Latin-Greek");
         return;
     }
-    pos.contextLimit = 0;
-    pos.contextStart = 0;
-    pos.limit = 0;
-    pos.start = 0;
     len = testString.length();
     stoppedAt = t->transliterate(testString, 0, 100);
     if (stoppedAt != -1) {
@@ -139,9 +134,11 @@ void TransliteratorErrorTest::TestTransliteratorErrors() {
     if(t1!=0 || U_SUCCESS(status)){
         delete t1;
         errln("FAIL: construction of bogus ID \"LATINGREEK-GREEKLATIN\"");
+    } else {
+        delete t1;
     }
     status = U_ZERO_ERROR;
-    Transliterator* t2 = Transliterator::createFromRules(newID, newIDRules, UTRANS_FORWARD, parseError, status);
+    Transliterator* t2 = new RuleBasedTransliterator(newID, newIDRules, UTRANS_FORWARD, status);
     if (U_SUCCESS(status)) {
         Transliterator* t3 = t2->createInverse(status);
         if (U_SUCCESS(status)) {
@@ -187,46 +184,46 @@ void TransliteratorErrorTest::TestUnicodeSetErrors() {
     delete set1;
 }
 
-//void TransliteratorErrorTest::TestUniToHexErrors() {
-//    UErrorCode status = U_ZERO_ERROR;
-//    Transliterator *t = new UnicodeToHexTransliterator("", TRUE, NULL, status);
-//    if (U_SUCCESS(status)) {
-//        errln("FAIL: Created a UnicodeToHexTransliterator with an empty pattern.");
-//    }
-//    delete t;
-//
-//    status = U_ZERO_ERROR;
-//    t = new UnicodeToHexTransliterator("\\x", TRUE, NULL, status);
-//    if (U_SUCCESS(status)) {
-//        errln("FAIL: Created a UnicodeToHexTransliterator with a bad pattern.");
-//    }
-//    delete t;
-//
-//    status = U_ZERO_ERROR;
-//    t = new UnicodeToHexTransliterator();
-//    ((UnicodeToHexTransliterator*)t)->applyPattern("\\x", status);
-//    if (U_SUCCESS(status)) {
-//        errln("FAIL: UnicodeToHexTransliterator::applyPattern succeeded with a bad pattern.");
-//    }
-//    delete t;
-//}
+void TransliteratorErrorTest::TestUniToHexErrors() {
+    UErrorCode status = U_ZERO_ERROR;
+    Transliterator *t = new UnicodeToHexTransliterator("", TRUE, NULL, status);
+    if (U_SUCCESS(status)) {
+        errln("FAIL: Created a UnicodeToHexTransliterator with an empty pattern.");
+    }
+    delete t;
+
+    status = U_ZERO_ERROR;
+    t = new UnicodeToHexTransliterator("\\x", TRUE, NULL, status);
+    if (U_SUCCESS(status)) {
+        errln("FAIL: Created a UnicodeToHexTransliterator with a bad pattern.");
+    }
+    delete t;
+
+    status = U_ZERO_ERROR;
+    t = new UnicodeToHexTransliterator();
+    ((UnicodeToHexTransliterator*)t)->applyPattern("\\x", status);
+    if (U_SUCCESS(status)) {
+        errln("FAIL: UnicodeToHexTransliterator::applyPattern succeeded with a bad pattern.");
+    }
+    delete t;
+}
 
 void TransliteratorErrorTest::TestRBTErrors() {
 
     UnicodeString rules="ab>y";
     UnicodeString id="MyRandom-YReverse";
-    //UnicodeString goodPattern="[[:L:]&[\\u0000-\\uFFFF]]"; /* all BMP letters */
+    UnicodeString goodPattern="[[:L:]&[\\u0000-\\uFFFF]]"; /* all BMP letters */
     UErrorCode status = U_ZERO_ERROR;
     UParseError parseErr;
-    /*UnicodeSet *set = new UnicodeSet(goodPattern, status);
+    UnicodeSet *set = new UnicodeSet(goodPattern, status);
     if (U_FAILURE(status)) {
         errln("FAIL: Was not able to create a good UnicodeSet based on valid patterns.");
         return;
-    }*/
-    Transliterator *t = Transliterator::createFromRules(id, rules, UTRANS_REVERSE, parseErr, status);
+    }
+    RuleBasedTransliterator *t = new RuleBasedTransliterator(id, rules, UTRANS_REVERSE, set, parseErr, status);
     if (U_FAILURE(status)) {
         errln("FAIL: Was not able to create a good RBT to test registration.");
-        //delete set;
+        delete set;
         return;
     }
     Transliterator::registerInstance(t);
@@ -239,47 +236,26 @@ void TransliteratorErrorTest::TestRBTErrors() {
     } 
 }
 
-//void TransliteratorErrorTest::TestHexToUniErrors() {
-//    UErrorCode status = U_ZERO_ERROR;
-//    Transliterator *t = new HexToUnicodeTransliterator("", NULL, status);
-//    if (U_FAILURE(status)) {
-//        errln("FAIL: Could not create a HexToUnicodeTransliterator with an empty pattern.");
-//    }
-//    delete t;
-//    status = U_ZERO_ERROR;
-//    t = new HexToUnicodeTransliterator("\\x", NULL, status);
-//    if (U_SUCCESS(status)) {
-//        errln("FAIL: Created a HexToUnicodeTransliterator with a bad pattern.");
-//    }
-//    delete t;
-//    status = U_ZERO_ERROR;
-//    t = new HexToUnicodeTransliterator();
-//    ((HexToUnicodeTransliterator*)t)->applyPattern("\\x", status);
-//    if (U_SUCCESS(status)) {
-//        errln("FAIL: HexToUnicodeTransliterator::applyPattern succeeded with a bad pattern.");
-//    }
-//    delete t;
-//}
-
-class StubTransliterator: public Transliterator{
-public:
-    StubTransliterator(): Transliterator(UNICODE_STRING_SIMPLE("Any-Null"), 0) {}
-    virtual void handleTransliterate(Replaceable& ,UTransPosition& offsets,UBool) const {
-        offsets.start = offsets.limit;
+void TransliteratorErrorTest::TestHexToUniErrors() {
+    UErrorCode status = U_ZERO_ERROR;
+    Transliterator *t = new HexToUnicodeTransliterator("", NULL, status);
+    if (U_FAILURE(status)) {
+        errln("FAIL: Could not create a HexToUnicodeTransliterator with an empty pattern.");
     }
-
-    virtual UClassID getDynamicClassID() const{
-        static char classID = 0;
-        return (UClassID)&classID; 
+    delete t;
+    status = U_ZERO_ERROR;
+    t = new HexToUnicodeTransliterator("\\x", NULL, status);
+    if (U_SUCCESS(status)) {
+        errln("FAIL: Created a HexToUnicodeTransliterator with a bad pattern.");
     }
-};
-
-void TransliteratorErrorTest::TestCoverage() {
-    StubTransliterator stub;
-
-    if (stub.clone() != NULL){
-        errln("FAIL: default Transliterator::clone() should return NULL");
+    delete t;
+    status = U_ZERO_ERROR;
+    t = new HexToUnicodeTransliterator();
+    ((HexToUnicodeTransliterator*)t)->applyPattern("\\x", status);
+    if (U_SUCCESS(status)) {
+        errln("FAIL: HexToUnicodeTransliterator::applyPattern succeeded with a bad pattern.");
     }
+    delete t;
 }
 
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
+

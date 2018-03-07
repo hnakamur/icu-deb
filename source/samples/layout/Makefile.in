@@ -1,8 +1,5 @@
-## Copyright (C) 2016 and later: Unicode, Inc. and others.
-## License & terms of use: http://www.unicode.org/copyright.html#License
-##
 ## Makefile.in for ICU - samples/layout
-## Copyright (c) 2001-2011, International Business Machines Corporation and
+## Copyright (c) 2001, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
 ## Source directory information
@@ -23,18 +20,22 @@ subdir = samples/layout
 CLEANFILES = *~ $(DEPS)
 
 ## Target information
-TARGET  = gnomelayout
-CTARGET = cgnomelayout
+TARGET = gnomelayout
 
-CPPFLAGS += -DLE_USE_CMEMORY `pkg-config --cflags libgnomeui-2.0 freetype2 cairo` -I$(top_srcdir)/common -I$(top_srcdir)/i18n -I$(top_srcdir)/layoutex -I$(top_srcdir)/layout -I$(top_srcdir) -g
+DEFS = @DEFS@
+CPPFLAGS = @CPPFLAGS@ `gnome-config --cflags gnomeui` -I$(top_builddir)/common -I$(top_srcdir)/common -I$(top_srcdir)/i18n -I$(top_srcdir)/layout -I$(top_srcdir)/extra/scrptrun -I$(top_srcdir)
+CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
+ENABLE_RPATH = @ENABLE_RPATH@
+ifeq ($(ENABLE_RPATH),YES)
+RPATHLDFLAGS = $(LD_RPATH)$(LD_RPATH_PRE)$(libdir)
+endif
+LDFLAGS = @LDFLAGS@ $(RPATHLDFLAGS)
+INVOKE = $(LDLIBRARYPATH_ENVVAR)=$(top_builddir)/common:$(top_builddir)/i18n:$(top_builddir)/tools/toolutil:$$$(LDLIBRARYPATH_ENVVAR)
+LIBS = $(LIBICULE) $(LIBICUUC) $(LIBICUI18N) @LIBS@ @LIB_M@ `gnome-config --libs gnomeui` -lttf
 
-LIBS = $(LIBICULX) $(LIBICULE) $(LIBICUUC) $(LIBICUI18N) @LIBS@ @LIB_M@ `pkg-config --libs libgnomeui-2.0 freetype2 cairo`
 
-COMMON=cmaps.o UnicodeReader.o GnomeGUISupport.o FontMap.o GnomeFontMap.o ScriptCompositeFontInstance.o GnomeFontInstance.o FontTableCache.o  paragraph.o
-
-OBJECTS=gnomelayout.o
-
-COBJECTS=gnomeglue.o pflow.o rsurface.o ucreader.o cgnomelayout.o
+OBJECTS=cmaps.o scrptrun.o UnicodeReader.o GnomeGUISupport.o FontMap.o GnomeFontMap.o RenderingFontInstance.o GnomeFontInstance.o paragraph.o gnomelayout.o
 
 DEPS = $(OBJECTS:.o=.d)
 
@@ -52,12 +53,8 @@ clean: clean-local
 distclean : distclean-local
 dist: dist-local
 check: all check-local
-c-all: c-all-local
-c-check: c-all c-check-local
 
 all-local: $(TARGET)
-
-c-all-local: $(CTARGET)
 
 install-local:
 
@@ -65,16 +62,12 @@ dist-local:
 
 clean-local:
 	test -z "$(CLEANFILES)" || $(RMV) $(CLEANFILES)
-	$(RMV) $(COMMON) $(OBJECTS) $(COBJECTS) $(TARGET)
+	$(RMV) $(OBJECTS) $(TARGET)
 
 distclean-local: clean-local
 	$(RMV) Makefile
 
 check-local: all-local
-	$(INVOKE) ./$(TARGET)
-
-c-check-local: c-all-local
-	$(INVOKE) ./$(CTARGET)
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
@@ -92,10 +85,7 @@ scrptrun.d: $(top_srcdir)/extra/scrptrun/scrptrun.cpp
 scrptrun.o: $(top_srcdir)/extra/scrptrun/scrptrun.cpp
 	$(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS) -o $@ $<
 
-$(TARGET) : $(COMMON) $(OBJECTS)
-	$(LINK.cc) -o $@ $^ $(LIBS)
-
-$(CTARGET) : $(COMMON) $(COBJECTS)
+$(TARGET) : $(OBJECTS)
 	$(LINK.cc) -o $@ $^ $(LIBS)
 
 invoke:

@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 1997-2013, International Business Machines Corporation and    *
+* Copyright (C) 1997-2001, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 *
@@ -25,20 +23,11 @@
 ********************************************************************************
 */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
+#include "cpputils.h"
 #include "unicode/choicfmt.h"
 #include "unicode/numfmt.h"
 #include "unicode/locid.h"
-#include "cpputils.h"
-#include "cstring.h"
-#include "messageimpl.h"
-#include "putilimp.h"
-#include "uassert.h"
-#include <stdio.h>
-#include <float.h>
+#include "ustrfmt.h"
 
 // *****************************************************************************
 // class ChoiceFormat
@@ -46,7 +35,7 @@
 
 U_NAMESPACE_BEGIN
 
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(ChoiceFormat)
+const char        ChoiceFormat::fgClassID = 0; // Value is irrelevant
 
 // Special characters used by ChoiceFormat.  There are two characters
 // used interchangeably to indicate <=.  Either is parsed, but only
@@ -57,17 +46,10 @@ UOBJECT_DEFINE_RTTI_IMPLEMENTATION(ChoiceFormat)
 #define LESS_EQUAL2  ((UChar)0x2264)
 #define VERTICAL_BAR ((UChar)0x007C)   /*|*/
 #define MINUS        ((UChar)0x002D)   /*-*/
-
-static const UChar LEFT_CURLY_BRACE = 0x7B;     /*{*/
-static const UChar RIGHT_CURLY_BRACE = 0x7D;    /*}*/
-
-#ifdef INFINITY
-#undef INFINITY
-#endif
 #define INFINITY     ((UChar)0x221E)
 
-//static const UChar gPositiveInfinity[] = {INFINITY, 0};
-//static const UChar gNegativeInfinity[] = {MINUS, INFINITY, 0};
+const UChar ChoiceFormat::fgPositiveInfinity[] = {INFINITY, 0};
+const UChar ChoiceFormat::fgNegativeInfinity[] = {MINUS, INFINITY, 0};
 #define POSITIVE_INF_STRLEN 1
 #define NEGATIVE_INF_STRLEN 2
 
@@ -76,8 +58,10 @@ static const UChar RIGHT_CURLY_BRACE = 0x7D;    /*}*/
 
 ChoiceFormat::ChoiceFormat(const UnicodeString& newPattern,
                            UErrorCode& status)
-: constructorErrorCode(status),
-  msgPattern(status)
+: fChoiceLimits(0),
+  fClosures(0),
+  fChoiceFormats(0),
+  fCount(0)
 {
     applyPattern(newPattern, status);
 }
@@ -89,10 +73,12 @@ ChoiceFormat::ChoiceFormat(const UnicodeString& newPattern,
 ChoiceFormat::ChoiceFormat(const double* limits, 
                            const UnicodeString* formats, 
                            int32_t cnt )
-: constructorErrorCode(U_ZERO_ERROR),
-  msgPattern(constructorErrorCode)
+: fChoiceLimits(0),
+  fClosures(0),
+  fChoiceFormats(0),
+  fCount(0)
 {
-    setChoices(limits, NULL, formats, cnt, constructorErrorCode);
+    setChoices(limits, formats, cnt );
 }
 
 // -------------------------------------
@@ -101,10 +87,12 @@ ChoiceFormat::ChoiceFormat(const double* limits,
                            const UBool* closures,
                            const UnicodeString* formats, 
                            int32_t cnt )
-: constructorErrorCode(U_ZERO_ERROR),
-  msgPattern(constructorErrorCode)
+: fChoiceLimits(0),
+  fClosures(0),
+  fChoiceFormats(0),
+  fCount(0)
 {
-    setChoices(limits, closures, formats, cnt, constructorErrorCode);
+    setChoices(limits, closures, formats, cnt );
 }
 
 // -------------------------------------
@@ -112,9 +100,11 @@ ChoiceFormat::ChoiceFormat(const double* limits,
 
 ChoiceFormat::ChoiceFormat(const    ChoiceFormat&   that) 
 : NumberFormat(that),
-  constructorErrorCode(that.constructorErrorCode),
-  msgPattern(that.msgPattern)
+  fChoiceLimits(0),
+  fClosures(0),
+  fChoiceFormats(0)
 {
+    *this = that;
 }
 
 // -------------------------------------
@@ -125,8 +115,10 @@ ChoiceFormat::ChoiceFormat(const    ChoiceFormat&   that)
 ChoiceFormat::ChoiceFormat(const UnicodeString& newPattern,
                            UParseError& parseError,
                            UErrorCode& status)
-: constructorErrorCode(status),
-  msgPattern(status)
+: fChoiceLimits(0),
+  fClosures(0),
+  fChoiceFormats(0),
+  fCount(0)
 {
     applyPattern(newPattern,parseError, status);
 }
@@ -136,9 +128,19 @@ UBool
 ChoiceFormat::operator==(const Format& that) const
 {
     if (this == &that) return TRUE;
+    if (this->getDynamicClassID() != that.getDynamicClassID()) return FALSE;  // not the same class
     if (!NumberFormat::operator==(that)) return FALSE;
     ChoiceFormat& thatAlias = (ChoiceFormat&)that;
-    return msgPattern == thatAlias.msgPattern;
+    if (fCount != thatAlias.fCount) return FALSE;
+    // Checks the limits, the corresponding format string and LE or LT flags.
+    // LE means less than and equal to, LT means less than.
+    for (int32_t i = 0; i < fCount; i++) {
+        if ((fChoiceLimits[i] != thatAlias.fChoiceLimits[i]) ||
+            (fClosures[i] != thatAlias.fClosures[i]) ||
+            (fChoiceFormats[i] != thatAlias.fChoiceFormats[i]))
+            return FALSE;
+    }
+    return TRUE;
 }
 
 // -------------------------------------
@@ -149,8 +151,21 @@ ChoiceFormat::operator=(const   ChoiceFormat& that)
 {
     if (this != &that) {
         NumberFormat::operator=(that);
-        constructorErrorCode = that.constructorErrorCode;
-        msgPattern = that.msgPattern;
+        fCount = that.fCount;
+        uprv_free(fChoiceLimits);
+        fChoiceLimits = NULL;
+        uprv_free(fClosures);
+        fClosures = NULL;
+        delete [] fChoiceFormats;
+        fChoiceFormats = NULL;
+
+        fChoiceLimits = (double*) uprv_malloc( sizeof(double) * fCount);
+        fClosures = (UBool*) uprv_malloc( sizeof(UBool) * fCount);
+        fChoiceFormats = new UnicodeString[fCount];
+
+        uprv_arrayCopy(that.fChoiceLimits, fChoiceLimits, fCount);
+        uprv_arrayCopy(that.fClosures, fClosures, fCount);
+        uprv_arrayCopy(that.fChoiceFormats, fChoiceFormats, fCount);
     }
     return *this;
 }
@@ -159,62 +174,41 @@ ChoiceFormat::operator=(const   ChoiceFormat& that)
 
 ChoiceFormat::~ChoiceFormat()
 {
+    uprv_free(fChoiceLimits);
+    fChoiceLimits = NULL;
+    uprv_free(fClosures);
+    fClosures = NULL;
+    delete [] fChoiceFormats;
+    fChoiceFormats = NULL;
+    fCount = 0;
+}
+
+/**
+ * Convert a string to a double value
+ */
+double
+ChoiceFormat::stod(const UnicodeString& string)
+{
+    char source[256];
+    char* end;
+
+    string.extract(0, string.length(), source, sizeof(source), "");    /* invariant codepage */
+    return uprv_strtod(source,&end);
 }
 
 // -------------------------------------
 
 /**
- * Convert a double value to a string without the overhead of NumberFormat.
+ * Convert a double value to a string
  */
 UnicodeString&
 ChoiceFormat::dtos(double value,
                    UnicodeString& string)
 {
-    /* Buffer to contain the digits and any extra formatting stuff. */
-    char temp[DBL_DIG + 16];
-    char *itrPtr = temp;
-    char *expPtr;
+    char temp[256];
 
-    sprintf(temp, "%.*g", DBL_DIG, value);
-
-    /* Find and convert the decimal point.
-       Using setlocale on some machines will cause sprintf to use a comma for certain locales.
-    */
-    while (*itrPtr && (*itrPtr == '-' || isdigit(*itrPtr))) {
-        itrPtr++;
-    }
-    if (*itrPtr != 0 && *itrPtr != 'e') {
-        /* We reached something that looks like a decimal point.
-        In case someone used setlocale(), which changes the decimal point. */
-        *itrPtr = '.';
-        itrPtr++;
-    }
-    /* Search for the exponent */
-    while (*itrPtr && *itrPtr != 'e') {
-        itrPtr++;
-    }
-    if (*itrPtr == 'e') {
-        itrPtr++;
-        /* Verify the exponent sign */
-        if (*itrPtr == '+' || *itrPtr == '-') {
-            itrPtr++;
-        }
-        /* Remove leading zeros. You will see this on Windows machines. */
-        expPtr = itrPtr;
-        while (*itrPtr == '0') {
-            itrPtr++;
-        }
-        if (*itrPtr && expPtr != itrPtr) {
-            /* Shift the exponent without zeros. */
-            while (*itrPtr) {
-                *(expPtr++)  = *(itrPtr++);
-            }
-            // NULL terminate
-            *expPtr = 0;
-        }
-    }
-
-    string = UnicodeString(temp, -1, US_INV);    /* invariant codepage */
+    uprv_dtostr(value, temp, 3, TRUE);
+    string = UnicodeString(temp, "");    /* invariant codepage */
     return string;
 }
 
@@ -225,8 +219,8 @@ void
 ChoiceFormat::applyPattern(const UnicodeString& pattern,
                            UErrorCode& status)
 {
-    msgPattern.parseChoiceStyle(pattern, NULL, status);
-    constructorErrorCode = status;
+    UParseError parseError;
+    applyPattern(pattern, parseError, status);
 }
 
 // -------------------------------------
@@ -237,16 +231,238 @@ ChoiceFormat::applyPattern(const UnicodeString& pattern,
                            UParseError& parseError,
                            UErrorCode& status)
 {
-    msgPattern.parseChoiceStyle(pattern, &parseError, status);
-    constructorErrorCode = status;
+    if (U_FAILURE(status)) 
+    {
+        return;
+    }
+
+    // Clear error struct
+    parseError.offset = -1;
+    parseError.preContext[0] = parseError.postContext[0] = (UChar)0;
+
+    // Perform 2 passes.  The first computes the number of limits in
+    // this pattern (fCount), which is 1 more than the number of
+    // literal VERTICAL_BAR characters.
+    int32_t count = 1;
+    int32_t i;
+    for (i=0; i<pattern.length(); ++i) {
+        UChar c = pattern[i];
+        if (c == SINGLE_QUOTE) {
+            // Skip over the entire quote, including embedded
+            // contiguous pairs of SINGLE_QUOTE.
+            for (;;) {
+                do {
+                    ++i;
+                } while (i<pattern.length() &&
+                         pattern[i] != SINGLE_QUOTE);
+                if ((i+1)<pattern.length() &&
+                    pattern[i+1] == SINGLE_QUOTE) {
+                    // SINGLE_QUOTE pair; skip over it
+                    ++i;
+                } else {
+                    break;
+                }
+            }
+        } else if (c == VERTICAL_BAR) {
+            ++count;
+        }
+    }
+
+    // Allocate the required storage.
+    double *newLimits = (double*) uprv_malloc( sizeof(double) * count);
+    UBool *newClosures = (UBool*) uprv_malloc( sizeof(UBool) * count);
+    UnicodeString *newFormats = new UnicodeString[count];
+
+    // Perform the second pass
+    int32_t k = 0; // index into newXxx[] arrays
+    UnicodeString buf; // scratch buffer
+    UBool inQuote = FALSE;
+    UBool inNumber = TRUE; // TRUE before < or #, FALSE after
+    for (i=0; i<pattern.length(); ++i) {
+        UChar c = pattern[i];
+        if (c == SINGLE_QUOTE) {
+            // Check for SINGLE_QUOTE pair indicating a literal quote
+            if ((i+1) < pattern.length() &&
+                pattern[i+1] == SINGLE_QUOTE) {
+                buf += SINGLE_QUOTE;
+                ++i;
+            } else {
+                inQuote = !inQuote;
+            }
+        } else if (inQuote) {
+            buf += c;
+        } else if (c == LESS_THAN || c == LESS_EQUAL || c == LESS_EQUAL2) {
+            if (!inNumber || buf.length() == 0) {
+                goto error;
+            }
+            inNumber = FALSE;
+
+            double limit;
+            buf.trim();
+            if (!buf.compare(fgPositiveInfinity, POSITIVE_INF_STRLEN)) {
+                limit = uprv_getInfinity();
+            } else if (!buf.compare(fgNegativeInfinity, NEGATIVE_INF_STRLEN)) {
+                limit = -uprv_getInfinity();
+            } else {
+                limit = stod(buf);
+            }
+
+            if (k == count) {
+                // This shouldn't happen.  If it does, it means that
+                // the count determined in the first pass did not
+                // match the number of elements found in the second
+                // pass.
+                goto error;
+            }
+            newLimits[k] = limit;
+            newClosures[k] = (c == LESS_THAN);
+
+            if (k > 0 && limit <= newLimits[k-1]) {
+                // Each limit must be strictly > than the previous
+                // limit.  One exception: Two subsequent limits may be
+                // == if the first closure is FALSE and the second
+                // closure is TRUE.  This places the limit value in
+                // the second interval.
+                if (!(limit == newLimits[k-1] &&
+                      !newClosures[k-1] &&
+                      newClosures[k])) {
+                    goto error;
+                }
+            }
+
+            buf.truncate(0);
+        } else if (c == VERTICAL_BAR) {
+            if (inNumber) {
+                goto error;
+            }
+            inNumber = TRUE;
+
+            newFormats[k] = buf;
+            ++k;
+            buf.truncate(0);
+        } else {
+            buf += c;
+        }        
+    }
+
+    if (k != (count-1) || inNumber || inQuote) {
+        goto error;
+    }
+    newFormats[k] = buf;
+
+    // Don't modify this object until the parse succeeds
+    uprv_free(fChoiceLimits);
+    uprv_free(fClosures);
+    delete[] fChoiceFormats;
+    fCount = count;
+    fChoiceLimits  = newLimits;
+    fClosures      = newClosures;
+    fChoiceFormats = newFormats;
+    return;
+
+error:
+    status = U_ILLEGAL_ARGUMENT_ERROR;
+    syntaxError(pattern,i,parseError);
+    uprv_free(newLimits);
+    uprv_free(newClosures);
+    delete[] newFormats;
+    return;
+
 }
 // -------------------------------------
-// Returns the input pattern string.
+// Reconstruct the original input pattern.
 
 UnicodeString&
 ChoiceFormat::toPattern(UnicodeString& result) const
 {
-    return result = msgPattern.getPatternString();
+    result.remove();
+    for (int32_t i = 0; i < fCount; ++i) {
+        if (i != 0) {
+            result += VERTICAL_BAR;
+        }
+        UnicodeString buf;
+        if (uprv_isPositiveInfinity(fChoiceLimits[i])) {
+            result += INFINITY;
+        } else if (uprv_isNegativeInfinity(fChoiceLimits[i])) {
+            result += MINUS;
+            result += INFINITY;
+        } else {
+            result += dtos(fChoiceLimits[i], buf);
+        }
+        if (fClosures[i]) {
+            result += LESS_THAN;
+        } else {
+            result += LESS_EQUAL;
+        }
+        // Append fChoiceFormats[i], using quotes if there are special
+        // characters.  Single quotes themselves must be escaped in
+        // either case.
+        const UnicodeString& text = fChoiceFormats[i];
+        UBool needQuote = text.indexOf(LESS_THAN) >= 0
+            || text.indexOf(LESS_EQUAL) >= 0
+            || text.indexOf(LESS_EQUAL2) >= 0
+            || text.indexOf(VERTICAL_BAR) >= 0;
+        if (needQuote) {
+            result += SINGLE_QUOTE;
+        }
+        if (text.indexOf(SINGLE_QUOTE) < 0) {
+            result += text;
+        }
+        else {
+            for (int32_t j = 0; j < text.length(); ++j) {
+                UChar c = text[j];
+                result += c;
+                if (c == SINGLE_QUOTE) {
+                    result += c;
+                }
+            }
+        }
+        if (needQuote) {
+            result += SINGLE_QUOTE;
+        }
+    }
+
+    return result;
+}
+
+// -------------------------------------
+// Adopts the limit and format arrays.
+
+void
+ChoiceFormat::adoptChoices(double *limits, 
+                           UnicodeString *formats, 
+                           int32_t cnt )
+{
+    adoptChoices(limits, (UBool *)0, formats, cnt);
+}
+
+// -------------------------------------
+// Adopts the limit and format arrays.
+
+void
+ChoiceFormat::adoptChoices(double *limits, 
+                           UBool *closures,
+                           UnicodeString *formats, 
+                           int32_t cnt )
+{
+    if(limits == 0 || formats == 0)
+        return;
+
+    uprv_free(fChoiceLimits);
+    uprv_free(fClosures);
+    delete [] fChoiceFormats;
+    fChoiceLimits = limits;
+    fClosures = closures;
+    fChoiceFormats = formats;
+    fCount = cnt;
+
+    if (fClosures == 0) {
+        fClosures = (UBool*) uprv_malloc( sizeof(UBool) * fCount);
+        int32_t i;
+        for (i=0; i<fCount; ++i) {
+            fClosures[i] = FALSE;
+        }
+    }
 }
 
 // -------------------------------------
@@ -256,8 +472,7 @@ ChoiceFormat::setChoices(  const double* limits,
                            const UnicodeString* formats, 
                            int32_t cnt )
 {
-    UErrorCode errorCode = U_ZERO_ERROR;
-    setChoices(limits, NULL, formats, cnt, errorCode);
+    setChoices(limits, 0, formats, cnt);
 }
 
 // -------------------------------------
@@ -268,76 +483,31 @@ ChoiceFormat::setChoices(  const double* limits,
                            const UnicodeString* formats, 
                            int32_t cnt )
 {
-    UErrorCode errorCode = U_ZERO_ERROR;
-    setChoices(limits, closures, formats, cnt, errorCode);
-}
+    if(limits == 0 || formats == 0)
+        return;
 
-void
-ChoiceFormat::setChoices(const double* limits,
-                         const UBool* closures,
-                         const UnicodeString* formats,
-                         int32_t count,
-                         UErrorCode &errorCode) {
-    if (U_FAILURE(errorCode)) {
-        return;
-    }
-    if (limits == NULL || formats == NULL) {
-        errorCode = U_ILLEGAL_ARGUMENT_ERROR;
-        return;
-    }
-    // Reconstruct the original input pattern.
-    // Modified version of the pre-ICU 4.8 toPattern() implementation.
-    UnicodeString result;
-    for (int32_t i = 0; i < count; ++i) {
-        if (i != 0) {
-            result += VERTICAL_BAR;
-        }
-        UnicodeString buf;
-        if (uprv_isPositiveInfinity(limits[i])) {
-            result += INFINITY;
-        } else if (uprv_isNegativeInfinity(limits[i])) {
-            result += MINUS;
-            result += INFINITY;
-        } else {
-            result += dtos(limits[i], buf);
-        }
-        if (closures != NULL && closures[i]) {
-            result += LESS_THAN;
-        } else {
-            result += LESS_EQUAL;
-        }
-        // Append formats[i], using quotes if there are special
-        // characters.  Single quotes themselves must be escaped in
-        // either case.
-        const UnicodeString& text = formats[i];
-        int32_t textLength = text.length();
-        int32_t nestingLevel = 0;
-        for (int32_t j = 0; j < textLength; ++j) {
-            UChar c = text[j];
-            if (c == SINGLE_QUOTE && nestingLevel == 0) {
-                // Double each top-level apostrophe.
-                result.append(c);
-            } else if (c == VERTICAL_BAR && nestingLevel == 0) {
-                // Surround each pipe symbol with apostrophes for quoting.
-                // If the next character is an apostrophe, then that will be doubled,
-                // and although the parser will see the apostrophe pairs beginning
-                // and ending one character earlier than our doubling, the result
-                // is as desired.
-                //   | -> '|'
-                //   |' -> '|'''
-                //   |'' -> '|''''' etc.
-                result.append(SINGLE_QUOTE).append(c).append(SINGLE_QUOTE);
-                continue;  // Skip the append(c) at the end of the loop body.
-            } else if (c == LEFT_CURLY_BRACE) {
-                ++nestingLevel;
-            } else if (c == RIGHT_CURLY_BRACE && nestingLevel > 0) {
-                --nestingLevel;
-            }
-            result.append(c);
+    uprv_free(fChoiceLimits);
+    uprv_free(fClosures);
+    delete [] fChoiceFormats;
+
+    // Note that the old arrays are deleted and this owns
+    // the created array.
+    fCount = cnt;
+    fChoiceLimits = (double*) uprv_malloc( sizeof(double) * fCount);
+    fClosures = (UBool*) uprv_malloc( sizeof(UBool) * fCount);
+    fChoiceFormats = new UnicodeString[fCount];
+
+    uprv_arrayCopy(limits, fChoiceLimits, fCount);
+    uprv_arrayCopy(formats, fChoiceFormats, fCount);
+
+    if (closures != 0) {
+        uprv_arrayCopy(closures, fClosures, fCount);
+    } else {
+        int32_t i;
+        for (i=0; i<fCount; ++i) {
+            fClosures[i] = FALSE;
         }
     }
-    // Apply the reconstructed pattern.
-    applyPattern(result, errorCode);
 }
 
 // -------------------------------------
@@ -346,8 +516,8 @@ ChoiceFormat::setChoices(const double* limits,
 const double*
 ChoiceFormat::getLimits(int32_t& cnt) const 
 {
-    cnt = 0;
-    return NULL;
+    cnt = fCount;
+    return fChoiceLimits;
 }
 
 // -------------------------------------
@@ -356,8 +526,8 @@ ChoiceFormat::getLimits(int32_t& cnt) const
 const UBool*
 ChoiceFormat::getClosures(int32_t& cnt) const 
 {
-    cnt = 0;
-    return NULL;
+    cnt = fCount;
+    return fClosures;
 }
 
 // -------------------------------------
@@ -366,33 +536,21 @@ ChoiceFormat::getClosures(int32_t& cnt) const
 const UnicodeString*
 ChoiceFormat::getFormats(int32_t& cnt) const
 {
-    cnt = 0;
-    return NULL;
+    cnt = fCount;
+    return fChoiceFormats;
 }
 
 // -------------------------------------
-// Formats an int64 number, it's actually formatted as
+// Formats a long number, it's actually formatted as
 // a double.  The returned format string may differ
 // from the input number because of this.
 
 UnicodeString&
-ChoiceFormat::format(int64_t number, 
-                     UnicodeString& appendTo, 
-                     FieldPosition& status) const
-{
-    return format((double) number, appendTo, status);
-}
-
-// -------------------------------------
-// Formats an int32_t number, it's actually formatted as
-// a double.
-
-UnicodeString&
 ChoiceFormat::format(int32_t number, 
-                     UnicodeString& appendTo, 
+                     UnicodeString& toAppendTo, 
                      FieldPosition& status) const
 {
-    return format((double) number, appendTo, status);
+    return format((double) number, toAppendTo, status);
 }
 
 // -------------------------------------
@@ -400,66 +558,29 @@ ChoiceFormat::format(int32_t number,
 
 UnicodeString&
 ChoiceFormat::format(double number, 
-                     UnicodeString& appendTo, 
+                     UnicodeString& toAppendTo, 
                      FieldPosition& /*pos*/) const
 {
-    if (msgPattern.countParts() == 0) {
-        // No pattern was applied, or it failed.
-        return appendTo;
-    }
-    // Get the appropriate sub-message.
-    int32_t msgStart = findSubMessage(msgPattern, 0, number);
-    if (!MessageImpl::jdkAposMode(msgPattern)) {
-        int32_t patternStart = msgPattern.getPart(msgStart).getLimit();
-        int32_t msgLimit = msgPattern.getLimitPartIndex(msgStart);
-        appendTo.append(msgPattern.getPatternString(),
-                        patternStart,
-                        msgPattern.getPatternIndex(msgLimit) - patternStart);
-        return appendTo;
-    }
-    // JDK compatibility mode: Remove SKIP_SYNTAX.
-    return MessageImpl::appendSubMessageWithoutSkipSyntax(msgPattern, msgStart, appendTo);
-}
-
-int32_t
-ChoiceFormat::findSubMessage(const MessagePattern &pattern, int32_t partIndex, double number) {
-    int32_t count = pattern.countParts();
-    int32_t msgStart;
-    // Iterate over (ARG_INT|DOUBLE, ARG_SELECTOR, message) tuples
-    // until ARG_LIMIT or end of choice-only pattern.
-    // Ignore the first number and selector and start the loop on the first message.
-    partIndex += 2;
-    for (;;) {
-        // Skip but remember the current sub-message.
-        msgStart = partIndex;
-        partIndex = pattern.getLimitPartIndex(partIndex);
-        if (++partIndex >= count) {
-            // Reached the end of the choice-only pattern.
-            // Return with the last sub-message.
-            break;
-        }
-        const MessagePattern::Part &part = pattern.getPart(partIndex++);
-        UMessagePatternPartType type = part.getType();
-        if (type == UMSGPAT_PART_TYPE_ARG_LIMIT) {
-            // Reached the end of the ChoiceFormat style.
-            // Return with the last sub-message.
-            break;
-        }
-        // part is an ARG_INT or ARG_DOUBLE
-        U_ASSERT(MessagePattern::Part::hasNumericValue(type));
-        double boundary = pattern.getNumericValue(part);
-        // Fetch the ARG_SELECTOR character.
-        int32_t selectorIndex = pattern.getPatternIndex(partIndex++);
-        UChar boundaryChar = pattern.getPatternString().charAt(selectorIndex);
-        if (boundaryChar == LESS_THAN ? !(number > boundary) : !(number >= boundary)) {
-            // The number is in the interval between the previous boundary and the current one.
-            // Return with the sub-message between them.
-            // The !(a>b) and !(a>=b) comparisons are equivalent to
-            // (a<=b) and (a<b) except they "catch" NaN.
+    // find the number
+    int32_t i;
+    for (i = 0; i < fCount; ++i) {
+        if (fClosures[i]) {
+            if (!(number > fChoiceLimits[i])) {
+                // same as number <= fChoiceLimits, except catches NaN
+                break;
+            }
+        } else if (!(number >= fChoiceLimits[i])) {
+            // same as number < fChoiceLimits, except catches NaN
             break;
         }
     }
-    return msgStart;
+    --i;
+    if (i < 0) {
+        i = 0;
+    }
+    // return either a formatted number, or a string
+    toAppendTo += fChoiceFormats[i];
+    return toAppendTo;
 }
 
 // -------------------------------------
@@ -469,96 +590,79 @@ ChoiceFormat::findSubMessage(const MessagePattern &pattern, int32_t partIndex, d
 UnicodeString&
 ChoiceFormat::format(const Formattable* objs,
                      int32_t cnt,
-                     UnicodeString& appendTo,
+                     UnicodeString& toAppendTo,
                      FieldPosition& pos,
                      UErrorCode& status) const
 {
     if(cnt < 0) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
-        return appendTo;
-    }
-    if (msgPattern.countParts() == 0) {
-        status = U_INVALID_STATE_ERROR;
-        return appendTo;
+        return toAppendTo;
     }
 
+    UnicodeString buffer;
     for (int32_t i = 0; i < cnt; i++) {
-        double objDouble = objs[i].getDouble(status);
-        if (U_SUCCESS(status)) {
-            format(objDouble, appendTo, pos);
-        }
+        double objDouble = (objs[i].getType() == Formattable::kLong) ?
+            ((double) objs[i].getLong()) : objs[i].getDouble();
+        buffer.remove();
+        toAppendTo += format(objDouble, buffer, pos);
     }
 
-    return appendTo;
+    return toAppendTo;
 }
 
+// -------------------------------------
+// Formats an array of objects. Checks if the data type of the objects
+// to get the right value for formatting.  
+
+UnicodeString&
+ChoiceFormat::format(const Formattable& obj, 
+                     UnicodeString& toAppendTo, 
+                     FieldPosition& pos,
+                     UErrorCode& status) const
+{
+    return NumberFormat::format(obj, toAppendTo, pos, status);
+}
 // -------------------------------------
 
 void
 ChoiceFormat::parse(const UnicodeString& text, 
                     Formattable& result,
-                    ParsePosition& pos) const
+                    ParsePosition& status) const
 {
-    result.setDouble(parseArgument(msgPattern, 0, text, pos));
-}
-
-double
-ChoiceFormat::parseArgument(
-        const MessagePattern &pattern, int32_t partIndex,
-        const UnicodeString &source, ParsePosition &pos) {
     // find the best number (defined as the one with the longest parse)
-    int32_t start = pos.getIndex();
+    int32_t start = status.getIndex();
     int32_t furthest = start;
     double bestNumber = uprv_getNaN();
     double tempNumber = 0.0;
-    int32_t count = pattern.countParts();
-    while (partIndex < count && pattern.getPartType(partIndex) != UMSGPAT_PART_TYPE_ARG_LIMIT) {
-        tempNumber = pattern.getNumericValue(pattern.getPart(partIndex));
-        partIndex += 2;  // skip the numeric part and ignore the ARG_SELECTOR
-        int32_t msgLimit = pattern.getLimitPartIndex(partIndex);
-        int32_t len = matchStringUntilLimitPart(pattern, partIndex, msgLimit, source, start);
-        if (len >= 0) {
-            int32_t newIndex = start + len;
-            if (newIndex > furthest) {
-                furthest = newIndex;
+    for (int i = 0; i < fCount; ++i) {
+        UnicodeString tempString = fChoiceFormats[i];
+        if(text.compareBetween(start, tempString.length(), tempString, 0, tempString.length()) == 0) {
+            status.setIndex(start + tempString.length());
+            tempNumber = fChoiceLimits[i];
+            if (status.getIndex() > furthest) {
+                furthest = status.getIndex();
                 bestNumber = tempNumber;
-                if (furthest == source.length()) {
+                if (furthest == text.length()) 
                     break;
-                }
             }
         }
-        partIndex = msgLimit + 1;
     }
-    if (furthest == start) {
-        pos.setErrorIndex(start);
-    } else {
-        pos.setIndex(furthest);
+    status.setIndex(furthest);
+    if (status.getIndex() == start) {
+        status.setErrorIndex(furthest);
     }
-    return bestNumber;
+    result.setDouble(bestNumber);
 }
 
-int32_t
-ChoiceFormat::matchStringUntilLimitPart(
-        const MessagePattern &pattern, int32_t partIndex, int32_t limitPartIndex,
-        const UnicodeString &source, int32_t sourceOffset) {
-    int32_t matchingSourceLength = 0;
-    const UnicodeString &msgString = pattern.getPatternString();
-    int32_t prevIndex = pattern.getPart(partIndex).getLimit();
-    for (;;) {
-        const MessagePattern::Part &part = pattern.getPart(++partIndex);
-        if (partIndex == limitPartIndex || part.getType() == UMSGPAT_PART_TYPE_SKIP_SYNTAX) {
-            int32_t index = part.getIndex();
-            int32_t length = index - prevIndex;
-            if (length != 0 && 0 != source.compare(sourceOffset, length, msgString, prevIndex, length)) {
-                return -1;  // mismatch
-            }
-            matchingSourceLength += length;
-            if (partIndex == limitPartIndex) {
-                return matchingSourceLength;
-            }
-            prevIndex = part.getLimit();  // SKIP_SYNTAX
-        }
-    }
+// -------------------------------------
+// Parses the text and return the Formattable object.  
+
+void
+ChoiceFormat::parse(const UnicodeString& text, 
+                    Formattable& result,
+                    UErrorCode& status) const
+{
+    NumberFormat::parse(text, result, status);
 }
 
 // -------------------------------------
@@ -570,8 +674,14 @@ ChoiceFormat::clone() const
     return aCopy;
 }
 
-U_NAMESPACE_END
+// -------------------------------------
 
-#endif /* #if !UCONFIG_NO_FORMATTING */
+double 
+ChoiceFormat::nextDouble( double d, UBool positive )
+{
+    return uprv_nextDouble( d, positive );
+}
+
+U_NAMESPACE_END
 
 //eof

@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2005, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -16,10 +14,6 @@
 */
 #ifndef _CCOLLTST
 #define _CCOLLTST
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "cintltst.h"
 #include "unicode/ucol.h"
@@ -35,8 +29,11 @@ void reportCResult( const UChar source[], const UChar target[],
 
 UChar* appendCompareResult(UCollationResult result, UChar* target);
 
+
+UChar* CharsToUChars(const char* chars);
+
 void addCollAPITest(TestNode**);
-void addCurrencyCollTest(TestNode**);
+void addCurrencyTest(TestNode**);
 void addNormTest(TestNode**);
 void addDanishCollTest(TestNode**);
 void addGermanCollTest(TestNode**);
@@ -52,7 +49,5 @@ void addCollIterTest(TestNode**);
 void addAllCollTest(TestNode**);
 void addMiscCollTest(TestNode**);
 void addSearchTest(TestNode**);
-
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -13,15 +11,10 @@
 *                         TestSecondary
 ***********************************************************************/
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "unicode/coll.h"
 #include "unicode/tblcoll.h"
 #include "unicode/unistr.h"
 #include "unicode/sortkey.h"
-#include "cmemory.h"
 #include "frcoll.h"
 
 #include "sfwdchit.h"
@@ -30,9 +23,9 @@ CollationFrenchTest::CollationFrenchTest()
 : myCollation(0)
 {
     UErrorCode status = U_ZERO_ERROR;
-    myCollation = Collator::createInstance(Locale::getCanadaFrench(), status);
+    myCollation = Collator::createInstance(Locale::getFrance(), status);
     if(!myCollation || U_FAILURE(status)) {
-        errcheckln(status, __FILE__ "failed to create! err " + UnicodeString(u_errorName(status)));
+        errln(__FILE__ "failed to create! err " + UnicodeString(u_errorName(status)));
         /* if it wasn't already: */
         delete myCollation;
         myCollation = NULL;
@@ -137,6 +130,23 @@ const UChar CollationFrenchTest::testBugs[][CollationFrenchTest::MAX_TOKEN_LEN] 
     {0x0078/*'x'*/, 0x000}
 };
 
+void CollationFrenchTest::doTest( UnicodeString source, UnicodeString target, Collator::EComparisonResult result)
+{
+    Collator::EComparisonResult compareResult = myCollation->compare(source, target);
+    CollationKey sortKey1, sortKey2;
+    UErrorCode key1status = U_ZERO_ERROR, key2status = U_ZERO_ERROR; //nos
+    myCollation->getCollationKey(source, /*nos*/ sortKey1, key1status );
+    myCollation->getCollationKey(target, /*nos*/ sortKey2, key2status );
+    if (U_FAILURE(key1status) || U_FAILURE(key2status))
+    {
+        errln("SortKey generation Failed.\n");
+        return;
+    }
+
+    Collator::EComparisonResult keyResult = sortKey1.compareTo(sortKey2);
+    reportCResult( source, target, sortKey1, sortKey2, compareResult, keyResult, compareResult, result );
+}
+
 void CollationFrenchTest::TestTertiary(/* char* par */)
 {
     int32_t i = 0;
@@ -151,7 +161,7 @@ void CollationFrenchTest::TestTertiary(/* char* par */)
     {
         for (i = 0; i < 12 ; i++)
         {
-            doTest(myCollation, testSourceCases[i], testTargetCases[i], results[i]);
+            doTest(testSourceCases[i], testTargetCases[i], results[i]);
         }
     }
 }
@@ -169,7 +179,7 @@ void CollationFrenchTest::TestSecondary(/* char* par */)
         errln("Error setting attribute in French collator");
     else
     {
-        const int32_t testAcuteSize = UPRV_LENGTHOF(testAcute);
+        const int32_t testAcuteSize = (int32_t)(sizeof(testAcute) / sizeof(testAcute[0]));
         for (i = 0; i < testAcuteSize; i++)
         {
             for (j = 0; j < testAcuteSize; j++)
@@ -180,7 +190,7 @@ void CollationFrenchTest::TestSecondary(/* char* par */)
                     expected = Collator::EQUAL;
                 else // (i >  j)
                     expected = Collator::GREATER;
-                doTest(myCollation, testAcute[i], testAcute[j], expected );
+                doTest(testAcute[i], testAcute[j], expected );
             }
         }
     }
@@ -194,7 +204,7 @@ void CollationFrenchTest::TestExtra(/* char* par */)
     {
         for (j = i + 1; j < 10; j += 1)
         {
-            doTest(myCollation, testBugs[i], testBugs[j], Collator::LESS);
+            doTest(testBugs[i], testBugs[j], Collator::LESS);
         }
     }
 }
@@ -204,8 +214,8 @@ void CollationFrenchTest::runIndexedTest( int32_t index, UBool exec, const char*
     if (exec) logln("TestSuite CollationFrenchTest: ");
 
     if((!myCollation) && exec) {
-        dataerrln(__FILE__ " cannot test - failed to create collator.");
-        name = "some test";
+        errln(__FILE__ " cannot test - failed to create collator.");
+        name = "";
         return;
     }
 
@@ -217,4 +227,3 @@ void CollationFrenchTest::runIndexedTest( int32_t index, UBool exec, const char*
     }
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */

@@ -1,15 +1,9 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***********************************************************************
+/********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation
- * and others. All Rights Reserved.
- ***********************************************************************/
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
+ ********************************************************************/
  
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "msfmrgts.h"
 
 #include "unicode/format.h"
@@ -19,8 +13,6 @@
 #include "unicode/numfmt.h"
 #include "unicode/choicfmt.h"
 #include "unicode/gregocal.h"
-#include "cmemory.h"
-#include "putilimp.h"
 
 // *****************************************************************************
 // class MessageFormatRegressionTest
@@ -28,44 +20,42 @@
 
 #define CASE(id,test) case id: name = #test; if (exec) { logln(#test "---"); logln((UnicodeString)""); test(); } break;
 
-void
+void 
 MessageFormatRegressionTest::runIndexedTest( int32_t index, UBool exec, const char* &name, char* /*par*/ )
 {
-    TESTCASE_AUTO_BEGIN;
-    TESTCASE_AUTO(Test4074764)
-    //TESTCASE_AUTO(Test4058973)  -- disabled/obsolete in ICU 4.8
-    TESTCASE_AUTO(Test4031438)
-    TESTCASE_AUTO(Test4052223)
-    TESTCASE_AUTO(Test4104976)
-    TESTCASE_AUTO(Test4106659)
-    TESTCASE_AUTO(Test4106660)
-    TESTCASE_AUTO(Test4111739)
-    TESTCASE_AUTO(Test4114743)
-    TESTCASE_AUTO(Test4116444)
-    TESTCASE_AUTO(Test4114739)
-    TESTCASE_AUTO(Test4113018)
-    TESTCASE_AUTO(Test4106661)
-    TESTCASE_AUTO(Test4094906)
-    TESTCASE_AUTO(Test4118592)
-    TESTCASE_AUTO(Test4118594)
-    TESTCASE_AUTO(Test4105380)
-    TESTCASE_AUTO(Test4120552)
-    TESTCASE_AUTO(Test4142938)
-    TESTCASE_AUTO(TestChoicePatternQuote)
-    TESTCASE_AUTO(Test4112104)
-    TESTCASE_AUTO(TestAPI)
-    TESTCASE_AUTO_END;
+    // if (exec) logln((UnicodeString)"TestSuite MessageFormatRegressionTest");
+    switch (index) {
+        CASE(0,Test4074764)
+        CASE(1,Test4058973)
+        CASE(2,Test4031438)
+        CASE(3,Test4052223)
+        CASE(4,Test4104976)
+        CASE(5,Test4106659)
+        CASE(6,Test4106660)
+        CASE(7,Test4111739)
+        CASE(8,Test4114743)
+        CASE(9,Test4116444)
+        CASE(10,Test4114739)
+        CASE(11,Test4113018)
+        CASE(12,Test4106661)
+        CASE(13,Test4094906)
+        CASE(14,Test4118592)
+        CASE(15,Test4118594)
+        CASE(16,Test4105380)
+        CASE(17,Test4120552)
+        CASE(18,Test4142938)
+        CASE(19,TestChoicePatternQuote)
+        CASE(20,Test4112104)
+
+        default: name = ""; break;
+    }
 }
 
 UBool 
-MessageFormatRegressionTest::failure(UErrorCode status, const char* msg, UBool possibleDataError)
+MessageFormatRegressionTest::failure(UErrorCode status, const char* msg)
 {
     if(U_FAILURE(status)) {
-        if (possibleDataError) {
-            dataerrln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
-        } else {
-            errln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
-        }
+        errln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
         return TRUE;
     }
 
@@ -149,13 +139,8 @@ void MessageFormatRegressionTest::Test4074764() {
 
 /* @bug 4058973
  * MessageFormat.toPattern has weird rounding behavior.
- *
- * ICU 4.8: This test is commented out because toPattern() has been changed to return
- * the original pattern string, rather than reconstituting a new (equivalent) one.
- * This trivially eliminates issues with rounding or any other pattern string differences.
  */
-/*
-void MessageFormatRegressionTest::Test4058973()
+void MessageFormatRegressionTest::Test4058973() 
 {
     UErrorCode status = U_ZERO_ERROR;
     MessageFormat *fmt = new MessageFormat("{0,choice,0#no files|1#one file|1< {0,number,integer} files}", status);
@@ -163,7 +148,7 @@ void MessageFormatRegressionTest::Test4058973()
 
     UnicodeString pat;
     pat = fmt->toPattern(pat);
-    UnicodeString exp("{0,choice,0#no files|1#one file|1< {0,number,integer} files}");
+    UnicodeString exp("{0,choice,0.0#no files|1.0#one file|1.0< {0,number,integer} files}");
     if (pat != exp) {
         errln("MessageFormat.toPattern failed");
         errln("Exp: " + exp);
@@ -171,7 +156,7 @@ void MessageFormatRegressionTest::Test4058973()
     }
 
     delete fmt;
-}*/
+}
 /* @bug 4031438
  * More robust message formats.
  */
@@ -184,8 +169,6 @@ void MessageFormatRegressionTest::Test4031438()
 
     MessageFormat *messageFormatter = new MessageFormat("", status);
     failure(status, "new MessageFormat");
-    
-    const UBool possibleDataError = TRUE;
 
     //try {
         logln("Apply with pattern : " + pattern1);
@@ -199,7 +182,7 @@ void MessageFormatRegressionTest::Test4031438()
         FieldPosition pos(FieldPosition::DONT_CARE);
         tempBuffer = messageFormatter->format(params, 1, tempBuffer, pos, status);
         if(tempBuffer != "Impossible {1} has occurred -- status code is 7 and message is {2}." || failure(status, "MessageFormat::format"))
-            dataerrln("Tests arguments < substitution failed");
+            errln("Tests arguments < substitution failed");
         logln("Formatted with 7 : " + tempBuffer);
         ParsePosition pp(0);
         int32_t count = 0;
@@ -219,33 +202,24 @@ void MessageFormatRegressionTest::Test4031438()
                 temp = obj.getString(temp);
             else {
                 fmt = NumberFormat::createInstance(status);
-                switch (obj.getType()) {
-                case Formattable::kLong: fmt->format(obj.getLong(), temp); break;
-                case Formattable::kInt64: fmt->format(obj.getInt64(), temp); break;
-                case Formattable::kDouble: fmt->format(obj.getDouble(), temp); break;
-                default: break;
-                }
+                fmt->format(obj.getType() == Formattable::kLong ? obj.getLong() : obj.getDouble(), temp);
             }
 
             // convert to string if not already
             Formattable obj1 = params[i];
             temp1.remove();
-            if(obj1.getType() == Formattable::kString)
-                temp1 = obj1.getString(temp1);
-            else {
+            if(obj1.getType() == Formattable::kDouble || obj1.getType() == Formattable::kLong) {
                 fmt = NumberFormat::createInstance(status);
-                switch (obj1.getType()) {
-                case Formattable::kLong: fmt->format(obj1.getLong(), temp1); break;
-                case Formattable::kInt64: fmt->format(obj1.getInt64(), temp1); break;
-                case Formattable::kDouble: fmt->format(obj1.getDouble(), temp1); break;
-                default: break;
-                }
+                fmt->format(obj1.getType() == Formattable::kLong ? obj1.getLong() : obj1.getDouble(), temp1);
             }
+            else
+                temp1 = obj1.getString(temp1);
 
             //if (objs[i] != NULL && objs[i].getString(temp1) != params[i].getString(temp2)) {
             if (temp != temp1) {
                 errln("Parse failed on object " + objs[i].getString(temp1) + " at index : " + i);
-            }       
+            }
+        
         }
 
         delete fmt;
@@ -260,11 +234,11 @@ void MessageFormatRegressionTest::Test4031438()
         logln("Formatted with null : " + tempBuffer);*/
         logln("Apply with pattern : " + pattern2);
         messageFormatter->applyPattern(pattern2, status);
-        failure(status, "messageFormatter->applyPattern", possibleDataError);
+        failure(status, "messageFormatter->applyPattern");
         tempBuffer.remove();
         tempBuffer = messageFormatter->format(params, 1, tempBuffer, pos, status);
-        if (tempBuffer != "Double ' Quotes 7 test and quoted {1} test plus 'other {2} stuff'.")
-            dataerrln("quote format test (w/ params) failed. - %s", u_errorName(status));
+        if (tempBuffer != "Double ' Quotes 7 test and quoted {1} test plus other {2} stuff.")
+            errln("quote format test (w/ params) failed.");
         logln("Formatted with params : " + tempBuffer);
         
         /*tempBuffer = messageFormatter->format(null);
@@ -337,7 +311,7 @@ void MessageFormatRegressionTest::Test4104976()
         UnicodeString("xyz"), 
         UnicodeString("abc")
     };
-    int32_t formats_length = UPRV_LENGTHOF(formats);
+    int32_t formats_length = (int32_t)(sizeof(formats)/sizeof(formats[0]));
     UErrorCode status = U_ZERO_ERROR;
     ChoiceFormat *cf = new ChoiceFormat(limits, formats, formats_length);
     failure(status, "new ChoiceFormat");
@@ -487,7 +461,7 @@ void MessageFormatRegressionTest::Test4116444()
     for (int i = 0; i < 3; i++) {
         UnicodeString pattern = patterns[i];
         mf->applyPattern(pattern, status);
-        failure(status, "mf->applyPattern", TRUE);
+        failure(status, "mf->applyPattern");
 
         //try {
         int32_t count = 0;    
@@ -500,7 +474,7 @@ void MessageFormatRegressionTest::Test4116444()
                 for (int j = 0; j < count; j++) {
                     //if (array[j] != null)
                     UnicodeString dummy;
-                    dataerrln("\"" + array[j].getString(dummy) + "\"");
+                    err("\"" + array[j].getString(dummy) + "\"");
                     //else
                      //   log("null");
                     if (j < count- 1) 
@@ -640,7 +614,7 @@ void MessageFormatRegressionTest::Test4094906()
     UErrorCode status = U_ZERO_ERROR;
     UnicodeString pattern("-");
     pattern += (UChar) 0x221E;
-    pattern += "<are negative|0<are no or fraction|1#is one|1<is 1+|";
+    pattern += "<are negative|0.0<are no or fraction|1.0#is one|1.0<is 1+|";
     pattern += (UChar) 0x221E;
     pattern += "<are many.";
 
@@ -737,7 +711,6 @@ void MessageFormatRegressionTest::Test4118592()
 void MessageFormatRegressionTest::Test4118594()
 {
     UErrorCode status = U_ZERO_ERROR;
-    const UBool possibleDataError = TRUE;
     MessageFormat *mf = new MessageFormat("{0}, {0}, {0}", status);
     failure(status, "new MessageFormat");
     UnicodeString forParsing("x, y, z");
@@ -752,30 +725,26 @@ void MessageFormatRegressionTest::Test4118594()
     if (objs[0].getString(str) != "z")
         errln("argument0: \"" + objs[0].getString(str) + "\"");
     mf->applyPattern("{0,number,#.##}, {0,number,#.#}", status);
-    failure(status, "mf->applyPattern", possibleDataError);
+    failure(status, "mf->applyPattern");
     //Object[] oldobjs = {new Double(3.1415)};
     Formattable oldobjs [] = {Formattable(3.1415)};
     UnicodeString result;
     FieldPosition pos(FieldPosition::DONT_CARE);
     result = mf->format( oldobjs, 1, result, pos, status );
-    failure(status, "mf->format", possibleDataError);
+    failure(status, "mf->format");
     pat.remove();
     logln("pattern: \"" + mf->toPattern(pat) + "\"");
     logln("text for parsing: \"" + result + "\"");
     // result now equals "3.14, 3.1"
     if (result != "3.14, 3.1")
-        dataerrln("result = " + result + " - " + u_errorName(status));
+        errln("result = " + result);
     //Object[] newobjs = mf.parse(result, new ParsePosition(0));
     int32_t count1 = 0;
     pp.setIndex(0);
     Formattable *newobjs = mf->parse(result, pp, count1);
     // newobjs now equals {new Double(3.1)}
-    if (newobjs == NULL) {
-        dataerrln("Error calling MessageFormat::parse");
-    } else {
-        if (newobjs[0].getDouble() != 3.1)
-            errln( UnicodeString("newobjs[0] = ") + newobjs[0].getDouble());
-    }
+    if (newobjs[0].getDouble() != 3.1)
+        errln( UnicodeString("newobjs[0] = ") + newobjs[0].getDouble());
 
     delete [] objs;
     delete [] newobjs;
@@ -789,7 +758,6 @@ void MessageFormatRegressionTest::Test4105380()
     UnicodeString patternText1("The disk \"{1}\" contains {0}.");
     UnicodeString patternText2("There are {0} on the disk \"{1}\"");
     UErrorCode status = U_ZERO_ERROR;
-    const UBool possibleDataError = TRUE;
     MessageFormat *form1 = new MessageFormat(patternText1, status);
     failure(status, "new MessageFormat");
     MessageFormat *form2 = new MessageFormat(patternText2, status);
@@ -813,10 +781,10 @@ void MessageFormatRegressionTest::Test4105380()
 
     UnicodeString result;
     logln(form1->format(testArgs, 2, result, bogus, status));
-    failure(status, "form1->format", possibleDataError);
+    failure(status, "form1->format");
     result.remove();
     logln(form2->format(testArgs, 2, result, bogus, status));
-    failure(status, "form1->format", possibleDataError);
+    failure(status, "form1->format");
 
     delete form1;
     delete form2;
@@ -889,17 +857,16 @@ void MessageFormatRegressionTest::Test4142938()
         };
         FieldPosition pos(FieldPosition::DONT_CARE);
         out = mf->format(objs, 1, out, pos, status);
-        if (!failure(status, "mf->format", TRUE)) {
-            if (SUFFIX[i] == "") {
-                if (out != PREFIX[i])
-                    errln((UnicodeString)"" + i + ": Got \"" + out + "\"; Want \"" + PREFIX[i] + "\"");
-            }
-            else {
-                if (!out.startsWith(PREFIX[i]) ||
-                    !out.endsWith(SUFFIX[i]))
-                    errln((UnicodeString)"" + i + ": Got \"" + out + "\"; Want \"" + PREFIX[i] + "\"...\"" +
-                          SUFFIX[i] + "\"");
-            }
+        failure(status, "mf->format");
+        if (SUFFIX[i] == "") {
+            if (out != PREFIX[i])
+                errln((UnicodeString)"" + i + ": Got \"" + out + "\"; Want \"" + PREFIX[i] + "\"");
+        }
+        else {
+            if (!out.startsWith(PREFIX[i]) ||
+                !out.endsWith(SUFFIX[i]))
+                errln((UnicodeString)"" + i + ": Got \"" + out + "\"; Want \"" + PREFIX[i] + "\"...\"" +
+                      SUFFIX[i] + "\"");
         }
     }
 
@@ -916,21 +883,12 @@ void MessageFormatRegressionTest::Test4142938()
  */
 void MessageFormatRegressionTest::TestChoicePatternQuote() 
 {
-    // ICU 4.8 ChoiceFormat (like PluralFormat & SelectFormat)
-    // returns the chosen string unmodified, so that it is usable in a MessageFormat.
-    // We modified the test strings accordingly.
-    // Note: Without further formatting/trimming/etc., it is not possible
-    // to get a single apostrophe as the last character of a non-final choice sub-message
-    // because the single apostrophe before the pipe '|' would start quoted text.
-    // Normally, ChoiceFormat is used inside a MessageFormat, where a double apostrophe
-    // can be used in that case and will be formatted as a single one.
-    // (Better: Use a "real" apostrophe, U+2019.)
     UnicodeString DATA [] = {
         // Pattern                  0 value           1 value
         // {sfb} hacked - changed \u2264 to = (copied from Character Map)
-        "0#can't|1#can",            "can't",          "can",
-        "0#pound(#)='#''|1#xyz",    "pound(#)='#''",  "xyz",
-        "0#1<2 '| 1=1'|1#'",        "1<2 '| 1=1'",    "'",
+        (UnicodeString)"0#can''t|1#can",           (UnicodeString)"can't",          (UnicodeString)"can",
+        (UnicodeString)"0#'pound(#)=''#'''|1#xyz", (UnicodeString)"pound(#)='#'",   (UnicodeString)"xyz",
+        (UnicodeString)"0#'1<2 | 1=1'|1#''",  (UnicodeString)"1<2 | 1=1", (UnicodeString)"'",
     };
     for (int i=0; i<9; i+=3) {
         //try {
@@ -943,7 +901,7 @@ void MessageFormatRegressionTest::TestChoicePatternQuote()
                 out = cf->format((double)j, out, pos);
                 if (out != DATA[i+1+j])
                     errln("Fail: Pattern \"" + DATA[i] + "\" x "+j+" -> " +
-                          out + "; want \"" + DATA[i+1+j] + "\"");
+                          out + "; want \"" + DATA[i+1+j] + '"');
             }
             UnicodeString pat;
             pat = cf->toPattern(pat);
@@ -951,9 +909,9 @@ void MessageFormatRegressionTest::TestChoicePatternQuote()
             ChoiceFormat *cf2 = new ChoiceFormat(pat, status);
             pat2 = cf2->toPattern(pat2);
             if (pat != pat2)
-                errln("Fail: Pattern \"" + DATA[i] + "\" x toPattern -> \"" + pat + "\"");
+                errln("Fail: Pattern \"" + DATA[i] + "\" x toPattern -> \"" + pat + '"');
             else
-                logln("Ok: Pattern \"" + DATA[i] + "\" x toPattern -> \"" + pat + "\"");
+                logln("Ok: Pattern \"" + DATA[i] + "\" x toPattern -> \"" + pat + '"');
         /*}
         catch (IllegalArgumentException e) {
             errln("Fail: Pattern \"" + DATA[i] + "\" -> " + e);
@@ -987,21 +945,3 @@ void MessageFormatRegressionTest::Test4112104()
     delete format;
 }
 
-void MessageFormatRegressionTest::TestAPI() {
-    UErrorCode status = U_ZERO_ERROR;
-    MessageFormat *format = new MessageFormat("", status);
-    failure(status, "new MessageFormat");
-    
-    // Test adoptFormat
-    MessageFormat *fmt = new MessageFormat("",status);
-    format->adoptFormat("some_name",fmt,status);  // Must at least pass a valid identifier.
-    failure(status, "adoptFormat");
-
-    // Test getFormat
-    format->setFormat((int32_t)0,*fmt);
-    format->getFormat("some_other_name",status);  // Must at least pass a valid identifier.
-    failure(status, "getFormat");
-    delete format;
-}
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

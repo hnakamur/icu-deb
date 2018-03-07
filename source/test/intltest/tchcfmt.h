@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2008, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -11,9 +9,6 @@
  * TestChoiceFormat is a third level test class
  */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
 
 #include "intltest.h"
 
@@ -33,6 +28,23 @@ class TestChoiceFormat: public IntlTest {
      **/
     void TestComplexExample(void);
 
+// We can deprecate the test code right away; the API itself goes 2002-Jun-30
+#ifdef ICU_ENABLE_DEPRECATED_NEXTDOUBLE
+    /**
+     * test the use of next_Double with ChoiceFormat
+     **/
+    void TestChoiceNextDouble(void);
+    /** 
+     * test the numerical results of next_Double and previous_Double
+     **/
+    void TestGapNextDouble(void);
+
+    /**
+     * utiltity function for TestGapNextDouble
+     **/
+    void testValue( double val );
+#endif
+
     /**
      * Test new closure API
      */
@@ -42,7 +54,6 @@ class TestChoiceFormat: public IntlTest {
      * Test applyPattern
      */
     void TestPatterns(void);
-    void TestChoiceFormatToPatternOverflow(void);
 
     void _testPattern(const char* pattern,
                       UBool isValid,
@@ -54,5 +65,3 @@ class TestChoiceFormat: public IntlTest {
      **/
     void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL );
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

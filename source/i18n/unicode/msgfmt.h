@@ -1,8 +1,5 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
-* Copyright (C) 2007-2013, International Business Machines Corporation and
-* others. All Rights Reserved.
+* Copyright (C) {1997-2001}, International Business Machines Corporation and others. All Rights Reserved.
 ********************************************************************************
 *
 * File MSGFMT.H
@@ -13,235 +10,33 @@
 *   02/19/97    aliu        Converted from java.
 *   03/20/97    helena      Finished first cut of implementation.
 *   07/22/98    stephen     Removed operator!= (defined in Format)
-*   08/19/2002  srl         Removing Javaisms
-*******************************************************************************/
+********************************************************************************
+*/
+// *****************************************************************************
+// This file was generated from the java source file MessageFormat.java
+// *****************************************************************************
 
 #ifndef MSGFMT_H
 #define MSGFMT_H
 
 #include "unicode/utypes.h"
-
-/**
- * \file
- * \brief C++ API: Formats messages in a language-neutral way.
- */
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "unicode/format.h"
 #include "unicode/locid.h"
-#include "unicode/messagepattern.h"
 #include "unicode/parseerr.h"
-#include "unicode/plurfmt.h"
-#include "unicode/plurrule.h"
-
-U_CDECL_BEGIN
-// Forward declaration.
-struct UHashtable;
-typedef struct UHashtable UHashtable; /**< @internal */
-U_CDECL_END
 
 U_NAMESPACE_BEGIN
 
-class AppendableWrapper;
-class DateFormat;
 class NumberFormat;
 
 /**
- * <p>MessageFormat prepares strings for display to users,
- * with optional arguments (variables/placeholders).
- * The arguments can occur in any order, which is necessary for translation
- * into languages with different grammars.
- *
- * <p>A MessageFormat is constructed from a <em>pattern</em> string
- * with arguments in {curly braces} which will be replaced by formatted values.
- *
- * <p><code>MessageFormat</code> differs from the other <code>Format</code>
- * classes in that you create a <code>MessageFormat</code> object with one
- * of its constructors (not with a <code>createInstance</code> style factory
- * method). Factory methods aren't necessary because <code>MessageFormat</code>
- * itself doesn't implement locale-specific behavior. Any locale-specific
- * behavior is defined by the pattern that you provide and the
- * subformats used for inserted arguments.
- *
- * <p>Arguments can be named (using identifiers) or numbered (using small ASCII-digit integers).
- * Some of the API methods work only with argument numbers and throw an exception
- * if the pattern has named arguments (see {@link #usesNamedArguments()}).
- *
- * <p>An argument might not specify any format type. In this case,
- * a Number value is formatted with a default (for the locale) NumberFormat,
- * a Date value is formatted with a default (for the locale) DateFormat,
- * and for any other value its toString() value is used.
- *
- * <p>An argument might specify a "simple" type for which the specified
- * Format object is created, cached and used.
- *
- * <p>An argument might have a "complex" type with nested MessageFormat sub-patterns.
- * During formatting, one of these sub-messages is selected according to the argument value
- * and recursively formatted.
- *
- * <p>After construction, a custom Format object can be set for
- * a top-level argument, overriding the default formatting and parsing behavior
- * for that argument.
- * However, custom formatting can be achieved more simply by writing
- * a typeless argument in the pattern string
- * and supplying it with a preformatted string value.
- *
- * <p>When formatting, MessageFormat takes a collection of argument values
- * and writes an output string.
- * The argument values may be passed as an array
- * (when the pattern contains only numbered arguments)
- * or as an array of names and and an array of arguments (which works for both named
- * and numbered arguments).
- *
- * <p>Each argument is matched with one of the input values by array index or argument name
- * and formatted according to its pattern specification
- * (or using a custom Format object if one was set).
- * A numbered pattern argument is matched with an argument name that contains that number
- * as an ASCII-decimal-digit string (without leading zero).
- *
- * <h4><a name="patterns">Patterns and Their Interpretation</a></h4>
- *
- * <code>MessageFormat</code> uses patterns of the following form:
- * <pre>
- * message = messageText (argument messageText)*
- * argument = noneArg | simpleArg | complexArg
- * complexArg = choiceArg | pluralArg | selectArg | selectordinalArg
- *
- * noneArg = '{' argNameOrNumber '}'
- * simpleArg = '{' argNameOrNumber ',' argType [',' argStyle] '}'
- * choiceArg = '{' argNameOrNumber ',' "choice" ',' choiceStyle '}'
- * pluralArg = '{' argNameOrNumber ',' "plural" ',' pluralStyle '}'
- * selectArg = '{' argNameOrNumber ',' "select" ',' selectStyle '}'
- * selectordinalArg = '{' argNameOrNumber ',' "selectordinal" ',' pluralStyle '}'
- *
- * choiceStyle: see {@link ChoiceFormat}
- * pluralStyle: see {@link PluralFormat}
- * selectStyle: see {@link SelectFormat}
- *
- * argNameOrNumber = argName | argNumber
- * argName = [^[[:Pattern_Syntax:][:Pattern_White_Space:]]]+
- * argNumber = '0' | ('1'..'9' ('0'..'9')*)
- *
- * argType = "number" | "date" | "time" | "spellout" | "ordinal" | "duration"
- * argStyle = "short" | "medium" | "long" | "full" | "integer" | "currency" | "percent" | argStyleText
- * </pre>
- *
- * <ul>
- *   <li>messageText can contain quoted literal strings including syntax characters.
- *       A quoted literal string begins with an ASCII apostrophe and a syntax character
- *       (usually a {curly brace}) and continues until the next single apostrophe.
- *       A double ASCII apostrohpe inside or outside of a quoted string represents
- *       one literal apostrophe.
- *   <li>Quotable syntax characters are the {curly braces} in all messageText parts,
- *       plus the '#' sign in a messageText immediately inside a pluralStyle,
- *       and the '|' symbol in a messageText immediately inside a choiceStyle.
- *   <li>See also {@link #UMessagePatternApostropheMode}
- *   <li>In argStyleText, every single ASCII apostrophe begins and ends quoted literal text,
- *       and unquoted {curly braces} must occur in matched pairs.
- * </ul>
- *
- * <p>Recommendation: Use the real apostrophe (single quote) character
- * \htmlonly&#x2019;\endhtmlonly (U+2019) for
- * human-readable text, and use the ASCII apostrophe ' (U+0027)
- * only in program syntax, like quoting in MessageFormat.
- * See the annotations for U+0027 Apostrophe in The Unicode Standard.
- *
- * <p>The <code>choice</code> argument type is deprecated.
- * Use <code>plural</code> arguments for proper plural selection,
- * and <code>select</code> arguments for simple selection among a fixed set of choices.
- *
- * <p>The <code>argType</code> and <code>argStyle</code> values are used to create
- * a <code>Format</code> instance for the format element. The following
- * table shows how the values map to Format instances. Combinations not
- * shown in the table are illegal. Any <code>argStyleText</code> must
- * be a valid pattern string for the Format subclass used.
- *
- * <p><table border=1>
- *    <tr>
- *       <th>argType
- *       <th>argStyle
- *       <th>resulting Format object
- *    <tr>
- *       <td colspan=2><i>(none)</i>
- *       <td><code>null</code>
- *    <tr>
- *       <td rowspan=5><code>number</code>
- *       <td><i>(none)</i>
- *       <td><code>NumberFormat.createInstance(getLocale(), status)</code>
- *    <tr>
- *       <td><code>integer</code>
- *       <td><code>NumberFormat.createInstance(getLocale(), kNumberStyle, status)</code>
- *    <tr>
- *       <td><code>currency</code>
- *       <td><code>NumberFormat.createCurrencyInstance(getLocale(), status)</code>
- *    <tr>
- *       <td><code>percent</code>
- *       <td><code>NumberFormat.createPercentInstance(getLocale(), status)</code>
- *    <tr>
- *       <td><i>argStyleText</i>
- *       <td><code>new DecimalFormat(argStyleText, new DecimalFormatSymbols(getLocale(), status), status)</code>
- *    <tr>
- *       <td rowspan=6><code>date</code>
- *       <td><i>(none)</i>
- *       <td><code>DateFormat.createDateInstance(kDefault, getLocale(), status)</code>
- *    <tr>
- *       <td><code>short</code>
- *       <td><code>DateFormat.createDateInstance(kShort, getLocale(), status)</code>
- *    <tr>
- *       <td><code>medium</code>
- *       <td><code>DateFormat.createDateInstance(kDefault, getLocale(), status)</code>
- *    <tr>
- *       <td><code>long</code>
- *       <td><code>DateFormat.createDateInstance(kLong, getLocale(), status)</code>
- *    <tr>
- *       <td><code>full</code>
- *       <td><code>DateFormat.createDateInstance(kFull, getLocale(), status)</code>
- *    <tr>
- *       <td><i>argStyleText</i>
- *       <td><code>new SimpleDateFormat(argStyleText, getLocale(), status)
- *    <tr>
- *       <td rowspan=6><code>time</code>
- *       <td><i>(none)</i>
- *       <td><code>DateFormat.createTimeInstance(kDefault, getLocale(), status)</code>
- *    <tr>
- *       <td><code>short</code>
- *       <td><code>DateFormat.createTimeInstance(kShort, getLocale(), status)</code>
- *    <tr>
- *       <td><code>medium</code>
- *       <td><code>DateFormat.createTimeInstance(kDefault, getLocale(), status)</code>
- *    <tr>
- *       <td><code>long</code>
- *       <td><code>DateFormat.createTimeInstance(kLong, getLocale(), status)</code>
- *    <tr>
- *       <td><code>full</code>
- *       <td><code>DateFormat.createTimeInstance(kFull, getLocale(), status)</code>
- *    <tr>
- *       <td><i>argStyleText</i>
- *       <td><code>new SimpleDateFormat(argStyleText, getLocale(), status)
- *    <tr>
- *       <td><code>spellout</code>
- *       <td><i>argStyleText (optional)</i>
- *       <td><code>new RuleBasedNumberFormat(URBNF_SPELLOUT, getLocale(), status)
- *           <br/>&nbsp;&nbsp;&nbsp;&nbsp;.setDefaultRuleset(argStyleText, status);</code>
- *    <tr>
- *       <td><code>ordinal</code>
- *       <td><i>argStyleText (optional)</i>
- *       <td><code>new RuleBasedNumberFormat(URBNF_ORDINAL, getLocale(), status)
- *           <br/>&nbsp;&nbsp;&nbsp;&nbsp;.setDefaultRuleset(argStyleText, status);</code>
- *    <tr>
- *       <td><code>duration</code>
- *       <td><i>argStyleText (optional)</i>
- *       <td><code>new RuleBasedNumberFormat(URBNF_DURATION, getLocale(), status)
- *           <br/>&nbsp;&nbsp;&nbsp;&nbsp;.setDefaultRuleset(argStyleText, status);</code>
- * </table>
- * <p>
- *
- * <h4>Usage Information</h4>
- *
- * <p>Here are some examples of usage:
+ * Provides means to produce concatenated messages in language-neutral way.
+ * Use this for all concatenations that show up to end users.
+ * <P>
+ * Takes a set of objects, formats them, then inserts the formatted
+ * strings into the pattern at the appropriate places.
+ * <P>
+ * Here are some examples of usage:
  * Example 1:
- *
  * <pre>
  * \code
  *     UErrorCode success = U_ZERO_ERROR;
@@ -262,563 +57,434 @@ class NumberFormat;
  *     //             in the Force on planet 7.
  * \endcode
  * </pre>
- *
  * Typically, the message format will come from resources, and the
  * arguments will be dynamically set at runtime.
- *
- * <p>Example 2:
- *
+ * <P>
+ * Example 2:
  * <pre>
  *  \code
  *     success = U_ZERO_ERROR;
  *     Formattable testArgs[] = {3L, "MyDisk"};
  *
- *     MessageFormat form(
+ *     MessageFormat* form = new MessageFormat(
  *         "The disk \"{1}\" contains {0} file(s).", success );
  *
  *     UnicodeString string;
  *     FieldPosition fpos = 0;
- *     cout << "format: " << form.format(testArgs, 2, string, fpos, success ) << endl;
+ *     cout &lt;&lt; "format: " &lt;&lt; form->format(testArgs, 2, string, fpos, success ) &lt;&lt; endl;
  *
  *     // output, with different testArgs:
  *     // output: The disk "MyDisk" contains 0 file(s).
  *     // output: The disk "MyDisk" contains 1 file(s).
  *     // output: The disk "MyDisk" contains 1,273 file(s).
+ *     delete form;
  *  \endcode
  *  </pre>
  *
+ *  The pattern is of the following form.  Legend:
+ *  <pre>
+ * \code
+ *       {optional item}
+ *       (group that may be repeated)*
+ * \endcode
+ *  </pre>
+ *  Do not confuse optional items with items inside quotes braces, such
+ *  as this: "{".  Quoted braces are literals.
+ *  <pre>
+ *  \code
+ *       messageFormatPattern := string ( "{" messageFormatElement "}" string )*
  *
- * <p>For messages that include plural forms, you can use a plural argument:
+ *       messageFormatElement := argument { "," elementFormat }
+ *
+ *       elementFormat := "time" { "," datetimeStyle }
+ *                      | "date" { "," datetimeStyle }
+ *                      | "number" { "," numberStyle }
+ *                      | "choice" "," choiceStyle
+ *
+ *       datetimeStyle := "short"
+ *                      | "medium"
+ *                      | "long"
+ *                      | "full"
+ *                      | dateFormatPattern
+ *
+ *       numberStyle :=   "currency"
+ *                      | "percent"
+ *                      | "integer"
+ *                      | numberFormatPattern
+ *
+ *       choiceStyle :=   choiceFormatPattern
+ * \endcode
+ * </pre>
+ * If there is no elementFormat, then the argument must be a string,
+ * which is substituted. If there is no dateTimeStyle or numberStyle,
+ * then the default format is used (e.g.  NumberFormat.getInstance(),
+ * DateFormat.getDefaultTime() or DateFormat.getDefaultDate(). For
+ * a ChoiceFormat, the pattern must always be specified, since there
+ * is no default.
+ * <P>
+ * In strings, single quotes can be used to quote the "{" sign if
+ * necessary. A real single quote is represented by ''.  Inside a
+ * messageFormatElement, quotes are [not] removed. For example,
+ * {1,number,$'#',##} will produce a number format with the pound-sign
+ * quoted, with a result such as: "$#31,45".
+ * <P>
+ * If a pattern is used, then unquoted braces in the pattern, if any,
+ * must match: that is, "ab {0} de" and "ab '}' de" are ok, but "ab
+ * {0'}' de" and "ab } de" are not.
+ * <P>
+ * The argument is a number from 0 to 9, which corresponds to the
+ * arguments presented in an array to be formatted.
+ * <P>
+ * It is ok to have unused arguments in the array.  With missing
+ * arguments or arguments that are not of the right class for the
+ * specified format, a failing UErrorCode result is set.
+ * <P>
+ * For more sophisticated patterns, you can use a ChoiceFormat to get
+ * output such as:
  * <pre>
  * \code
- *  success = U_ZERO_ERROR;
- *  MessageFormat msgFmt(
- *       "{num_files, plural, "
- *       "=0{There are no files on disk \"{disk_name}\".}"
- *       "=1{There is one file on disk \"{disk_name}\".}"
- *       "other{There are # files on disk \"{disk_name}\".}}",
- *      Locale("en"),
- *      success);
- *  FieldPosition fpos = 0;
- *  Formattable testArgs[] = {0L, "MyDisk"};
- *  UnicodeString testArgsNames[] = {"num_files", "disk_name"};
- *  UnicodeString result;
- *  cout << msgFmt.format(testArgs, testArgsNames, 2, result, fpos, 0, success);
- *  testArgs[0] = 3L;
- *  cout << msgFmt.format(testArgs, testArgsNames, 2, result, fpos, 0, success);
+ *     UErrorCode success = U_ZERO_ERROR;
+ *     MessageFormat* form = new MessageFormat("The disk \"{1}\" contains {0}.", success);
+ *     double filelimits[] = {0,1,2};
+ *     UnicodeString filepart[] = {"no files","one file","{0,number} files"};
+ *     ChoiceFormat* fileform = new ChoiceFormat(filelimits, filepart, 3);
+ *     form->setFormat(1, *fileform); // NOT zero, see below
+ *
+ *     Formattable testArgs[] = {1273L, "MyDisk"};
+ *
+ *     UnicodeString string;
+ *     FieldPosition fpos = 0;
+ *     cout << form->format(testArgs, 2, string, fpos, success) << endl;
+ *
+ *     // output, with different testArgs
+ *     // output: The disk "MyDisk" contains no files.
+ *     // output: The disk "MyDisk" contains one file.
+ *     // output: The disk "MyDisk" contains 1,273 files.
  * \endcode
- * <em>output</em>:
- * There are no files on disk "MyDisk".
- * There are 3 files on "MyDisk".
  * </pre>
- * See {@link PluralFormat} and {@link PluralRules} for details.
+ * You can either do this programmatically, as in the above example,
+ * or by using a pattern (see ChoiceFormat for more information) as in:
+ * <pre>
+ * \code
+ *    form->applyPattern(
+ *      "There {0,choice,0#are no files|1#is one file|1<are {0,number,integer} files}.");
+ * \endcode
+ * </pre>
+ * <P>
+ * [Note:] As we see above, the string produced by a ChoiceFormat in
+ * MessageFormat is treated specially; occurances of '{' are used to
+ * indicated subformats, and cause recursion.  If you create both a
+ * MessageFormat and ChoiceFormat programmatically (instead of using
+ * the string patterns), then be careful not to produce a format that
+ * recurses on itself, which will cause an infinite loop.
+ * <P>
+ * [Note:] Formats are numbered by order of variable in the string.
+ * This is [not] the same as the argument numbering!
+ * <pre>
+ * \code
+ *    For example: with "abc{2}def{3}ghi{0}...",
  *
- * <h4><a name="synchronization">Synchronization</a></h4>
- *
- * <p>MessageFormats are not synchronized.
- * It is recommended to create separate format instances for each thread.
- * If multiple threads access a format concurrently, it must be synchronized
- * externally.
- *
- * @stable ICU 2.0
+ *    format0 affects the first variable {2}
+ *    format1 affects the second variable {3}
+ *    format2 affects the second variable {0}
+ * \endcode
+ * </pre>
+ * and so on.
  */
 class U_I18N_API MessageFormat : public Format {
 public:
-#ifndef U_HIDE_OBSOLETE_API
+    enum EFormatNumber { kMaxFormat = 10 };
     /**
-     * Enum type for kMaxFormat.
-     * @obsolete ICU 3.0.  The 10-argument limit was removed as of ICU 2.6,
-     * rendering this enum type obsolete.
-     */
-    enum EFormatNumber {
-        /**
-         * The maximum number of arguments.
-         * @obsolete ICU 3.0.  The 10-argument limit was removed as of ICU 2.6,
-         * rendering this constant obsolete.
-         */
-        kMaxFormat = 10
-    };
-#endif  /* U_HIDE_OBSOLETE_API */
-
-    /**
-     * Constructs a new MessageFormat using the given pattern and the
-     * default locale.
+     * Construct a new MessageFormat using the given pattern.
      *
      * @param pattern   Pattern used to construct object.
-     * @param status    Input/output error code.  If the
+     * @param status    Output param to receive success code.  If the
      *                  pattern cannot be parsed, set to failure code.
-     * @stable ICU 2.0
+     * @stable
      */
     MessageFormat(const UnicodeString& pattern,
                   UErrorCode &status);
 
     /**
-     * Constructs a new MessageFormat using the given pattern and locale.
+     * Constructor that allows locale specification.
      * @param pattern   Pattern used to construct object.
      * @param newLocale The locale to use for formatting dates and numbers.
-     * @param status    Input/output error code.  If the
+     * @param status    Output param to receive success code.  If the
      *                  pattern cannot be parsed, set to failure code.
-     * @stable ICU 2.0
+     * @stable
      */
     MessageFormat(const UnicodeString& pattern,
                   const Locale& newLocale,
-                        UErrorCode& status);
+                        UErrorCode& success);
     /**
-     * Constructs a new MessageFormat using the given pattern and locale.
+     * Constructor that allows locale specification.
      * @param pattern   Pattern used to construct object.
      * @param newLocale The locale to use for formatting dates and numbers.
-     * @param parseError Struct to receive information on the position
-     *                   of an error within the pattern.
-     * @param status    Input/output error code.  If the
+     * @param parseError Struct to recieve information on position 
+     *                   of error if an error is encountered
+     * @param status    Output param to receive success code.  If the
      *                  pattern cannot be parsed, set to failure code.
-     * @stable ICU 2.0
+     * @stable
      */
     MessageFormat(const UnicodeString& pattern,
                   const Locale& newLocale,
                   UParseError& parseError,
-                  UErrorCode& status);
+                  UErrorCode& success);
     /**
-     * Constructs a new MessageFormat from an existing one.
-     * @stable ICU 2.0
+     * Copy constructor.
+     * @stable
      */
     MessageFormat(const MessageFormat&);
 
     /**
      * Assignment operator.
-     * @stable ICU 2.0
+     * @stable
      */
     const MessageFormat& operator=(const MessageFormat&);
 
     /**
      * Destructor.
-     * @stable ICU 2.0
+     * @stable
      */
     virtual ~MessageFormat();
 
     /**
-     * Clones this Format object polymorphically.  The caller owns the
+     * Clone this Format object polymorphically. The caller owns the
      * result and should delete it when done.
-     * @stable ICU 2.0
+     * @stable
      */
     virtual Format* clone(void) const;
 
     /**
-     * Returns true if the given Format objects are semantically equal.
+     * Return true if the given Format objects are semantically equal.
      * Objects of different subclasses are considered unequal.
-     * @param other  the object to be compared with.
-     * @return       true if the given Format objects are semantically equal.
-     * @stable ICU 2.0
+     * @stable
      */
     virtual UBool operator==(const Format& other) const;
 
     /**
-     * Sets the locale to be used for creating argument Format objects.
-     * @param theLocale    the new locale value to be set.
-     * @stable ICU 2.0
+     * Sets the locale. This locale is used for fetching default number or date
+     * format information.
+     * @stable
      */
     virtual void setLocale(const Locale& theLocale);
 
     /**
-     * Gets the locale used for creating argument Format objects.
+     * Gets the locale. This locale is used for fetching default number or date
      * format information.
-     * @return    the locale of the object.
-     * @stable ICU 2.0
+     * @stable
      */
     virtual const Locale& getLocale(void) const;
 
     /**
-     * Applies the given pattern string to this message format.
+     * Apply the given pattern string to this message format.
      *
      * @param pattern   The pattern to be applied.
-     * @param status    Input/output error code.  If the
-     *                  pattern cannot be parsed, set to failure code.
-     * @stable ICU 2.0
+     * @param status    Output param set to success/failure code on
+     *                  exit. If the pattern is invalid, this will be
+     *                  set to a failure result.
+     * @stable
      */
     virtual void applyPattern(const UnicodeString& pattern,
                               UErrorCode& status);
     /**
-     * Applies the given pattern string to this message format.
-     *
+     * Sets the pattern.
      * @param pattern    The pattern to be applied.
-     * @param parseError Struct to receive information on the position
-     *                   of an error within the pattern.
-     * @param status    Input/output error code.  If the
-     *                  pattern cannot be parsed, set to failure code.
-     * @stable ICU 2.0
+     * @param parseError Struct to recieve information on position 
+     *                   of error if an error is encountered
+     * @param status     Output param set to success/failure code on
+     *                   exit. If the pattern is invalid, this will be
+     *                   set to a failure result.
+     * @draft
      */
     virtual void applyPattern(const UnicodeString& pattern,
                              UParseError& parseError,
                              UErrorCode& status);
 
     /**
-     * Sets the UMessagePatternApostropheMode and the pattern used by this message format.
-     * Parses the pattern and caches Format objects for simple argument types.
-     * Patterns and their interpretation are specified in the
-     * <a href="#patterns">class description</a>.
-     * <p>
-     * This method is best used only once on a given object to avoid confusion about the mode,
-     * and after constructing the object with an empty pattern string to minimize overhead.
-     *
-     * @param pattern    The pattern to be applied.
-     * @param aposMode   The new apostrophe mode.
-     * @param parseError Struct to receive information on the position
-     *                   of an error within the pattern.
-     *                   Can be NULL.
-     * @param status    Input/output error code.  If the
-     *                  pattern cannot be parsed, set to failure code.
-     * @stable ICU 4.8
+     * Gets the pattern. See the class description.
+     * @stable
      */
-    virtual void applyPattern(const UnicodeString& pattern,
-                              UMessagePatternApostropheMode aposMode,
-                              UParseError* parseError,
-                              UErrorCode& status);
+    virtual UnicodeString& toPattern(UnicodeString& result) const;
 
     /**
-     * @return this instance's UMessagePatternApostropheMode.
-     * @stable ICU 4.8
-     */
-    UMessagePatternApostropheMode getApostropheMode() const {
-        return msgPattern.getApostropheMode();
-    }
-
-    /**
-     * Returns a pattern that can be used to recreate this object.
-     *
-     * @param appendTo  Output parameter to receive the pattern.
-     *                  Result is appended to existing contents.
-     * @return          Reference to 'appendTo' parameter.
-     * @stable ICU 2.0
-     */
-    virtual UnicodeString& toPattern(UnicodeString& appendTo) const;
-
-    /**
-     * Sets subformats.
+     * Sets formats to use on parameters.
      * See the class description about format numbering.
      * The caller should not delete the Format objects after this call.
-     * <EM>The array formatsToAdopt is not itself adopted.</EM> Its
-     * ownership is retained by the caller. If the call fails because
-     * memory cannot be allocated, then the formats will be deleted
-     * by this method, and this object will remain unchanged.
-     *
-     * <p>If this format uses named arguments, the new formats are discarded
-     * and this format remains unchanged.
-     *
-     * @stable ICU 2.0
-     * @param formatsToAdopt    the format to be adopted.
-     * @param count             the size of the array.
+     * @draft HSYS: possible semantic change on limitation of the size of array
      */
     virtual void adoptFormats(Format** formatsToAdopt, int32_t count);
 
     /**
-     * Sets subformats.
+     * Sets formats to use on parameters.
      * See the class description about format numbering.
-     * Each item in the array is cloned into the internal array.
-     * If the call fails because memory cannot be allocated, then this
-     * object will remain unchanged.
-     *
-     * <p>If this format uses named arguments, the new formats are discarded
-     * and this format remains unchanged.
-     *
-     * @stable ICU 2.0
-     * @param newFormats the new format to be set.
-     * @param cnt        the size of the array.
+     * @draft HSYS: possible semantic change on limitation of the size of array
      */
-    virtual void setFormats(const Format** newFormats, int32_t cnt);
+    virtual void setFormats(const Format** newFormats,int32_t cnt);
 
 
     /**
-     * Sets one subformat.
+     * Sets formats individually to use on parameters.
      * See the class description about format numbering.
      * The caller should not delete the Format object after this call.
-     * If the number is over the number of formats already set,
-     * the item will be deleted and ignored.
-     *
-     * <p>If this format uses named arguments, the new format is discarded
-     * and this format remains unchanged.
-     *
-     * @stable ICU 2.0
-     * @param formatNumber     index of the subformat.
-     * @param formatToAdopt    the format to be adopted.
+     * @draft HSYS: possible semantic change on limitation of the size of array
      */
     virtual void adoptFormat(int32_t formatNumber, Format* formatToAdopt);
 
     /**
-     * Sets one subformat.
+     * Sets formats individually to use on parameters.
      * See the class description about format numbering.
-     * If the number is over the number of formats already set,
-     * the item will be ignored.
-     * @param formatNumber     index of the subformat.
-     * @param format    the format to be set.
-     * @stable ICU 2.0
+     * @stable
      */
-    virtual void setFormat(int32_t formatNumber, const Format& format);
+    virtual void setFormat(int32_t variable, const Format& newFormat);
+
 
     /**
-     * Gets format names. This function returns formatNames in StringEnumerations
-     * which can be used with getFormat() and setFormat() to export formattable
-     * array from current MessageFormat to another.  It is the caller's responsibility
-     * to delete the returned formatNames.
-     * @param status  output param set to success/failure code.
-     * @stable ICU 4.0
-     */
-    virtual StringEnumeration* getFormatNames(UErrorCode& status);
-
-    /**
-     * Gets subformat pointer for given format name.
-     * This function supports both named and numbered
-     * arguments. If numbered, the formatName is the
-     * corresponding UnicodeStrings (e.g. "0", "1", "2"...).
-     * The returned Format object should not be deleted by the caller,
-     * nor should the ponter of other object .  The pointer and its
-     * contents remain valid only until the next call to any method
-     * of this class is made with this object.
-     * @param formatName the name or number specifying a format
-     * @param status  output param set to success/failure code.
-     * @stable ICU 4.0
-     */
-    virtual Format* getFormat(const UnicodeString& formatName, UErrorCode& status);
-
-    /**
-     * Sets one subformat for given format name.
-     * See the class description about format name.
-     * This function supports both named and numbered
-     * arguments-- if numbered, the formatName is the
-     * corresponding UnicodeStrings (e.g. "0", "1", "2"...).
-     * If there is no matched formatName or wrong type,
-     * the item will be ignored.
-     * @param formatName  Name of the subformat.
-     * @param format      the format to be set.
-     * @param status  output param set to success/failure code.
-     * @stable ICU 4.0
-     */
-    virtual void setFormat(const UnicodeString& formatName, const Format& format, UErrorCode& status);
-
-    /**
-     * Sets one subformat for given format name.
-     * See the class description about format name.
-     * This function supports both named and numbered
-     * arguments-- if numbered, the formatName is the
-     * corresponding UnicodeStrings (e.g. "0", "1", "2"...).
-     * If there is no matched formatName or wrong type,
-     * the item will be ignored.
-     * The caller should not delete the Format object after this call.
-     * @param formatName  Name of the subformat.
-     * @param formatToAdopt  Format to be adopted.
-     * @param status      output param set to success/failure code.
-     * @stable ICU 4.0
-     */
-    virtual void adoptFormat(const UnicodeString& formatName, Format* formatToAdopt, UErrorCode& status);
-
-    /**
-     * Gets an array of subformats of this object.  The returned array
-     * should not be deleted by the caller, nor should the pointers
-     * within the array.  The array and its contents remain valid only
-     * until the next call to this format. See the class description
-     * about format numbering.
-     *
-     * @param count output parameter to receive the size of the array
-     * @return an array of count Format* objects, or NULL if out of
-     * memory.  Any or all of the array elements may be NULL.
-     * @stable ICU 2.0
+     * Gets formats that were set with setFormats.
+     * See the class description about format numbering.
+     * @draft HSYS: possible semantic change on limitation of the size of array
      */
     virtual const Format** getFormats(int32_t& count) const;
 
-
-    using Format::format;
-
     /**
-     * Formats the given array of arguments into a user-readable string.
-     * Does not take ownership of the Formattable* array or its contents.
+     * Returns pattern with formatted objects.  Does not take ownership
+     * of the Formattable* array; just reads it and uses it to generate
+     * the format string.
      *
-     * <p>If this format uses named arguments, appendTo is unchanged and
-     * status is set to U_ILLEGAL_ARGUMENT_ERROR.
-     *
-     * @param source    An array of objects to be formatted.
-     * @param count     The number of elements of 'source'.
-     * @param appendTo  Output parameter to receive result.
-     *                  Result is appended to existing contents.
-     * @param ignore    Not used; inherited from base class API.
-     * @param status    Input/output error code.  If the
-     *                  pattern cannot be parsed, set to failure code.
-     * @return          Reference to 'appendTo' parameter.
-     * @stable ICU 2.0
+     * @param source    An array of objects to be formatted & substituted.
+     * @param result    Where text is appended.
+     * @param ignore    No useful status is returned.
+     * @stable
      */
-    UnicodeString& format(const Formattable* source,
-                          int32_t count,
-                          UnicodeString& appendTo,
-                          FieldPosition& ignore,
-                          UErrorCode& status) const;
+    UnicodeString& format(  const Formattable* source,
+                            int32_t count,
+                            UnicodeString& result,
+                            FieldPosition& ignore,
+                            UErrorCode& success) const;
 
     /**
-     * Formats the given array of arguments into a user-readable string
-     * using the given pattern.
-     *
-     * <p>If this format uses named arguments, appendTo is unchanged and
-     * status is set to U_ILLEGAL_ARGUMENT_ERROR.
-     *
-     * @param pattern   The pattern.
-     * @param arguments An array of objects to be formatted.
-     * @param count     The number of elements of 'source'.
-     * @param appendTo  Output parameter to receive result.
-     *                  Result is appended to existing contents.
-     * @param status    Input/output error code.  If the
-     *                  pattern cannot be parsed, set to failure code.
-     * @return          Reference to 'appendTo' parameter.
-     * @stable ICU 2.0
+     * Convenience routine.  Avoids explicit creation of
+     * MessageFormat, but doesn't allow future optimizations.
+     * @stable
      */
-    static UnicodeString& format(const UnicodeString& pattern,
-                                 const Formattable* arguments,
-                                 int32_t count,
-                                 UnicodeString& appendTo,
-                                 UErrorCode& status);
+    static UnicodeString& format(   const UnicodeString& pattern,
+                                    const Formattable* arguments,
+                                    int32_t count,
+                                    UnicodeString& result,
+                                    UErrorCode& success);
 
     /**
-     * Formats the given array of arguments into a user-readable
-     * string.  The array must be stored within a single Formattable
-     * object of type kArray. If the Formattable object type is not of
-     * type kArray, then returns a failing UErrorCode.
+     * Format an object to produce a message.  This method handles
+     * Formattable objects of type kArray. If the Formattable
+     * object type is not of type kArray, then it returns a failing
+     * UErrorCode.
      *
-     * <p>If this format uses named arguments, appendTo is unchanged and
-     * status is set to U_ILLEGAL_ARGUMENT_ERROR.
-     *
-     * @param obj       A Formattable of type kArray containing
-     *                  arguments to be formatted.
-     * @param appendTo  Output parameter to receive result.
-     *                  Result is appended to existing contents.
-     * @param pos       On input: an alignment field, if desired.
-     *                  On output: the offsets of the alignment field.
-     * @param status    Input/output error code.  If the
-     *                  pattern cannot be parsed, set to failure code.
-     * @return          Reference to 'appendTo' parameter.
-     * @stable ICU 2.0
+     * @param obj           The object to format
+     * @param toAppendTo    Where the text is to be appended
+     * @param pos           On input: an alignment field, if desired.
+     *                      On output: the offsets of the alignment field.
+     * @param status        Output param filled with success/failure status.
+     * @return              The value passed in as toAppendTo (this allows chaining,
+     *                      as with UnicodeString::append())
+     * @stable
      */
     virtual UnicodeString& format(const Formattable& obj,
-                                  UnicodeString& appendTo,
+                                  UnicodeString& toAppendTo,
                                   FieldPosition& pos,
                                   UErrorCode& status) const;
 
     /**
-     * Formats the given array of arguments into a user-defined argument name
-     * array. This function supports both named and numbered
-     * arguments-- if numbered, the formatName is the
-     * corresponding UnicodeStrings (e.g. "0", "1", "2"...).
-     *
-     * @param argumentNames argument name array
-     * @param arguments An array of objects to be formatted.
-     * @param count     The number of elements of 'argumentNames' and
-     *                  arguments.  The number of argumentNames and arguments
-     *                  must be the same.
-     * @param appendTo  Output parameter to receive result.
-     *                  Result is appended to existing contents.
-     * @param status    Input/output error code.  If the
-     *                  pattern cannot be parsed, set to failure code.
-     * @return          Reference to 'appendTo' parameter.
-     * @stable ICU 4.0
+     * Redeclared Format method.
+     * @stable
      */
-    UnicodeString& format(const UnicodeString* argumentNames,
-                          const Formattable* arguments,
-                          int32_t count,
-                          UnicodeString& appendTo,
+    UnicodeString& format(const Formattable& obj,
+                          UnicodeString& result,
                           UErrorCode& status) const;
-    /**
-     * Parses the given string into an array of output arguments.
-     *
-     * @param source    String to be parsed.
-     * @param pos       On input, starting position for parse. On output,
-     *                  final position after parse.  Unchanged if parse
-     *                  fails.
-     * @param count     Output parameter to receive the number of arguments
-     *                  parsed.
-     * @return an array of parsed arguments.  The caller owns both
-     * the array and its contents.
-     * @stable ICU 2.0
-     */
-    virtual Formattable* parse(const UnicodeString& source,
-                               ParsePosition& pos,
-                               int32_t& count) const;
 
     /**
-     * Parses the given string into an array of output arguments.
+     * Parses the string.
+     * <P>
+     * Caveats: The parse may fail in a number of circumstances.  For
+     * example:
+     * <P>
+     * If one of the arguments does not occur in the pattern.
+     * <P>
+     * If the format of an argument is loses information, such as with
+     * a choice format where a large number formats to "many".
+     * <P>
+     * Does not yet handle recursion (where the substituted strings
+     * contain {n} references.)
+     * <P>
+     * Will not always find a match (or the correct match) if some
+     * part of the parse is ambiguous.  For example, if the pattern
+     * "{1},{2}" is used with the string arguments {"a,b", "c"}, it
+     * will format as "a,b,c".  When the result is parsed, it will
+     * return {"a", "b,c"}.
+     * <P>
+     * If a single argument is formatted twice in the string, then the
+     * later parse wins.
      *
-     * <p>If this format uses named arguments, status is set to
-     * U_ARGUMENT_TYPE_MISMATCH.
+     * @param source    String to be parsed.
+     * @param status    On input, starting position for parse. On output,
+     *                  final position after parse.
+     * @param count     Output param to receive size of returned array.
+     * @result          Array of Formattable objects, with length
+     *                  'count', owned by the caller.
+     * @stable
+     */
+    virtual Formattable* parse( const UnicodeString& source,
+                                ParsePosition& status,
+                                int32_t& count) const;
+
+    /**
+     * Parses the string. Does not yet handle recursion (where
+     * the substituted strings contain {n} references.)
      *
      * @param source    String to be parsed.
      * @param count     Output param to receive size of returned array.
-     * @param status    Input/output error code.  If the
-     *                  pattern cannot be parsed, set to failure code.
-     * @return an array of parsed arguments.  The caller owns both
-     * the array and its contents. Returns NULL if status is not U_ZERO_ERROR.
-     *
-     * @stable ICU 2.0
+     * @param status    Output param to receive success/error code.
+     * @result          Array of Formattable objects, with length
+     *                  'count', owned by the caller.
+     * @stable
      */
-    virtual Formattable* parse(const UnicodeString& source,
-                               int32_t& count,
-                               UErrorCode& status) const;
+    virtual Formattable* parse( const UnicodeString& source,
+                                int32_t& count,
+                                UErrorCode& status) const;
 
     /**
-     * Parses the given string into an array of output arguments
-     * stored within a single Formattable of type kArray.
+     * Parse a string to produce an object.  This methods handles
+     * parsing of message strings into arrays of Formattable objects.
+     * Does not yet handle recursion (where the substituted strings
+     * contain %n references.)
+     * <P>
+     * Before calling, set parse_pos.index to the offset you want to
+     * start parsing at in the source. After calling, parse_pos.index
+     * is the end of the text you parsed.  If error occurs, index is
+     * unchanged.
+     * <P>
+     * When parsing, leading whitespace is discarded (with successful
+     * parse), while trailing whitespace is left as is.
+     * <P>
+     * See Format::parseObject() for more.
      *
      * @param source    The string to be parsed into an object.
      * @param result    Formattable to be set to the parse result.
      *                  If parse fails, return contents are undefined.
-     * @param pos       On input, starting position for parse. On output,
-     *                  final position after parse.  Unchanged if parse
-     *                  fails.
-     * @stable ICU 2.0
+     * @param parse_pos The position to start parsing at. Upon return
+     *                  this param is set to the position after the
+     *                  last character successfully parsed. If the
+     *                  source is not parsed successfully, this param
+     *                  will remain unchanged.
+     * @return          A newly created Formattable* object, or NULL
+     *                  on failure.  The caller owns this and should
+     *                  delete it when done.
+     * @stable
      */
     virtual void parseObject(const UnicodeString& source,
                              Formattable& result,
-                             ParsePosition& pos) const;
+                             ParsePosition& parse_pos) const;
 
-    /**
-     * Convert an 'apostrophe-friendly' pattern into a standard
-     * pattern.  Standard patterns treat all apostrophes as
-     * quotes, which is problematic in some languages, e.g.
-     * French, where apostrophe is commonly used.  This utility
-     * assumes that only an unpaired apostrophe immediately before
-     * a brace is a true quote.  Other unpaired apostrophes are paired,
-     * and the resulting standard pattern string is returned.
-     *
-     * <p><b>Note</b> it is not guaranteed that the returned pattern
-     * is indeed a valid pattern.  The only effect is to convert
-     * between patterns having different quoting semantics.
-     *
-     * @param pattern the 'apostrophe-friendly' patttern to convert
-     * @param status    Input/output error code.  If the pattern
-     *                  cannot be parsed, the failure code is set.
-     * @return the standard equivalent of the original pattern
-     * @stable ICU 3.4
-     */
-    static UnicodeString autoQuoteApostrophe(const UnicodeString& pattern,
-        UErrorCode& status);
-
-
-    /**
-     * Returns true if this MessageFormat uses named arguments,
-     * and false otherwise.  See class description.
-     *
-     * @return true if named arguments are used.
-     * @stable ICU 4.0
-     */
-    UBool usesNamedArguments() const;
-
-
-#ifndef U_HIDE_INTERNAL_API
-    /**
-     * This API is for ICU internal use only.
-     * Please do not use it.
-     *
-     * Returns argument types count in the parsed pattern.
-     * Used to distinguish pattern "{0} d" and "d".
-     *
-     * @return           The number of formattable types in the pattern
-     * @internal
-     */
-    int32_t getArgTypeCount() const;
-#endif  /* U_HIDE_INTERNAL_API */
-
+public:
     /**
      * Returns a unique class ID POLYMORPHICALLY.  Pure virtual override.
      * This method is to implement a simple version of RTTI, since not all
@@ -828,7 +494,7 @@ public:
      * @return          The class ID for this object. All objects of a
      *                  given class have the same class ID.  Objects of
      *                  other classes have different class IDs.
-     * @stable ICU 2.0
+     * @stable
      */
     virtual UClassID getDynamicClassID(void) const;
 
@@ -841,96 +507,45 @@ public:
      * .      Derived::getStaticClassID()) ...
      * </pre>
      * @return          The class ID for all objects of this class.
-     * @stable ICU 2.0
+     * @stable
      */
-    static UClassID U_EXPORT2 getStaticClassID(void);
-
-#ifndef U_HIDE_INTERNAL_API
+    static UClassID getStaticClassID(void) { return (UClassID)&fgClassID; }
+    
     /**
-     * Compares two Format objects. This is used for constructing the hash
-     * tables.
-     *
-     * @param left pointer to a Format object. Must not be NULL.
-     * @param right pointer to a Format object. Must not be NULL.
-     *
-     * @return whether the two objects are the same
+     * Returns array of formattable types in the parsed pattern 
+     * for use in C API
+     * @param count Output parameter to receive the size of array
+     * @return The array of formattable types in the pattern
      * @internal
      */
-    static UBool equalFormats(const void* left, const void* right);
-#endif  /* U_HIDE_INTERNAL_API */
+    const Formattable::Type* getFormatTypeList(int32_t& listCount){
+        listCount=fListCount;
+        return fFormatTypeList; 
+    }
 
 private:
+    static const char fgClassID;
+    //static NumberFormat* fgNumberFormat;
 
-    Locale              fLocale;
-    MessagePattern      msgPattern;
-    Format**            formatAliases; // see getFormats
-    int32_t             formatAliasesCapacity;
-
-    MessageFormat(); // default constructor not implemented
-
-     /**
-      * This provider helps defer instantiation of a PluralRules object
-      * until we actually need to select a keyword.
-      * For example, if the number matches an explicit-value selector like "=1"
-      * we do not need any PluralRules.
-      */
-    class U_I18N_API PluralSelectorProvider : public PluralFormat::PluralSelector {
-    public:
-        PluralSelectorProvider(const MessageFormat &mf, UPluralType type);
-        virtual ~PluralSelectorProvider();
-        virtual UnicodeString select(void *ctx, double number, UErrorCode& ec) const;
-
-        void reset();
-    private:
-        const MessageFormat &msgFormat;
-        PluralRules* rules;
-        UPluralType type;
-    };
-
-    /**
-     * A MessageFormat formats an array of arguments.  Each argument
-     * has an expected type, based on the pattern.  For example, if
-     * the pattern contains the subformat "{3,number,integer}", then
-     * we expect argument 3 to have type Formattable::kLong.  This
-     * array needs to grow dynamically if the MessageFormat is
-     * modified.
+    /* stores types of formattable objects in the pattern
+     * is for umsg_* CAPI 
      */
-    Formattable::Type* argTypes;
-    int32_t            argTypeCount;
-    int32_t            argTypeCapacity;
+    Formattable::Type fFormatTypeList[kMaxFormat];
+    int32_t fListCount;
 
-    /**
-     * TRUE if there are different argTypes for the same argument.
-     * This only matters when the MessageFormat is used in the plain C (umsg_xxx) API
-     * where the pattern argTypes determine how the va_arg list is read.
-     */
-    UBool hasArgTypeConflicts;
+    // fgNumberFormat is held in a cache of one.
 
-    // Variable-size array management
-    UBool allocateArgTypes(int32_t capacity, UErrorCode& status);
+    static NumberFormat* getNumberFormat(UErrorCode &status); // call this function to 'check out' a numberformat from the cache.
+    static void          releaseNumberFormat(NumberFormat *adopt); // call this function to 'return' the number format to the cache.
 
-    /**
-     * Default Format objects used when no format is specified and a
-     * numeric or date argument is formatted.  These are volatile
-     * cache objects maintained only for performance.  They do not
-     * participate in operator=(), copy constructor(), nor
-     * operator==().
-     */
-    NumberFormat* defaultNumberFormat;
-    DateFormat*   defaultDateFormat;
-
-    UHashtable* cachedFormatters;
-    UHashtable* customFormatArgStarts;
-
-    PluralSelectorProvider pluralProvider;
-    PluralSelectorProvider ordinalProvider;
-
-    /**
-     * Method to retrieve default formats (or NULL on failure).
-     * These are semantically const, but may modify *this.
-     */
-    const NumberFormat* getDefaultNumberFormat(UErrorCode&) const;
-    const DateFormat*   getDefaultDateFormat(UErrorCode&) const;
+    Locale                 fLocale;
+    UnicodeString         fPattern;
+    // later, allow more than ten items
+    Format                 *fFormats[kMaxFormat];
+    int32_t             *fOffsets;
+    int32_t             fCount;
+    int32_t             *fArgumentNumbers;
+    int32_t             fMaxOffset;
 
     /**
      * Finds the word s, in the keyword list and returns the located index.
@@ -939,104 +554,40 @@ private:
      * @return the index of the list which matches the keyword s.
      */
     static int32_t findKeyword( const UnicodeString& s,
-                                const char16_t * const *list);
+                            const UChar * const *list);
 
     /**
-     * Thin wrapper around the format(... AppendableWrapper ...) variant.
-     * Wraps the destination UnicodeString into an AppendableWrapper and
-     * supplies default values for some other parameters.
+     * Formats the array of arguments and copies the result into the result buffer,
+     * updates the field position.
+     * @param arguments the formattable objects array.
+     * @param cnt the array count.
+     * @param status field position status.
+     * @param recursionProtection Initially zero. Bits 0..9 are used to indicate
+     * that a parameter has already been seen, to avoid recursion.  Currently
+     * unused.
+     * @param success the error code status.
      */
-    UnicodeString& format(const Formattable* arguments,
-                          const UnicodeString *argumentNames,
-                          int32_t cnt,
-                          UnicodeString& appendTo,
-                          FieldPosition* pos,
-                          UErrorCode& status) const;
+    UnicodeString&  format( const Formattable* arguments,
+                            int32_t cnt,
+                            UnicodeString& result,
+                            FieldPosition& status,
+                            int32_t recursionProtection,
+                            UErrorCode& success) const;
 
     /**
-     * Formats the arguments and writes the result into the
-     * AppendableWrapper, updates the field position.
-     *
-     * @param msgStart      Index to msgPattern part to start formatting from.
-     * @param plNumber      NULL except when formatting a plural argument sub-message
-     *                      where a '#' is replaced by the format string for this number.
-     * @param arguments     The formattable objects array. (Must not be NULL.)
-     * @param argumentNames NULL if numbered values are used. Otherwise the same
-     *                      length as "arguments", and each entry is the name of the
-     *                      corresponding argument in "arguments".
-     * @param cnt           The length of arguments (and of argumentNames if that is not NULL).
-     * @param appendTo      Output parameter to receive the result.
-     *                      The result string is appended to existing contents.
-     * @param pos           Field position status.
-     * @param success       The error code status.
+     * Checks the segments for the closest matched format instance and
+     * updates the format array with the new format instance.
+     * @param position the last processed offset in the pattern
+     * @param offsetNumber the offset number of the last processed segment
+     * @param segments the string that contains the parsed pattern segments.
+     * @param success the error code
+     * @return argument number that was parsed.
      */
-    void format(int32_t msgStart,
-                const void *plNumber,
-                const Formattable* arguments,
-                const UnicodeString *argumentNames,
-                int32_t cnt,
-                AppendableWrapper& appendTo,
-                FieldPosition* pos,
-                UErrorCode& success) const;
-
-    UnicodeString getArgName(int32_t partIndex);
-
-    void setArgStartFormat(int32_t argStart, Format* formatter, UErrorCode& status);
-
-    void setCustomArgStartFormat(int32_t argStart, Format* formatter, UErrorCode& status);
-
-    int32_t nextTopLevelArgStart(int32_t partIndex) const;
-
-    UBool argNameMatches(int32_t partIndex, const UnicodeString& argName, int32_t argNumber);
-
-    void cacheExplicitFormats(UErrorCode& status);
-
-    Format* createAppropriateFormat(UnicodeString& type,
-                                    UnicodeString& style,
-                                    Formattable::Type& formattableType,
-                                    UParseError& parseError,
-                                    UErrorCode& ec);
-
-    const Formattable* getArgFromListByName(const Formattable* arguments,
-                                            const UnicodeString *argumentNames,
-                                            int32_t cnt, UnicodeString& name) const;
-
-    Formattable* parse(int32_t msgStart,
-                       const UnicodeString& source,
-                       ParsePosition& pos,
-                       int32_t& count,
-                       UErrorCode& ec) const;
-
-    FieldPosition* updateMetaData(AppendableWrapper& dest, int32_t prevLength,
-                                  FieldPosition* fp, const Formattable* argId) const;
-
-    /**
-     * Finds the "other" sub-message.
-     * @param partIndex the index of the first PluralFormat argument style part.
-     * @return the "other" sub-message start part index.
-     */
-    int32_t findOtherSubMessage(int32_t partIndex) const;
-
-    /**
-     * Returns the ARG_START index of the first occurrence of the plural number in a sub-message.
-     * Returns -1 if it is a REPLACE_NUMBER.
-     * Returns 0 if there is neither.
-     */
-    int32_t findFirstPluralNumberArg(int32_t msgStart, const UnicodeString &argName) const;
-
-    Format* getCachedFormatter(int32_t argumentNumber) const;
-
-    UnicodeString getLiteralStringUntilNextArgument(int32_t from) const;
-
-    void copyObjects(const MessageFormat& that, UErrorCode& ec);
-
-    void formatComplexSubMessage(int32_t msgStart,
-                                 const void *plNumber,
-                                 const Formattable* arguments,
-                                 const UnicodeString *argumentNames,
-                                 int32_t cnt,
-                                 AppendableWrapper& appendTo,
-                                 UErrorCode& success) const;
+    int32_t          makeFormat( /*int32_t position, */
+                                int32_t offsetNumber,
+                                UnicodeString* segments,
+                                UParseError& parseError,
+                                UErrorCode& success);
 
     /**
      * Convenience method that ought to be in NumberFormat
@@ -1044,52 +595,48 @@ private:
     NumberFormat* createIntegerFormat(const Locale& locale, UErrorCode& status) const;
 
     /**
-     * Returns array of argument types in the parsed pattern
-     * for use in C API.  Only for the use of umsg_vformat().  Not
-     * for public consumption.
-     * @param listCount  Output parameter to receive the size of array
-     * @return           The array of formattable types in the pattern
+     * Checks the range of the source text to quote the special
+     * characters, { and ' and copy to target buffer.
+     * @param source
+     * @param start the text offset to start the process of in the source string
+     * @param end the text offset to end the process of in the source string
+     * @param target the result buffer
      */
-    const Formattable::Type* getArgTypeList(int32_t& listCount) const {
-        listCount = argTypeCount;
-        return argTypes;
-    }
+    static void copyAndFixQuotes(const UnicodeString& source, int32_t start, int32_t end, UnicodeString& target);
 
     /**
-     * Resets the internal MessagePattern, and other associated caches.
+     * Converts a string to an integer value using a default NumberFormat object
+     * which is static (shared by all MessageFormat instances).  This replaces
+     * a call to wtoi().
+     * @param string the source string to convert with
+     * @return the converted number.
      */
-    void resetPattern();
+    static int32_t stoi(const UnicodeString& string);
 
     /**
-     * A DummyFormatter that we use solely to store a NULL value. UHash does
-     * not support storing NULL values.
+     * Converts an integer value to a string using a default NumberFormat object
+     * which is static (shared by all MessageFormat instances).  This replaces
+     * a call to wtoi().
+     * @param i the integer to format
+     * @param string the destination string
+     * @return a reference to string.
      */
-    class U_I18N_API DummyFormat : public Format {
-    public:
-        virtual UBool operator==(const Format&) const;
-        virtual Format* clone() const;
-        virtual UnicodeString& format(const Formattable& obj,
-                              UnicodeString& appendTo,
-                              UErrorCode& status) const;
-        virtual UnicodeString& format(const Formattable&,
-                                      UnicodeString& appendTo,
-                                      FieldPosition&,
-                                      UErrorCode& status) const;
-        virtual UnicodeString& format(const Formattable& obj,
-                                      UnicodeString& appendTo,
-                                      FieldPositionIterator* posIter,
-                                      UErrorCode& status) const;
-        virtual void parseObject(const UnicodeString&,
-                                 Formattable&,
-                                 ParsePosition&) const;
-    };
-
-    friend class MessageFormatAdapter; // getFormatTypeList() access
+    static UnicodeString& itos(int32_t i, UnicodeString& string);
 };
 
-U_NAMESPACE_END
+inline UClassID
+MessageFormat::getDynamicClassID() const
+{
+    return MessageFormat::getStaticClassID();
+}
 
-#endif /* #if !UCONFIG_NO_FORMATTING */
+inline UnicodeString&
+MessageFormat::format(const Formattable& obj,
+                      UnicodeString& result,
+                      UErrorCode& status) const {
+    return Format::format(obj, result, status);
+}
+U_NAMESPACE_END
 
 #endif // _MSGFMT
 //eof

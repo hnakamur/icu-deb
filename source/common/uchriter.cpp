@@ -1,22 +1,17 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-* Copyright (C) 1998-2012, International Business Machines Corporation and
-* others. All Rights Reserved.
+* Copyright (C) 1998-2001, International Business Machines Corporation and   *
+* others. All Rights Reserved.                                               *
 ******************************************************************************
 */
 
-#include "utypeinfo.h"  // for 'typeid' to work
-
 #include "unicode/uchriter.h"
 #include "unicode/ustring.h"
-#include "unicode/utf16.h"
-#include "ustr_imp.h"
+#include "uhash.h"
 
 U_NAMESPACE_BEGIN
 
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(UCharCharacterIterator)
+const char UCharCharacterIterator::fgClassID = 0;
 
 UCharCharacterIterator::UCharCharacterIterator()
   : CharacterIterator(),
@@ -25,14 +20,14 @@ UCharCharacterIterator::UCharCharacterIterator()
     // never default construct!
 }
 
-UCharCharacterIterator::UCharCharacterIterator(ConstChar16Ptr textPtr,
+UCharCharacterIterator::UCharCharacterIterator(const UChar* textPtr,
                                                int32_t length)
   : CharacterIterator(textPtr != 0 ? (length>=0 ? length : u_strlen(textPtr)) : 0),
   text(textPtr)
 {
 }
 
-UCharCharacterIterator::UCharCharacterIterator(ConstChar16Ptr textPtr,
+UCharCharacterIterator::UCharCharacterIterator(const UChar* textPtr,
                                                int32_t length,
                                                int32_t position)
   : CharacterIterator(textPtr != 0 ? (length>=0 ? length : u_strlen(textPtr)) : 0, position),
@@ -40,7 +35,7 @@ UCharCharacterIterator::UCharCharacterIterator(ConstChar16Ptr textPtr,
 {
 }
 
-UCharCharacterIterator::UCharCharacterIterator(ConstChar16Ptr textPtr,
+UCharCharacterIterator::UCharCharacterIterator(const UChar* textPtr,
                                                int32_t length,
                                                int32_t textBegin,
                                                int32_t textEnd,
@@ -71,7 +66,8 @@ UCharCharacterIterator::operator==(const ForwardCharacterIterator& that) const {
     if (this == &that) {
         return TRUE;
     }
-    if (typeid(*this) != typeid(that)) {
+    
+    if (getDynamicClassID() != that.getDynamicClassID()) {
         return FALSE;
     }
 
@@ -86,7 +82,7 @@ UCharCharacterIterator::operator==(const ForwardCharacterIterator& that) const {
 
 int32_t
 UCharCharacterIterator::hashCode() const {
-    return ustr_hashUCharsN(text, textLength) ^ pos ^ begin ^ end;
+    return uhash_hashUCharsN(text, textLength) ^ pos ^ begin ^ end;
 }
 
 CharacterIterator*
@@ -194,7 +190,7 @@ UCharCharacterIterator::first32() {
     if(pos < end) {
         int32_t i = pos;
         UChar32 c;
-        U16_NEXT(text, i, end, c);
+        UTF_NEXT_CHAR(text, i, end, c);
         return c;
     } else {
         return DONE;
@@ -206,7 +202,7 @@ UCharCharacterIterator::first32PostInc() {
     pos = begin;
     if(pos < end) {
         UChar32 c;
-        U16_NEXT(text, pos, end, c);
+        UTF_NEXT_CHAR(text, pos, end, c);
         return c;
     } else {
         return DONE;
@@ -218,7 +214,7 @@ UCharCharacterIterator::last32() {
     pos = end;
     if(pos > begin) {
         UChar32 c;
-        U16_PREV(text, begin, pos, c);
+        UTF_PREV_CHAR(text, begin, pos, c);
         return c;
     } else {
         return DONE;
@@ -233,10 +229,10 @@ UCharCharacterIterator::setIndex32(int32_t position) {
         position = end;
     }
     if(position < end) {
-        U16_SET_CP_START(text, begin, position);
+        UTF_SET_CHAR_START(text, begin, position);
         int32_t i = this->pos = position;
         UChar32 c;
-        U16_NEXT(text, i, end, c);
+        UTF_NEXT_CHAR(text, i, end, c);
         return c;
     } else {
         this->pos = position;
@@ -248,7 +244,7 @@ UChar32
 UCharCharacterIterator::current32() const {
     if (pos >= begin && pos < end) {
         UChar32 c;
-        U16_GET(text, begin, pos, end, c);
+        UTF_GET_CHAR(text, begin, pos, end, c);
         return c;
     } else {
         return DONE;
@@ -258,11 +254,11 @@ UCharCharacterIterator::current32() const {
 UChar32
 UCharCharacterIterator::next32() {
     if (pos < end) {
-        U16_FWD_1(text, pos, end);
+        UTF_FWD_1(text, pos, end);
         if(pos < end) {
             int32_t i = pos;
             UChar32 c;
-            U16_NEXT(text, i, end, c);
+            UTF_NEXT_CHAR(text, i, end, c);
             return c;
         }
     }
@@ -275,7 +271,7 @@ UChar32
 UCharCharacterIterator::next32PostInc() {
     if (pos < end) {
         UChar32 c;
-        U16_NEXT(text, pos, end, c);
+        UTF_NEXT_CHAR(text, pos, end, c);
         return c;
     } else {
         return DONE;
@@ -286,7 +282,7 @@ UChar32
 UCharCharacterIterator::previous32() {
     if (pos > begin) {
         UChar32 c;
-        U16_PREV(text, begin, pos, c);
+        UTF_PREV_CHAR(text, begin, pos, c);
         return c;
     } else {
         return DONE;
@@ -326,20 +322,20 @@ UCharCharacterIterator::move32(int32_t delta, CharacterIterator::EOrigin origin)
     case kStart:
         pos = begin;
         if(delta > 0) {
-            U16_FWD_N(text, pos, end, delta);
+            UTF_FWD_N(text, pos, end, delta);
         }
         break;
     case kCurrent:
         if(delta > 0) {
-            U16_FWD_N(text, pos, end, delta);
+            UTF_FWD_N(text, pos, end, delta);
         } else {
-            U16_BACK_N(text, begin, pos, -delta);
+            UTF_BACK_N(text, begin, pos, -delta);
         }
         break;
     case kEnd:
         pos = end;
         if(delta < 0) {
-            U16_BACK_N(text, begin, pos, -delta);
+            UTF_BACK_N(text, begin, pos, -delta);
         }
         break;
     default:
@@ -349,7 +345,7 @@ UCharCharacterIterator::move32(int32_t delta, CharacterIterator::EOrigin origin)
     return pos;
 }
 
-void UCharCharacterIterator::setText(ConstChar16Ptr newText,
+void UCharCharacterIterator::setText(const UChar* newText,
                                      int32_t      newTextLength) {
     text = newText;
     if(newText == 0 || newTextLength < 0) {

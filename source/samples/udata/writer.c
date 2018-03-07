@@ -1,18 +1,12 @@
 /*
 *******************************************************************************
 *
-*   © 2016 and later: Unicode, Inc. and others.
-*   License & terms of use: http://www.unicode.org/copyright.html#License
-*
-*******************************************************************************
-*******************************************************************************
-*
-*   Copyright (C) 1999-2006, International Business Machines
+*   Copyright (C) 1999-2000, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
 *   file name:  writer.c
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -39,7 +33,7 @@
 /* this is private - available only through toolutil */
 #include "unewdata.h"
 
-#define DATA_NAME "mypkg_example"
+#define DATA_NAME "example"
 #define DATA_TYPE "dat"
 
 /* UDataInfo cf. udata.h */
@@ -77,7 +71,7 @@ main(int argc, const char *argv[]) {
     char *currdir = getcwd(NULL, 0);
 #endif
 
-    pData=udata_create(currdir, DATA_TYPE, DATA_NAME, &dataInfo,
+    pData=udata_create(getcwd(NULL, 0), DATA_TYPE, DATA_NAME, &dataInfo,
                        U_COPYRIGHT_STRING, &errorCode);
 
     if(currdir != NULL) {

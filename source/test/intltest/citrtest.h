@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2002, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -40,8 +38,6 @@ public:
 
     void TestUCharIterator();
     void TestUCharIterator(UCharIterator *iter, CharacterIterator &ci, const char *moves, const char *which);
-    void TestCoverage();
-    void TestCharIteratorSubClasses();
 };
 
 #endif

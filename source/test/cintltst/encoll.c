@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -22,18 +20,13 @@
 
 #include <stdlib.h>
 #include <string.h>
-
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "unicode/ucol.h"
 #include "unicode/uloc.h"
 #include "cintltst.h"
 #include "encoll.h"
 #include "ccolltst.h"
 #include "callcoll.h"
-#include "cmemory.h"
 #include "unicode/ustring.h"
 
 static UCollator *myCollation = NULL;
@@ -243,9 +236,9 @@ const static UChar testAcute[][MAX_TOKEN_LEN] = {
 
 static const UChar testMore[][MAX_TOKEN_LEN] = {
     {(UChar)0x0061 /* 'a' */, (UChar)0x0065 /* 'e' */, 0},
+    {(UChar)0x0061 /* 'a' */, (UChar)0x0066 /* 'f' */, 0},
     { 0x00E6, 0},
     { 0x00C6, 0},
-    {(UChar)0x0061 /* 'a' */, (UChar)0x0066 /* 'f' */, 0},
     {(UChar)0x006F /* 'o' */, (UChar)0x0065 /* 'e' */, 0},
     { 0x0153, 0},
     { 0x0152, 0},
@@ -270,7 +263,7 @@ static void TestTertiary( )
     UErrorCode status = U_ZERO_ERROR;
     myCollation = ucol_open("en_US", &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n", myErrorName(status));
+        log_err("ERROR: in creation of rule based collator: %s\n", myErrorName(status));
         return;
     }
     log_verbose("Testing English Collation with Tertiary strength\n");
@@ -291,7 +284,7 @@ static void TestTertiary( )
         }
    }
     /*test more interesting cases */
-    testMoreSize = UPRV_LENGTHOF(testMore);
+    testMoreSize = sizeof(testMore) / sizeof(testMore[0]);
     for (i = 0; i < testMoreSize; i++)
     {
         for (j = 0; j < testMoreSize; j++)
@@ -312,7 +305,7 @@ static void TestPrimary()
     UErrorCode status = U_ZERO_ERROR;
     myCollation = ucol_open("en_US", &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n", myErrorName(status));
+        log_err("ERROR: in creation of rule based collator: %s\n", myErrorName(status));
         return;
     }
     ucol_setStrength(myCollation, UCOL_PRIMARY);
@@ -331,7 +324,7 @@ static void TestSecondary()
     UErrorCode status = U_ZERO_ERROR;
     myCollation = ucol_open("en_US", &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n", myErrorName(status));
+        log_err("ERROR: in creation of rule based collator: %s\n", myErrorName(status));
         return;
     }
     ucol_setStrength(myCollation, UCOL_SECONDARY);
@@ -343,7 +336,7 @@ static void TestSecondary()
     
 
     /*test acute and grave ordering (compare to french collation) */
-    testAcuteSize = UPRV_LENGTHOF(testAcute);
+    testAcuteSize = sizeof(testAcute) / sizeof(testAcute[0]);
     for (i = 0; i < testAcuteSize; i++)
     {
         for (j = 0; j < testAcuteSize; j++)
@@ -356,5 +349,3 @@ static void TestSecondary()
     }
 ucol_close(myCollation);
 }
-
-#endif /* #if !UCONFIG_NO_COLLATION */

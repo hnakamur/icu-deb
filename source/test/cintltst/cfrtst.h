@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2001, International Business Machines Corporation and
@@ -23,9 +21,6 @@
 #ifndef _CFRCOLLTST
 #define _CFRCOLLTST
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "cintltst.h"
 
@@ -41,6 +36,5 @@
 static    void TestTertiary(void);
 
 
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

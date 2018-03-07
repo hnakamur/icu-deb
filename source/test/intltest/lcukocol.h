@@ -1,18 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2003, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 
 #ifndef LOTUSCOLLATIONKOREANTEST_H
 #define LOTUSCOLLATIONKOREANTEST_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "tscoll.h"
 
@@ -26,6 +20,9 @@ public:
     virtual ~LotusCollationKoreanTest();
     void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL );
 
+    // main test routine, tests rules specific to "Kana" locale
+    void doTest( UnicodeString source, UnicodeString target, Collator::EComparisonResult result);
+
     // performs test with strength TERIARY
     void TestTertiary(/* char* par */);
 
@@ -36,7 +33,4 @@ private:
 
     Collator *myCollation;
 };
-
-#endif /* #if !UCONFIG_NO_COLLATION */
-
 #endif

@@ -1,22 +1,19 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
- ********************************************************************************
- *   Copyright (C) 1997-2006, International Business Machines
- *   Corporation and others.  All Rights Reserved.
- ********************************************************************************
- *
- * File FIELDPOS.H
- *
- * Modification History:
- *
- *   Date        Name        Description
- *   02/25/97    aliu        Converted from java.
- *   03/17/97    clhuang     Updated per Format implementation.
- *    07/17/98    stephen        Added default/copy ctors, and operators =, ==, !=
- ********************************************************************************
- */
-
+********************************************************************************
+*   Copyright (C) 1997-2001, International Business Machines
+*   Corporation and others.  All Rights Reserved.
+********************************************************************************
+*
+* File FIELDPOS.H
+*
+* Modification History:
+*
+*   Date        Name        Description
+*   02/25/97    aliu        Converted from java.
+*   03/17/97    clhuang     Updated per Format implementation.
+*    07/17/98    stephen        Added default/copy ctors, and operators =, ==, !=
+********************************************************************************
+*/
 // *****************************************************************************
 // This file was generated from the java source file FieldPosition.java
 // *****************************************************************************
@@ -25,15 +22,6 @@
 #define FIELDPOS_H
 
 #include "unicode/utypes.h"
-
-/**
- * \file 
- * \brief C++ API: FieldPosition identifies the fields in a formatted output.
- */
-
-#if !UCONFIG_NO_FORMATTING
-
-#include "unicode/uobject.h"
 
 U_NAMESPACE_BEGIN
 
@@ -57,8 +45,6 @@ U_NAMESPACE_BEGIN
  * object as an argument. You use this <code>format</code> method
  * to perform partial formatting or to get information about the
  * formatted output (such as the position of a field).
- *
- * The FieldPosition class is not intended for public subclassing.
  *
  * <p>
  * Below is an example of using <code>FieldPosition</code> to aid
@@ -104,22 +90,21 @@ U_NAMESPACE_BEGIN
  *                     1.234
  *  \endcode
  * </pre>
- */
-class U_I18N_API FieldPosition : public UObject {
+*/
+class U_I18N_API FieldPosition {
 public:
     /**
      * DONT_CARE may be specified as the field to indicate that the
-     * caller doesn't need to specify a field.
-     * @stable ICU 2.0
+     * caller doesn't need to specify a field.  Do not subclass.
      */
     enum { DONT_CARE = -1 };
 
     /**
      * Creates a FieldPosition object with a non-specified field.
-     * @stable ICU 2.0
+     * @stable
      */
     FieldPosition() 
-        : UObject(), fField(DONT_CARE), fBeginIndex(0), fEndIndex(0) {}
+        : fField(DONT_CARE), fBeginIndex(0), fEndIndex(0) {}
 
     /**
      * Creates a FieldPosition object for the given field.  Fields are
@@ -130,119 +115,82 @@ public:
      * @see NumberFormat#FRACTION_FIELD
      * @see DateFormat#YEAR_FIELD
      * @see DateFormat#MONTH_FIELD
-     * @stable ICU 2.0
+     * @stable
      */
     FieldPosition(int32_t field) 
-        : UObject(), fField(field), fBeginIndex(0), fEndIndex(0) {}
+        : fField(field), fBeginIndex(0), fEndIndex(0) {}
 
     /**
      * Copy constructor
      * @param copy the object to be copied from.
-     * @stable ICU 2.0
+     * @stable
      */
     FieldPosition(const FieldPosition& copy) 
-        : UObject(copy), fField(copy.fField), fBeginIndex(copy.fBeginIndex), fEndIndex(copy.fEndIndex) {}
+        : fField(copy.fField), fBeginIndex(copy.fBeginIndex), fEndIndex(copy.fEndIndex) {}
 
     /**
      * Destructor
-     * @stable ICU 2.0
+     * @stable
      */
-    virtual ~FieldPosition();
+    ~FieldPosition() {}
 
     /**
      * Assignment operator
-     * @param copy the object to be copied from.
-     * @stable ICU 2.0
+     * @stable
      */
     FieldPosition&      operator=(const FieldPosition& copy);
 
     /** 
      * Equality operator.
-     * @param that    the object to be compared with.
-     * @return        TRUE if the two field positions are equal, FALSE otherwise.
-     * @stable ICU 2.0
+     * @return TRUE if the two field positions are equal, FALSE otherwise.
+     * @stable
      */
     UBool              operator==(const FieldPosition& that) const;
 
     /** 
      * Equality operator.
-     * @param that    the object to be compared with.
-     * @return        TRUE if the two field positions are not equal, FALSE otherwise.
-     * @stable ICU 2.0
+     * @return TRUE if the two field positions are not equal, FALSE otherwise.
+     * @stable
      */
     UBool              operator!=(const FieldPosition& that) const;
 
     /**
-     * Clone this object.
-     * Clones can be used concurrently in multiple threads.
-     * If an error occurs, then NULL is returned.
-     * The caller must delete the clone.
-     *
-     * @return a clone of this object
-     *
-     * @see getDynamicClassID
-     * @stable ICU 2.8
-     */
-    FieldPosition *clone() const;
-
-    /**
      * Retrieve the field identifier.
-     * @return    the field identifier.
-     * @stable ICU 2.0
+     * @stable
      */
     int32_t getField(void) const { return fField; }
 
     /**
      * Retrieve the index of the first character in the requested field.
-     * @return    the index of the first character in the requested field.
-     * @stable ICU 2.0
+     * @stable
      */
     int32_t getBeginIndex(void) const { return fBeginIndex; }
 
     /**
      * Retrieve the index of the character following the last character in the
      * requested field.
-     * @return    the index of the character following the last character in the
-     *            requested field.
-     * @stable ICU 2.0
+     * @stable
      */
     int32_t getEndIndex(void) const { return fEndIndex; }
  
     /**
      * Set the field.
-     * @param f    the new value of the field.
-     * @stable ICU 2.0
+     * @stable
      */
     void setField(int32_t f) { fField = f; }
 
     /**
      * Set the begin index.  For use by subclasses of Format.
-     * @param bi    the new value of the begin index
-     * @stable ICU 2.0
+     * @stable
      */
     void setBeginIndex(int32_t bi) { fBeginIndex = bi; }
 
     /**
      * Set the end index.  For use by subclasses of Format.
-     * @param ei    the new value of the end index
-     * @stable ICU 2.0
+     * @stable
      */
     void setEndIndex(int32_t ei) { fEndIndex = ei; }
     
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     *
-     * @stable ICU 2.2
-     */
-    virtual UClassID getDynamicClassID() const;
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     *
-     * @stable ICU 2.2
-     */
-    static UClassID U_EXPORT2 getStaticClassID();
-
 private:
     /**
      * Input: Desired field to determine start and end offsets for.
@@ -275,9 +223,12 @@ FieldPosition::operator=(const FieldPosition& copy)
 inline UBool
 FieldPosition::operator==(const FieldPosition& copy) const
 {
-    return (fField == copy.fField &&
-        fEndIndex == copy.fEndIndex &&
-        fBeginIndex == copy.fBeginIndex);
+    if(    fField         != copy.fField || 
+        fEndIndex     != copy.fEndIndex ||
+        fBeginIndex != copy.fBeginIndex) 
+        return FALSE;
+    else
+        return TRUE;
 }
 
 inline UBool
@@ -287,8 +238,6 @@ FieldPosition::operator!=(const FieldPosition& copy) const
 }
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif // _FIELDPOS
 //eof

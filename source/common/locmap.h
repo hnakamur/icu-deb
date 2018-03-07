@@ -1,14 +1,16 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1996-2013, International Business Machines
+*   Copyright (C) 1996-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
+*/
+/*
+*============================================================================
 *
 * File locmap.h      : Locale Mapping Classes
+*
 * 
 *
 * Created by: Helena Shih
@@ -23,18 +25,21 @@
 *============================================================================
 */
 
+/* include this first so that we are sure to get WIN32 defined */
+#include "unicode/utypes.h"
+
 #ifndef LOCMAP_H
 #define LOCMAP_H
 
-#include "unicode/utypes.h"
+U_CAPI const char* U_EXPORT2 
+uprv_defaultCodePageForLocale(const char *locale);
 
+#ifdef WIN32
 #define LANGUAGE_LCID(hostID) (uint16_t)(0x03FF & hostID)
 
-U_CAPI int32_t uprv_convertToPosix(uint32_t hostid, char* posixID, int32_t posixIDCapacity, UErrorCode* status);
+U_CFUNC const char *T_convertToPosix(uint32_t hostid, UErrorCode* status);
 
-/* Don't call these functions directly. Use uloc_getLCID instead. */
-U_CAPI uint32_t uprv_convertToLCIDPlatform(const char *localeID);   // Leverage platform conversion if possible
-U_CAPI uint32_t uprv_convertToLCID(const char *langID, const char* posixID, UErrorCode* status);
+U_CFUNC uint32_t T_convertToLCID(const char* posixID, UErrorCode* status);
+#endif /* WIN32 */
 
 #endif /* LOCMAP_H */
-

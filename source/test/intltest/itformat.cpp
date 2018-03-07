@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * COPYRIGHT:
- * Copyright (c) 1997-2015, International Business Machines
- * Corporation and others. All Rights Reserved.
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
  ********************************************************************/
 
 /**
@@ -11,10 +9,6 @@
  */
 
 #include "unicode/utypes.h"
-#include "unicode/localpointer.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "itformat.h"
 #include "tsdate.h"
 #include "tsnmfmt.h"
@@ -42,51 +36,6 @@
 #include "pptest.h"         // ParsePositionTest
 #include "calregts.h"       // CalendarRegressionTest
 #include "tzregts.h"        // TimeZoneRegressionTest
-#include "astrotst.h"       // AstroTest
-#include "incaltst.h"       // IntlCalendarTest
-#include "calcasts.h"       // CalendarCaseTest
-#include "tzrulets.h"       // TimeZoneRuleTest
-#include "dadrcal.h"        // DataDrivenCalendarTest
-#include "dadrfmt.h"        // DataDrivenFormatTest
-#include "dtptngts.h"       // IntlTestDateTimePatternGeneratorAPI
-#include "tzoffloc.h"       // TimeZoneOffsetLocalTest
-#include "tzfmttst.h"       // TimeZoneFormatTest
-#include "plurults.h"       // PluralRulesTest
-#include "plurfmts.h"       // PluralFormatTest
-#include "selfmts.h"       // PluralFormatTest
-#include "dtifmtts.h"       // DateIntervalFormatTest
-#include "locnmtst.h"       // LocaleDisplayNamesTest
-#include "dcfmtest.h"       // DecimalFormatTest
-#include "listformattertest.h"  // ListFormatterTest
-#include "regiontst.h"      // RegionTest
-
-// NumberFormatter is disabled on some platforms due to C++11 compatibility
-#if !UPRV_INCOMPLETE_CPP11_SUPPORT
-#   include "numbertest.h"     // All NumberFormatter tests
-#else
-class NumberTest : public IntlTest {
-  public:
-    void runIndexedTest(int32_t index, UBool exec, const char*& name, char*) {
-        if (index > 0) { name = ""; return; } // base case
-        name = "NumberTest";
-        if (exec) {
-            infoln(u"   NOTE: NumberTest is disabled on this platform; see ICU ticket #13393.");
-        }
-    }
-};
-#endif
-
-extern IntlTest *createCompactDecimalFormatTest();
-extern IntlTest *createGenderInfoTest();
-#if !UCONFIG_NO_BREAK_ITERATION
-extern IntlTest *createRelativeDateTimeFormatterTest();
-#endif
-extern IntlTest *createTimeUnitTest();
-extern IntlTest *createMeasureFormatTest();
-extern IntlTest *createNumberFormatSpecificationTest();
-extern IntlTest *createScientificNumberFormatterTest();
-extern IntlTest *createNumberFormat2Test(); 
-
 
 #define TESTCLASS(id, TestClass)          \
     case id:                              \
@@ -106,7 +55,7 @@ void IntlTestFormat::runIndexedTest( int32_t index, UBool exec, const char* &nam
     Locale  saveDefaultLocale = Locale::getDefault();
     if (exec) {
         saveDefaultTimeZone = TimeZone::createDefault();
-        TimeZone *tz = TimeZone::createTimeZone("America/Los_Angeles");
+        TimeZone *tz = TimeZone::createTimeZone("PST");
         TimeZone::setDefault(*tz);
         delete tz;
         UErrorCode status = U_ZERO_ERROR;
@@ -143,102 +92,20 @@ void IntlTestFormat::runIndexedTest( int32_t index, UBool exec, const char* &nam
         TESTCLASS(23,ParsePositionTest);
         TESTCLASS(24,CalendarRegressionTest);
         TESTCLASS(25,TimeZoneRegressionTest);
-        TESTCLASS(26,IntlCalendarTest);
-        TESTCLASS(27,AstroTest);
-        TESTCLASS(28,CalendarCaseTest);
-        TESTCLASS(29,TimeZoneRuleTest);
-#if !UCONFIG_NO_FILE_IO && !UCONFIG_NO_LEGACY_CONVERSION
-        TESTCLASS(30,DataDrivenCalendarTest);
-        TESTCLASS(31,DataDrivenFormatTest);
-#endif
-        TESTCLASS(32,IntlTestDateTimePatternGeneratorAPI);
-        TESTCLASS(33,TimeZoneOffsetLocalTest);
-        TESTCLASS(34,TimeZoneFormatTest);
-        TESTCLASS(35,PluralRulesTest);
-        TESTCLASS(36,PluralFormatTest);
-        TESTCLASS(37,DateIntervalFormatTest);
-        case 38:
-          name = "TimeUnitTest";
-          if (exec) {
-            logln("TimeUnitTest test---");
-            logln((UnicodeString)"");
-            LocalPointer<IntlTest> test(createTimeUnitTest());
-            callTest(*test, par);
-          }
-          break;
-        TESTCLASS(39,SelectFormatTest);
-        TESTCLASS(40,LocaleDisplayNamesTest);
-#if !UCONFIG_NO_REGULAR_EXPRESSIONS
-        TESTCLASS(41,DecimalFormatTest);
-#endif
-        TESTCLASS(42,ListFormatterTest);
-        case 43:
-          name = "GenderInfoTest";
-          if (exec) {
-            logln("GenderInfoTest test---");
-            logln((UnicodeString)"");
-            LocalPointer<IntlTest> test(createGenderInfoTest());
-            callTest(*test, par);
-          }
-          break;
-        case 44:
-          name = "CompactDecimalFormatTest";
-          if (exec) {
-            logln("CompactDecimalFormatTest test---");
-            logln((UnicodeString)"");
-            LocalPointer<IntlTest> test(createCompactDecimalFormatTest());
-            callTest(*test, par);
-          }
-          break;
-        TESTCLASS(45,RegionTest);
-        case 46:
-#if !UCONFIG_NO_BREAK_ITERATION
-          name = "RelativeDateTimeFormatterTest";
-          if (exec) {
-            logln("RelativeDateTimeFormatterTest test---");
-            logln((UnicodeString)"");
-            LocalPointer<IntlTest> test(createRelativeDateTimeFormatterTest());
-            callTest(*test, par);
-          }
-#endif
-          break;
-        case 47:
-          name = "MeasureFormatTest";
-          if (exec) {
-            logln("MeasureFormatTest test---");
-            logln((UnicodeString)"");
-            LocalPointer<IntlTest> test(createMeasureFormatTest());
-            callTest(*test, par);
-          }
-          break;
-        case 48:
-          name = "NumberFormatSpecificationTest";
-          if (exec) {
-            logln("NumberFormatSpecificationTest test---");
-            logln((UnicodeString)"");
-            LocalPointer<IntlTest> test(createNumberFormatSpecificationTest());
-            callTest(*test, par);
-          }
-          break;
-        case 49:
-          name = "ScientificNumberFormatterTest";
-          if (exec) {
-            logln("ScientificNumberFormatterTest test---");
-            logln((UnicodeString)"");
-            LocalPointer<IntlTest> test(createScientificNumberFormatterTest());
-            callTest(*test, par);
-          }
-          break;
-        case 50:
-          name = "NumberFormat2Test"; 
-          if (exec) { 
-            logln("NumberFormat2Test test---"); 
-            logln((UnicodeString)""); 
-            LocalPointer<IntlTest> test(createNumberFormat2Test()); 
-            callTest(*test, par); 
-          } 
-          break;
-        TESTCLASS(51,NumberTest);
+
+        //TESTCLASS(0,IntlTestDateFormatSymbolsC);
+        //TESTCLASS(0,IntlTestDecimalFormatSymbolsC);
+        //TESTCLASS(0,IntlTestSimpleDateFormatAPIC);
+        //TESTCLASS(0,IntlTestDateFormatAPIC);
+        //TESTCLASS(0,IntlTestDecimalFormatAPIC);
+        //TESTCLASS(0,IntlTestNumberFormatAPIC);
+        //TESTCLASS(0,CNumberSpelloutFormatTest);
+        //TESTCLASS(0,CNumberSpelloutFormatRoundTripTest);
+        //TESTCLASS(0,TestCwrapperFormatSmallClasses);
+        //TESTCLASS(0,TestCwrapperMessageFormat);
+        //TESTCLASS(0,TestCwrapperChoiceFormat);
+        //TESTCLASS(0,TestCwrapperCalendar);
+        //TESTCLASS(0,TestCwrapperTimeZone);
         default: name = ""; break; //needed to end loop
     }
     if (exec) {
@@ -251,5 +118,3 @@ void IntlTestFormat::runIndexedTest( int32_t index, UBool exec, const char* &nam
         }
     }
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

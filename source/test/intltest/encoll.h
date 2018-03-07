@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2006, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -16,10 +14,6 @@
 #ifndef _ENCOLL
 #define _ENCOLL
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "tscoll.h"
 
 class CollationEnglishTest: public IntlTestCollator {
@@ -32,6 +26,9 @@ public:
     virtual ~CollationEnglishTest();
     void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL );
 
+    // main test routine, tests rules defined by the "en" locale
+    void doTest( UnicodeString source, UnicodeString target, Collator::EComparisonResult result);
+
     // performs test with strength PRIMARY
     void TestPrimary(/* char* par */);
 
@@ -42,9 +39,12 @@ public:
     void TestTertiary(/* char* par */);
 
 private:
+    static const UChar testBugs[][MAX_TOKEN_LEN];
+    static const UChar testSourceCases[][MAX_TOKEN_LEN];
+    static const UChar testTargetCases[][MAX_TOKEN_LEN];
+    static const Collator::EComparisonResult results[];
+    static const UChar testAcute[][MAX_TOKEN_LEN];
+
     Collator *myCollation;
 };
-
-#endif /* #if !UCONFIG_NO_COLLATION */
-
 #endif

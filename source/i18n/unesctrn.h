@@ -1,20 +1,14 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
- **********************************************************************
- *   Copyright (c) 2001-2007, International Business Machines
- *   Corporation and others.  All Rights Reserved.
- **********************************************************************
- *   Date        Name        Description
- *   11/20/2001  aliu        Creation.
- **********************************************************************
- */
+**********************************************************************
+*   Copyright (c) 2001-2002, International Business Machines
+*   Corporation and others.  All Rights Reserved.
+**********************************************************************
+*   Date        Name        Description
+*   11/20/2001  aliu        Creation.
+**********************************************************************
+*/
 #ifndef UNESCTRN_H
 #define UNESCTRN_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
 
 #include "unicode/translit.h"
 
@@ -30,7 +24,7 @@ U_NAMESPACE_BEGIN
  *
  * @author Alan Liu
  */
-class UnescapeTransliterator : public Transliterator {
+class U_I18N_API UnescapeTransliterator : public Transliterator {
 
  private:
 
@@ -58,8 +52,6 @@ class UnescapeTransliterator : public Transliterator {
 
     /**
      * Constructor.  Takes the encoded spec array (does not adopt it).
-     * @param ID   the string identifier for this transliterator
-     * @param spec the encoded spec array
      */
     UnescapeTransliterator(const UnicodeString& ID,
                            const UChar *spec);
@@ -79,34 +71,30 @@ class UnescapeTransliterator : public Transliterator {
      */
     virtual Transliterator* clone() const;
 
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     */
-    virtual UClassID getDynamicClassID() const;
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     */
-    U_I18N_API static UClassID U_EXPORT2 getStaticClassID();
-
  protected:
 
     /**
      * Implements {@link Transliterator#handleTransliterate}.
-     * @param text        the buffer holding transliterated and
-     *                    untransliterated text
-     * @param offset      the start and limit of the text, the position
-     *                    of the cursor, and the start and limit of transliteration.
-     * @param incremental if true, assume more text may be coming after
-     *                    pos.contextLimit.  Otherwise, assume the text is complete.
      */
-    virtual void handleTransliterate(Replaceable& text, UTransPosition& offset,
+    void handleTransliterate(Replaceable& text, UTransPosition& offset,
                              UBool isIncremental) const;
 
+ private:
+
+    /**
+     * Factory methods
+     */
+    static Transliterator* _createUnicode(const UnicodeString& ID, Token context);
+    static Transliterator* _createJava(const UnicodeString& ID, Token context);
+    static Transliterator* _createC(const UnicodeString& ID, Token context);
+    static Transliterator* _createXML(const UnicodeString& ID, Token context);
+    static Transliterator* _createXML10(const UnicodeString& ID, Token context);
+    static Transliterator* _createPerl(const UnicodeString& ID, Token context);
+    static Transliterator* _createAny(const UnicodeString& ID, Token context);
+
+    static UChar* copySpec(const UChar* spec);
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif

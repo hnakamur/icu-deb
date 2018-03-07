@@ -1,13 +1,7 @@
 /*
- ******************************************************************************
- *
- *   © 2016 and later: Unicode, Inc. and others.
- *   License & terms of use: http://www.unicode.org/copyright.html#License
- *
- ******************************************************************************
  ****************************************************************************** *
  *
- *   Copyright (C) 1999-2003, International Business Machines
+ *   Copyright (C) 1999-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  ****************************************************************************** *
@@ -88,7 +82,7 @@ inline CMAPMapper::CMAPMapper(const CMAPTable *cmap)
 
 inline CMAPMapper::~CMAPMapper()
 {
-    LE_DELETE_ARRAY(fcmap);
+    delete[] (char *) fcmap;
 }
 
 #endif

@@ -1,8 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * Copyright (c) 1997-2013 International Business Machines 
- * Corporation and others. All Rights Reserved.
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
 *
@@ -11,19 +10,14 @@
 * Modification History:
 *        Name                     Description            
 *     Madhu Katragadda            Converted to C
-*     Brian Rower                 Added TestOpenVsOpenRules
 *********************************************************************************
 *//* C API TEST For COLLATOR */
 
 #ifndef _CCOLLAPITST
 #define _CCOLLAPITST
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "cintltst.h"
-#include "callcoll.h"
 #define MAX_TOKEN_LEN 16
 
 
@@ -75,16 +69,6 @@
     void TestSafeClone(void);
 
     /**
-     * Test ucol_cloneBinary(), ucol_openBinary()
-     **/
-    void TestCloneBinary(void);
-
-    /**
-     * Test ucol_open() vs. ucol_openRules()
-     **/
-    void TestOpenVsOpenRules(void);
-
-    /**
      * Test getting bounds for a sortkey
      */
     void TestBounds(void);
@@ -94,49 +78,5 @@
      */
     void TestGetLocale(void);
 
-    /**
-     * Test buffer overrun while having smaller buffer for sortkey (j1865)
-     */
-    void TestSortKeyBufferOverrun(void);
-    /**
-     * Test getting and setting of attributes
-     */
-    void TestGetSetAttr(void);
-    /**
-     * Test getTailoredSet
-     */
-    void TestGetTailoredSet(void);
-
-    /**
-     * Test mergeSortKeys
-     */
-    void TestMergeSortKeys(void);
-
-    /** 
-     * test short string and collator identifier functions
-     */
-    static void TestShortString(void);
-
-    /** 
-     * test getContractions and getUnsafeSet
-     */
-    static void TestGetContractionsAndUnsafes(void);
-
-    /**
-     * Test funny stuff with open binary
-     */
-    static void TestOpenBinary(void);
-
-    /**
-     * Test getKeywordValuesForLocale API
-     */
-    static void TestGetKeywordValuesForLocale(void);
-
-    /**
-     * test strcoll with null arg
-     */
-    static void TestStrcollNull(void);
-
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

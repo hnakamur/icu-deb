@@ -1,7 +1,3 @@
-Copyright (C) 2016 and later: Unicode, Inc. and others.
-License & terms of use: http://www.unicode.org/copyright.html#License
-
-Copyright (c) 2002-2010, International Business Machines Corporation and others. All Rights Reserved.
 udata: Low level ICU data
 
 This sample demonstrates
@@ -11,12 +7,12 @@ This sample demonstrates
 Files:
     writer.c       C source for Writer application, will generate data file to be read by Reader.
     reader.c       C source for Reader application, will read file created by Writer
-    udata.sln      Windows MSVC workspace.  Double-click this to get started.
-    udata.vcproj   Windows MSVC project file
+    udata.dsw      Windows MSVC workspace.  Double-click this to get started.
+    udata.dsp      Windows MSVC project file
 
 To Build udata on Windows
     1.  Install and build ICU
-    2.  In MSVC, open the workspace file icu\samples\udata\udata.sln
+    2.  In MSVC, open the workspace file icu\samples\udata\udata.dsw
     3.  Choose a Debug or Release build.
     4.  Build.
 
@@ -30,7 +26,6 @@ To Run on Windows
     4.  Run it
             writer
             reader
-    IMPORTANT: On some systems, the reader and writer executables may not be in the same directory.  If this is the case, this will likely cause a problem with reader looking for the .dat file in the wrong directory).
 
 To Build on Unixes
     1.  Build ICU.  

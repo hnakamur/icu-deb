@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 1999-2011, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -11,10 +9,6 @@
 */
 #ifndef TRANSTST_H
 #define TRANSTST_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
 
 #include "unicode/translit.h"
 #include "intltest.h"
@@ -27,7 +21,7 @@ class TransliteratorTest : public IntlTest {
 
 public:
     TransliteratorTest();
-    virtual ~TransliteratorTest();
+    virtual ~TransliteratorTest() {}
 
 private:
     void runIndexedTest(int32_t index, UBool exec, const char* &name,
@@ -252,8 +246,6 @@ private:
     /* Test Compound Indic-Latin transliterators*/
     void TestCompoundLatinRT(void);
 
-    /* Test bindi and tippi for Gurmukhi */
-    void TestGurmukhiDevanagari(void);
     /**
      * Test instantiation from a locale.
      */
@@ -330,45 +322,6 @@ private:
 
     void TestInvalidBackRef(void);
 
-    void TestMulticharStringSet(void);
-
-    void TestUserFunction(void);
-
-    void TestAnyX(void);
-
-    void TestAny(void);
-
-    void TestSourceTargetSet(void);
-
-    void TestPatternWhiteSpace(void);
-
-    void TestAllCodepoints(void);
-
-    void TestBoilerplate(void);
-
-    void TestAlternateSyntax(void);
-
-    void TestRuleStripping(void);
-
-    void TestHalfwidthFullwidth(void);
-
-    void TestThai(void);
-
-    /**
-     * Tests the multiple-pass syntax
-     */
-    void TestBeginEnd(void);
-
-    /**
-     * Tests that toRules() works right with the multiple-pass syntax
-     */
-    void TestBeginEndToRules(void);
-
-    /**
-     * Tests the registerAlias() function
-     */
-    void TestRegisterAlias(void);
-
     //======================================================================
     // Support methods
     //======================================================================
@@ -378,12 +331,6 @@ private:
                  const UnicodeString& expectedResult);
 
     void expect(const UnicodeString& rules,
-                const UnicodeString& source,
-                const UnicodeString& expectedResult,
-                UTransPosition *pos=0);
-
-    void expect(const UnicodeString& id,
-                const UnicodeString& rules,
                 const UnicodeString& source,
                 const UnicodeString& expectedResult,
                 UTransPosition *pos=0);
@@ -416,14 +363,10 @@ private:
     void CheckIncrementalAux(const Transliterator* t, 
                              const UnicodeString& input);
 
-    void reportParseError(const UnicodeString& message, const UParseError& parseError, const UErrorCode& status);
-
 
     const UnicodeString DESERET_DEE;
     const UnicodeString DESERET_dee;
 
 };
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif

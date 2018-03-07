@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 2001-2005, International Business Machines Corporation and
+ * Copyright (c) 2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /************************************************************************
@@ -18,10 +16,6 @@
 
 #ifndef TRNSERR_H
 #define TRNSERR_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
 
 #include "unicode/translit.h"
 #include "intltest.h"
@@ -39,18 +33,16 @@ public:
     
     void TestUnicodeSetErrors(void);
 
-    //void TestUniToHexErrors(void);
+    void TestUniToHexErrors(void);
 
     void TestRBTErrors(void);
 
-    //void TestHexToUniErrors(void);
-
-    // JitterBug 4452, for coverage.  The reason to put this method here is 
-    //  this class is comparable smaller than other Transliterator*Test classes
-    void TestCoverage(void);
+    void TestHexToUniErrors(void);
 
 };
 
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
-
 #endif
+
+
+
+

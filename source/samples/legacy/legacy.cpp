@@ -1,18 +1,12 @@
 /*
 *******************************************************************************
 *
-*   © 2016 and later: Unicode, Inc. and others.
-*   License & terms of use: http://www.unicode.org/copyright.html#License
-*
-*******************************************************************************
-*******************************************************************************
-*
-*   Copyright (C) 2001 - 2005, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
 *   file name:  main.cpp
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -28,8 +22,8 @@
 #include "unicode/utypes.h"
 #include "unicode/ustring.h"
 
-extern "C" void test_current(UChar data[][5], uint32_t size, uint32_t maxLen, uint8_t keys[][32]);
-extern "C" void test_legacy(UChar data[][5], uint32_t size, uint32_t maxlen, uint8_t keys[][32]);
+void test_current(UChar data[][5], uint32_t size, uint32_t maxLen, uint8_t keys[][32]);
+void test_legacy(UChar data[][5], uint32_t size, uint32_t maxlen, uint8_t keys[][32]);
 
 void printZTUChar(const UChar *str) {
   while(*str != 0) {

@@ -1,21 +1,30 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***************************************************************************
-*
-*   Copyright (C) 1998-2014, International Business Machines
-*   Corporation and others.  All Rights Reserved.
-*
-************************************************************************/
+/*
+ *  %W% %E%
+ *
+ * (C) Copyright IBM Corp. 1998 - All Rights Reserved
+ *
+ * Portions Copyright 1998 by Sun Microsystems, Inc.,
+ * 901 San Antonio Road, Palo Alto, California, 94303, U.S.A.
+ * All rights reserved.
+ *
+ * This software is the confidential and proprietary information
+ * of Sun Microsystems, Inc. ("Confidential Information").  You
+ * shall not disclose such Confidential Information and shall use
+ * it only in accordance with the terms of the license agreement
+ * you entered into with Sun.
+ *
+ * The original version of this source code and documentation is
+ * copyrighted and owned by IBM. These materials are provided
+ * under terms of a License Agreement between IBM and Sun.
+ * This technology is protected by multiple US and International
+ * patents. This notice and attribution to IBM may not be removed.
+ */
 
-#include "layout/LETypes.h"
-#include "layout/LESwaps.h"
+#include "LETypes.h"
+#include "LESwaps.h"
 
 #include "sfnt.h"
 #include "cmaps.h"
-#include <stdio.h>
-
-#define SWAPU16(code) ((LEUnicode16) SWAPW(code))
-#define SWAPU32(code) ((LEUnicode32) SWAPL(code))
 
 //
 // Finds the high bit by binary searching
@@ -58,83 +67,35 @@ CMAPMapper *CMAPMapper::createUnicodeMapper(const CMAPTable *cmap)
     le_uint16 i;
     le_uint16 nSubtables = SWAPW(cmap->numberSubtables);
     const CMAPEncodingSubtable *subtable = NULL;
-    le_bool found = FALSE;
-    le_uint16 foundPlatformID = 0xFFFF;
-    le_uint16 foundPlatformSpecificID = 0xFFFF;
-    le_uint32 foundOffset = 0;
-    le_uint16 foundTable = 0xFFFF;
-    // first pass, look for MS table. (preferred?)
-    for (i = 0; i < nSubtables && !found; i += 1) {
+    le_uint32 offset1 = 0, offset10 = 0;
+
+    for (i = 0; i < nSubtables; i += 1) {
         const CMAPEncodingSubtableHeader *esh = &cmap->encodingSubtableHeaders[i];
 
-        le_uint16 platformID = SWAPW(esh->platformID);
-        le_uint16 platformSpecificID = SWAPW(esh->platformSpecificID);
-        if (platformID == 3) { // microsoft
-          switch (platformSpecificID) {
-            case 1: // Unicode BMP (UCS-2)
-            case 10: // Unicode UCS-4
-                foundOffset = SWAPL(esh->encodingOffset);
-                foundPlatformID = platformID;
-                foundPlatformSpecificID = platformSpecificID;
-                found = TRUE;
-                foundTable = i;
+        if (SWAPW(esh->platformID) == 3) {
+            switch (SWAPW(esh->platformSpecificID)) {
+            case 1:
+                offset1 = SWAPL(esh->encodingOffset);
                 break;
 
-                //default:
-              //              printf("%s:%d: microsoft (3) platform specific ID %d (wanted 1 or 10) for subtable %d/%d\n", __FILE__, __LINE__, (SWAPW(esh->platformSpecificID)), i, nSubtables);
+            case 10:
+                offset10 = SWAPL(esh->encodingOffset);
+                break;
             }
-        } else {
-          //printf("%s:%d: platform  ID %d (wanted 3, microsoft) for subtable %d/%d\n", __FILE__, __LINE__, (SWAPW(esh->platformID)), i, nSubtables);
-        }
-    }
-
-    // second pass, allow non MS table
-    // first pass, look for MS table. (preferred?)
-      for (i = 0; i < nSubtables && !found; i += 1) {
-        const CMAPEncodingSubtableHeader *esh = &cmap->encodingSubtableHeaders[i];
-        le_uint16 platformID = SWAPW(esh->platformID);
-        le_uint16 platformSpecificID = SWAPW(esh->platformSpecificID);
-        //printf("%s:%d: table %d/%d has platform:specific %d:%d\n", __FILE__, __LINE__, i, nSubtables, platformID, platformSpecificID);
-        switch(platformID) {
-        case 0: // Unicode platform
-          switch(platformSpecificID) {
-          case 0:
-          case 1:
-          case 2:
-          case 3:
-            foundOffset = SWAPL(esh->encodingOffset);
-            foundPlatformID = platformID;
-            foundPlatformSpecificID = platformSpecificID;
-            foundTable = i;
-            found = TRUE;
-            break;
-
-          default: printf("Error: table %d (psid %d) is unknown. Skipping.\n", i, platformSpecificID); break;
-          }
-          break;
-        
-          //default:
-          //printf("Skipping platform id %d\n", platformID);
         }
     }
 
 
-    if (found)
+    if (offset10 != 0)
     {
-      subtable = (const CMAPEncodingSubtable *) ((const char *) cmap + foundOffset);
-      //printf("%s:%d: using subtable #%d/%d type %d:%d\n", __FILE__, __LINE__, foundTable, nSubtables, foundPlatformID, foundPlatformSpecificID);
-      (void)foundPlatformID;   // Suppress unused variable compiler warnings.
-      (void)foundTable;
-      (void)foundPlatformSpecificID;
+        subtable = (const CMAPEncodingSubtable *) ((const char *) cmap + offset10);
+    } else if (offset1 != 0) {
+        subtable = (const CMAPEncodingSubtable *) ((const char *) cmap + offset1);
     } else {
-      printf("%s:%d: could not find subtable.\n", __FILE__, __LINE__);
-      return NULL;
+        return NULL;
     }
 
-    le_uint16 tableFormat = SWAPW(subtable->format);
-    //printf("%s:%d: table format %d\n", __FILE__, __LINE__, tableFormat);
-
-    switch (tableFormat) {
+    switch (SWAPW(subtable->format)) {
     case 4:
         return new CMAPFormat4Mapper(cmap, (const CMAPFormat4Encoding *) subtable);
 
@@ -149,7 +110,6 @@ CMAPMapper *CMAPMapper::createUnicodeMapper(const CMAPTable *cmap)
         break;
     }
 
-    printf("%s:%d: Unknown format %x.\n", __FILE__, __LINE__, (SWAPW(subtable->format)));
     return NULL;
 }
 
@@ -175,25 +135,25 @@ LEGlyphID CMAPFormat4Mapper::unicodeToGlyph(LEUnicode32 unicode32) const
     LEUnicode16 unicode = (LEUnicode16) unicode32;
     le_uint16 index = 0;
     le_uint16 probe = 1 << fEntrySelector;
-    TTGlyphID result = 0;
+    LEGlyphID result = 0;
 
-    if (SWAPU16(fStartCodes[fRangeShift]) <= unicode) {
+    if (SWAPW(fStartCodes[fRangeShift]) <= unicode) {
         index = fRangeShift;
     }
 
     while (probe > (1 << 0)) {
         probe >>= 1;
 
-        if (SWAPU16(fStartCodes[index + probe]) <= unicode) {
+        if (SWAPW(fStartCodes[index + probe]) <= unicode) {
             index += probe;
         }
     }
 
-    if (unicode >= SWAPU16(fStartCodes[index]) && unicode <= SWAPU16(fEndCodes[index])) {
+    if (unicode >= SWAPW(fStartCodes[index]) && unicode <= SWAPW(fEndCodes[index])) {
         if (fIdRangeOffset[index] == 0) {
-            result = (TTGlyphID) unicode;
+            result = (LEGlyphID) unicode;
         } else {
-            le_uint16 offset = unicode - SWAPU16(fStartCodes[index]);
+            le_uint16 offset = unicode - SWAPW(fStartCodes[index]);
             le_uint16 rangeOffset = SWAPW(fIdRangeOffset[index]);
             le_uint16 *glyphIndexTable = (le_uint16 *) ((char *) &fIdRangeOffset[index] + rangeOffset);
 
@@ -205,7 +165,7 @@ LEGlyphID CMAPFormat4Mapper::unicodeToGlyph(LEUnicode32 unicode32) const
         result = 0;
     }
 
-    return LE_SET_GLYPH(0, result);
+    return result;
 }
 
 CMAPFormat4Mapper::~CMAPFormat4Mapper()
@@ -226,20 +186,20 @@ LEGlyphID CMAPGroupMapper::unicodeToGlyph(LEUnicode32 unicode32) const
     le_int32 probe = fPower;
     le_int32 range = 0;
 
-    if (SWAPU32(fGroups[fRangeOffset].startCharCode) <= unicode32) {
+    if (SWAPL(fGroups[fRangeOffset].startCharCode) <= unicode32) {
         range = fRangeOffset;
     }
 
     while (probe > (1 << 0)) {
         probe >>= 1;
 
-        if (SWAPU32(fGroups[range + probe].startCharCode) <= unicode32) {
+        if (SWAPL(fGroups[range + probe].startCharCode) <= unicode32) {
             range += probe;
         }
     }
 
-    if (SWAPU32(fGroups[range].startCharCode) <= unicode32 && SWAPU32(fGroups[range].endCharCode) >= unicode32) {
-        return (LEGlyphID) (SWAPU32(fGroups[range].startGlyphCode) + unicode32 - SWAPU32(fGroups[range].startCharCode));
+    if (SWAPL(fGroups[range].startCharCode) <= unicode32 && SWAPL(fGroups[range].endCharCode) >= unicode32) {
+        return (LEGlyphID) (SWAPL(fGroups[range].startGlyphCode) + unicode32 - SWAPL(fGroups[range].startCharCode));
     }
 
     return 0;

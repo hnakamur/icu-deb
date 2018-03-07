@@ -1,24 +1,20 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2010, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
- ********************************************************************
- *
- * File CMSGTST.H
- *
- * Modification History:
- *        Name                     Description            
- *     Madhu Katragadda              Creation
  ********************************************************************/
+/********************************************************************************
+*
+* File CMSGTST.H
+*
+* Modification History:
+*        Name                     Description            
+*     Madhu Katragadda              Creation
+*********************************************************************************
+*/
 /* C API TEST FOR MESSAGE FORMAT */
 #ifndef _CMSGFRMTST
 #define _CMSGFRMTST
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
 
 #include "cintltst.h"
 
@@ -42,10 +38,6 @@
      **/
     static void TestMsgFormatChoice(void);
     /**
-     * Test u_formatMessage() with Select option
-     **/
-    static void TestMsgFormatSelect(void);
-    /**
      * Test u_parseMessage() with various test patterns()
      **/
     static void TestParseMessage(void);
@@ -58,7 +50,5 @@
      * Regression test for ICU4C Jitterbug 904
      */
     static void TestJ904(void);
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif

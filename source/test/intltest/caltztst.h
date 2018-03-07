@@ -1,18 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2009, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 
 #ifndef _CALTZTST
 #define _CALTZTST
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
 
 #include "unicode/unistr.h"
 #include "unicode/calendar.h"
@@ -29,13 +23,12 @@ public:
 protected:
     // Return true if the given status indicates failure.  Also has the side effect
     // of calling errln().  Msg should be of the form "Class::Method" in general.
-    UBool failure(UErrorCode status, const char* msg, UBool possibleDataError=FALSE);
+    UBool failure(UErrorCode status, const char* msg);
 
     // Utility method for formatting dates for printing; useful for Java->C++ conversion.
     // Tries to mimic the Java Date.toString() format.
     UnicodeString  dateToString(UDate d);
     UnicodeString& dateToString(UDate d, UnicodeString& str);
-    UnicodeString& dateToString(UDate d, UnicodeString& str, const TimeZone& z);
 
     // Utility methods to create a date.  This is useful for converting Java constructs
     // which create a Date object.  Returns a Date in the current local time.
@@ -60,8 +53,6 @@ protected:
      Calendar*                 getCalendar(void);
     static void                releaseCalendar(Calendar *c);
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif //_CALTZTST
 //eof

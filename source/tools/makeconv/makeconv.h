@@ -1,14 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2000-2010, International Business Machines
+*   Copyright (C) 2000-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
 *   file name:  makeconv.h
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -22,41 +20,44 @@
 #include "unicode/utypes.h"
 #include "ucnv_bld.h"
 #include "unewdata.h"
-#include "ucm.h"
 
 /* exports from makeconv.c */
 U_CFUNC UBool VERBOSE;
-U_CFUNC UBool SMALL;
-U_CFUNC UBool IGNORE_SISO_CHECK;
-
-/* converter table type for writing */
-enum {
-    TABLE_NONE,
-    TABLE_BASE,
-    TABLE_EXT,
-    TABLE_BASE_AND_EXT
-};
 
 /* abstract converter generator struct, C++ - style */
 struct NewConverter;
 typedef struct NewConverter NewConverter;
 
-U_CDECL_BEGIN
 struct NewConverter {
     void
-    (* U_CALLCONV_FPTR close)(NewConverter *cnvData);
+    (*close)(NewConverter *cnvData);
+
+    UBool
+    (*startMappings)(NewConverter *cnvData);
 
     /** is this byte sequence valid? */
     UBool
-    (*U_CALLCONV_FPTR isValid)(NewConverter *cnvData,
-               const uint8_t *bytes, int32_t length);
+    (*isValid)(NewConverter *cnvData,
+               const uint8_t *bytes, int32_t length,
+               uint32_t b);
 
     UBool
-    (*U_CALLCONV_FPTR addTable)(NewConverter *cnvData, UCMTable *table, UConverterStaticData *staticData);
+    (*addToUnicode)(NewConverter *cnvData,
+                    const uint8_t *bytes, int32_t length,
+                    UChar32 c, uint32_t b,
+                    int8_t isFallback);
+
+    UBool
+    (*addFromUnicode)(NewConverter *cnvData,
+                      const uint8_t *bytes, int32_t length,
+                      UChar32 c, uint32_t b,
+                      int8_t isFallback);
+
+    void
+    (*finishMappings)(NewConverter *cnvData, const UConverterStaticData *staticData);
 
     uint32_t
-    (*U_CALLCONV_FPTR write)(NewConverter *cnvData, const UConverterStaticData *staticData,
-             UNewDataMemory *pData, int32_t tableType);
+    (*write)(NewConverter *cnvData, const UConverterStaticData *staticData, UNewDataMemory *pData);
 };
-U_CDECL_END
-#endif /* __MAKECONV_H__ */
+
+#endif

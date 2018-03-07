@@ -1,13 +1,7 @@
 /*
  *******************************************************************************
  *
- *   © 2016 and later: Unicode, Inc. and others.
- *   License & terms of use: http://www.unicode.org/copyright.html#License
- *
- *******************************************************************************
- *******************************************************************************
- *
- *   Copyright (C) 1999-2015, International Business Machines
+ *   Copyright (C) 1999-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  *******************************************************************************
@@ -17,273 +11,508 @@
  *   created by: Eric R. Mader
  */
 
+#include "unicode/loengine.h"
+
+#include "RenderingFontInstance.h"
+
 #include "unicode/utypes.h"
 #include "unicode/uchar.h"
+#include "unicode/uchriter.h"
+#include "unicode/brkiter.h"
+#include "unicode/locid.h"
 #include "unicode/ubidi.h"
-#include "unicode/ustring.h"
-
-#include "layout/ParagraphLayout.h"
-
-#include "RenderingSurface.h"
 
 #include "paragraph.h"
+#include "scrptrun.h"
 #include "UnicodeReader.h"
+#include "FontMap.h"
 
 #define MARGIN 10
-#define LINE_GROW 32
-#define PARA_GROW 8
 
-#define CH_LF 0x000A
-#define CH_CR 0x000D
-#define CH_LSEP 0x2028
-#define CH_PSEP 0x2029
-
-static LEUnicode *skipLineEnd(LEUnicode *ptr)
+Paragraph::Paragraph(void *surface, RunParams params[], int32_t count, UBiDi *bidi)
+    : fBidi(bidi), fRunCount(count), fRunInfo(NULL), fCharCount(0), fText(NULL), fGlyphCount(0), fGlyphs(NULL),
+      fCharIndices(NULL), fGlyphIndices(NULL), fDX(NULL), fBreakArray(NULL), fBreakCount(0),
+      fLineHeight(-1), fAscent(-1)
 {
-    if (ptr[0] == CH_CR && ptr[1] == CH_LF) {
-        ptr += 1;
+    int32_t i;
+
+    fWidth = fHeight = 0;
+
+    fRunInfo = new RunInfo[count + 1];
+
+    // Set charBase and rightToLeft for
+    // each run and count the total characters
+    for (i = 0; i < count; i += 1) {
+        fRunInfo[i].charBase = fCharCount;
+        fRunInfo[i].rightToLeft = params[i].rightToLeft;
+        fCharCount += params[i].count;
     }
 
-    return ptr + 1;
-}
+    // Set charBase and rightToLeft for the
+    // fake run at the end.
+    fRunInfo[count].charBase = fCharCount;
+    fRunInfo[count].rightToLeft = false;
 
-static le_int32 findRun(const RunArray *runArray, le_int32 offset)
-{
-    le_int32 runCount = runArray->getCount();
+    fBreakArray = new int32_t[fCharCount + 1];
+    fText = new LEUnicode[fCharCount];
+    
+    // Copy the text runs into a single array
+    for (i = 0; i < count; i += 1) {
+        int32_t charBase = fRunInfo[i].charBase;
+        int32_t charCount = fRunInfo[i + 1].charBase - charBase;
 
-    for (le_int32 run = 0; run < runCount; run += 1) {
-        if (runArray->getLimit(run) > offset) {
-            return run;
-        }
+        LE_ARRAY_COPY(&fText[charBase], params[i].text, charCount);
     }
 
-    return -1;
-}
+    Locale thai("th");
+    UCharCharacterIterator *iter = new UCharCharacterIterator(fText, fCharCount);
+    UErrorCode status = U_ZERO_ERROR;
+    Locale dummyLocale;
 
-static void subsetFontRuns(const FontRuns *fontRuns, le_int32 start, le_int32 limit, FontRuns *sub)
-{
-    le_int32 startRun = findRun(fontRuns, start);
-    le_int32 endRun   = findRun(fontRuns, limit - 1);
+    fBrkiter = BreakIterator::createLineInstance(thai, status);
+    fBrkiter->adoptText(iter);
 
-    sub->reset();
+    ICULayoutEngine **engines = new ICULayoutEngine *[count];
+    int32_t maxAscent = -1, maxDescent = -1, maxLeading = -1;
+    float x = 0, y = 0;
 
-    for (le_int32 run = startRun; run <= endRun; run += 1) {
-        const LEFontInstance *runFont = fontRuns->getFont(run);
-        le_int32 runLimit = fontRuns->getLimit(run) - start;
+    // Layout each run, set glyphBase and glyphCount
+    // and count the total number of glyphs
+    for (i = 0; i < count; i += 1) {
+        int32_t charBase = fRunInfo[i].charBase;
+        int32_t charCount = fRunInfo[i + 1].charBase - charBase;
+        int32_t glyphCount = 0;
+        int32_t runAscent = 0, runDescent = 0, runLeading = 0;
+        UErrorCode success = U_ZERO_ERROR;
 
-        if (run == endRun) {
-            runLimit = limit - start;
+        fRunInfo[i].fontInstance = params[i].fontInstance;
+
+        fRunInfo[i].fontInstance->setFont(surface);
+
+        runAscent  = fRunInfo[i].fontInstance->getAscent();
+        runDescent = fRunInfo[i].fontInstance->getDescent();
+        runLeading = fRunInfo[i].fontInstance->getLeading();
+
+
+        if (runAscent > maxAscent) {
+            maxAscent = runAscent;
         }
 
-        sub->add(runFont, runLimit);
-    }
-}
-
-Paragraph::Paragraph(const LEUnicode chars[], int32_t charCount, const FontRuns *fontRuns, LEErrorCode &status)
-  : fParagraphLayout(NULL), fParagraphCount(0), fParagraphMax(PARA_GROW), fParagraphGrow(PARA_GROW),
-    fLineCount(0), fLinesMax(LINE_GROW), fLinesGrow(LINE_GROW), fLines(NULL), fChars(NULL),
-    fLineHeight(-1), fAscent(-1), fWidth(-1), fHeight(-1), fParagraphLevel(UBIDI_DEFAULT_LTR)
-{
-    static const LEUnicode separators[] = {CH_LF, CH_CR, CH_LSEP, CH_PSEP, 0x0000};
-
-	if (LE_FAILURE(status)) {
-		return;
-	}
-
-    le_int32 ascent  = 0;
-    le_int32 descent = 0;
-    le_int32 leading = 0;
-
-	LocaleRuns *locales = NULL;
-    FontRuns fr(0);
-
-    fLines = LE_NEW_ARRAY(const ParagraphLayout::Line *, fLinesMax);
-    fParagraphLayout = LE_NEW_ARRAY(ParagraphLayout *, fParagraphMax);
-
-    fChars = LE_NEW_ARRAY(LEUnicode, charCount + 1);
-    LE_ARRAY_COPY(fChars, chars, charCount);
-    fChars[charCount] = 0;
-
-    LEUnicode *pStart = &fChars[0];
-
-    while (*pStart != 0) {
-        LEUnicode *pEnd = u_strpbrk(pStart, separators);
-        le_int32 pAscent, pDescent, pLeading;
-        ParagraphLayout *paragraphLayout = NULL;
-
-        if (pEnd == NULL) {
-            pEnd = &fChars[charCount];
+        if (runDescent > maxDescent) {
+            maxDescent = runDescent;
         }
 
-        if (pEnd != pStart) {
-            subsetFontRuns(fontRuns, pStart - fChars, pEnd - fChars, &fr);
-
-            paragraphLayout = new ParagraphLayout(pStart, pEnd - pStart, &fr, NULL, NULL, locales, fParagraphLevel, FALSE, status);
-
-            if (LE_FAILURE(status)) {
-                delete paragraphLayout;
-                break; // return? something else?
-            }
-
-            if (fParagraphLevel == UBIDI_DEFAULT_LTR) {
-                fParagraphLevel = paragraphLayout->getParagraphLevel();
-            }
-
-            pAscent  = paragraphLayout->getAscent();
-            pDescent = paragraphLayout->getDescent();
-            pLeading = paragraphLayout->getLeading();
-
-            if (pAscent > ascent) {
-                ascent = pAscent;
-            }
-
-            if (pDescent > descent) {
-                descent = pDescent;
-            }
-
-            if (pLeading > leading) {
-                leading = pLeading;
-            }
+        if (runLeading > maxLeading) {
+            maxLeading = runLeading;
         }
 
-        if (fParagraphCount >= fParagraphMax) {
-            fParagraphLayout = (ParagraphLayout **) LE_GROW_ARRAY(fParagraphLayout, fParagraphMax + fParagraphGrow);
-            fParagraphMax += fParagraphGrow;
-        }
+        engines[i] = ICULayoutEngine::createInstance(fRunInfo[i].fontInstance, params[i].scriptCode, dummyLocale, success);
 
-        fParagraphLayout[fParagraphCount++] = paragraphLayout;
+        glyphCount = engines[i]->layoutChars(fText, charBase, charBase + charCount, fCharCount,
+            fRunInfo[i].rightToLeft, x, y, success);
 
-        if (*pEnd == 0) {
-            break;
-        }
+        engines[i]->getGlyphPosition(glyphCount, x, y, success);
 
-        pStart = skipLineEnd(pEnd);
+        fRunInfo[i].glyphBase = fGlyphCount;
+        fGlyphCount += glyphCount;
     }
 
-    fLineHeight = ascent + descent + leading;
-    fAscent     = ascent;
+    fLineHeight = maxAscent + maxDescent + maxLeading;
+    fAscent = maxAscent;
+
+    // Set glyphBase for the fake run at the end
+    fRunInfo[count].glyphBase = fGlyphCount;
+
+    fGlyphs = new LEGlyphID[fGlyphCount];
+    fCharIndices = new int32_t[fGlyphCount];
+    fGlyphIndices = new int32_t[fCharCount + 1];
+    fDX = new int32_t[fGlyphCount];
+    fDY = new int32_t[fGlyphCount];
+
+
+    float *positions = new float[fGlyphCount * 2 + 2];
+
+    // Build the glyph, charIndices and positions arrays
+    for (i = 0; i < count; i += 1) {
+        ICULayoutEngine *engine = engines[i];
+        int32_t charBase = fRunInfo[i].charBase;
+        int32_t glyphBase = fRunInfo[i].glyphBase;
+        UErrorCode success = U_ZERO_ERROR;
+
+        engine->getGlyphs(&fGlyphs[glyphBase], success);
+        engine->getCharIndices(&fCharIndices[glyphBase], charBase, success);
+        engine->getGlyphPositions(&positions[glyphBase * 2], success);
+    }
+
+    // Filter deleted glyphs, compute logical advances
+    // and set the char to glyph map
+    for (i = 0; i < fGlyphCount; i += 1) {
+        // Filter deleted glyphs
+        if (fGlyphs[i] == 0xFFFE || fGlyphs[i] == 0xFFFF) {
+            fGlyphs[i] = 0x0001;
+        }
+
+        // compute the logical advance
+        fDX[i] = (int32_t) (positions[i * 2 + 2] - positions[i * 2]);
+
+        // save the Y offset
+        fDY[i] = (int32_t) positions[i * 2 + 1];
+
+        // set char to glyph map
+        fGlyphIndices[fCharIndices[i]] = i;
+    }
+
+    if (fRunInfo[count - 1].rightToLeft) {
+        fGlyphIndices[fCharCount] = fRunInfo[count - 1].glyphBase - 1;
+    } else {
+        fGlyphIndices[fCharCount] = fGlyphCount;
+    }
+
+    delete[] positions;
+
+    // Get rid of the LayoutEngine's:
+    for (i = 0; i < count; i += 1) {
+        delete engines[i];
+    }
+
+    delete[] engines;
 }
 
 Paragraph::~Paragraph()
 {
-    for (le_int32 line = 0; line < fLineCount; line += 1) {
-        delete /*(LineInfo *)*/ fLines[line];
-    }
+    delete[] fDY;
+    delete[] fDX;
+    delete[] fGlyphIndices;
+    delete[] fCharIndices;
+    delete[] fGlyphs;
 
-    for (le_int32 paragraph = 0; paragraph < fParagraphCount; paragraph += 1) {
-        delete fParagraphLayout[paragraph];
-    }
+    delete fBrkiter;
+    delete fText;
 
-    LE_DELETE_ARRAY(fLines);
-    LE_DELETE_ARRAY(fParagraphLayout);
-    LE_DELETE_ARRAY(fChars);
+    delete[] fBreakArray;
+    delete[] fRunInfo;
+
+    ubidi_close(fBidi);
 }
 
-void Paragraph::addLine(const ParagraphLayout::Line *line)
+int32_t Paragraph::getLineHeight()
 {
-    if (fLineCount >= fLinesMax) {
-        fLines = (const ParagraphLayout::Line **) LE_GROW_ARRAY(fLines, fLinesMax + fLinesGrow);
-        fLinesMax += fLinesGrow;
-    }
-
-    fLines[fLineCount++] = line;
+    return fLineHeight;
 }
 
-void Paragraph::breakLines(le_int32 width, le_int32 height)
+int32_t Paragraph::getLineCount()
 {
+    return fBreakCount;
+}
+
+int32_t Paragraph::getAscent()
+{
+    return fAscent;
+}
+
+int32_t Paragraph::previousBreak(int32_t charIndex)
+{
+    LEUnicode ch = fText[charIndex];
+
+    // skip over any whitespace or control
+    // characters, because they can hang in
+    // the margin.
+    while (charIndex < fCharCount &&
+           (u_isWhitespace(ch) ||
+            u_iscntrl(ch))) {
+        ch = fText[++charIndex];
+    }
+
+    // return the break location that's at or before
+    // the character we stopped on. Note: if we're
+    // on a break, the "+ 1" will cause preceding to
+    // back up to it.
+    return fBrkiter->preceding(charIndex + 1);
+}
+
+void Paragraph::breakLines(int32_t width, int32_t height)
+{
+    int32_t lineWidth = width - (2 * MARGIN);
+    int32_t thisWidth = 0;
+    int32_t thisBreak = -1;
+    int32_t prevWidth = fWidth;
+
+    fWidth  = width;
     fHeight = height;
 
     // don't re-break if the width hasn't changed
-    if (fWidth == width) {
+    if (width == prevWidth) {
         return;
     }
 
-    fWidth  = width;
+    fBreakArray[0] = 0;
+    fBreakCount = 1;
 
-    float lineWidth = (float) (width - 2 * MARGIN);
-    const ParagraphLayout::Line *line;
+    for (int32_t run = 0; run < fRunCount; run += 1) {
+        int32_t glyph = fRunInfo[run].glyphBase;
+        int32_t stop = fRunInfo[run + 1].glyphBase;
+        int32_t dir = 1;
 
-    // Free the old LineInfo's...
-    for (le_int32 li = 0; li < fLineCount; li += 1) {
-        delete fLines[li];
-    }
+        if (fRunInfo[run].rightToLeft) {
+            glyph = stop - 1;
+            stop = fRunInfo[run].glyphBase - 1;
+            dir = -1;
+        }
 
-    fLineCount = 0;
+        while (glyph != stop) {
+            // Find the first glyph that doesn't fit on the line
+            while (thisWidth + fDX[glyph] <= lineWidth) {
+                thisWidth += fDX[glyph];
+                glyph += dir;
 
-    for (le_int32 p = 0; p < fParagraphCount; p += 1) {
-        ParagraphLayout *paragraphLayout = fParagraphLayout[p];
-
-        if (paragraphLayout != NULL) {
-            paragraphLayout->reflow();
-            while ((line = paragraphLayout->nextLine(lineWidth)) != NULL) {
-                addLine(line);
+                if (glyph == stop) {
+                    break;
+                }
             }
-        } else {
-            addLine(NULL);
+
+            // Check to see if we fell off the
+            // end of the run
+            if (glyph == stop) {
+                break;
+            }
+
+
+            // Find a place before here to break,
+            thisBreak = previousBreak(fCharIndices[glyph]);
+
+            // If there wasn't one, force one
+            if (thisBreak <= fBreakArray[fBreakCount - 1]) {
+                thisBreak = fCharIndices[glyph];
+            }
+
+            // Save the break location.
+            fBreakArray[fBreakCount++] = thisBreak;
+
+            // Reset the accumulated width
+            thisWidth = 0;
+
+            // Map the character back to a glyph
+            glyph = fGlyphIndices[thisBreak];
+
+            // Check to see if the new glyph is off
+            // the end of the run.
+            if (glyph == stop) {
+                break;
+            }
+
+            // If the glyph's not in the run we stopped in, we
+            // have to re-synch to the new run
+            if (glyph < fRunInfo[run].glyphBase || glyph >= fRunInfo[run + 1].glyphBase) {
+                run = getGlyphRun(glyph, 0, 1);
+
+                if (fRunInfo[run].rightToLeft) {
+                    stop = fRunInfo[run].glyphBase - 1;
+                    dir = -1;
+                } else {
+                    stop = fRunInfo[run + 1].glyphBase;
+                    dir = 1;
+                }
+            }
         }
     }
+
+    // Make sure the last break is after the last character
+    if (fBreakArray[--fBreakCount] != fCharCount) {
+        fBreakArray[++fBreakCount] = fCharCount;
+    }
+
+    return;
 }
 
-void Paragraph::draw(RenderingSurface *surface, le_int32 firstLine, le_int32 lastLine)
+int32_t Paragraph::getGlyphRun(int32_t glyph, int32_t startingRun, int32_t direction)
 {
-    le_int32 li, x, y;
+    int32_t limit;
 
-    x = MARGIN;
+    if (direction < 0) {
+        limit = -1;
+    } else {
+        limit = fRunCount;
+    }
+
+    for (int32_t run = startingRun; run != limit; run += direction) {
+        if (glyph >= fRunInfo[run].glyphBase && glyph < fRunInfo[run + 1].glyphBase) {
+            return run;
+        }
+    }
+
+    return limit;
+}
+
+int32_t Paragraph::getCharRun(int32_t ch, int32_t startingRun, int32_t direction)
+{
+    int32_t limit;
+
+    if (direction < 0) {
+        limit = -1;
+    } else {
+        limit = fRunCount;
+    }
+
+    for (int32_t run = startingRun; run != limit; run += direction) {
+        if (ch >= fRunInfo[run].charBase && ch < fRunInfo[run + 1].charBase) {
+            return run;
+        }
+    }
+
+    return limit;
+}
+
+int32_t Paragraph::getRunWidth(int32_t startGlyph, int32_t endGlyph)
+{
+    int32_t width = 0;
+
+    for (int32_t glyph = startGlyph; glyph <= endGlyph; glyph += 1) {
+        width += fDX[glyph];
+    }
+
+    return width;
+}
+
+int32_t Paragraph::drawRun(void *surface, const RenderingFontInstance *fontInstance, int32_t firstChar, int32_t lastChar,
+                         int32_t x, int32_t y)
+{
+    int32_t firstGlyph = fGlyphIndices[firstChar];
+    int32_t lastGlyph  = fGlyphIndices[lastChar];
+
+    for (int32_t ch = firstChar; ch <= lastChar; ch += 1) {
+        int32_t glyph = fGlyphIndices[ch];
+
+        if (glyph < firstGlyph) {
+            firstGlyph = glyph;
+        }
+
+        if (glyph > lastGlyph) {
+            lastGlyph = glyph;
+        }
+    }
+
+    int32_t dyStart = firstGlyph, dyEnd = dyStart;
+
+    fontInstance->setFont(surface);
+
+    while (dyEnd <= lastGlyph) {
+        while (dyEnd <= lastGlyph && fDY[dyStart] == fDY[dyEnd]) {
+            dyEnd += 1;
+        }
+
+        fontInstance->drawGlyphs(surface, &fGlyphs[dyStart], dyEnd - dyStart,
+            &fDX[dyStart], x, y + fDY[dyStart], fWidth, fHeight);
+
+        for (int32_t i = dyStart; i < dyEnd; i += 1) {
+            x += fDX[i];
+        }
+
+        dyStart = dyEnd;
+    }
+
+    return getRunWidth(firstGlyph, lastGlyph);
+}
+
+void Paragraph::draw(void *surface, int32_t firstLine, int32_t lastLine)
+{
+    int32_t line, x, y;
+    int32_t prevRun = 0;
+    UErrorCode bidiStatus = U_ZERO_ERROR;
+    UBiDi  *lBidi = ubidi_openSized(fCharCount, 0, &bidiStatus);
+
     y = fAscent;
 
-    for (li = firstLine; li <= lastLine; li += 1) {
-        const ParagraphLayout::Line *line = fLines[li];
+    for (line = firstLine; line <= lastLine; line += 1) {
+        int32_t firstChar = fBreakArray[line];
+        int32_t lastChar  = fBreakArray[line + 1] - 1;
+        int32_t dirCount, dirRun;
 
-        if (line != NULL) {
-            le_int32 runCount = line->countRuns();
-            le_int32 run;
+        x = MARGIN;
 
-		    if (fParagraphLevel == UBIDI_RTL) {
-			    le_int32 lastX = line->getWidth();
+        ubidi_setLine(fBidi, firstChar, lastChar + 1, lBidi, &bidiStatus);
 
-			    x = (fWidth - lastX - MARGIN);
-		    }
+        dirCount = ubidi_countRuns(lBidi, &bidiStatus);
 
+        for (dirRun = 0; dirRun < dirCount; dirRun += 1) {
+            int32_t relStart = 0, runLength = 0;
+            UBiDiDirection runDirection = ubidi_getVisualRun(lBidi, dirRun, &relStart, &runLength);
+            int32_t runStart  = relStart + firstChar;
+            int32_t runEnd    = runStart + runLength - 1;
+            int32_t firstRun  = getCharRun(runStart, prevRun, 1);
+            int32_t lastRun   = getCharRun(runEnd,   firstRun, 1);
 
-            for (run = 0; run < runCount; run += 1) {
-                const ParagraphLayout::VisualRun *visualRun = line->getVisualRun(run);
-                le_int32 glyphCount = visualRun->getGlyphCount();
-                const LEFontInstance *font = visualRun->getFont();
-                const LEGlyphID *glyphs = visualRun->getGlyphs();
-                const float *positions = visualRun->getPositions();
+            for (int32_t run = firstRun; run <= lastRun; run += 1) {
+                const RenderingFontInstance *fontInstance = fRunInfo[run].fontInstance;
+                int32_t nextBase;
 
-                surface->drawGlyphs(font, glyphs, glyphCount, positions, x, y, fWidth, fHeight);
+                if (run == lastRun) {
+                    nextBase = runEnd + 1;
+                } else {
+                    nextBase = fRunInfo[run + 1].charBase;
+                }
+
+                x += drawRun(surface, fontInstance, runStart, nextBase - 1, x, y);
+                runStart = nextBase;
             }
+
+            prevRun = lastRun;
         }
 
         y += fLineHeight;
     }
+
+    ubidi_close(lBidi);
 }
 
-Paragraph *Paragraph::paragraphFactory(const char *fileName, const LEFontInstance *font, GUISupport *guiSupport)
+Paragraph *Paragraph::paragraphFactory(const char *fileName, FontMap *fontMap, GUISupport *guiSupport, void *surface)
 {
-    LEErrorCode status  = LE_NO_ERROR;
-    le_int32 charCount;
+    RunParams params[64];
+    int32_t paramCount = 0;
+    int32_t charCount  = 0;
+    int32_t dirCount   = 0;
+    int32_t dirRun     = 0;
+    RFIErrorCode fontStatus = RFI_NO_ERROR;
+    UErrorCode bidiStatus = U_ZERO_ERROR;
     const UChar *text = UnicodeReader::readFile(fileName, guiSupport, charCount);
-    Paragraph *result = NULL;
+    ScriptRun scriptRun(text, charCount);
 
     if (text == NULL) {
         return NULL;
     }
 
-    FontRuns  fontRuns(0);
+    UBiDi *pBidi = ubidi_openSized(charCount, 0, &bidiStatus);
 
-    fontRuns.add(font, charCount);
+    ubidi_setPara(pBidi, text, charCount, UBIDI_DEFAULT_LTR, NULL, &bidiStatus);
 
-    result = new Paragraph(text, charCount, &fontRuns, status);
+    dirCount = ubidi_countRuns(pBidi, &bidiStatus);
 
-	if (LE_FAILURE(status)) {
-		delete result;
-		result = NULL;
-	}
+    for (dirRun = 0; dirRun < dirCount; dirRun += 1) {
+        int32_t runStart = 0, runLength = 0;
+        UBiDiDirection runDirection = ubidi_getVisualRun(pBidi, dirRun, &runStart, &runLength);
+        
+        scriptRun.reset(runStart, runLength);
 
-    LE_DELETE_ARRAY(text);
+        while (scriptRun.next()) {
+            int32_t     start = scriptRun.getScriptStart();
+            int32_t     end   = scriptRun.getScriptEnd();
+            UScriptCode code  = scriptRun.getScriptCode();
 
-    return result;    
+            params[paramCount].text = &((UChar *) text)[start];
+            params[paramCount].count = end - start;
+            params[paramCount].scriptCode = (UScriptCode) code;
+            params[paramCount].rightToLeft = runDirection == UBIDI_RTL;
+
+            params[paramCount].fontInstance = fontMap->getScriptFont(code, fontStatus);
+
+            if (params[paramCount].fontInstance == NULL) {
+                ubidi_close(pBidi);
+                return 0;
+            }
+
+            paramCount += 1;
+        }
+    }
+
+    return new Paragraph(surface, params, paramCount, pBidi);
 }
 

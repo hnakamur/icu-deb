@@ -1,17 +1,11 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2003, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #ifndef _INTLTESTDATEFORMAT
 #define _INTLTESTDATEFORMAT
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
 
 #include "unicode/unistr.h"
 #include "unicode/datefmt.h"
@@ -76,9 +70,7 @@ private:
         DATE_TIME
     };
 public:
-    virtual ~IntlTestDateFormat();
+    virtual ~IntlTestDateFormat() {}
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif

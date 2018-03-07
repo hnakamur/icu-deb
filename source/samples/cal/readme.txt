@@ -1,7 +1,3 @@
-Copyright (C) 2016 and later: Unicode, Inc. and others.
-License & terms of use: http://www.unicode.org/copyright.html#License
-
-Copyright (c) 2002-2005, International Business Machines Corporation and others. All Rights Reserved.
 icucal: a sample program which displays the calendar.
 
 This sample demonstrates
@@ -13,12 +9,12 @@ Files:
     cal.c                      Main source file
     uprint.h                   codepage output convenience header
     uprint.h                   codepage output convenience implementation
-    cal.sln                    Windows MSVC workspace.  Double-click this to get started.
-    cal.vcproj                 Windows MSVC project file
+    cal.dsw                    Windows MSVC workspace.  Double-click this to get started.
+    cal.dsp                    Windows MSVC project file
 
 To Build icucal on Windows
     1.  Install and build ICU
-    2.  In MSVC, open the workspace file icu\samples\cal\cal.sln
+    2.  In MSVC, open the workspace file icu\samples\cal\cal.dsw
     3.  Choose a Debug or Release build.
     4.  Build.
 	

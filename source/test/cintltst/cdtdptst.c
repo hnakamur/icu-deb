@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -16,11 +14,8 @@
 */
 /* INDEPTH TEST FOR DATE FORMAT */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "unicode/uloc.h"
+#include "unicode/utypes.h"
 #include "unicode/udat.h"
 #include "unicode/ucal.h"
 #include "unicode/unum.h"
@@ -40,8 +35,6 @@ void addDtFrDepTest(TestNode** root)
     addTest(root, &TestRunTogetherPattern985, "tsformat/cdtdptst/TestRunTogetherPattern985");
     addTest(root, &TestCzechMonths459, "tsformat/cdtdptst/TestCzechMonths459");
     addTest(root, &TestQuotePattern161, "tsformat/cdtdptst/TestQuotePattern161");
-    addTest(root, &TestBooleanAttributes, "tsformat/cdtdptst/TestBooleanAttributes");
-
     
 }
 
@@ -57,53 +50,47 @@ void TestTwoDigitYearDSTParse()
     UChar *s;
     int32_t pos;
 
-    ctest_setTimeZone(NULL, &status);
-
-    pattern=(UChar*)malloc(sizeof(UChar) * (strlen("EEE MMM dd HH:mm:ss.SSS zzz yyyy G")+1 ));
+    pattern=(UChar*)uprv_malloc(sizeof(UChar) * (strlen("EEE MMM dd HH:mm:ss.SSS zzz yyyy G")+1 ));
     u_uastrcpy(pattern, "EEE MMM dd HH:mm:ss.SSS zzz yyyy G");
-    fullFmt= udat_open(UDAT_PATTERN, UDAT_PATTERN,"en_US",NULL,0,pattern, u_strlen(pattern),&status);
+    fullFmt= udat_open(UDAT_IGNORE, UDAT_IGNORE,"en_US",NULL,0,pattern, u_strlen(pattern),&status);
     if(U_FAILURE(status))    {
-        log_data_err("FAIL: Error in creating a date format using udat_openPattern %s - (Are you missing data?)\n", 
+        log_err("FAIL: Error in creating a date format using udat_openPattern \n %s\n", 
             myErrorName(status) );
     }
-    else {
-        log_verbose("PASS: creating dateformat using udat_openPattern() succesful\n");
+    else {log_verbose("PASS: creating dateformat using udat_openPattern() succesful\n");}
     
-        u_uastrcpy(pattern, "dd-MMM-yy h:mm:ss 'o''clock' a z");
-        fmt= udat_open(UDAT_PATTERN,UDAT_PATTERN,"en_US", NULL, 0,pattern, u_strlen(pattern), &status);
-        
-        
-        s=(UChar*)malloc(sizeof(UChar) * (strlen("03-Apr-04 2:20:47 o'clock AM PST")+1) );
-        u_uastrcpy(s, "03-Apr-04 2:20:47 o'clock AM PST");
-        pos=0;
-        d = udat_parse(fmt, s, u_strlen(s), &pos, &status);
+    u_uastrcpy(pattern, "dd-MMM-yy h:mm:ss 'o''clock' a z");
+    fmt= udat_open(UDAT_IGNORE,UDAT_IGNORE,"en_US", NULL, 0,pattern, u_strlen(pattern), &status);
+    
+    
+    s=(UChar*)uprv_malloc(sizeof(UChar) * (strlen("03-Apr-04 2:20:47 o'clock AM PST")+1) );
+    u_uastrcpy(s, "03-Apr-04 2:20:47 o'clock AM PST");
+    pos=0;
+    d = udat_parse(fmt, s, u_strlen(s), &pos, &status);
+    if (U_FAILURE(status)) {
+        log_err("FAIL: Could not parse \"%s\"\n", austrdup(s));
+    } else {
+        UCalendar *cal = ucal_open(NULL, 0, uloc_getDefault(), UCAL_TRADITIONAL, &status);
         if (U_FAILURE(status)) {
-            log_err("FAIL: Could not parse \"%s\"\n", austrdup(s));
+            log_err("FAIL: Could not open calendar");
         } else {
-            UCalendar *cal = ucal_open(NULL, 0, uloc_getDefault(), UCAL_TRADITIONAL, &status);
+            int32_t h;
+            ucal_setMillis(cal, d, &status);
+            h = ucal_get(cal, UCAL_HOUR_OF_DAY, &status);
             if (U_FAILURE(status)) {
-                log_err_status(status, "FAIL: Could not open calendar: %s\n", u_errorName(status));
-            } else {
-                int32_t h;
-                ucal_setMillis(cal, d, &status);
-                h = ucal_get(cal, UCAL_HOUR_OF_DAY, &status);
-                if (U_FAILURE(status)) {
-                    log_err("FAIL: Some calendar operations failed");
-                } else if (h != 2) {
-                    log_err("FAIL: Parse of \"%s\" returned HOUR_OF_DAY %d\n",
-                            austrdup(s), h);
-                }
-                ucal_close(cal);
+                log_err("FAIL: Some calendar operations failed");
+            } else if (h != 2) {
+                log_err("FAIL: Parse of \"%s\" returned HOUR_OF_DAY %d\n",
+                        austrdup(s), h);
             }
+            ucal_close(cal);
         }
-        
-        udat_close(fullFmt);
-        udat_close(fmt);
-        free(s);
     }
-    free(pattern);
-
-    ctest_resetTimeZone();
+    
+    udat_close(fullFmt);
+    udat_close(fmt);
+    uprv_free(pattern);
+    uprv_free(s);
 }
 
 
@@ -118,7 +105,6 @@ void TestPartialParse994()
     UDateFormat *f;
     UErrorCode status = U_ZERO_ERROR;
     UChar *s;
-    UChar *fmtChars;
     UDate d, null;
     null=0;
 
@@ -127,31 +113,21 @@ void TestPartialParse994()
     /* f = udat_open(UDAT_DEFAULT, UDAT_SHORT, NULL, NULL, 0, &status); */
     f = udat_open(UDAT_DEFAULT, UDAT_SHORT, "en_US", NULL, 0,  NULL, 0,&status);
     if(U_FAILURE(status)){
-        log_data_err("FAIL: ErrorCode received during test: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("FAIL: ErrorCode received during test: %s\n", myErrorName(status));
         return;
     }
-    s=(UChar*)malloc(sizeof(UChar) * (strlen("01/01/1997 10:11:42 AM")+1) );
+    s=(UChar*)uprv_malloc(sizeof(UChar) * (strlen("01/01/1997 10:11:42 AM")+1) );
     u_uastrcpy(s, "01/01/1997 10:11:42 AM");
     pos=0;
     d = udat_parse(f, s, u_strlen(s), &pos, &status);
-    if(U_FAILURE(status)) {
-      log_data_err("FAIL: could not parse - exitting");
-      return;
-    }
-    fmtChars = myDateFormat(f, d);
-    if(fmtChars) {
-      log_verbose("%s\n", fmtChars);
-    } else {
-      log_data_err("FAIL: could not format \n");
-      return;
-    }
+    log_verbose("%s\n", austrdup(myDateFormat(f, d)) );
     tryPat994(f, "yy/MM/dd HH:mm:ss", "97/01/01 10:11:42", d);
     tryPat994(f, "yy/MM/dd HH:mm:ss", "97/01/01 10:", null);
     tryPat994(f, "yy/MM/dd HH:mm:ss", "97/01/01 10", null);
     tryPat994(f, "yy/MM/dd HH:mm:ss", "97/01/01 ", null);
     tryPat994(f, "yy/MM/dd HH:mm:ss", "97/01/01", null);
     udat_close(f);
-    free(s);
+    uprv_free(s);
 }
  
 
@@ -164,9 +140,9 @@ void tryPat994(UDateFormat* format, const char* pattern, const char* s, UDate ex
     UDate null=0;
     int32_t pos;
     UErrorCode status = U_ZERO_ERROR;
-    str=(UChar*)malloc(sizeof(UChar) * (strlen(s) + 1) );
+    str=(UChar*)uprv_malloc(sizeof(UChar) * (strlen(s) + 1) );
     u_uastrcpy(str, s);
-    pat=(UChar*)malloc(sizeof(UChar) * (strlen(pattern) + 1) );
+    pat=(UChar*)uprv_malloc(sizeof(UChar) * (strlen(pattern) + 1) );
     u_uastrcpy(pat, pattern);
     log_verbose("Pattern : %s ;  String : %s\n", austrdup(pat), austrdup(str));
     udat_applyPattern(format, FALSE, pat, u_strlen(pat));
@@ -186,8 +162,8 @@ void tryPat994(UDateFormat* format, const char* pattern, const char* s, UDate ex
             log_err("FAIL: Expected : %s\n", austrdup(str) );
     }
     
-    free(str);
-    free(pat);
+    uprv_free(str);
+    uprv_free(pat);
 }
  
 
@@ -202,11 +178,11 @@ void TestRunTogetherPattern985()
     UDateFormat *format;
     UDate date1, date2;
     UErrorCode status = U_ZERO_ERROR;
-    pattern=(UChar*)malloc(sizeof(UChar) * (strlen("yyyyMMddHHmmssSSS")+1) );
+    pattern=(UChar*)uprv_malloc(sizeof(UChar) * (strlen("yyyyMMddHHmmssSSS")+1) );
     u_uastrcpy(pattern, "yyyyMMddHHmmssSSS");
-    format = udat_open(UDAT_PATTERN, UDAT_PATTERN, NULL, NULL, 0,pattern, u_strlen(pattern), &status);
+    format = udat_open(UDAT_IGNORE, UDAT_IGNORE, NULL, NULL, 0,pattern, u_strlen(pattern), &status);
     if(U_FAILURE(status)){
-        log_data_err("FAIL: Error in date format construction with pattern: %s - (Are you missing data?)\n", myErrorName(status));
+        log_err("FAIL: Error in date format construction with pattern: %s\n", myErrorName(status));
         return;
     }
     date1 = ucal_getNow();
@@ -220,7 +196,7 @@ void TestRunTogetherPattern985()
     if (!(date2 == date1)) log_err("FAIL\n");
     
     udat_close(format);
-    free(pattern);
+    uprv_free(pattern);
        
 }
 
@@ -237,24 +213,23 @@ void TestCzechMonths459()
     UCalendar *cal;
     UDate june, july, d;
     UErrorCode status = U_ZERO_ERROR;
+    char buffer[512];
     UChar *date;
     
-    ctest_setTimeZone(NULL, &status);
     fmt = udat_open(UDAT_FULL, UDAT_FULL, "cs", NULL, 0, NULL, 0, &status);
     if(U_FAILURE(status)){
-        log_data_err("Error in constructing the date format -> %s (Are you missing data?)\n", u_errorName(status));
-        ctest_resetTimeZone();
+        log_err("Error in constructing the date format\n");
         return;
     }
     lneed=0;
     lneed=udat_toPattern(fmt, TRUE, NULL, lneed, &status);
     if(status==U_BUFFER_OVERFLOW_ERROR){
         status=U_ZERO_ERROR;
-        pattern=(UChar*)malloc(sizeof(UChar) * (lneed+1) );
+        pattern=(UChar*)uprv_malloc(sizeof(UChar) * (lneed+1) );
         udat_toPattern(fmt, TRUE, pattern, lneed+1, &status);
     }
     if(U_FAILURE(status)){ log_err("Error in extracting the pattern\n"); }
-    tzID=(UChar*)malloc(sizeof(UChar) * 4);
+    tzID=(UChar*)uprv_malloc(sizeof(UChar) * 4);
     u_uastrcpy(tzID, "GMT");
     cal=ucal_open(tzID, u_strlen(tzID), "cs", UCAL_GREGORIAN, &status);
     if(U_FAILURE(status)){ log_err("error in ucal_open caldef : %s\n", myErrorName(status));    }
@@ -264,39 +239,30 @@ void TestCzechMonths459()
     ucal_setDate(cal, 1997, UCAL_JULY, 15, &status);
     july=ucal_getMillis(cal, &status);
 
+    
     juneStr = myDateFormat(fmt, june);
     julyStr = myDateFormat(fmt, july);
     pos=0;
-    if(juneStr == NULL) {
-      log_data_err("Can't load juneStr. Quitting.\n");
-      return;
-    }
     d = udat_parse(fmt, juneStr, u_strlen(juneStr), &pos, &status);
     date = myDateFormat(fmt, d);
-
-    if(U_SUCCESS(status)){
-        UChar* out1 = myDateFormat(fmt, june);
-        UChar* out2 = myDateFormat(fmt, d);
-        if(u_strcmp(out1, out2) !=0)
-            log_err("Error in handling the czech month june\n");
-        else
-            log_verbose("Pass: Date = %s (czech month June)\n", aescstrdup(date, -1));
-    }else{
-        log_err("udat_parse failed. Error. %s\n",u_errorName(status));
-    }
+    u_UCharsToChars(date, buffer, (int32_t)(u_strlen(date)+1));
+    if(u_strcmp(myDateFormat(fmt, june), myDateFormat(fmt, d) ) !=0)
+        log_err("Error in handling the czech month june\n");
+    else
+        log_verbose("Pass: Date = %s\n",  buffer );
     pos=0;
     d = udat_parse(fmt, julyStr, u_strlen(julyStr), &pos, &status);
     date = myDateFormat(fmt, d);
+    u_UCharsToChars(date, buffer, (int32_t)(u_strlen(date)+1));
     if(u_strcmp(myDateFormat(fmt, july), myDateFormat(fmt, d) ) !=0)
         log_err("Error in handling the czech month july\n");
     else
-        log_verbose("Pass: Date = %s (czech month July)\n", aescstrdup(date, -1));
+        log_verbose("Pass: Date = %s\n",  buffer );
     
-    ctest_resetTimeZone();
     udat_close(fmt);
     ucal_close(cal);
-    free(pattern);
-    free(tzID);
+    uprv_free(pattern);
+    uprv_free(tzID);
 }
  
 /**
@@ -311,21 +277,18 @@ void TestQuotePattern161()
     UChar *dateString;
     UErrorCode status = U_ZERO_ERROR;
     const char* expStr = "04/13/1999 at 10:42:28 AM ";
-
-    ctest_setTimeZone(NULL, &status);
-
-    pattern=(UChar*)malloc(sizeof(UChar) * (strlen("MM/dd/yyyy 'at' hh:mm:ss a zzz")+1) );
+    pattern=(UChar*)uprv_malloc(sizeof(UChar) * (strlen("MM/dd/yyyy 'at' hh:mm:ss a zzz")+1) );
     u_uastrcpy(pattern, "MM/dd/yyyy 'at' hh:mm:ss a zzz");
     
     /* this is supposed to open default date format, but later on it treats it like it is "en_US" 
        - very bad if you try to run the tests on machine where default locale is NOT "en_US" */
     /* format= udat_openPattern(pattern, u_strlen(pattern), NULL, &status); */
-    format= udat_open(UDAT_PATTERN, UDAT_PATTERN,"en_US", NULL, 0,pattern, u_strlen(pattern), &status);
+    format= udat_open(UDAT_IGNORE, UDAT_IGNORE,"en_US", NULL, 0,pattern, u_strlen(pattern), &status);
     if(U_FAILURE(status)){
-        log_data_err("error in udat_open: %s - (Are you missing data?)\n", myErrorName(status));
+        log_err("error in udat_open: %s\n", myErrorName(status));
         return;
     }
-    tzID=(UChar*)malloc(sizeof(UChar) * 4);
+    tzID=(UChar*)uprv_malloc(sizeof(UChar) * 4);
     u_uastrcpy(tzID, "PST");
     /* this is supposed to open default date format, but later on it treats it like it is "en_US" 
        - very bad if you try to run the tests on machine where default locale is NOT "en_US" */
@@ -337,51 +300,17 @@ void TestQuotePattern161()
     currentTime_1 = ucal_getMillis(cal, &status);
     
     dateString = myDateFormat(format, currentTime_1);
-    exp=(UChar*)malloc(sizeof(UChar) * (strlen(expStr) + 1) );
+    exp=(UChar*)uprv_malloc(sizeof(UChar) * (strlen(expStr) + 1) );
     u_uastrcpy(exp, expStr);
     
     log_verbose("%s\n", austrdup(dateString) );
-    if(u_strncmp(dateString, exp, (int32_t)strlen(expStr)) !=0)
+    if(u_strncmp(dateString, exp, strlen(expStr)) !=0)
         log_err("Error in formatting a pattern with single quotes\n");
 
     udat_close(format);
     ucal_close(cal);
-    free(exp);
-    free(tzID);
-    free(pattern);
+    uprv_free(exp);
+    uprv_free(tzID);
+    uprv_free(pattern);
     
-    ctest_resetTimeZone();
 }
-
-/*
- * Testing udat_getBooleanAttribute and  unum_setBooleanAttribute() to make sure basic C wrapper functionality is present
- */
-void TestBooleanAttributes(void)
-{
-    UDateFormat *en;
-    UErrorCode status=U_ZERO_ERROR;
-    UBool initialState = TRUE;
-    UBool switchedState = FALSE;
-        
-    log_verbose("\ncreating a date format with english locale\n");
-    en = udat_open(UDAT_FULL, UDAT_DEFAULT, "en_US", NULL, 0, NULL, 0, &status);
-    if(U_FAILURE(status)) {
-        log_data_err("error in creating the dateformat -> %s (Are you missing data?)\n", 
-            myErrorName(status) );
-        return;
-    }
-    
-    
-    initialState = udat_getBooleanAttribute(en, UDAT_PARSE_ALLOW_NUMERIC, &status);
-    if(initialState != TRUE) switchedState = TRUE;  // if it wasn't the default of TRUE, then flip what we expect
-
-    udat_setBooleanAttribute(en, UDAT_PARSE_ALLOW_NUMERIC, switchedState, &status);
-    if(switchedState != udat_getBooleanAttribute(en, UDAT_PARSE_ALLOW_NUMERIC, &status)) {
-        log_err("unable to switch states!");
-        return;
-    }
-
-    udat_close(en);
-}
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

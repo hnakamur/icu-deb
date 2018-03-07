@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 1997-2015, International Business Machines Corporation and others.
+* Copyright (C) 1997-2002, International Business Machines Corporation and others.
 * All Rights Reserved.
 *******************************************************************************
 */
@@ -10,69 +8,43 @@
 #ifndef RBNF_H
 #define RBNF_H
 
-#include "unicode/utypes.h"
-
-/**
- * \file
- * \brief C++ API: Rule Based Number Format
- */
-
-/**
- * \def U_HAVE_RBNF
- * This will be 0 if RBNF support is not included in ICU
- * and 1 if it is.
- *
- * @stable ICU 2.4
- */
-#if UCONFIG_NO_FORMATTING
+#ifdef U_INT64_T_UNAVAILABLE
 #define U_HAVE_RBNF 0
 #else
 #define U_HAVE_RBNF 1
 
+#include "unicode/coll.h"
 #include "unicode/dcfmtsym.h"
 #include "unicode/fmtable.h"
 #include "unicode/locid.h"
 #include "unicode/numfmt.h"
 #include "unicode/unistr.h"
-#include "unicode/strenum.h"
-#include "unicode/brkiter.h"
-#include "unicode/upluralrules.h"
+#include "unicode/utypes.h"
 
 U_NAMESPACE_BEGIN
 
-class NFRule;
 class NFRuleSet;
-class LocalizationInfo;
-class PluralFormat;
-class RuleBasedCollator;
 
-/**
- * Tags for the predefined rulesets.
- *
- * @stable ICU 2.2
- */
+/** Tags for the predefined rulesets. */
 enum URBNFRuleSetTag {
     URBNF_SPELLOUT,
     URBNF_ORDINAL,
     URBNF_DURATION,
-    URBNF_NUMBERING_SYSTEM,
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal URBNFRuleSetTag value.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
     URBNF_COUNT
-#endif  // U_HIDE_DEPRECATED_API
 };
 
 /**
- * The RuleBasedNumberFormat class formats numbers according to a set of rules. This number formatter is
+ * \brief C++ API: RuleBasedNumberFormat
+ *
+ * <h2> Rule Based Number Format C++ API </h2>
+ *
+ * <p>A class that formats numbers according to a set of rules. This number formatter is
  * typically used for spelling out numeric values in words (e.g., 25,3476 as
  * &quot;twenty-five thousand three hundred seventy-six&quot; or &quot;vingt-cinq mille trois
  * cents soixante-seize&quot; or
  * &quot;f&uuml;nfundzwanzigtausenddreihundertsechsundsiebzig&quot;), but can also be used for
  * other complicated formatting tasks, such as formatting a number of seconds as hours,
- * minutes and seconds (e.g., 3,730 as &quot;1:02:10&quot;).
+ * minutes and seconds (e.g., 3,730 as &quot;1:02:10&quot;).</p>
  *
  * <p>The resources contain three predefined formatters for each locale: spellout, which
  * spells out a value in words (123 is &quot;one hundred twenty-three&quot;); ordinal, which
@@ -155,30 +127,36 @@ enum URBNFRuleSetTag {
  * <p>To see how these rules actually work in practice, consider the following example:
  * Formatting 25,430 with this rule set would work like this:</p>
  *
- * <table border="0" width="100%">
+ * <table border="0" width="630">
  *   <tr>
- *     <td><strong>&lt;&lt; thousand &gt;&gt;</strong></td>
- *     <td>[the rule whose base value is 1,000 is applicable to 25,340]</td>
+ *     <td width="21"></td>
+ *     <td width="257" valign="top"><strong>&lt;&lt; thousand &gt;&gt;</strong></td>
+ *     <td width="340" valign="top">[the rule whose base value is 1,000 is applicable to 25,340]</td>
  *   </tr>
  *   <tr>
- *     <td><strong>twenty-&gt;&gt;</strong> thousand &gt;&gt;</td>
- *     <td>[25,340 over 1,000 is 25. The rule for 20 applies.]</td>
+ *     <td width="21"></td>
+ *     <td width="257" valign="top"><strong>twenty-&gt;&gt;</strong> thousand &gt;&gt;</td>
+ *     <td width="340" valign="top">[25,340 over 1,000 is 25. The rule for 20 applies.]</td>
  *   </tr>
  *   <tr>
- *     <td>twenty-<strong>five</strong> thousand &gt;&gt;</td>
- *     <td>[25 mod 10 is 5. The rule for 5 is &quot;five.&quot;</td>
+ *     <td width="21"></td>
+ *     <td width="257" valign="top">twenty-<strong>five</strong> thousand &gt;&gt;</td>
+ *     <td width="340" valign="top">[25 mod 10 is 5. The rule for 5 is &quot;five.&quot;</td>
  *   </tr>
  *   <tr>
- *     <td>twenty-five thousand <strong>&lt;&lt; hundred &gt;&gt;</strong></td>
- *     <td>[25,340 mod 1,000 is 340. The rule for 100 applies.]</td>
+ *     <td width="21"></td>
+ *     <td width="257" valign="top">twenty-five thousand <strong>&lt;&lt; hundred &gt;&gt;</strong></td>
+ *     <td width="340" valign="top">[25,340 mod 1,000 is 340. The rule for 100 applies.]</td>
  *   </tr>
  *   <tr>
- *     <td>twenty-five thousand <strong>three</strong> hundred &gt;&gt;</td>
- *     <td>[340 over 100 is 3. The rule for 3 is &quot;three.&quot;]</td>
+ *     <td width="21"></td>
+ *     <td width="257" valign="top">twenty-five thousand <strong>three</strong> hundred &gt;&gt;</td>
+ *     <td width="340" valign="top">[340 over 100 is 3. The rule for 3 is &quot;three.&quot;]</td>
  *   </tr>
  *   <tr>
- *     <td>twenty-five thousand three hundred <strong>forty</strong></td>
- *     <td>[340 mod 100 is 40. The rule for 40 applies. Since 40 divides
+ *     <td width="21"></td>
+ *     <td width="257" valign="top">twenty-five thousand three hundred <strong>forty</strong></td>
+ *     <td width="340" valign="top">[340 mod 100 is 40. The rule for 40 applies. Since 40 divides
  *     evenly by 10, the hyphen and substitution in the brackets are omitted.]</td>
  *   </tr>
  * </table>
@@ -226,9 +204,7 @@ enum URBNFRuleSetTag {
  * The body of <tt>%%lenient-parse</tt> isn't a set of number-formatting rules, but a <tt>RuleBasedCollator</tt>
  * description which is used to define equivalences for lenient parsing. For more information
  * on the syntax, see <tt>RuleBasedCollator</tt>. For more information on lenient parsing,
- * see <tt>setLenientParse()</tt>.  <em>Note:</em> symbols that have syntactic meaning
- * in collation rules, such as '&amp;', have no particular meaning when appearing outside
- * of the <tt>lenient-parse</tt> rule set.</p>
+ * see <tt>setLenientParse()</tt>.</p>
  *
  * <p>The body of a rule set consists of an ordered, semicolon-delimited list of <em>rules.</em>
  * Internally, every rule has a base value, a divisor, rule text, and zero, one, or two <em>substitutions.</em>
@@ -240,82 +216,61 @@ enum URBNFRuleSetTag {
  *
  * <table border="0" width="100%">
  *   <tr>
- *     <td><em>bv</em>:</td>
- *     <td><em>bv</em> specifies the rule's base value. <em>bv</em> is a decimal
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top"><em>bv</em>:</td>
+ *     <td valign="top"><em>bv</em> specifies the rule's base value. <em>bv</em> is a decimal
  *     number expressed using ASCII digits. <em>bv</em> may contain spaces, period, and commas,
  *     which are ignored. The rule's divisor is the highest power of 10 less than or equal to
  *     the base value.</td>
  *   </tr>
  *   <tr>
- *     <td><em>bv</em>/<em>rad</em>:</td>
- *     <td><em>bv</em> specifies the rule's base value. The rule's divisor is the
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top"><em>bv</em>/<em>rad</em>:</td>
+ *     <td valign="top"><em>bv</em> specifies the rule's base value. The rule's divisor is the
  *     highest power of <em>rad</em> less than or equal to the base value.</td>
  *   </tr>
  *   <tr>
- *     <td><em>bv</em>&gt;:</td>
- *     <td><em>bv</em> specifies the rule's base value. To calculate the divisor,
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top"><em>bv</em>&gt;:</td>
+ *     <td valign="top"><em>bv</em> specifies the rule's base value. To calculate the divisor,
  *     let the radix be 10, and the exponent be the highest exponent of the radix that yields a
  *     result less than or equal to the base value. Every &gt; character after the base value
  *     decreases the exponent by 1. If the exponent is positive or 0, the divisor is the radix
  *     raised to the power of the exponent; otherwise, the divisor is 1.</td>
  *   </tr>
  *   <tr>
- *     <td><em>bv</em>/<em>rad</em>&gt;:</td>
- *     <td><em>bv</em> specifies the rule's base value. To calculate the divisor,
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top"><em>bv</em>/<em>rad</em>&gt;:</td>
+ *     <td valign="top"><em>bv</em> specifies the rule's base value. To calculate the divisor,
  *     let the radix be <em>rad</em>, and the exponent be the highest exponent of the radix that
  *     yields a result less than or equal to the base value. Every &gt; character after the radix
  *     decreases the exponent by 1. If the exponent is positive or 0, the divisor is the radix
  *     raised to the power of the exponent; otherwise, the divisor is 1.</td>
  *   </tr>
  *   <tr>
- *     <td>-x:</td>
- *     <td>The rule is a negative-number rule.</td>
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top">-x:</td>
+ *     <td valign="top">The rule is a negative-number rule.</td>
  *   </tr>
  *   <tr>
- *     <td>x.x:</td>
- *     <td>The rule is an <em>improper fraction rule</em>. If the full stop in
- *     the middle of the rule name is replaced with the decimal point
- *     that is used in the language or DecimalFormatSymbols, then that rule will
- *     have precedence when formatting and parsing this rule. For example, some
- *     languages use the comma, and can thus be written as x,x instead. For example,
- *     you can use "x.x: &lt;&lt; point &gt;&gt;;x,x: &lt;&lt; comma &gt;&gt;;" to
- *     handle the decimal point that matches the language's natural spelling of
- *     the punctuation of either the full stop or comma.</td>
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top">x.x:</td>
+ *     <td valign="top">The rule is an <em>improper fraction rule.</em></td>
  *   </tr>
  *   <tr>
- *     <td>0.x:</td>
- *     <td>The rule is a <em>proper fraction rule</em>. If the full stop in
- *     the middle of the rule name is replaced with the decimal point
- *     that is used in the language or DecimalFormatSymbols, then that rule will
- *     have precedence when formatting and parsing this rule. For example, some
- *     languages use the comma, and can thus be written as 0,x instead. For example,
- *     you can use "0.x: point &gt;&gt;;0,x: comma &gt;&gt;;" to
- *     handle the decimal point that matches the language's natural spelling of
- *     the punctuation of either the full stop or comma.</td>
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top">0.x:</td>
+ *     <td valign="top">The rule is a <em>proper fraction rule.</em></td>
  *   </tr>
  *   <tr>
- *     <td>x.0:</td>
- *     <td>The rule is a <em>master rule</em>. If the full stop in
- *     the middle of the rule name is replaced with the decimal point
- *     that is used in the language or DecimalFormatSymbols, then that rule will
- *     have precedence when formatting and parsing this rule. For example, some
- *     languages use the comma, and can thus be written as x,0 instead. For example,
- *     you can use "x.0: &lt;&lt; point;x,0: &lt;&lt; comma;" to
- *     handle the decimal point that matches the language's natural spelling of
- *     the punctuation of either the full stop or comma.</td>
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top">x.0:</td>
+ *     <td valign="top">The rule is a <em>master rule.</em></td>
  *   </tr>
  *   <tr>
- *     <td>Inf:</td>
- *     <td>The rule for infinity.</td>
- *   </tr>
- *   <tr>
- *     <td>NaN:</td>
- *     <td>The rule for an IEEE 754 NaN (not a number).</td>
- *   </tr>
- *   <tr>
- *   <tr>
- *     <td><em>nothing</em></td>
- *     <td>If the rule's rule descriptor is left out, the base value is one plus the
+ *     <td width="5%" valign="top"></td>
+ *     <td width="8%" valign="top"><em>nothing</em></td>
+ *     <td valign="top">If the rule's rule descriptor is left out, the base value is one plus the
  *     preceding rule's base value (or zero if this is the first rule in the list) in a normal
  *     rule set.&nbsp; In a fraction rule set, the base value is the same as the preceding rule's
  *     base value.</td>
@@ -381,111 +336,110 @@ enum URBNFRuleSetTag {
  *
  * <table border="0" width="100%">
  *   <tr>
- *     <td>&gt;&gt;</td>
- *     <td>in normal rule</td>
+ *     <td width="37"></td>
+ *     <td width="23">&gt;&gt;</td>
+ *     <td width="165" valign="top">in normal rule</td>
  *     <td>Divide the number by the rule's divisor and format the remainder</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in negative-number rule</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in negative-number rule</td>
  *     <td>Find the absolute value of the number and format the result</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in fraction or master rule</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in fraction or master rule</td>
  *     <td>Isolate the number's fractional part and format it.</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in rule in fraction rule set</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in rule in fraction rule set</td>
  *     <td>Not allowed.</td>
  *   </tr>
  *   <tr>
- *     <td>&gt;&gt;&gt;</td>
- *     <td>in normal rule</td>
+ *     <td width="37"></td>
+ *     <td width="23">&gt;&gt;&gt;</td>
+ *     <td width="165" valign="top">in normal rule</td>
  *     <td>Divide the number by the rule's divisor and format the remainder,
  *       but bypass the normal rule-selection process and just use the
  *       rule that precedes this one in this rule list.</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in all other rules</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in all other rules</td>
  *     <td>Not allowed.</td>
  *   </tr>
  *   <tr>
- *     <td>&lt;&lt;</td>
- *     <td>in normal rule</td>
+ *     <td width="37"></td>
+ *     <td width="23">&lt;&lt;</td>
+ *     <td width="165" valign="top">in normal rule</td>
  *     <td>Divide the number by the rule's divisor and format the quotient</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in negative-number rule</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in negative-number rule</td>
  *     <td>Not allowed.</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in fraction or master rule</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in fraction or master rule</td>
  *     <td>Isolate the number's integral part and format it.</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in rule in fraction rule set</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in rule in fraction rule set</td>
  *     <td>Multiply the number by the rule's base value and format the result.</td>
  *   </tr>
  *   <tr>
- *     <td>==</td>
- *     <td>in all rule sets</td>
+ *     <td width="37"></td>
+ *     <td width="23">==</td>
+ *     <td width="165" valign="top">in all rule sets</td>
  *     <td>Format the number unchanged</td>
  *   </tr>
  *   <tr>
- *     <td>[]</td>
- *     <td>in normal rule</td>
+ *     <td width="37"></td>
+ *     <td width="23">[]</td>
+ *     <td width="165" valign="top">in normal rule</td>
  *     <td>Omit the optional text if the number is an even multiple of the rule's divisor</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in negative-number rule</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in negative-number rule</td>
  *     <td>Not allowed.</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in improper-fraction rule</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in improper-fraction rule</td>
  *     <td>Omit the optional text if the number is between 0 and 1 (same as specifying both an
  *     x.x rule and a 0.x rule)</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in master rule</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in master rule</td>
  *     <td>Omit the optional text if the number is an integer (same as specifying both an x.x
  *     rule and an x.0 rule)</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in proper-fraction rule</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in proper-fraction rule</td>
  *     <td>Not allowed.</td>
  *   </tr>
  *   <tr>
- *     <td></td>
- *     <td>in rule in fraction rule set</td>
+ *     <td width="37"></td>
+ *     <td width="23"></td>
+ *     <td width="165" valign="top">in rule in fraction rule set</td>
  *     <td>Omit the optional text if multiplying the number by the rule's base value yields 1.</td>
- *   </tr>
- *   <tr>
- *     <td width="37">$(cardinal,<i>plural syntax</i>)$</td>
- *     <td width="23"></td>
- *     <td width="165" valign="top">in all rule sets</td>
- *     <td>This provides the ability to choose a word based on the number divided by the radix to the power of the
- *     exponent of the base value for the specified locale, which is normally equivalent to the &lt;&lt; value.
- *     This uses the cardinal plural rules from PluralFormat. All strings used in the plural format are treated
- *     as the same base value for parsing.</td>
- *   </tr>
- *   <tr>
- *     <td width="37">$(ordinal,<i>plural syntax</i>)$</td>
- *     <td width="23"></td>
- *     <td width="165" valign="top">in all rule sets</td>
- *     <td>This provides the ability to choose a word based on the number divided by the radix to the power of the
- *     exponent of the base value for the specified locale, which is normally equivalent to the &lt;&lt; value.
- *     This uses the ordinal plural rules from PluralFormat. All strings used in the plural format are treated
- *     as the same base value for parsing.</td>
  *   </tr>
  * </table>
  *
@@ -494,20 +448,22 @@ enum URBNFRuleSetTag {
  *
  * <table border="0" width="100%">
  *   <tr>
- *     <td>a rule set name</td>
+ *     <td width="42"></td>
+ *     <td width="166" valign="top">a rule set name</td>
  *     <td>Perform the mathematical operation on the number, and format the result using the
  *     named rule set.</td>
  *   </tr>
  *   <tr>
- *     <td>a DecimalFormat pattern</td>
+ *     <td width="42"></td>
+ *     <td width="166" valign="top">a DecimalFormat pattern</td>
  *     <td>Perform the mathematical operation on the number, and format the result using a
  *     DecimalFormat with the specified pattern.&nbsp; The pattern must begin with 0 or #.</td>
  *   </tr>
  *   <tr>
- *     <td>nothing</td>
+ *     <td width="42"></td>
+ *     <td width="166" valign="top">nothing</td>
  *     <td>Perform the mathematical operation on the number, and format the result using the rule
- *     set containing the current rule, except:
- *     <ul>
+ *     set containing the current rule, except:<ul>
  *       <li>You can't have an empty substitution descriptor with a == substitution.</li>
  *       <li>If you omit the substitution descriptor in a &gt;&gt; substitution in a fraction rule,
  *         format the result one digit at a time using the rule set containing the current rule.</li>
@@ -529,34 +485,10 @@ enum URBNFRuleSetTag {
  * <p>See the resource data and the demo program for annotated examples of real rule sets
  * using these features.</p>
  *
- * <p><em>User subclasses are not supported.</em> While clients may write
- * subclasses, such code will not necessarily work and will not be
- * guaranteed to work stably from release to release.
- *
- * <p><b>Localizations</b></p>
- * <p>Constructors are available that allow the specification of localizations for the
- * public rule sets (and also allow more control over what public rule sets are available).
- * Localization data is represented as a textual description.  The description represents
- * an array of arrays of string.  The first element is an array of the public rule set names,
- * each of these must be one of the public rule set names that appear in the rules.  Only
- * names in this array will be treated as public rule set names by the API.  Each subsequent
- * element is an array of localizations of these names.  The first element of one of these
- * subarrays is the locale name, and the remaining elements are localizations of the
- * public rule set names, in the same order as they were listed in the first arrray.</p>
- * <p>In the syntax, angle brackets '<', '>' are used to delimit the arrays, and comma ',' is used
- * to separate elements of an array.  Whitespace is ignored, unless quoted.</p>
- * <p>For example:<pre>
- * < < %foo, %bar, %baz >,
- *   < en, Foo, Bar, Baz >,
- *   < fr, 'le Foo', 'le Bar', 'le Baz' >
- *   < zh, \\u7532, \\u4e59, \\u4e19 > >
- * </pre></p>
  * @author Richard Gillam
  * @see NumberFormat
  * @see DecimalFormat
- * @see PluralFormat
- * @see PluralRules
- * @stable ICU 2.0
+ * @draft ICU 2.0
  */
 class U_I18N_API RuleBasedNumberFormat : public NumberFormat {
 public:
@@ -564,44 +496,6 @@ public:
   //-----------------------------------------------------------------------
   // constructors
   //-----------------------------------------------------------------------
-
-    /**
-     * Creates a RuleBasedNumberFormat that behaves according to the description
-     * passed in.  The formatter uses the default locale.
-     * @param rules A description of the formatter's desired behavior.
-     * See the class documentation for a complete explanation of the description
-     * syntax.
-     * @param perror The parse error if an error was encountered.
-     * @param status The status indicating whether the constructor succeeded.
-     * @stable ICU 3.2
-     */
-    RuleBasedNumberFormat(const UnicodeString& rules, UParseError& perror, UErrorCode& status);
-
-    /**
-     * Creates a RuleBasedNumberFormat that behaves according to the description
-     * passed in.  The formatter uses the default locale.
-     * <p>
-     * The localizations data provides information about the public
-     * rule sets and their localized display names for different
-     * locales. The first element in the list is an array of the names
-     * of the public rule sets.  The first element in this array is
-     * the initial default ruleset.  The remaining elements in the
-     * list are arrays of localizations of the names of the public
-     * rule sets.  Each of these is one longer than the initial array,
-     * with the first String being the ULocale ID, and the remaining
-     * Strings being the localizations of the rule set names, in the
-     * same order as the initial array.  Arrays are NULL-terminated.
-     * @param rules A description of the formatter's desired behavior.
-     * See the class documentation for a complete explanation of the description
-     * syntax.
-     * @param localizations the localization information.
-     * names in the description.  These will be copied by the constructor.
-     * @param perror The parse error if an error was encountered.
-     * @param status The status indicating whether the constructor succeeded.
-     * @stable ICU 3.2
-     */
-    RuleBasedNumberFormat(const UnicodeString& rules, const UnicodeString& localizations,
-                        UParseError& perror, UErrorCode& status);
 
   /**
    * Creates a RuleBasedNumberFormat that behaves according to the rules
@@ -611,59 +505,28 @@ public:
    * @param rules The formatter rules.
    * See the class documentation for a complete explanation of the rule
    * syntax.
-   * @param locale A locale that governs which characters are used for
-   * formatting values in numerals and which characters are equivalent in
+   * @param locale A locale, that governs which characters are used for
+   * formatting values in numerals, and which characters are equivalent in
    * lenient parsing.
    * @param perror The parse error if an error was encountered.
    * @param status The status indicating whether the constructor succeeded.
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
-  RuleBasedNumberFormat(const UnicodeString& rules, const Locale& locale,
+  RuleBasedNumberFormat(const UnicodeString& rules, const Locale& locale, 
                         UParseError& perror, UErrorCode& status);
-
-    /**
-     * Creates a RuleBasedNumberFormat that behaves according to the description
-     * passed in.  The formatter uses the default locale.
-     * <p>
-     * The localizations data provides information about the public
-     * rule sets and their localized display names for different
-     * locales. The first element in the list is an array of the names
-     * of the public rule sets.  The first element in this array is
-     * the initial default ruleset.  The remaining elements in the
-     * list are arrays of localizations of the names of the public
-     * rule sets.  Each of these is one longer than the initial array,
-     * with the first String being the ULocale ID, and the remaining
-     * Strings being the localizations of the rule set names, in the
-     * same order as the initial array.  Arrays are NULL-terminated.
-     * @param rules A description of the formatter's desired behavior.
-     * See the class documentation for a complete explanation of the description
-     * syntax.
-     * @param localizations a list of localizations for the rule set
-     * names in the description.  These will be copied by the constructor.
-     * @param locale A locale that governs which characters are used for
-     * formatting values in numerals and which characters are equivalent in
-     * lenient parsing.
-     * @param perror The parse error if an error was encountered.
-     * @param status The status indicating whether the constructor succeeded.
-     * @stable ICU 3.2
-     */
-    RuleBasedNumberFormat(const UnicodeString& rules, const UnicodeString& localizations,
-                        const Locale& locale, UParseError& perror, UErrorCode& status);
 
   /**
    * Creates a RuleBasedNumberFormat from a predefined ruleset.  The selector
    * code choosed among three possible predefined formats: spellout, ordinal,
    * and duration.
    * @param tag A selector code specifying which kind of formatter to create for that
-   * locale.  There are four legal values: URBNF_SPELLOUT, which creates a formatter that
+   * locale.  There are three legal values: URBNF_SPELLOUT, which creates a formatter that
    * spells out a value in words in the desired language, URBNF_ORDINAL, which attaches
    * an ordinal suffix from the desired language to the end of a number (e.g. "123rd"),
-   * URBNF_DURATION, which formats a duration in seconds as hours, minutes, and seconds always rounding down,
-   * and URBNF_NUMBERING_SYSTEM, which is used to invoke rules for alternate numbering
-   * systems such as the Hebrew numbering system, or for Roman Numerals, etc.
+   * and URBNF_DURATION, which formats a duration in seconds as hours, minutes, and seconds.
    * @param locale The locale for the formatter.
    * @param status The status indicating whether the constructor succeeded.
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
   RuleBasedNumberFormat(URBNFRuleSetTag tag, const Locale& locale, UErrorCode& status);
 
@@ -673,38 +536,28 @@ public:
 
   /**
    * Copy constructor
-   * @param rhs    the object to be copied from.
-   * @stable ICU 2.6
    */
   RuleBasedNumberFormat(const RuleBasedNumberFormat& rhs);
 
   /**
    * Assignment operator
-   * @param rhs    the object to be copied from.
-   * @stable ICU 2.6
    */
   RuleBasedNumberFormat& operator=(const RuleBasedNumberFormat& rhs);
 
   /**
    * Release memory allocated for a RuleBasedNumberFormat when you are finished with it.
-   * @stable ICU 2.6
    */
   virtual ~RuleBasedNumberFormat();
 
   /**
    * Clone this object polymorphically.  The caller is responsible
    * for deleting the result when done.
-   * @return  A copy of the object.
-   * @stable ICU 2.6
    */
   virtual Format* clone(void) const;
 
   /**
    * Return true if the given Format objects are semantically equal.
    * Objects of different subclasses are considered unequal.
-   * @param other    the object to be compared with.
-   * @return        true if the given Format objects are semantically equal.
-   * @stable ICU 2.6
    */
   virtual UBool operator==(const Format& other) const;
 
@@ -713,74 +566,27 @@ public:
 //-----------------------------------------------------------------------
 
   /**
-   * return the rules that were provided to the RuleBasedNumberFormat.
+   * @return the rules that were provided to the RuleBasedNumberFormat.
    * @return the result String that was passed in
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
   virtual UnicodeString getRules() const;
-
-  /**
-   * Return the number of public rule set names.
-   * @return the number of public rule set names.
-   * @stable ICU 2.0
-   */
-  virtual int32_t getNumberOfRuleSetNames() const;
 
   /**
    * Return the name of the index'th public ruleSet.  If index is not valid,
    * the function returns null.
    * @param index the index of the ruleset
    * @return the name of the index'th public ruleSet.
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
   virtual UnicodeString getRuleSetName(int32_t index) const;
 
   /**
-   * Return the number of locales for which we have localized rule set display names.
-   * @return the number of locales for which we have localized rule set display names.
-   * @stable ICU 3.2
+   * Return the number of public rule set names.
+   * @return the number of public rule set names.
+   * @draft ICU 2.0
    */
-  virtual int32_t getNumberOfRuleSetDisplayNameLocales(void) const;
-
-  /**
-   * Return the index'th display name locale.
-   * @param index the index of the locale
-   * @param status set to a failure code when this function fails
-   * @return the locale
-   * @see #getNumberOfRuleSetDisplayNameLocales
-   * @stable ICU 3.2
-   */
-  virtual Locale getRuleSetDisplayNameLocale(int32_t index, UErrorCode& status) const;
-
-    /**
-     * Return the rule set display names for the provided locale.  These are in the same order
-     * as those returned by getRuleSetName.  The locale is matched against the locales for
-     * which there is display name data, using normal fallback rules.  If no locale matches,
-     * the default display names are returned.  (These are the internal rule set names minus
-     * the leading '%'.)
-     * @param index the index of the rule set
-     * @param locale the locale (returned by getRuleSetDisplayNameLocales) for which the localized
-     * display name is desired
-     * @return the display name for the given index, which might be bogus if there is an error
-     * @see #getRuleSetName
-     * @stable ICU 3.2
-     */
-  virtual UnicodeString getRuleSetDisplayName(int32_t index,
-                          const Locale& locale = Locale::getDefault());
-
-    /**
-     * Return the rule set display name for the provided rule set and locale.
-     * The locale is matched against the locales for which there is display name data, using
-     * normal fallback rules.  If no locale matches, the default display name is returned.
-     * @return the display name for the rule set
-     * @stable ICU 3.2
-     * @see #getRuleSetDisplayName
-     */
-  virtual UnicodeString getRuleSetDisplayName(const UnicodeString& ruleSetName,
-                          const Locale& locale = Locale::getDefault());
-
-
-  using NumberFormat::format;
+  virtual int32_t getNumberOfRuleSetNames() const;
 
   /**
    * Formats the specified 32-bit number using the default ruleset.
@@ -788,7 +594,7 @@ public:
    * @param toAppendTo the string that will hold the (appended) result
    * @param pos the fieldposition
    * @return A textual representation of the number.
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
   virtual UnicodeString& format(int32_t number,
                                 UnicodeString& toAppendTo,
@@ -800,7 +606,7 @@ public:
    * @param toAppendTo the string that will hold the (appended) result
    * @param pos the fieldposition
    * @return A textual representation of the number.
-   * @stable ICU 2.1
+   * @draft ICU 2.1
    */
   virtual UnicodeString& format(int64_t number,
                                 UnicodeString& toAppendTo,
@@ -811,14 +617,14 @@ public:
    * @param toAppendTo the string that will hold the (appended) result
    * @param pos the fieldposition
    * @return A textual representation of the number.
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
   virtual UnicodeString& format(double number,
                                 UnicodeString& toAppendTo,
                                 FieldPosition& pos) const;
 
   /**
-   * Formats the specified number using the named ruleset.
+   * Formats the specified number using the default ruleset.
    * @param number The number to format.
    * @param ruleSetName The name of the rule set to format the number with.
    * This must be the name of a valid public rule set for this formatter.
@@ -826,7 +632,7 @@ public:
    * @param pos the fieldposition
    * @param status the status
    * @return A textual representation of the number.
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
   virtual UnicodeString& format(int32_t number,
                                 const UnicodeString& ruleSetName,
@@ -834,7 +640,7 @@ public:
                                 FieldPosition& pos,
                                 UErrorCode& status) const;
   /**
-   * Formats the specified 64-bit number using the named ruleset.
+   * Formats the specified 64-bit number using the default ruleset.
    * @param number The number to format.
    * @param ruleSetName The name of the rule set to format the number with.
    * This must be the name of a valid public rule set for this formatter.
@@ -842,7 +648,7 @@ public:
    * @param pos the fieldposition
    * @param status the status
    * @return A textual representation of the number.
-   * @stable ICU 2.1
+   * @draft ICU 2.1
    */
   virtual UnicodeString& format(int64_t number,
                                 const UnicodeString& ruleSetName,
@@ -850,7 +656,7 @@ public:
                                 FieldPosition& pos,
                                 UErrorCode& status) const;
   /**
-   * Formats the specified number using the named ruleset.
+   * Formats the specified number using the default ruleset.
    * @param number The number to format.
    * @param ruleSetName The name of the rule set to format the number with.
    * This must be the name of a valid public rule set for this formatter.
@@ -858,7 +664,7 @@ public:
    * @param pos the fieldposition
    * @param status the status
    * @return A textual representation of the number.
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
   virtual UnicodeString& format(double number,
                                 const UnicodeString& ruleSetName,
@@ -866,53 +672,40 @@ public:
                                 FieldPosition& pos,
                                 UErrorCode& status) const;
 
-protected:
-    /**
-     * Format a decimal number.
-     * The number is a DigitList wrapper onto a floating point decimal number.
-     * The default implementation in NumberFormat converts the decimal number
-     * to a double and formats that.  Subclasses of NumberFormat that want
-     * to specifically handle big decimal numbers must override this method.
-     * class DecimalFormat does so.
-     *
-     * @param number    The number, a DigitList format Decimal Floating Point.
-     * @param appendTo  Output parameter to receive result.
-     *                  Result is appended to existing contents.
-     * @param posIter   On return, can be used to iterate over positions
-     *                  of fields generated by this format call.
-     * @param status    Output param filled with success/failure status.
-     * @return          Reference to 'appendTo' parameter.
-     * @internal
-     */
-    virtual UnicodeString& format(const DigitList &number,
-                                  UnicodeString& appendTo,
-                                  FieldPositionIterator* posIter,
-                                  UErrorCode& status) const;
+  /**
+   * Formats the specified number using the default ruleset.
+   * @param obj The number to format.
+   * @param toAppendTo the string that will hold the (appended) result
+   * @param pos the fieldposition
+   * @param status the status
+   * @return A textual representation of the number.
+   * @draft ICU 2.0
+   */
+  virtual UnicodeString& format(const Formattable& obj,
+                                UnicodeString& toAppendTo,
+                                FieldPosition& pos,
+                                UErrorCode& status) const;
+  /**
+   * Redeclared Format method.
+   * @stable
+   */
+  UnicodeString& format(const Formattable& obj,
+                        UnicodeString& result,
+                        UErrorCode& status) const;
 
-    /**
-     * Format a decimal number.
-     * The number is a DigitList wrapper onto a floating point decimal number.
-     * The default implementation in NumberFormat converts the decimal number
-     * to a double and formats that.  Subclasses of NumberFormat that want
-     * to specifically handle big decimal numbers must override this method.
-     * class DecimalFormat does so.
-     *
-     * @param number    The number, a DigitList format Decimal Floating Point.
-     * @param appendTo  Output parameter to receive result.
-     *                  Result is appended to existing contents.
-     * @param pos       On input: an alignment field, if desired.
-     *                  On output: the offsets of the alignment field.
-     * @param status    Output param filled with success/failure status.
-     * @return          Reference to 'appendTo' parameter.
-     * @internal
-     */
-    virtual UnicodeString& format(const DigitList &number,
-                                  UnicodeString& appendTo,
-                                  FieldPosition& pos,
-                                  UErrorCode& status) const;
-public:
+  /**
+   * Redeclared NumberFormat method.
+   * @stable
+   */
+   UnicodeString& format(double number,
+                         UnicodeString& output) const;
 
-  using NumberFormat::parse;
+  /**
+   * Redeclared NumberFormat method.
+   * @stable
+   */
+   UnicodeString& format(int32_t number,
+                         UnicodeString& output) const;
 
   /**
    * Parses the specfied string, beginning at the specified position, according
@@ -925,14 +718,22 @@ public:
    * @param parsePosition On entry, contains the position of the first character
    * in "text" to examine.  On exit, has been updated to contain the position
    * of the first character in "text" that wasn't consumed by the parse.
-   * @see #setLenient
-   * @stable ICU 2.0
+   * @see #setLenientParseMode
+   * @draft ICU 2.0
    */
   virtual void parse(const UnicodeString& text,
                      Formattable& result,
                      ParsePosition& parsePosition) const;
 
-#if !UCONFIG_NO_COLLATION
+  
+  /**
+   * Redeclared Format method.
+   * @stable
+   */
+  virtual inline void parse(const UnicodeString& text,
+                      Formattable& result,
+                      UErrorCode& status) const;
+
 
   /**
    * Turns lenient parse mode on and off.
@@ -965,7 +766,7 @@ public:
    *
    * @param enabled If true, turns lenient-parse mode on; if false, turns it off.
    * @see RuleBasedCollator
-   * @stable ICU 2.0
+   * @draft ICU 2.0
    */
   virtual void setLenient(UBool enabled);
 
@@ -973,162 +774,86 @@ public:
    * Returns true if lenient-parse mode is turned on.  Lenient parsing is off
    * by default.
    * @return true if lenient-parse mode is turned on.
-   * @see #setLenient
-   * @stable ICU 2.0
+   * @see #setLenientParseMode
+   * @draft ICU 2.0
    */
   virtual inline UBool isLenient(void) const;
 
-#endif
+private:
+  void init(const UnicodeString& rules, UParseError& perror, UErrorCode& status);
+  void dispose();
+  void stripWhitespace(UnicodeString& src);
+  void setDefaultRuleSet();
+  void format(double number, NFRuleSet& ruleSet);
+  NFRuleSet* findRuleSet(const UnicodeString& name, UErrorCode& status) const;
 
-  /**
-   * Override the default rule set to use.  If ruleSetName is null, reset
-   * to the initial default rule set.  If the rule set is not a public rule set name,
-   * U_ILLEGAL_ARGUMENT_ERROR is returned in status.
-   * @param ruleSetName the name of the rule set, or null to reset the initial default.
-   * @param status set to failure code when a problem occurs.
-   * @stable ICU 2.6
-   */
-  virtual void setDefaultRuleSet(const UnicodeString& ruleSetName, UErrorCode& status);
+  /* friend access */
+  friend class NFSubstitution;
+  friend class NFRule;
+  friend class FractionalPartSubstitution;
 
-  /**
-   * Return the name of the current default rule set.  If the current rule set is
-   * not public, returns a bogus (and empty) UnicodeString.
-   * @return the name of the current default rule set
-   * @stable ICU 3.0
-   */
-  virtual UnicodeString getDefaultRuleSetName() const;
-
-  /**
-   * Set a particular UDisplayContext value in the formatter, such as
-   * UDISPCTX_CAPITALIZATION_FOR_STANDALONE. Note: For getContext, see
-   * NumberFormat.
-   * @param value The UDisplayContext value to set.
-   * @param status Input/output status. If at entry this indicates a failure
-   *               status, the function will do nothing; otherwise this will be
-   *               updated with any new status from the function. 
-   * @stable ICU 53
-   */
-  virtual void setContext(UDisplayContext value, UErrorCode& status);
-
-    /**
-     * Get the rounding mode.
-     * @return A rounding mode
-     * @draft ICU 60
-     */
-    virtual ERoundingMode getRoundingMode(void) const;
-
-    /**
-     * Set the rounding mode.
-     * @param roundingMode A rounding mode
-     * @draft ICU 60
-     */
-    virtual void setRoundingMode(ERoundingMode roundingMode);
-
-public:
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     *
-     * @stable ICU 2.8
-     */
-    static UClassID U_EXPORT2 getStaticClassID(void);
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     *
-     * @stable ICU 2.8
-     */
-    virtual UClassID getDynamicClassID(void) const;
-
-    /**
-     * Sets the decimal format symbols, which is generally not changed
-     * by the programmer or user. The formatter takes ownership of
-     * symbolsToAdopt; the client must not delete it.
-     *
-     * @param symbolsToAdopt DecimalFormatSymbols to be adopted.
-     * @stable ICU 49
-     */
-    virtual void adoptDecimalFormatSymbols(DecimalFormatSymbols* symbolsToAdopt);
-
-    /**
-     * Sets the decimal format symbols, which is generally not changed
-     * by the programmer or user. A clone of the symbols is created and
-     * the symbols is _not_ adopted; the client is still responsible for
-     * deleting it.
-     *
-     * @param symbols DecimalFormatSymbols.
-     * @stable ICU 49
-     */
-    virtual void setDecimalFormatSymbols(const DecimalFormatSymbols& symbols);
+  inline NFRuleSet * getDefaultRuleSet() const;
+  Collator * getCollator() const;
+  DecimalFormatSymbols * getDecimalFormatSymbols() const;
 
 private:
-    RuleBasedNumberFormat(); // default constructor not implemented
+    static const char fgClassID;
 
-    // this will ref the localizations if they are not NULL
-    // caller must deref to get adoption
-    RuleBasedNumberFormat(const UnicodeString& description, LocalizationInfo* localizations,
-              const Locale& locale, UParseError& perror, UErrorCode& status);
-
-    void init(const UnicodeString& rules, LocalizationInfo* localizations, UParseError& perror, UErrorCode& status);
-    void initCapitalizationContextInfo(const Locale& thelocale);
-    void dispose();
-    void stripWhitespace(UnicodeString& src);
-    void initDefaultRuleSet();
-    NFRuleSet* findRuleSet(const UnicodeString& name, UErrorCode& status) const;
-
-    /* friend access */
-    friend class NFSubstitution;
-    friend class NFRule;
-    friend class NFRuleSet;
-    friend class FractionalPartSubstitution;
-
-    inline NFRuleSet * getDefaultRuleSet() const;
-    const RuleBasedCollator * getCollator() const;
-    DecimalFormatSymbols * initializeDecimalFormatSymbols(UErrorCode &status);
-    const DecimalFormatSymbols * getDecimalFormatSymbols() const;
-    NFRule * initializeDefaultInfinityRule(UErrorCode &status);
-    const NFRule * getDefaultInfinityRule() const;
-    NFRule * initializeDefaultNaNRule(UErrorCode &status);
-    const NFRule * getDefaultNaNRule() const;
-    PluralFormat *createPluralFormat(UPluralType pluralType, const UnicodeString &pattern, UErrorCode& status) const;
-    UnicodeString& adjustForCapitalizationContext(int32_t startPos, UnicodeString& currentResult, UErrorCode& status) const;
-    UnicodeString& format(int64_t number, NFRuleSet *ruleSet, UnicodeString& toAppendTo, UErrorCode& status) const;
-    void format(double number, NFRuleSet& rs, UnicodeString& toAppendTo, UErrorCode& status) const;
+public:
+    static UClassID getStaticClassID(void) { return (UClassID)&fgClassID; }
+    virtual UClassID getDynamicClassID(void) const { return getStaticClassID(); }
 
 private:
     NFRuleSet **ruleSets;
-    UnicodeString* ruleSetDescriptions;
-    int32_t numRuleSets;
     NFRuleSet *defaultRuleSet;
     Locale locale;
-    RuleBasedCollator* collator;
+    Collator* collator;
     DecimalFormatSymbols* decimalFormatSymbols;
-    NFRule *defaultInfinityRule;
-    NFRule *defaultNaNRule;
-    ERoundingMode roundingMode;
     UBool lenient;
     UnicodeString* lenientParseRules;
-    LocalizationInfo* localizations;
-    UnicodeString originalDescription;
-    UBool capitalizationInfoSet;
-    UBool capitalizationForUIListMenu;
-    UBool capitalizationForStandAlone;
-    BreakIterator* capitalizationBrkIter;
 };
 
 // ---------------
 
-#if !UCONFIG_NO_COLLATION
-
-inline UBool
-RuleBasedNumberFormat::isLenient(void) const {
-    return lenient;
+inline UnicodeString&
+RuleBasedNumberFormat::format(const Formattable& obj,
+                              UnicodeString& result,
+                              UErrorCode& status) const
+{
+    // Don't use Format:: - use immediate base class only,
+    // in case immediate base modifies behavior later.
+    // dlf - the above comment is bogus, if there were a reason to modify
+    // it, it would be virtual, and there's no reason because it is
+    // a one-line macro in NumberFormat anyway, just like this one.
+    return NumberFormat::format(obj, result, status);
 }
 
-#endif
+inline UnicodeString&
+RuleBasedNumberFormat::format(double number, UnicodeString& output) const {
+    FieldPosition pos(0);
+    return format(number, output, pos);
+}
 
-inline NFRuleSet*
-RuleBasedNumberFormat::getDefaultRuleSet() const {
-    return defaultRuleSet;
+inline UnicodeString&
+RuleBasedNumberFormat::format(int32_t number, UnicodeString& output) const {
+    FieldPosition pos(0);
+    return format(number, output, pos);
+}
+
+inline void
+RuleBasedNumberFormat::parse(const UnicodeString& text, Formattable& result, UErrorCode& status) const
+{
+    NumberFormat::parse(text, result, status);
+}
+
+inline UBool 
+RuleBasedNumberFormat::isLenient(void) const { 
+    return lenient; 
+}
+
+inline NFRuleSet* 
+RuleBasedNumberFormat::getDefaultRuleSet() const { 
+    return defaultRuleSet; 
 }
 
 U_NAMESPACE_END

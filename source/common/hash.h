@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-*   Copyright (C) 1997-2014, International Business Machines
+*   Copyright (C) 1997-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ******************************************************************************
 *   Date        Name        Description
@@ -13,10 +11,8 @@
 #ifndef HASH_H
 #define HASH_H
 
-#include "unicode/unistr.h"
-#include "unicode/uobject.h"
-#include "cmemory.h"
 #include "uhash.h"
+#include "unicode/unistr.h"
 
 U_NAMESPACE_BEGIN
 
@@ -27,49 +23,18 @@ U_NAMESPACE_BEGIN
  *
  * Hashtable is an INTERNAL CLASS.
  */
-class U_COMMON_API Hashtable : public UMemory {
+class Hashtable {
     UHashtable* hash;
-    UHashtable hashObj;
-
-    inline void init(UHashFunction *keyHash, UKeyComparator *keyComp, UValueComparator *valueComp, UErrorCode& status);
-
-    inline void initSize(UHashFunction *keyHash, UKeyComparator *keyComp, UValueComparator *valueComp, int32_t size, UErrorCode& status);
 
 public:
-    /**
-     * Construct a hashtable
-     * @param ignoreKeyCase If true, keys are case insensitive.
-     * @param status Error code
-    */
     Hashtable(UBool ignoreKeyCase, UErrorCode& status);
-
-    /**
-     * Construct a hashtable
-     * @param ignoreKeyCase If true, keys are case insensitive.
-     * @param size initial size allocation
-     * @param status Error code
-    */
-    Hashtable(UBool ignoreKeyCase, int32_t size, UErrorCode& status);
-
-    /**
-     * Construct a hashtable
-     * @param keyComp Comparator for comparing the keys
-     * @param valueComp Comparator for comparing the values
-     * @param status Error code
-    */
-    Hashtable(UKeyComparator *keyComp, UValueComparator *valueComp, UErrorCode& status);
-
-    /**
-     * Construct a hashtable
-     * @param status Error code
-    */
-    Hashtable(UErrorCode& status);
 
     /**
      * Construct a hashtable, _disregarding any error_.  Use this constructor
      * with caution.
+     * @param ignoreKeyCase if TRUE, keys are case insensitive
      */
-    Hashtable();
+    Hashtable(UBool ignoreKeyCase = FALSE);
 
     /**
      * Non-virtual destructor; make this virtual if Hashtable is subclassed
@@ -77,7 +42,7 @@ public:
      */
     ~Hashtable();
 
-    UObjectDeleter *setValueDeleter(UObjectDeleter *fn);
+    UObjectDeleter setValueDeleter(UObjectDeleter fn);
 
     int32_t count() const;
 
@@ -86,9 +51,9 @@ public:
     int32_t puti(const UnicodeString& key, int32_t value, UErrorCode& status);
 
     void* get(const UnicodeString& key) const;
-
+    
     int32_t geti(const UnicodeString& key) const;
-
+    
     void* remove(const UnicodeString& key);
 
     int32_t removei(const UnicodeString& key);
@@ -97,97 +62,48 @@ public:
 
     const UHashElement* find(const UnicodeString& key) const;
 
-    /**
-     * @param pos - must be UHASH_FIRST on first call, and untouched afterwards.
-     * @see uhash_nextElement
-     */
     const UHashElement* nextElement(int32_t& pos) const;
-
-    UKeyComparator* setKeyComparator(UKeyComparator*keyComp);
-
-    UValueComparator* setValueComparator(UValueComparator* valueComp);
-
-    UBool equals(const Hashtable& that) const;
-private:
-    Hashtable(const Hashtable &other); // forbid copying of this class
-    Hashtable &operator=(const Hashtable &other); // forbid copying of this class
 };
 
 /*********************************************************************
  * Implementation
  ********************************************************************/
 
-inline void Hashtable::init(UHashFunction *keyHash, UKeyComparator *keyComp,
-                            UValueComparator *valueComp, UErrorCode& status) {
+inline Hashtable::Hashtable(UBool ignoreKeyCase, UErrorCode& status) :
+    hash(0) {
     if (U_FAILURE(status)) {
         return;
     }
-    uhash_init(&hashObj, keyHash, keyComp, valueComp, &status);
+    hash = uhash_open(ignoreKeyCase ? uhash_hashCaselessUnicodeString
+                                    : uhash_hashUnicodeString,
+                      ignoreKeyCase ? uhash_compareCaselessUnicodeString
+                                    : uhash_compareUnicodeString,
+                      &status);
     if (U_SUCCESS(status)) {
-        hash = &hashObj;
-        uhash_setKeyDeleter(hash, uprv_deleteUObject);
+        uhash_setKeyDeleter(hash, uhash_deleteUnicodeString);
     }
 }
 
-inline void Hashtable::initSize(UHashFunction *keyHash, UKeyComparator *keyComp,
-                                UValueComparator *valueComp, int32_t size, UErrorCode& status) {
-    if (U_FAILURE(status)) {
-        return;
-    }
-    uhash_initSize(&hashObj, keyHash, keyComp, valueComp, size, &status);
-    if (U_SUCCESS(status)) {
-        hash = &hashObj;
-        uhash_setKeyDeleter(hash, uprv_deleteUObject);
-    }
-}
-
-inline Hashtable::Hashtable(UKeyComparator *keyComp, UValueComparator *valueComp,
-                 UErrorCode& status) : hash(0) {
-    init( uhash_hashUnicodeString, keyComp, valueComp, status);
-}
-
-inline Hashtable::Hashtable(UBool ignoreKeyCase, UErrorCode& status)
- : hash(0)
-{
-    init(ignoreKeyCase ? uhash_hashCaselessUnicodeString
-                        : uhash_hashUnicodeString,
-            ignoreKeyCase ? uhash_compareCaselessUnicodeString
-                        : uhash_compareUnicodeString,
-            NULL,
-            status);
-}
-
-inline Hashtable::Hashtable(UBool ignoreKeyCase, int32_t size, UErrorCode& status)
- : hash(0)
-{
-    initSize(ignoreKeyCase ? uhash_hashCaselessUnicodeString
-                        : uhash_hashUnicodeString,
-            ignoreKeyCase ? uhash_compareCaselessUnicodeString
-                        : uhash_compareUnicodeString,
-            NULL, size,
-            status);
-}
-
-inline Hashtable::Hashtable(UErrorCode& status)
- : hash(0)
-{
-    init(uhash_hashUnicodeString, uhash_compareUnicodeString, NULL, status);
-}
-
-inline Hashtable::Hashtable()
- : hash(0)
-{
+inline Hashtable::Hashtable(UBool ignoreKeyCase) : hash(0) {
     UErrorCode status = U_ZERO_ERROR;
-    init(uhash_hashUnicodeString, uhash_compareUnicodeString, NULL, status);
+    hash = uhash_open(ignoreKeyCase ? uhash_hashCaselessUnicodeString
+                                    : uhash_hashUnicodeString,
+                      ignoreKeyCase ? uhash_compareCaselessUnicodeString
+                                    : uhash_compareUnicodeString,
+                      &status);
+    if (U_SUCCESS(status)) {
+        uhash_setKeyDeleter(hash, uhash_deleteUnicodeString);
+    }
 }
 
 inline Hashtable::~Hashtable() {
-    if (hash != NULL) {
+    if (hash != 0) {
         uhash_close(hash);
+        hash = 0;
     }
 }
 
-inline UObjectDeleter *Hashtable::setValueDeleter(UObjectDeleter *fn) {
+inline UObjectDeleter Hashtable::setValueDeleter(UObjectDeleter fn) {
     return uhash_setValueDeleter(hash, fn);
 }
 
@@ -228,21 +144,9 @@ inline const UHashElement* Hashtable::nextElement(int32_t& pos) const {
 }
 
 inline void Hashtable::removeAll(void) {
-    uhash_removeAll(hash);
+  uhash_removeAll(hash);
 }
 
-inline UKeyComparator* Hashtable::setKeyComparator(UKeyComparator*keyComp){
-    return uhash_setKeyComparator(hash, keyComp);
-}
-
-inline UValueComparator* Hashtable::setValueComparator(UValueComparator* valueComp){
-    return uhash_setValueComparator(hash, valueComp);
-}
-
-inline UBool Hashtable::equals(const Hashtable& that)const{
-   return uhash_equals(hash, that.hash);
-}
 U_NAMESPACE_END
 
 #endif
-

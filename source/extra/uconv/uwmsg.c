@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-* Copyright (C) 1998-2016, International Business Machines Corporation
+* Copyright (C) 1998-2000, International Business Machines Corporation 
 * and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -20,8 +18,6 @@
 #include "unicode/umsg.h"
 #include "unicode/uwmsg.h"
 #include "unicode/ures.h"
-#include "unicode/putil.h"
-#include "cmemory.h"
 #include "cstring.h"
 
 #include <stdlib.h>
@@ -85,11 +81,10 @@ finish:
     ucnv_close(converter);
 }
 
+static const char *gPath = 0;
 static UResourceBundle *gBundle = NULL;
 
-U_STRING_DECL(gNoFormatting, " (UCONFIG_NO_FORMATTING see uconfig.h)", 38);
-
-U_CFUNC UResourceBundle *u_wmsg_setPath(const char *path, UErrorCode *err)
+U_CAPI UResourceBundle *u_wmsg_setPath(const char *path, UErrorCode *err)
 {
   if(U_FAILURE(*err))
   {
@@ -110,25 +105,22 @@ U_CFUNC UResourceBundle *u_wmsg_setPath(const char *path, UErrorCode *err)
          return 0;
     }
 
+    gPath = uprv_strdup(path);
     gBundle = b;
-
-    U_STRING_INIT(gNoFormatting, " (UCONFIG_NO_FORMATTING see uconfig.h)", 38);
   }
   
   return gBundle;
 }
 
 /* Format a message and print it's output to fp */
-U_CFUNC int u_wmsg(FILE *fp, const char *tag, ... )
+U_CAPI int u_wmsg(FILE *fp, const char *tag, ... )
 {
     const UChar *msg;
     int32_t      msgLen;
     UErrorCode  err = U_ZERO_ERROR;
-#if !UCONFIG_NO_FORMATTING
     va_list ap;
-#endif
     UChar   result[4096];
-    int32_t resultLength = UPRV_LENGTHOF(result);
+    int32_t resultLength  = 4096;
 
     if(gBundle == NULL)
     {
@@ -142,20 +134,12 @@ U_CFUNC int u_wmsg(FILE *fp, const char *tag, ... )
 
     if(U_FAILURE(err))
     {
+#if 0
+        fprintf(stderr, "u_wmsg: failed to load tag [%s] [%s] [%s]!!\n", tag,  u_errorName(err), gPath);
+#endif
         return -1;
     }
 
-#if UCONFIG_NO_FORMATTING
-    resultLength = UPRV_LENGTHOF(gNoFormatting);
-    if((msgLen + resultLength) <= UPRV_LENGTHOF(result)) {
-        memcpy(result, msg, msgLen * U_SIZEOF_UCHAR);
-        memcpy(result + msgLen, gNoFormatting, resultLength);
-        resultLength += msgLen;
-        uprint(result, resultLength, fp, &err);
-    } else {
-        uprint(msg,msgLen, fp, &err);
-    }
-#else
     va_start(ap, tag);
 
     resultLength = u_vformatMessage(uloc_getDefault(), msg, msgLen, result, resultLength, ap, &err);
@@ -176,7 +160,6 @@ U_CFUNC int u_wmsg(FILE *fp, const char *tag, ... )
     }
 
     uprint(result, resultLength, fp, &err);
-#endif
 
     if(U_FAILURE(err))
     {
@@ -193,27 +176,21 @@ U_CFUNC int u_wmsg(FILE *fp, const char *tag, ... )
 }
 
 /* these will break if the # of messages change. simply add or remove 0's .. */
-UChar **gInfoMessages = NULL;
+UChar * gInfoMessages[U_ERROR_WARNING_LIMIT-U_ERROR_WARNING_START] = 
+    { 0,0 };
 
-UChar **gErrMessages = NULL;
+UChar * gErrMessages[U_ERROR_LIMIT] = 
+    { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
 static const UChar *fetchErrorName(UErrorCode err)
 {
-    if (!gInfoMessages) {
-        gInfoMessages = (UChar **)malloc((U_ERROR_WARNING_LIMIT-U_ERROR_WARNING_START)*sizeof(UChar*));
-        memset(gInfoMessages, 0, (U_ERROR_WARNING_LIMIT-U_ERROR_WARNING_START)*sizeof(UChar*));
-    }
-    if (!gErrMessages) {
-        gErrMessages = (UChar **)malloc(U_ERROR_LIMIT*sizeof(UChar*));
-        memset(gErrMessages, 0, U_ERROR_LIMIT*sizeof(UChar*));
-    }
     if(err>=0)
         return gErrMessages[err];
     else
         return gInfoMessages[err-U_ERROR_WARNING_START];
 }
 
-U_CFUNC const UChar *u_wmsg_errorName(UErrorCode err)
+U_CAPI const UChar *u_wmsg_errorName(UErrorCode err)
 {
     UChar *msg;
     int32_t msgLen;
@@ -253,7 +230,7 @@ U_CFUNC const UChar *u_wmsg_errorName(UErrorCode err)
             textMsg = error;
         }
         msg = (UChar*)malloc((strlen(textMsg)+1)*sizeof(msg[0]));
-        u_charsToUChars(textMsg, msg, (int32_t)(strlen(textMsg)+1));
+        u_charsToUChars(textMsg, msg, strlen(textMsg)+1);
     }
 
     if(err>=0)

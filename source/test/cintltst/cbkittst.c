@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2001, International Business Machines Corporation and
@@ -14,20 +12,15 @@
 *     Madhu Katragadda               Creation
 *********************************************************************************
 */
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_BREAK_ITERATION
-
 #include "cintltst.h"
 
 void addBrkIterAPITest(TestNode**);
+void addBrkIterRegrTest(TestNode**);
 
 void addBreakIter(TestNode** root);
 
 void addBreakIter(TestNode** root)
 {
     addBrkIterAPITest(root);
+    addBrkIterRegrTest(root);
 }
-
-#endif /* #if !UCONFIG_NO_BREAK_ITERATION */

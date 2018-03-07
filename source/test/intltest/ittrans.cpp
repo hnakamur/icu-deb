@@ -1,11 +1,15 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***************************************************************************
-*
-*   Copyright (C) 2000-2007, International Business Machines
-*   Corporation and others.  All Rights Reserved.
-*
-************************************************************************
+/*
+*****************************************************************************************
+*                                                                                       *
+* COPYRIGHT:                                                                            *
+*   (C) Copyright International Business Machines Corporation,  2001                    *
+*   Licensed Material - Program-Property of IBM - All Rights Reserved.                  *
+*   US Government Users Restricted Rights - Use, duplication, or disclosure             *
+*   restricted by GSA ADP Schedule Contract with IBM Corp.                              *
+*                                                                                       *
+*****************************************************************************************
+*/
+/***********************************************************************
 *   Date        Name        Description
 *   01/03/2000  Madhu        Creation.
 *   03/2000     Madhu        Added additional tests
@@ -15,14 +19,15 @@
  */
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "ittrans.h"
 #include "transtst.h"
 #include "transapi.h"
 #include "cpdtrtst.h"
+#include "unhxtrts.h"
+#include "hxuntrts.h"
+#include "ufltlgts.h"
 #include "transrt.h"
+#include "usettest.h"
 #include "jamotest.h"
 #include "trnserr.h"
 #include "reptest.h"
@@ -30,7 +35,7 @@
 #define CASE(id,test) case id:                                \
                           name = #test;                       \
                           if (exec) {                         \
-                              logln(#test "---"); logln();    \
+                              logln(#test "---"); logln("");  \
                               test t;                         \
                               callTest(t, par);               \
                           }                                   \
@@ -43,16 +48,15 @@ void IntlTestTransliterator::runIndexedTest( int32_t index, UBool exec, const ch
         CASE(0, TransliteratorTest);
         CASE(1, TransliteratorAPITest);
         CASE(2, CompoundTransliteratorTest);
-        CASE(3, TransliteratorRoundTripTest);
-        CASE(4, JamoTest);
-        CASE(5, TransliteratorErrorTest);
-        CASE(6, ReplaceableTest);
-#if !UCONFIG_NO_TRANSLITERATION && defined(U_USE_UNICODE_FILTER_LOGIC_OBSOLETE_2_8)
-        CASE(7, UnicodeFilterLogicTest);
-#endif
+        CASE(3, UniToHexTransliteratorTest);
+        CASE(4, HexToUniTransliteratorTest);
+        CASE(5, UnicodeFilterLogicTest);
+        CASE(6, TransliteratorRoundTripTest);
+        CASE(7, UnicodeSetTest);
+        CASE(8, JamoTest);
+        CASE(9, TransliteratorErrorTest);
+        CASE(10, ReplaceableTest);
 
         default: name=""; break;
     }
 }
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */

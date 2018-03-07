@@ -1,28 +1,22 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (c) 2000-2005, International Business Machines
+*   Copyright (c) 2000, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
 *   01/11/2000  aliu        Creation.
 **********************************************************************
 */
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
-#include "nultrans.h"
+#include "unicode/nultrans.h"
 
 U_NAMESPACE_BEGIN
 
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(NullTransliterator)
 
-NullTransliterator::NullTransliterator() : Transliterator(UNICODE_STRING_SIMPLE("Any-Null"), 0) {}
+// "Any-Null"
+const UChar NullTransliterator::ID[] = {65,110,121,45,0x4E, 0x75, 0x6C, 0x6C, 0x00};
 
-NullTransliterator::~NullTransliterator() {}
+// "Null"
+const UChar NullTransliterator::SHORT_ID[] = {0x4E, 0x75, 0x6C, 0x6C, 0x00};
 
 Transliterator* NullTransliterator::clone(void) const {
     return new NullTransliterator();
@@ -35,4 +29,3 @@ void NullTransliterator::handleTransliterate(Replaceable& /*text*/, UTransPositi
 
 U_NAMESPACE_END
 
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */

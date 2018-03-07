@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2012, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -15,26 +13,22 @@
 *********************************************************************************
 */
 #include <stdio.h>
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "cintltst.h"
 #include "ccolltst.h"
 #include "unicode/ucol.h"
 #include "unicode/ustring.h"
 #include "cmemory.h"
 
+UChar U_CALLCONV testInc(void *context);
+
 void addCollTest(TestNode** root);
 
 void addCollTest(TestNode** root)
 {
     addCollAPITest(root);
-    addCurrencyCollTest(root);
-#if !UCONFIG_NO_NORMALIZATION
+    addCurrencyTest(root);
     addNormTest(root);
-#endif
+    addDanishCollTest(root);
     addGermanCollTest(root);
     addSpanishCollTest(root);
     addFrenchCollTest(root);
@@ -48,9 +42,8 @@ void addCollTest(TestNode** root)
     addCollIterTest(root);
     addAllCollTest(root);
     addMiscCollTest(root);
-#if !UCONFIG_NO_BREAK_ITERATION && !UCONFIG_NO_FILE_IO
+
     addSearchTest(root);
-#endif
 }
 
 
@@ -68,23 +61,6 @@ static char* dumpSk(uint8_t *sourceKey, char *sk) {
     return sk;
 }
 
-static const char *getCompareResult(UCollationResult result)
-{
-    if (result == UCOL_LESS)
-    {
-        return "LESS";
-    }
-    else if (result == UCOL_EQUAL)
-    {
-        return "EQUAL";
-    }
-    else if (result == UCOL_GREATER)
-    {
-        return "GREATER";
-    }
-    return "invalid UCollationResult?";
-}
-
 void reportCResult( const UChar source[], const UChar target[], 
                          uint8_t *sourceKey, uint8_t *targetKey,
                          UCollationResult compareResult,
@@ -92,6 +68,9 @@ void reportCResult( const UChar source[], const UChar target[],
                          UCollationResult incResult,
                          UCollationResult expectedResult )
 {
+    UChar *sResult, *sExpect;
+    sResult=(UChar*)uprv_malloc(sizeof(UChar) * 10);
+    sExpect=(UChar*)uprv_malloc(sizeof(UChar) * 10);
     if (expectedResult < -1 || expectedResult > 1)
     {
         log_err("***** invalid call to reportCResult ****\n");
@@ -100,34 +79,101 @@ void reportCResult( const UChar source[], const UChar target[],
 
     if (compareResult != expectedResult)
     {
+        
+        appendCompareResult(compareResult, sResult);
+        appendCompareResult(expectedResult, sExpect);
         log_err("Compare(%s , %s) returned: %s expected: %s\n", aescstrdup(source,-1), aescstrdup(target,-1),
-            getCompareResult(compareResult), getCompareResult(expectedResult) );
+            austrdup(sResult), austrdup(sExpect) );
     }
 
     if (incResult != expectedResult)
     {
+        
+        appendCompareResult(incResult, sResult);
+        appendCompareResult(expectedResult, sExpect);
         log_err("incCompare(%s , %s) returned: %s expected: %s\n", aescstrdup(source,-1), aescstrdup(target,-1),
-            getCompareResult(incResult), getCompareResult(expectedResult) );
+            austrdup(sResult), austrdup(sExpect) );
     }
 
     if (keyResult != expectedResult)
     {
+    
+        appendCompareResult(keyResult, sResult);
+        appendCompareResult(expectedResult, sExpect);
+
         log_err("KeyCompare(%s , %s) returned: %s expected: %s\n", aescstrdup(source,-1), aescstrdup(target,-1), 
-            getCompareResult(keyResult), getCompareResult(expectedResult) );
+            austrdup(sResult), austrdup(sExpect) );
+
+    
     }
 
     if (keyResult != compareResult)
     {
+    
+        appendCompareResult(keyResult, sResult);
+        appendCompareResult(compareResult, sExpect);
+
         log_err("difference between sortkey and compare result for (%s , %s) Keys: %s compare %s\n", aescstrdup(source,-1), aescstrdup(target,-1), 
-            getCompareResult(keyResult), getCompareResult(compareResult));
+            austrdup(sResult), austrdup(sExpect) );
+
+    
     }
 
     if(keyResult != expectedResult || keyResult != compareResult)
     {
-        char sk[10000];
-        log_verbose("SortKey1: %s\n", dumpSk(sourceKey, sk));
-        log_verbose("SortKey2: %s\n", dumpSk(targetKey, sk));
+      char sk[10000];
+      log_verbose("SortKey1: %s\n", dumpSk(sourceKey, sk));
+      log_verbose("SortKey2: %s\n", dumpSk(targetKey, sk));
+    }
+
+    uprv_free(sExpect);
+    uprv_free(sResult);
+}
+
+UChar* appendCompareResult(UCollationResult result, UChar* target)
+{
+    if (result == UCOL_LESS)
+    {
+        u_uastrcpy(target, "LESS");
+    }
+    else if (result == UCOL_EQUAL)
+    {
+        u_uastrcpy(target, "EQUAL");
+    }
+    else if (result == UCOL_GREATER)
+    {
+        u_uastrcpy(target, "GREATER");
+    }
+    else
+    {
+        u_uastrcpy(target, "huh???");
+    }
+
+    return target;
+}
+
+UChar* CharsToUChars(const char* str) {
+    /* Might be faster to just use uprv_strlen() as the preflight len - liu */
+    int32_t len = u_unescape(str, 0, 0); /* preflight */
+    UChar *buf = (UChar*) uprv_malloc(sizeof(UChar) * len);
+    u_unescape(str, buf, len);
+    return buf;
+}
+
+
+/* Support for testing incremental strcoll */
+typedef struct {
+    const UChar *start;
+    const UChar *end;
+} testContext;
+
+UChar U_CALLCONV testInc(void *context) {
+    testContext *s = (testContext *)context;
+    if(s->start == s->end) {
+        return 0xFFFF;
+    } else {
+        return *(s->start++);
     }
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */
+

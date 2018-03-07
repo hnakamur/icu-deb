@@ -1,9 +1,9 @@
 ## -*-makefile-*-
-## Copyright (C) 2016 and later: Unicode, Inc. and others.
-## License & terms of use: http://www.unicode.org/copyright.html
-## os/390, z/OS specific setup 
-## Copyright (c) 1999-2014, International Business Machines Corporation and
+## 390-specific setup 
+## Copyright (c) 1999-2001, International Business Machines Corporation and
 ## others. All Rights Reserved.
+##
+## $Id: mh-os390,v 1.34 2002/02/12 20:04:52 yves-oss Exp $
 
 ###################################################################
 #                    IMPORTANT NOTE                               #
@@ -16,100 +16,45 @@
 #                                                                 #
 #   export OS390BATCH=1                                           #
 #                                                                 #
-# To build a version of ICU that does not use IEEE Floating point #
+# To build a version of ICU which uses IEEE Floating point        #
 #                                                                 #
-#   export IEEE390=0                                              #
-#                                                                 #
-# To build a version of ICU which uses a two data libraries       #
-# where the smaller one is loaded first, use OS390_STUBDATA.      #
-# USAGE OF THIS OPTION IS DEPRECATED. You should look into using  #
-# Link Pack Area (LPA), library lookaside facility (LLA) or other #
-# z/OS options that enable page fault based loading of read-only  #
-# code/data instead of this option.                               #
-# This option will be removed in a future version of ICU.         #
-#                                                                 #
-#   export OS390_STUBDATA=1                                       #
-#                                                                 #
-# To build a version of ICU which exploits the C/C++ compiler     #
-# and runtime Extra Performance Linkage (XPLINK), specify         #
-#                                                                 #
-#   export OS390_XPLINK=1                                         #
+#   export IEEE390=1                                              #
 #                                                                 #
 ###################################################################
 
-# TODO: Fix this configuration so that icu-config will work!
-#       If statements don't work well when icu-config is generated.
-ifeq (${IEEE390},)
-IEEE390=1#M#
-endif
-
 ifeq (${IEEE390}, 1)
-ICU_IEEE          = -Wc,'FLOAT(IEEE)' -DIEEE_754=0#M#
+ICU_IEEE          = -Wc,"float(ieee)" -DIEEE_754=1
 else
-ICU_IEEE          =#M#
+ICU_IEEE          = -DIEEE_754=0
 endif
 
-## Additional flags when building libraries and with threads
-THREADSCPPFLAGS = -D_OPEN_THREADS=3
-
-# For a dynamically called DLL module to share access to the POSIX external
-# variables, with its caller, the DLL module must define these _SHR_* macros.
-SHAREDLIBCPPFLAGS	= -D_SHR_TZNAME -D_SHR_TIMEZONE
-
-# -Wc,expo is used to export all functions
-SHAREDLIBCFLAGS	= -Wc,expo
-SHAREDLIBCXXFLAGS	= -Wc,expo
-
-# TODO: Consider using  -Wc,roc,ros for making the data and strings readonly
-#       -Wc,"ros" seems to work, but not the "roc"
-# The RENT option makes the program reentrant. This may not really have the same
-#       meaning as normal reentrancy on other platforms. See the z/OS documentation
-#       for details. This is the default for C++, but not C.
-# The DLL option must be used by the callee and caller code when using shared libraries.
-# NOCSECT might be used as an optimization option.
-# -+ means accept any file extension as a C++ file. By default only .C is accepted.
-CFLAGS          += -Wc,DLL,ROS,RENT,'ARCH(7)','LOC(POSIX)',NOANSIALIAS,'LANGLVL(EXTENDED)' $(ICU_IEEE)
-CXXFLAGS        += -Wc,DLL,ROS,RTTI,'ARCH(7)','LOC(POSIX)',NOANSIALIAS,'LANGLVL(EXTENDED0X)' $(ICU_IEEE) -+
-ARFLAGS         = -cr
-
-# _MSE_PROTOS usually interacts with _XOPEN_SOURCE. It affects some standard
-# C functions that use wchar_t, and it selects behavior for
-# multibyte extension support (MSE) functions.
-#DEFS            += -D_MSE_PROTOS
-
-ifeq (${OS390_XPLINK}, 1)
-#SH# if [ "x$OS390_XPLINK" = "x1" ]; then
-# These lines must be the last options specified.
-# GOFF is is the strategic object module format for S/390. It is required for XPLINK.
-# NOTEMPINC could be used if ICU starts using templates.
-ICU_XPLINK_C      = -Wc,'xplink(backchain,storeargs),goff'
-ICU_XPLINK_CXX    = -Wc,'xplink(backchain,storeargs),goff' -Wc,'NOTEMPINC'
-ICU_XPLINK_L      = -Wl,xplink
-#SH# fi
-endif
-
+# TODO: Consider using  -Wc,roc,rent for making the data readonly
+CFLAGS390=      -Wc,"langlvl(extended),spill(2000)" $(ICU_BUILD_OPTIONS)  $(ICU_IEEE) -Wc,dll,expo
 ## OS390BATCH
 ifeq (${OS390BATCH},1)
-DEFS            += -DOS390BATCH#M#
+DEFS390=        -D_OPEN_THREADS -D_XOPEN_SOURCE_EXTENDED -D_SHR_TZNAME -D_SHR_TIMEZONE -DOS390BATCH
+else
+DEFS390=        -D_OPEN_THREADS -D_XOPEN_SOURCE_EXTENDED -D_SHR_TZNAME -D_SHR_TIMEZONE
 endif
+ARFLAGS=        -cr
+OS390DATA=      1
+
 
 ## Commands to generate dependency files
 GEN_DEPS.c=	makedep                        
 GEN_DEPS.cc=	makedep
 
 ## Commands to compile
-# _CXX_STEPS="-1" is a prelink step when compiling C and C++, and
-# it's only needed for long function names
-COMPILE.c       = $(COMPILE_LINK_ENVVAR) $(CC) $(DEFS) $(CPPFLAGS) $(CFLAGS) $(ICU_XPLINK_C) -c
-COMPILE.cc      = $(COMPILE_LINK_ENVVAR) $(CXX) $(DEFS) $(CPPFLAGS) $(CXXFLAGS) $(ICU_XPLINK_CXX) -c
+COMPILE.c=	_CXX_CXXSUFFIX="cpp" _CXX_STEPS="-1" $(CXX) $(DEFS) $(CPPFLAGS) $(CFLAGS) $(CFLAGS390) $(DEFS390) -c
+COMPILE.cc=	_CXX_CXXSUFFIX="cpp" _CXX_STEPS="-1" $(CXX) $(DEFS) $(CPPFLAGS) $(CFLAGS) $(CFLAGS390) $(DEFS390) -c
 
 # Commands to link
-LINK.c=		$(COMPILE_LINK_ENVVAR) $(CC) $(CFLAGS) -Wl,dll $(LDFLAGS) $(ICU_XPLINK_L)
-LINK.cc=	$(COMPILE_LINK_ENVVAR) $(CXX) $(CXXFLAGS) -Wl,dll $(LDFLAGS) $(ICU_XPLINK_L)
+LINK.c=		$(CC) $(DEFS) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) 
+LINK.cc=	$(CXX) $(DEFS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) 
 
 ## Commands for shared library (dll)
-SHLIB.c=	$(LINK.c)
-SHLIB.cc=	$(LINK.cc)
+SHLIB.c=	$(LINK.c) -Wl,dll
+SHLIB.cc=	$(LINK.cc) -Wl,dll
 
 ## Compiler switch to embed a runtime search path
 LD_RPATH=	-I
@@ -117,84 +62,32 @@ LD_RPATH=	-I
 ## Environment variable to set a runtime search path
 LDLIBRARYPATH_ENVVAR = LIBPATH
 
-## An import library (a.k.a. sidedeck) is needed for z/OS and MSVC
-IMPORT_LIB_EXT = .x
-
 ## Versioned target for a shared library.
-FINAL_SO_TARGET=  $(basename $(SO_TARGET))$(SO_TARGET_VERSION).$(SO)
-MIDDLE_SO_TARGET= $(basename $(SO_TARGET))$(SO_TARGET_VERSION_MAJOR).$(SO)
+FINAL_SO_TARGET = $(basename $(SO_TARGET)).$(SO_TARGET_VERSION).$(SO)
+MIDDLE_SO_TARGET = $(basename $(SO_TARGET).$(SO))
 
-## Versioned import library names.
-IMPORT_LIB = $(basename $(notdir $(SO_TARGET)))$(IMPORT_LIB_EXT)#M#
-MIDDLE_IMPORT_LIB = $(basename $(notdir $(MIDDLE_SO_TARGET)))$(IMPORT_LIB_EXT)#M#
-FINAL_IMPORT_LIB = $(basename $(notdir $(FINAL_SO_TARGET)))$(IMPORT_LIB_EXT)#M#
-
+## Shared object suffix (switch to dll for shared library build)
+SO = dll
 ## Non-shared intermediate object suffix
 STATIC_O = o
 
-ifeq ($(OS390_STUBDATA),1)
-## Suffix of the subset data library for dual common library support
-STUB_SUFFIX=_stub#M#
-DEFS      += -DOS390_STUBDATA -DU_LIBICUDATA_NAME=\"$(ICUPREFIX)$(DATA_STUBNAME)$(ICULIBSUFFIX)\"#M#
-endif
+## Suffix of the subset data library for batch mode
+BATCH_STUB_SUFFIX=_390
 
 ifeq ($(OS390BATCH),1)
-## PDS_NAME_PREFIX sets the prefix of the PDS dataset name while keeping the ICU version number.
-## To use custom names set ICU_PDS_NAME and ICU_PDS_NAME_SUFFIX
-## IXM is used as a name prefix for XML Toolkit, default value
-ifeq ($(PDS_NAME_PREFIX),)
-PDS_NAME_PREFIX= IXMI
+BATCH_STUB_TARGET=	"//'${LOADMOD}(IXMI${SO_TARGET_VERSION_MAJOR}D1)'"
+BATCH_LIBICUUC=		"//'${LOADEXP}(IXMI${SO_TARGET_VERSION_MAJOR}UC)'"
+BATCH_LIBICUDT=		"//'${LOADEXP}(IXMI${SO_TARGET_VERSION_MAJOR}D1)'"
 endif
-ifeq ($(ICU_PDS_NAME),)
-PDS_FULL_NAME=${PDS_NAME_PREFIX}${SO_TARGET_VERSION_MAJOR}
-else
-PDS_FULL_NAME=${ICU_PDS_NAME}
-endif
-ifeq ($(OS390_STUBDATA),1)
-BATCH_STUB_TARGET=	"//'${LOADMOD}(${PDS_FULL_NAME}D1${ICU_PDS_NAME_SUFFIX})'"
-BATCH_LIBICUDT=		"//'${LOADEXP}(${PDS_FULL_NAME}D1${ICU_PDS_NAME_SUFFIX})'"
-else
-BATCH_STUB_TARGET=	"//'${LOADMOD}(${PDS_FULL_NAME}DA${ICU_PDS_NAME_SUFFIX})'"
-BATCH_LIBICUDT=		"//'${LOADEXP}(${PDS_FULL_NAME}DA${ICU_PDS_NAME_SUFFIX})'"
-PKGDATA_DEFS        += -DU_LIBICUDATA_NAME=\"$(ICUPREFIX)$(DATA_STUBNAME)$(ICULIBSUFFIX)\"
-endif
-
-BATCH_COMMON_TARGET="//'${LOADMOD}(${PDS_FULL_NAME}UC${ICU_PDS_NAME_SUFFIX})'"
-BATCH_I18N_TARGET="//'${LOADMOD}(${PDS_FULL_NAME}IN${ICU_PDS_NAME_SUFFIX})'"
-BATCH_IO_TARGET="//'${LOADMOD}(${PDS_FULL_NAME}IO${ICU_PDS_NAME_SUFFIX})'"
-BATCH_LAYOUT_TARGET="//'${LOADMOD}(${PDS_FULL_NAME}LE${ICU_PDS_NAME_SUFFIX})'"
-BATCH_LAYOUTEX_TARGET="//'${LOADMOD}(${PDS_FULL_NAME}LX${ICU_PDS_NAME_SUFFIX})'"
-
-BATCH_LIBICUUC=		"//'${LOADEXP}(${PDS_FULL_NAME}UC${ICU_PDS_NAME_SUFFIX})'"
-BATCH_LIBICUI18N=	"//'${LOADEXP}(${PDS_FULL_NAME}IN${ICU_PDS_NAME_SUFFIX})'"
-BATCH_LIBICUIO=		"//'${LOADEXP}(${PDS_FULL_NAME}IO${ICU_PDS_NAME_SUFFIX})'"
-BATCH_LIBICULE=		"//'${LOADEXP}(${PDS_FULL_NAME}LE${ICU_PDS_NAME_SUFFIX})'"
-BATCH_LIBICULX=		"//'${LOADEXP}(${PDS_FULL_NAME}LX${ICU_PDS_NAME_SUFFIX})'"
-endif
-
 
 ## Link commands to link to ICU libs
-LIBICUDT=	$(top_builddir)/stubdata/$(LIBICU)data$(ICULIBSUFFIX)$(STUB_SUFFIX)$(SO_TARGET_VERSION).x
-LIBICUUC=	$(top_builddir)/common/$(LIBICU)uc$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
-LIBICUI18N=	$(top_builddir)/i18n/$(LIBICU)i18n$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
-LIBICULX=	$(top_builddir)/layoutex/$(LIBICU)lx$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
-LIBICUIO=	$(top_builddir)/io/$(LIBICU)io$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
-LIBCTESTFW=	$(top_builddir)/tools/ctestfw/$(LIBICU)test$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
-LIBICUTOOLUTIL=	$(top_builddir)/tools/toolutil/$(LIBICU)tu$(ICULIBSUFFIX)$(SO_TARGET_VERSION).x
-
-ifneq (${ICUDATA_CHAR},e)
-#SH# if [ "$ICUDATA_CHAR" != "e" ]; then
-## We're in ASCII mode.
-CFLAGS		+= -Wc,'ascii'
-CXXFLAGS	+= -Wc,'ascii'
-SO = so
-else
-#SH# else
-## We're in EBCDIC mode.
-## Shared object suffix
-SO = dll
-endif
-#SH# fi
+LIBICUDT=	$(top_builddir)/stubdata/lib$(ICUDATA_NAME)$(ICULIBSUFFIX)$(BATCH_STUB_SUFFIX).x
+LIBICUUC=	$(top_builddir)/common/li$(ICUPREFIX)uc$(ICULIBSUFFIX).$(SO_TARGET_VERSION).x
+LIBICUI18N=	$(top_builddir)/i18n/lib$(ICUPREFIX)i18n$(ICULIBSUFFIX).$(SO_TARGET_VERSION).x
+LIBICULE=	$(top_builddir)/layout/lib$(ICUPREFIX)le$(ICULIBSUFFIX).$(SO_TARGET_VERSION).x
+LIBCTESTFW=	$(top_builddir)/tools/ctestfw/lib$(ICUPREFIX)ctestfw$(ICULIBSUFFIX).$(SO_TARGET_VERSION).x
+LIBICUTOOLUTIL=	$(top_builddir)/tools/toolutil/lib$(ICUPREFIX)toolutil$(ICULIBSUFFIX).$(SO_TARGET_VERSION).x
+LIBUSTDIO=	$(top_builddir)/extra/ustdio/libustdio$(ICULIBSUFFIX).$(SO_TARGET_VERSION).x
 
 ## Special 390 rules
 
@@ -208,27 +101,10 @@ endif
 %.o: $(srcdir)/%.c
 	$(COMPILE.c) $(DYNAMICCPPFLAGS) $(DYNAMICCFLAGS) -o $@ $<
 
-# This causes escapesrc to be built before other ICU targets.
-NEED_ESCAPING=YES
-
-ifneq ($(SKIP_ESCAPING),)
 %.$(STATIC_O): $(srcdir)/%.cpp
 	$(COMPILE.cc) $(STATICCPPFLAGS) $(STATICCXXFLAGS) -o $@ $<
 %.o: $(srcdir)/%.cpp
 	$(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS) -o $@ $<
-else
-# convert *.cpp files to _*.cpp with \u / \U escaping
-CLEANFILES += _*.cpp
-
-# the actual escaping
-_%.cpp: $(srcdir)/%.cpp
-	@$(BINDIR)/escapesrc$(EXEEXT) $< $@
-
-%.$(STATIC_O): _%.cpp
-	$(COMPILE.cc) $(STATICCPPFLAGS) $(STATICCXXFLAGS) -o $@ $<
-%.o: _%.cpp
-	$(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS) -o $@ $<
-endif
 
 ## Dependency rules
 %.d : %.u
@@ -247,12 +123,7 @@ endif
 	@$(SHELL) -ec '$(GEN_DEPS.cc)  -f $*.u $< > /dev/null 2>&1'
 
 ## Versioned libraries rules
-%$(SO_TARGET_VERSION_MAJOR).$(SO): %$(SO_TARGET_VERSION).$(SO)
-	$(RM) $@ && ln -s ${*F}$(SO_TARGET_VERSION).$(SO) $@
-%.$(SO): %$(SO_TARGET_VERSION).$(SO)
-	$(RM) $@ && ln -s ${*F}$(SO_TARGET_VERSION).$(SO) $@
-
-## Install libraries as executable
-INSTALL-L=$(INSTALL_PROGRAM)
+%.$(SO): %.$(SO_TARGET_VERSION).$(SO)
+	$(RM) $@ && ln -s $*.$(SO_TARGET_VERSION).$(SO) $@
 
 ## End 390-specific setup

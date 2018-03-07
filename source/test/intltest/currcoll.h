@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2001, International Business Machines Corporation and
@@ -13,10 +11,6 @@
 
 #ifndef _CURRCOLL
 #define _CURRCOLL
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "unicode/coleitr.h"
 #include "tscoll.h"
@@ -35,7 +29,5 @@ public:
 
     void currencyTest(/*char *par*/);
 };
-
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

@@ -1,12 +1,10 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*  
 **********************************************************************
-*   Copyright (C) 1999-2015, International Business Machines
+*   Copyright (C) 1999-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  ustr_imp.h
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -18,33 +16,168 @@
 #define __USTR_IMP_H__
 
 #include "unicode/utypes.h"
-#include "unicode/utf8.h"
+#include "unicode/ucnv.h"
+#include "unicode/uiter.h"
+
+/** Simple declaration for u_strToTitle() to avoid including unicode/ubrk.h. */
+#ifndef UBRK_TYPEDEF_UBREAK_ITERATOR
+#   define UBRK_TYPEDEF_UBREAK_ITERATOR
+    typedef void *UBreakIterator;
+#endif
 
 /**
- * Internal option for unorm_cmpEquivFold() for strncmp style.
- * If set, checks for both string length and terminating NUL.
+ * Are the Unicode properties loaded?
+ * This must be used before internal functions are called that do
+ * not perform this check.
+ * @internal
  */
-#define _STRNCMP_STYLE 0x1000
+U_CFUNC UBool
+uprv_haveProperties(void);
 
 /**
- * Compare two strings in code point order or code unit order.
- * Works in strcmp style (both lengths -1),
- * strncmp style (lengths equal and >=0, flag TRUE),
- * and memcmp/UnicodeString style (at least one length >=0).
+ * Type of a function that may be passed to the internal case mapping functions
+ * or similar for growing the destination buffer.
+ * @internal
  */
-U_CFUNC int32_t U_EXPORT2
-uprv_strCompare(const UChar *s1, int32_t length1,
-                const UChar *s2, int32_t length2,
-                UBool strncmpStyle, UBool codePointOrder);
+typedef UBool U_CALLCONV
+UGrowBuffer(void *context,      /* opaque pointer for this function */
+            UChar **pBuffer,    /* in/out destination buffer pointer */
+            int32_t *pCapacity, /* in/out buffer capacity in numbers of UChars */
+            int32_t reqCapacity,/* requested capacity */
+            int32_t length);    /* number of UChars to be copied to new buffer */
 
-U_CAPI int32_t U_EXPORT2 
-ustr_hashUCharsN(const UChar *str, int32_t length);
+/**
+ * Default implementation of UGrowBuffer.
+ * Takes a static buffer as context, allocates a new buffer,
+ * and releases the old one if it is not the same as the one passed as context.
+ * @internal
+ */
+U_CAPI UBool /* U_CALLCONV U_EXPORT2 */
+u_growBufferFromStatic(void *context,
+                       UChar **pBuffer, int32_t *pCapacity, int32_t reqCapacity,
+                       int32_t length);
 
-U_CAPI int32_t U_EXPORT2 
-ustr_hashCharsN(const char *str, int32_t length);
+/*
+ * Internal string casing functions implementing
+ * ustring.h/ustrcase.c and UnicodeString case mapping functions.
+ *
+ * Lowercases [srcStart..srcLimit[ but takes
+ * context [0..srcLength[ into account.
+ * @internal
+ */
+U_CFUNC int32_t
+u_internalStrToLower(UChar *dest, int32_t destCapacity,
+                     const UChar *src, int32_t srcLength,
+                     int32_t srcStart, int32_t srcLimit,
+                     const char *locale,
+                     UErrorCode *pErrorCode);
 
+/**
+ * @internal
+ */
+U_CFUNC int32_t
+u_internalStrToUpper(UChar *dest, int32_t destCapacity,
+                     const UChar *src, int32_t srcLength,
+                     const char *locale,
+                     UErrorCode *pErrorCode);
+
+/**
+ * @internal
+ */
+U_CFUNC int32_t
+u_internalStrToTitle(UChar *dest, int32_t destCapacity,
+                     const UChar *src, int32_t srcLength,
+                     UBreakIterator *titleIter,
+                     const char *locale,
+                     UErrorCode *pErrorCode);
+
+/**
+ * Internal case folding function.
+ * @internal
+ */
+U_CFUNC int32_t
+u_internalStrFoldCase(UChar *dest, int32_t destCapacity,
+                      const UChar *src, int32_t srcLength,
+                      uint32_t options,
+                      UErrorCode *pErrorCode);
+
+/**
+ * Get the full lowercase mapping for c.
+ * @param iter Character iterator to check for context for SpecialCasing.
+ *             The current index must be on the character after c.
+ *             This function may or may not change the iterator index.
+ *             If iter==NULL then a context-independent result is returned.
+ * @return the length of the output, negative if same as c
+ * @internal
+ */
 U_CAPI int32_t U_EXPORT2
-ustr_hashICharsN(const char *str, int32_t length);
+u_internalToLower(UChar32 c, UCharIterator *iter,
+                  UChar *dest, int32_t destCapacity,
+                  const char *locale);
+
+/**
+ * Get the full uppercase mapping for c.
+ * @param iter Character iterator to check for context for SpecialCasing.
+ *             The current index must be on the character after c.
+ *             This function may or may not change the iterator index.
+ *             If iter==NULL then a context-independent result is returned.
+ * @return the length of the output, negative if same as c
+ * @internal
+ */
+U_CAPI int32_t U_EXPORT2
+u_internalToUpper(UChar32 c, UCharIterator *iter,
+                  UChar *dest, int32_t destCapacity,
+                  const char *locale);
+
+/**
+ * Get the full titlecase mapping for c.
+ * @param iter Character iterator to check for context for SpecialCasing.
+ *             The current index must be on the character after c.
+ *             This function may or may not change the iterator index.
+ *             If iter==NULL then a context-independent result is returned.
+ * @return the length of the output, negative if same as c
+ * @internal
+ */
+U_CAPI int32_t U_EXPORT2
+u_internalToTitle(UChar32 c, UCharIterator *iter,
+                  UChar *dest, int32_t destCapacity,
+                  const char *locale);
+
+/**
+ * Get the full case folding mapping for c.
+ * @return the length of the output, negative if same as c
+ * @internal
+ */
+U_CAPI int32_t U_EXPORT2
+u_internalFoldCase(UChar32 c,
+                   UChar *dest, int32_t destCapacity,
+                   uint32_t options);
+
+/**
+ * Internal case-insensitive string compare function.
+ * @internal
+ */
+U_CFUNC int32_t
+u_internalStrcasecmp(const UChar *s1, int32_t length1,
+                     const UChar *s2, int32_t length2,
+                     uint32_t options);
+
+/**
+ * Get the default converter. This is a commonly used converter
+ * that is used for the ustring and UnicodeString API.
+ * Remember to use the u_releaseDefaultConverter when you are done.
+ * @internal
+ */
+U_CAPI UConverter* U_EXPORT2
+u_getDefaultConverter(UErrorCode *status);
+
+
+/**
+ * Release the default converter to the converter cache.
+ * @internal
+ */
+U_CAPI void U_EXPORT2
+u_releaseDefaultConverter(UConverter *converter);
 
 /**
  * NUL-terminate a UChar * string if possible.
@@ -57,6 +190,7 @@ ustr_hashICharsN(const char *str, int32_t length);
  * @param length Number of UChars that were (to be) written to dest.
  * @param pErrorCode ICU error code.
  * @return length
+ * @internal
  */
 U_CAPI int32_t U_EXPORT2
 u_terminateUChars(UChar *dest, int32_t destCapacity, int32_t length, UErrorCode *pErrorCode);
@@ -82,62 +216,22 @@ u_terminateUChar32s(UChar32 *dest, int32_t destCapacity, int32_t length, UErrorC
 U_CAPI int32_t U_EXPORT2
 u_terminateWChars(wchar_t *dest, int32_t destCapacity, int32_t length, UErrorCode *pErrorCode);
 
-/**
- * Counts the bytes of any whole valid sequence for a UTF-8 lead byte.
- * Returns 1 for ASCII 0..0x7f.
- * Returns 0 for 0x80..0xc1 as well as for 0xf5..0xff.
- * leadByte might be evaluated multiple times.
- *
- * @param leadByte The first byte of a UTF-8 sequence. Must be 0..0xff.
- * @return 0..4
- */
-#define U8_COUNT_BYTES(leadByte) \
-    (U8_IS_SINGLE(leadByte) ? 1 : U8_COUNT_BYTES_NON_ASCII(leadByte))
+#define u_getMaxCaseExpansion() 10
 
 /**
- * Counts the bytes of any whole valid sequence for a UTF-8 lead byte.
- * Returns 0 for 0x00..0xc1 as well as for 0xf5..0xff.
- * leadByte might be evaluated multiple times.
- *
- * @param leadByte The first byte of a UTF-8 sequence. Must be 0..0xff.
- * @return 0 or 2..4
+ * Find a single (unmatched) surrogate code point in the string s[0..length[ .
+ * Find the first such surrogate.
+ * @internal
  */
-#define U8_COUNT_BYTES_NON_ASCII(leadByte) \
-    (U8_IS_LEAD(leadByte) ? ((uint8_t)(leadByte)>=0xe0)+((uint8_t)(leadByte)>=0xf0)+2 : 0)
+U_CFUNC const UChar *
+uprv_strFindSurrogate(const UChar *s, int32_t length, UChar surrogate);
 
-#ifdef __cplusplus
-
-U_NAMESPACE_BEGIN
-
-class UTF8 {
-public:
-    UTF8() = delete;  // all static
-
-    /**
-     * Is t a valid UTF-8 trail byte?
-     *
-     * @param prev Must be the preceding lead byte if i==1 and length>=3;
-     *             otherwise ignored.
-     * @param t The i-th byte following the lead byte.
-     * @param i The index (1..3) of byte t in the byte sequence. 0<i<length
-     * @param length The length (2..4) of the byte sequence according to the lead byte.
-     * @return TRUE if t is a valid trail byte in this context.
-     */
-    static inline UBool isValidTrail(int32_t prev, uint8_t t, int32_t i, int32_t length) {
-        // The first trail byte after a 3- or 4-byte lead byte
-        // needs to be validated together with its lead byte.
-        if (length <= 2 || i > 1) {
-            return U8_IS_TRAIL(t);
-        } else if (length == 3) {
-            return U8_IS_VALID_LEAD3_AND_T1(prev, t);
-        } else {  // length == 4
-            return U8_IS_VALID_LEAD4_AND_T1(prev, t);
-        }
-    }
-};
-
-U_NAMESPACE_END
-
-#endif  // __cplusplus
+/**
+ * Find a single (unmatched) surrogate code point in the string s[0..length[ .
+ * Find the last such surrogate.
+ * @internal
+ */
+U_CFUNC const UChar *
+uprv_strFindLastSurrogate(const UChar *s, int32_t length, UChar surrogate);
 
 #endif

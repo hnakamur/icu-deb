@@ -1,17 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 
 /********************************************************************
- * Copyright (c) 1997-2014, International Business Machines
- * Corporation and others. All Rights Reserved.
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
  ********************************************************************/
  
 #ifndef __TimeZoneTest__
 #define __TimeZoneTest__
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
 
 #include "unicode/simpletz.h" 
 #include "caltztst.h"
@@ -39,8 +34,6 @@ public:
      */
     virtual void TestGetAvailableIDs913(void);
 
-    virtual void TestGetAvailableIDsNew(void);
-
     /**
      * Generic API testing for API coverage.
      */
@@ -49,16 +42,11 @@ public:
      * Test the setStartRule/setEndRule API calls.
      */
     virtual void TestRuleAPI(void);
- 
-    void findTransition(const TimeZone& tz,
-                        UDate min, UDate max);
 
-   /**
+    /**
      * subtest used by TestRuleAPI
      **/
-    void testUsingBinarySearch(const TimeZone& tz,
-                               UDate min, UDate max,
-                               UDate expectedBoundary);
+    void testUsingBinarySearch(SimpleTimeZone* tz, UDate min, UDate max, UDate expectedBoundary);
 
 
     /**
@@ -82,43 +70,11 @@ public:
 
     void TestCountries(void);
 
-    void TestHistorical(void);
-
-    void TestEquivalentIDs(void);
-
-    void TestAliasedNames(void);
-    
-    void TestFractionalDST(void);
-
-    void TestFebruary(void);
-
-    void TestCanonicalIDAPI();
-    void TestCanonicalID(void);
-
-    virtual void TestDisplayNamesMeta();
-
-    void TestGetRegion(void);
-    void TestGetUnknown();
-
-    void TestGetWindowsID(void);
-    void TestGetIDForWindowsID(void);
-
     static const UDate INTERVAL;
 
 private:
     // internal functions
-    static UnicodeString& formatOffset(int32_t offset, UnicodeString& rv);
-    static UnicodeString& formatTZID(int32_t offset, UnicodeString& rv);
-
-    // Some test case data is current date/tzdata version sensitive and producing errors
-    // when year/rule are changed.
-    static const int32_t REFERENCE_YEAR;
-    static const char *REFERENCE_DATA_VERSION;
-
-    void checkContainsAll(StringEnumeration *s1, const char *name1,
-        StringEnumeration *s2, const char *name2);
+    static UnicodeString& formatMinutes(int32_t min, UnicodeString& rv);
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
  
 #endif // __TimeZoneTest__

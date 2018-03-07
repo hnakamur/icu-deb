@@ -1,13 +1,7 @@
 /*
  *******************************************************************************
  *
- *   © 2016 and later: Unicode, Inc. and others.
- *   License & terms of use: http://www.unicode.org/copyright.html#License
- *
- *******************************************************************************
- *******************************************************************************
- *
- *   Copyright (C) 1999-2005, International Business Machines
+ *   Copyright (C) 1999-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  *******************************************************************************
@@ -24,7 +18,7 @@ class GUISupport
 {
 public:
     GUISupport() {};
-    virtual ~GUISupport() {};
+    ~GUISupport() {};
 
     virtual void postErrorMessage(const char *message, const char *title) = 0;
 };

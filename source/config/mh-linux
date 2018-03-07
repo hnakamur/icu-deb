@@ -1,13 +1,13 @@
 ## -*-makefile-*-
-## Copyright (C) 2016 and later: Unicode, Inc. and others.
-## License & terms of use: http://www.unicode.org/copyright.html
 ## Linux-specific setup
-## Copyright (c) 1999-2013, International Business Machines Corporation and
+## Copyright (c) 1999-2001, International Business Machines Corporation and
 ## others. All Rights Reserved.
+##
+## $Id: mh-linux,v 1.31 2002/01/24 17:35:04 rviswanadha Exp $
 
 ## Commands to generate dependency files
 GEN_DEPS.c=  $(CC) -E -MM $(DEFS) $(CPPFLAGS)
-GEN_DEPS.cc= $(CXX) -E -MM $(DEFS) $(CPPFLAGS) $(CXXFLAGS)
+GEN_DEPS.cc= $(CXX) -E -MM $(DEFS) $(CPPFLAGS)
 
 ## Flags for position independent code
 SHAREDLIBCFLAGS = -fPIC
@@ -15,24 +15,15 @@ SHAREDLIBCXXFLAGS = -fPIC
 SHAREDLIBCPPFLAGS = -DPIC
 
 ## Additional flags when building libraries and with threads
+LIBCPPFLAGS = -D_REENTRANT
 THREADSCPPFLAGS = -D_REENTRANT
-LIBCPPFLAGS =
 
 ## Compiler switch to embed a runtime search path
-LD_RPATH= -Wl,-zorigin,-rpath,'$$'ORIGIN 
+LD_RPATH=	
 LD_RPATH_PRE = -Wl,-rpath,
 
-## These are the library specific LDFLAGS
-LDFLAGSICUDT=-nodefaultlibs -nostdlib
-
 ## Compiler switch to embed a library name
-# The initial tab in the next line is to prevent icu-config from reading it.
-	LD_SONAME = -Wl,-soname -Wl,$(notdir $(MIDDLE_SO_TARGET))
-#SH# # We can't depend on MIDDLE_SO_TARGET being set.
-#SH# LD_SONAME=
-
-## Shared library options
-LD_SOOPTIONS= -Wl,-Bsymbolic
+LD_SONAME = -Wl,-soname -Wl,$(MIDDLE_SO_TARGET)
 
 ## Shared object suffix
 SO = so
@@ -41,25 +32,27 @@ STATIC_O = ao
 
 ## Compilation rules
 %.$(STATIC_O): $(srcdir)/%.c
-	$(call SILENT_COMPILE,$(strip $(COMPILE.c) $(STATICCPPFLAGS) $(STATICCFLAGS)) -o $@ $<)
+	$(COMPILE.c) $(STATICCPPFLAGS) $(STATICCFLAGS) -o $@ $<
 %.o: $(srcdir)/%.c
-	$(call SILENT_COMPILE,$(strip $(COMPILE.c) $(DYNAMICCPPFLAGS) $(DYNAMICCFLAGS)) -o $@ $<)
+	$(COMPILE.c) $(DYNAMICCPPFLAGS) $(DYNAMICCFLAGS) -o $@ $<
 
 %.$(STATIC_O): $(srcdir)/%.cpp
-	$(call SILENT_COMPILE,$(strip $(COMPILE.cc) $(STATICCPPFLAGS) $(STATICCXXFLAGS)) -o $@ $<)
+	$(COMPILE.cc) $(STATICCPPFLAGS) $(STATICCXXFLAGS) -o $@ $<
 %.o: $(srcdir)/%.cpp
-	$(call SILENT_COMPILE,$(strip $(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS)) -o $@ $<)
+	$(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS) -o $@ $<
 
+../data/%.o: ../data/%.c
+	$(COMPILE.c) $(DYNAMICCPPFLAGS) $(DYNAMICCFLAGS) -o $@ $<
 
 ## Dependency rules
 %.d: $(srcdir)/%.c
-	$(call ICU_MSG,(deps)) $<
+	@echo "generating dependency information for $<"
 	@$(SHELL) -ec '$(GEN_DEPS.c) $< \
 		| sed '\''s%\($*\)\.o[ :]*%\1.o $@ : %g'\'' > $@; \
 		[ -s $@ ] || rm -f $@'
 
 %.d: $(srcdir)/%.cpp
-	$(call ICU_MSG,(deps)) $<
+	@echo "generating dependency information for $<"
 	@$(SHELL) -ec '$(GEN_DEPS.cc) $< \
 		| sed '\''s%\($*\)\.o[ :]*%\1.o $@ : %g'\'' > $@; \
 		[ -s $@ ] || rm -f $@'
@@ -76,12 +69,11 @@ STATIC_O = ao
 # LDflags that pkgdata will use
 BIR_LDFLAGS= -Wl,-Bsymbolic
 
+# CPPflags for genccode/gencmn
+BIR_CPPFLAGS= -DU_HAVE_BIND_INTERNAL_REFERENCES
+
 # Dependencies [i.e. map files] for the final library
 BIR_DEPS=
-
-## Remove shared library 's'
-STATIC_PREFIX_WHEN_USED = 
-STATIC_PREFIX = 
 
 ## End Linux-specific setup
 

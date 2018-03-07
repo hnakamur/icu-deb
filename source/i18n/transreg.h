@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (c) 2001-2014, International Business Machines
+*   Copyright (c) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -13,18 +11,14 @@
 #define _TRANSREG_H
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
-#include "unicode/uobject.h"
 #include "unicode/translit.h"
 #include "hash.h"
 #include "uvector.h"
 
 U_NAMESPACE_BEGIN
 
-class TransliteratorEntry;
-class TransliteratorSpec;
+class Entry;
+class Spec;
 class UnicodeString;
 
 //------------------------------------------------------------------
@@ -40,64 +34,31 @@ class UnicodeString;
  * Why all the shenanigans?  To prevent circular calls between
  * the registry code and the transliterator code that deadlocks.
  */
-class TransliteratorAlias : public UMemory {
+class TransliteratorAlias {
  public:
     /**
-     * Construct a simple alias (type == SIMPLE)
-     * @param aliasID the given id.
+     * Construct a simple alias.
      */
-    TransliteratorAlias(const UnicodeString& aliasID, const UnicodeSet* compoundFilter);
-
+    TransliteratorAlias(const UnicodeString& aliasID);
+    
     /**
-     * Construct a compound RBT alias (type == COMPOUND)
+     * Construct a compound RBT alias.
      */
-    TransliteratorAlias(const UnicodeString& ID, const UnicodeString& idBlocks,
-                        UVector* adoptedTransliterators,
+    TransliteratorAlias(const UnicodeString& ID, const UnicodeString& idBlock,
+                        Transliterator* adopted, int32_t idSplitPoint,
                         const UnicodeSet* compoundFilter);
 
-    /**
-     * Construct a rules alias (type = RULES)
-     */
-    TransliteratorAlias(const UnicodeString& theID,
-                        const UnicodeString& rules,
-                        UTransDirection dir);
-
     ~TransliteratorAlias();
-
+    
     /**
      * The whole point of create() is that the caller must invoke
      * it when the registry mutex is NOT held, to prevent deadlock.
      * It may only be called once.
-     *
-     * Note: Only call create() if isRuleBased() returns FALSE.
-     *
-     * This method must be called *outside* of the TransliteratorRegistry
-     * mutex.
      */
     Transliterator* create(UParseError&, UErrorCode&);
-
-    /**
-     * Return TRUE if this alias is rule-based.  If so, the caller
-     * must call parse() on it, then call TransliteratorRegistry::reget().
-     */
-    UBool isRuleBased() const;
-
-    /**
-     * If isRuleBased() returns TRUE, then the caller must call this
-     * method, followed by TransliteratorRegistry::reget().  The latter
-     * method must be called inside the TransliteratorRegistry mutex.
-     *
-     * Note: Only call parse() if isRuleBased() returns TRUE.
-     *
-     * This method must be called *outside* of the TransliteratorRegistry
-     * mutex, because it can instantiate Transliterators embedded in
-     * the rules via the "&Latin-Arabic()" syntax.
-     */
-    void parse(TransliteratorParser& parser,
-               UParseError& pe, UErrorCode& ec) const;
-
+    
  private:
-    // We actually come in three flavors:
+    // We actually come in two flavors:
     // 1. Simple alias
     //    Here aliasID is the alias string.  Everything else is
     //    null, zero, empty.
@@ -106,18 +67,11 @@ class TransliteratorAlias : public UMemory {
     //    contained RBT, and idSplitPoint is the offet in aliasID
     //    where the contained RBT goes.  compoundFilter is the
     //    compound filter, and it is _not_ owned.
-    // 3. Rules
-    //    Here ID is the ID, aliasID is the rules string.
-    //    idSplitPoint is the UTransDirection.
     UnicodeString ID;
-    UnicodeString aliasesOrRules;
-    UVector* transes; // owned
+    UnicodeString aliasID;
+    Transliterator* trans; // owned
     const UnicodeSet* compoundFilter; // alias
-    UTransDirection direction;
-    enum { SIMPLE, COMPOUND, RULES } type;
-
-    TransliteratorAlias(const TransliteratorAlias &other); // forbid copying of this class
-    TransliteratorAlias &operator=(const TransliteratorAlias &other); // forbid copying of this class
+    int32_t idSplitPoint;
 };
 
 
@@ -139,14 +93,10 @@ class TransliteratorAlias : public UMemory {
  *
  * @author Alan Liu
  */
-class TransliteratorRegistry : public UMemory {
+class TransliteratorRegistry {
 
  public:
 
-    /**
-     * Contructor
-     * @param status Output param set to success/failure code.
-     */
     TransliteratorRegistry(UErrorCode& status);
 
     /**
@@ -167,36 +117,11 @@ class TransliteratorRegistry : public UMemory {
      * We cannot instantiate it ourselves because the alias may contain
      * filters or compounds, which we do not understand.  Caller should
      * make aliasReturn NULL before calling.
-     * @param ID          the given ID
-     * @param aliasReturn output param to receive TransliteratorAlias;
-     *                    should be NULL on entry
-     * @param parseError  Struct to recieve information on position
-     *                    of error if an error is encountered
-     * @param status      Output param set to success/failure code.
      */
     Transliterator* get(const UnicodeString& ID,
                         TransliteratorAlias*& aliasReturn,
+                        UParseError& parseError,
                         UErrorCode& status);
-
-    /**
-     * The caller must call this after calling get(), if [a] calling get()
-     * returns an alias, and [b] the alias is rule based.  In that
-     * situation the caller must call alias->parse() to do the parsing
-     * OUTSIDE THE REGISTRY MUTEX, then call this method to retry
-     * instantiating the transliterator.
-     *
-     * Note: Another alias might be returned by this method.
-     *
-     * This method (like all public methods of this class) must be called
-     * from within the TransliteratorRegistry mutex.
-     *
-     * @param aliasReturn output param to receive TransliteratorAlias;
-     *                    should be NULL on entry
-     */
-    Transliterator* reget(const UnicodeString& ID,
-                          TransliteratorParser& parser,
-                          TransliteratorAlias*& aliasReturn,
-                          UErrorCode& status);
 
     /**
      * Register a prototype (adopted).  This adds an entry to the
@@ -204,8 +129,7 @@ class TransliteratorRegistry : public UMemory {
      * underlying static locale resource store is masked.
      */
     void put(Transliterator* adoptedProto,
-             UBool visible,
-             UErrorCode& ec);
+             UBool visible);
 
     /**
      * Register an ID and a factory function pointer.  This adds an
@@ -215,8 +139,7 @@ class TransliteratorRegistry : public UMemory {
     void put(const UnicodeString& ID,
              Transliterator::Factory factory,
              Transliterator::Token context,
-             UBool visible,
-             UErrorCode& ec);
+             UBool visible);
 
     /**
      * Register an ID and a resource name.  This adds an entry to the
@@ -226,9 +149,7 @@ class TransliteratorRegistry : public UMemory {
     void put(const UnicodeString& ID,
              const UnicodeString& resourceName,
              UTransDirection dir,
-             UBool readonlyResourceAlias,
-             UBool visible,
-             UErrorCode& ec);
+             UBool visible);
 
     /**
      * Register an ID and an alias ID.  This adds an entry to the
@@ -237,15 +158,12 @@ class TransliteratorRegistry : public UMemory {
      */
     void put(const UnicodeString& ID,
              const UnicodeString& alias,
-             UBool readonlyAliasAlias,
-             UBool visible,
-             UErrorCode& ec);
+             UBool visible);
 
     /**
      * Unregister an ID.  This removes an entry from the dynamic store
      * if there is one.  The static locale resource store is
      * unaffected.
-     * @param ID    the given ID.
      */
     void remove(const UnicodeString& ID);
 
@@ -254,41 +172,26 @@ class TransliteratorRegistry : public UMemory {
     //------------------------------------------------------------------
 
     /**
-     * Return a StringEnumeration over the IDs currently registered
-     * with the system.
-     * @internal
-     */
-    StringEnumeration* getAvailableIDs() const;
-
-    /**
-     * == OBSOLETE - remove in ICU 3.4 ==
      * Return the number of IDs currently registered with the system.
      * To retrieve the actual IDs, call getAvailableID(i) with
      * i from 0 to countAvailableIDs() - 1.
-     * @return the number of IDs currently registered with the system.
-     * @internal
+     * @draft
      */
-    int32_t countAvailableIDs(void) const;
+    int32_t countAvailableIDs(void);
 
     /**
-     * == OBSOLETE - remove in ICU 3.4 ==
      * Return the index-th available ID.  index must be between 0
      * and countAvailableIDs() - 1, inclusive.  If index is out of
      * range, the result of getAvailableID(0) is returned.
-     * @param index the given index.
-     * @return the index-th available ID.  index must be between 0
-     *         and countAvailableIDs() - 1, inclusive.  If index is out of
-     *         range, the result of getAvailableID(0) is returned.
-     * @internal
+     * @draft
      */
-    const UnicodeString& getAvailableID(int32_t index) const;
+    const UnicodeString& getAvailableID(int32_t index);
 
     /**
      * Return the number of registered source specifiers.
-     * @return the number of registered source specifiers.
      */
-    int32_t countAvailableSources(void) const;
-
+    int32_t countAvailableSources(void);
+    
     /**
      * Return a registered source specifier.
      * @param index which specifier to return, from 0 to n-1, where
@@ -298,17 +201,14 @@ class TransliteratorRegistry : public UMemory {
      * @return reference to result
      */
     UnicodeString& getAvailableSource(int32_t index,
-                                      UnicodeString& result) const;
-
+                                      UnicodeString& result);
+    
     /**
      * Return the number of registered target specifiers for a given
      * source specifier.
-     * @param source the given source specifier.
-     * @return the number of registered target specifiers for a given
-     *         source specifier.
      */
-    int32_t countAvailableTargets(const UnicodeString& source) const;
-
+    int32_t countAvailableTargets(const UnicodeString& source);
+    
     /**
      * Return a registered target specifier for a given source.
      * @param index which specifier to return, from 0 to n-1, where
@@ -321,22 +221,18 @@ class TransliteratorRegistry : public UMemory {
      */
     UnicodeString& getAvailableTarget(int32_t index,
                                       const UnicodeString& source,
-                                      UnicodeString& result) const;
-
+                                      UnicodeString& result);
+    
     /**
      * Return the number of registered variant specifiers for a given
      * source-target pair.  There is always at least one variant: If
      * just source-target is registered, then the single variant
      * NO_VARIANT is returned.  If source-target/variant is registered
      * then that variant is returned.
-     * @param source the source specifiers
-     * @param target the target specifiers
-     * @return the number of registered variant specifiers for a given
-     *         source-target pair.
      */
     int32_t countAvailableVariants(const UnicodeString& source,
-                                   const UnicodeString& target) const;
-
+                                   const UnicodeString& target);
+    
     /**
      * Return a registered variant specifier for a given source-target
      * pair.  If NO_VARIANT is one of the variants, then it will be
@@ -353,7 +249,7 @@ class TransliteratorRegistry : public UMemory {
     UnicodeString& getAvailableVariant(int32_t index,
                                        const UnicodeString& source,
                                        const UnicodeString& target,
-                                       UnicodeString& result) const;
+                                       UnicodeString& result);
 
  private:
 
@@ -361,40 +257,40 @@ class TransliteratorRegistry : public UMemory {
     // Private implementation
     //----------------------------------------------------------------
 
-    TransliteratorEntry* find(const UnicodeString& ID);
-
-    TransliteratorEntry* find(UnicodeString& source,
+    Entry* find(const UnicodeString& ID);
+    
+    Entry* find(UnicodeString& source,
                 UnicodeString& target,
                 UnicodeString& variant);
 
-    TransliteratorEntry* findInDynamicStore(const TransliteratorSpec& src,
-                              const TransliteratorSpec& trg,
-                              const UnicodeString& variant) const;
+    Entry* findInDynamicStore(const Spec& src,
+                              const Spec& trg,
+                              const UnicodeString& variant);
 
-    TransliteratorEntry* findInStaticStore(const TransliteratorSpec& src,
-                             const TransliteratorSpec& trg,
+    Entry* findInStaticStore(const Spec& src,
+                             const Spec& trg,
                              const UnicodeString& variant);
 
-    static TransliteratorEntry* findInBundle(const TransliteratorSpec& specToOpen,
-                               const TransliteratorSpec& specToFind,
+    static Entry* findInBundle(const Spec& specToOpen,
+                               const Spec& specToFind,
                                const UnicodeString& variant,
                                UTransDirection direction);
 
     void registerEntry(const UnicodeString& source,
                        const UnicodeString& target,
                        const UnicodeString& variant,
-                       TransliteratorEntry* adopted,
+                       Entry* adopted,
                        UBool visible);
 
     void registerEntry(const UnicodeString& ID,
-                       TransliteratorEntry* adopted,
+                       Entry* adopted,
                        UBool visible);
 
-    void registerEntry(const UnicodeString& ID,
+   void registerEntry(const UnicodeString& ID,
                        const UnicodeString& source,
                        const UnicodeString& target,
                        const UnicodeString& variant,
-                       TransliteratorEntry* adopted,
+                       Entry* adopted,
                        UBool visible);
 
     void registerSTV(const UnicodeString& source,
@@ -406,27 +302,15 @@ class TransliteratorRegistry : public UMemory {
                    const UnicodeString& variant);
 
     Transliterator* instantiateEntry(const UnicodeString& ID,
-                                     TransliteratorEntry *entry,
+                                     Entry *entry,
                                      TransliteratorAlias*& aliasReturn,
+                                     UParseError& parseError,
                                      UErrorCode& status);
 
-    /**
-     * A StringEnumeration over the registered IDs in this object.
-     */
-    class Enumeration : public StringEnumeration {
-    public:
-        Enumeration(const TransliteratorRegistry& reg);
-        virtual ~Enumeration();
-        virtual int32_t count(UErrorCode& status) const;
-        virtual const UnicodeString* snext(UErrorCode& status);
-        virtual void reset(UErrorCode& status);
-        static UClassID U_EXPORT2 getStaticClassID();
-        virtual UClassID getDynamicClassID() const;
-    private:
-        int32_t index;
-        const TransliteratorRegistry& reg;
-    };
-    friend class Enumeration;
+    static void STVtoID(const UnicodeString& source,
+                        const UnicodeString& target,
+                        const UnicodeString& variant,
+                        UnicodeString& id);
 
  private:
 
@@ -437,32 +321,23 @@ class TransliteratorRegistry : public UMemory {
      * specDAG or not.
      */
     Hashtable registry;
-
+    
     /**
      * DAG of visible IDs by spec.  Hashtable: source => (Hashtable:
-     * target => variant bitmask)
+     * target => (UVector: variant)) The UVector of variants is never
+     * empty.  For a source-target with no variant, the special
+     * variant NO_VARIANT (the empty string) is stored in slot zero of
+     * the UVector.
      */
     Hashtable specDAG;
-
-    /**
-     * Vector of all variant names
-     */
-    UVector variantList;
-
+    
     /**
      * Vector of public full IDs.
      */
     UVector availableIDs;
-
-    TransliteratorRegistry(const TransliteratorRegistry &other); // forbid copying of this class
-    TransliteratorRegistry &operator=(const TransliteratorRegistry &other); // forbid copying of this class
 };
 
 U_NAMESPACE_END
-
-U_CFUNC UBool utrans_transliterator_cleanup(void);
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif
 //eof

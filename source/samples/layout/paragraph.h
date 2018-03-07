@@ -1,13 +1,7 @@
 /*
  *******************************************************************************
  *
- *   © 2016 and later: Unicode, Inc. and others.
- *   License & terms of use: http://www.unicode.org/copyright.html#License
- *
- *******************************************************************************
- *******************************************************************************
- *
- *   Copyright (C) 1999-2007, International Business Machines
+ *   Copyright (C) 1999-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  *******************************************************************************
@@ -20,74 +14,85 @@
 #define __PARAGRAPH_H
 
 #include "unicode/utypes.h"
+#include "unicode/uscript.h"
+#include "unicode/brkiter.h"
 #include "unicode/ubidi.h"
 
-#include "layout/LEFontInstance.h"
-#include "layout/ParagraphLayout.h"
-
 #include "GUISupport.h"
-#include "RenderingSurface.h"
+#include "RenderingFontInstance.h"
+#include "FontMap.h"
 
 U_NAMESPACE_USE
 
 #define MARGIN 10
 
-#if 0
-class LineInfo;
-#endif
+struct RunParams
+{
+    const RenderingFontInstance *fontInstance;
+    UChar *text;
+    int32_t count;
+    UScriptCode scriptCode;
+    UBool rightToLeft;
+};
+
+struct RunInfo
+{
+    const RenderingFontInstance *fontInstance;
+    int32_t charBase;
+    int32_t glyphBase;
+    UBool rightToLeft;
+};
 
 class Paragraph
 {
 public:
-    Paragraph(const LEUnicode chars[], le_int32 charCount, const FontRuns *fontRuns, LEErrorCode &status);
+    Paragraph(void *surface,RunParams runs[], int32_t count, UBiDi *bidi);
 
     ~Paragraph();
 
-    le_int32 getAscent();
-    le_int32 getLineHeight();
-    le_int32 getLineCount();
-    void breakLines(le_int32 width, le_int32 height);
-    void draw(RenderingSurface *surface, le_int32 firstLine, le_int32 lastLine);
+    int32_t getAscent();
+    int32_t getLineHeight();
+    int32_t getLineCount();
+    void breakLines(int32_t width, int32_t height);
+    void draw(void *surface, int32_t firstLine, int32_t lastLine);
 
-    static Paragraph *paragraphFactory(const char *fileName, const LEFontInstance *font, GUISupport *guiSupport);
+    static Paragraph *paragraphFactory(const char *fileName, FontMap *fontMap, GUISupport *guiSupport, void *surface);
+
+protected:
+    int32_t previousBreak(int32_t charIndex);
+    int32_t getCharRun(int32_t ch, int32_t startingRun, int32_t direction);
+    int32_t getGlyphRun(int32_t glyph, int32_t startingRun, int32_t direction);
+
+    int32_t getRunWidth(int32_t startGlyph, int32_t endGlyph);
+    int32_t drawRun(void *surface, const RenderingFontInstance *fontInstance, int32_t firstChar, int32_t lastChar,
+                     int32_t x, int32_t y);
+
 
 private:
-    void addLine(const ParagraphLayout::Line *line);
+    UBiDi *fBidi;
 
-    ParagraphLayout **fParagraphLayout;
+    int32_t fRunCount;
+    RunInfo *fRunInfo;
 
-    le_int32          fParagraphCount;
-    le_int32          fParagraphMax;
-    le_int32          fParagraphGrow;
-    
-    le_int32          fLineCount;
-    le_int32          fLinesMax;
-    le_int32          fLinesGrow;
+    int32_t fCharCount;
+    UChar *fText;
+    BreakIterator *fBrkiter;
 
-    const ParagraphLayout::Line **fLines;
-          LEUnicode *fChars;
+    int32_t fGlyphCount;
+    LEGlyphID *fGlyphs;
+    int32_t *fCharIndices;
+    int32_t *fGlyphIndices;
+    int32_t *fDX;
+    int32_t *fDY;
 
-    le_int32         fLineHeight;
-    le_int32         fAscent;
-    le_int32         fWidth;
-    le_int32         fHeight;
-    UBiDiLevel       fParagraphLevel;
+    int32_t fBreakCount;
+    int32_t *fBreakArray;
+
+    int32_t fLineHeight;
+    int32_t fAscent;
+    int32_t fWidth;
+    int32_t fHeight;
 };
-
-inline le_int32 Paragraph::getLineHeight()
-{
-    return fLineHeight;
-}
-
-inline le_int32 Paragraph::getLineCount()
-{
-    return fLineCount;
-}
-
-inline le_int32 Paragraph::getAscent()
-{
-    return fAscent;
-}
 
 #endif
 

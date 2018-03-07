@@ -1,20 +1,15 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
+
+
 #ifndef _TESTMESSAGEFORMAT
 #define _TESTMESSAGEFORMAT
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "unicode/unistr.h"
 #include "unicode/fmtable.h"
-#include "unicode/msgfmt.h"
 #include "intltest.h"
 
 /**
@@ -57,46 +52,8 @@ public:
      * tests MesageFormat functionality with a format including a ChoiceFormat
      **/
     void testMsgFormatChoice(/* char* par */);
-    /** 
-     * tests MesageFormat functionality with a PluralFormat.
-     **/
-    void testMsgFormatPlural(/* char* par */);
 
-    /** 
-     * tests MessageFormat functionality with a SelectFormat.
-     **/
-    void testMsgFormatSelect(/* char* par */);
-
-    void testApostropheInPluralAndSelect();
-
-    /** 
-     * Internal method to format a MessageFormat object with passed args 
-     **/
-    void internalFormat(MessageFormat* msgFmt ,
-        Formattable* args , int32_t numOfArgs ,
-        UnicodeString expected, const char* errMsg);
-
-    /** 
-     * Internal method to create a MessageFormat object with passed args 
-     **/
-    MessageFormat* internalCreate(
-        UnicodeString pattern ,Locale locale , UErrorCode& err, char* errMsg);
-
-    /**
-     * Verify that MessageFormat accomodates more than 10 arguments
-     * and more than 10 subformats.
-     */
-    void TestUnlimitedArgsAndSubformats();
-
-    /**
-     * Test RBNF extensions to MessageFormat.
-     */
-    void TestRBNF();
-
-    void TestApostropheMode();
-
-    void TestCompatibleApostrophe();
-
+    //
     /** 
      * ------------ API tests ----------
      * These routines test various API functionality.
@@ -104,7 +61,6 @@ public:
      * they often test other methods as well.
      **/
     void testCopyConstructor(void);
-    void testCopyConstructor2(void);
     void testAssignment(void);
     void testClone(void);
     void testEquals(void);
@@ -113,19 +69,9 @@ public:
     void testFormat(void);
     void testParse(void);
     void testAdopt(void);
-    void TestTurkishCasing(void);
-    void testAutoQuoteApostrophe(void);
-    void testCoverage();
-    void testGetFormatNames();
-    void TestTrimArgumentName();
-    void TestSelectOrdinal();
-    void TestDecimals();
-    void TestArgIsPrefixOfAnother();
 
 private:
-    UnicodeString GetPatternAndSkipSyntax(const MessagePattern& pattern);
 };
 
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif

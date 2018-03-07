@@ -1,7 +1,5 @@
 ## Makefile.in for ICU - tools/genccode
-## Copyright (C) 2016 and later: Unicode, Inc. and others.
-## License & terms of use: http://www.unicode.org/copyright.html
-## Copyright (c) 1999-2011, International Business Machines Corporation and
+## Copyright (c) 1999-2000, International Business Machines Corporation and
 ## others. All Rights Reserved.
 ## Steven R. Loomis
 
@@ -13,32 +11,45 @@ top_builddir = ../..
 
 include $(top_builddir)/icudefs.mk
 
+## Platform-specific setup
+include @platform_make_fragment@
+
 ## Build directory information
 subdir = tools/genccode
 
-TARGET_STUB_NAME = genccode
+##
 
 SECTION = 8
 
-MAN_FILES = $(TARGET_STUB_NAME).$(SECTION)
+MANX_FILES = $(TARGET).$(SECTION)
 
+ALL_MAN_FILES = $(MANX_FILES)
 
 ## Extra files to remove for 'make clean'
-CLEANFILES = *~ $(DEPS) $(MAN_FILES)
+CLEANFILES = *~ $(DEPS) $(RES_FILES) $(TEST_FILES) $(ALL_MAN_FILES)
 
 ## Target information
-TARGET = $(BINDIR)/$(TARGET_STUB_NAME)$(EXEEXT)
+TARGET = genccode
 
-CPPFLAGS += -I$(top_srcdir)/common -I$(srcdir)/../toolutil
-LIBS = $(LIBICUTOOLUTIL) $(LIBICUI18N) $(LIBICUUC) $(DEFAULT_LIBS) $(LIB_M)
+DEFS = @DEFS@
+CPPFLAGS = @CPPFLAGS@ -I$(top_builddir)/common -I$(top_srcdir)/common -I$(srcdir)/../toolutil $(BIR_CPPFLAGS)
+CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
+ENABLE_RPATH = @ENABLE_RPATH@
+ifeq ($(ENABLE_RPATH),YES)
+RPATHLDFLAGS = $(LD_RPATH)$(LD_RPATH_PRE)$(libdir)
+endif
+LDFLAGS = @LDFLAGS@ $(RPATHLDFLAGS)
+LIBS = $(LIBICUUC) @LIBS@ @LIB_M@ $(LIBICUTOOLUTIL)
 
 OBJECTS = genccode.o
 
 DEPS = $(OBJECTS:.o=.d)
 
 ## List of phony targets
-.PHONY : all all-local install install-local clean clean-local	\
-distclean distclean-local dist dist-local check check-local install-man
+.PHONY : all all-local install install-local clean clean-local		\
+distclean distclean-local dist dist-local check	\
+check-local install-man install-manx
 
 ## Clear suffix list
 .SUFFIXES :
@@ -51,15 +62,21 @@ distclean : distclean-local
 dist: dist-local
 check: all check-local
 
-all-local: $(TARGET) $(MAN_FILES)
+all-local: $(TARGET) $(RES_FILES) $(TRANSLIT_RES) $(TEST_FILES) $(ALL_MAN_FILES)
 
 install-local: all-local install-man
 	$(MKINSTALLDIRS) $(DESTDIR)$(sbindir)
-	$(INSTALL) $(TARGET) $(DESTDIR)$(sbindir)
+	$(INSTALL) $(TARGET) $(DESTDIR)$(sbindir)/$(TARGET)
 
-install-man: $(MAN_FILES)
+# man page
+install-man: install-manx
+install-manx: $(MANX_FILES)
 	$(MKINSTALLDIRS) $(DESTDIR)$(mandir)/man$(SECTION)
 	$(INSTALL_DATA) $? $(DESTDIR)$(mandir)/man$(SECTION)
+
+%.$(SECTION): $(srcdir)/%.$(SECTION).in
+	cd $(top_builddir) \
+	 && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 dist-local:
 
@@ -77,14 +94,7 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	 && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 $(TARGET) : $(OBJECTS)
-	$(LINK.cc) $(OUTOPT)$@ $^ $(LIBS)
-	$(POST_BUILD_STEP)
-
-
-%.$(SECTION): $(srcdir)/%.$(SECTION).in
-	cd $(top_builddir) \
-	 && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
-
+	$(LINK.c) -o $@ $^ $(LIBS) 
 
 ifeq (,$(MAKECMDGOALS))
 -include $(DEPS)
@@ -93,4 +103,3 @@ ifneq ($(patsubst %clean,,$(MAKECMDGOALS)),)
 -include $(DEPS)
 endif
 endif
-

@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 2000-2004, International Business Machines
+*   Copyright (C) 2000-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
  *  ucnv_cb.h:
@@ -64,9 +62,6 @@
 #define UCNV_CB_H
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_CONVERSION
-
 #include "unicode/ucnv.h"
 #include "unicode/ucnv_err.h"
 
@@ -82,9 +77,9 @@
  * be returned to the user, because it means that not all data could be written into the target buffer, and some is 
  * in the converter error buffer.
  * @see ucnv_cbFromUWriteSub
- * @stable ICU 2.0
+ * @stable
  */
-U_STABLE void U_EXPORT2
+U_CAPI void U_EXPORT2
 ucnv_cbFromUWriteBytes (UConverterFromUnicodeArgs *args,
                         const char* source,
                         int32_t length,
@@ -102,9 +97,9 @@ ucnv_cbFromUWriteBytes (UConverterFromUnicodeArgs *args,
  * be returned to the user, because it means that not all data could be written into the target buffer, and some is 
  * in the converter error buffer.
  * @see ucnv_cbFromUWriteBytes
- * @stable ICU 2.0
+ * @stable
  */
-U_STABLE void U_EXPORT2 
+U_CAPI void U_EXPORT2 
 ucnv_cbFromUWriteSub (UConverterFromUnicodeArgs *args,
                       int32_t offsetIndex,
                       UErrorCode * err);
@@ -119,9 +114,9 @@ ucnv_cbFromUWriteSub (UConverterFromUnicodeArgs *args,
  * @param offsetIndex the relative offset index from callback which will be set
  * @param err error status <TT>U_BUFFER_OVERFLOW</TT>
  * @see ucnv_cbToUWriteSub
- * @stable ICU 2.0
+ * @stable
  */
-U_STABLE void U_EXPORT2 ucnv_cbFromUWriteUChars(UConverterFromUnicodeArgs *args,
+U_CAPI void U_EXPORT2 ucnv_cbFromUWriteUChars(UConverterFromUnicodeArgs *args,
                              const UChar** source,
                              const UChar*  sourceLimit,
                              int32_t offsetIndex,
@@ -138,9 +133,9 @@ U_STABLE void U_EXPORT2 ucnv_cbFromUWriteUChars(UConverterFromUnicodeArgs *args,
  * @param offsetIndex the relative offset index which will be written.
  * @param err error status <TT>U_BUFFER_OVERFLOW</TT>
  * @see ucnv_cbToUWriteSub
- * @stable ICU 2.0
+ * @stable
  */
-U_STABLE void U_EXPORT2 ucnv_cbToUWriteUChars (UConverterToUnicodeArgs *args,
+U_CAPI void U_EXPORT2 ucnv_cbToUWriteUChars (UConverterToUnicodeArgs *args,
                                              const UChar* source,
                                              int32_t length,
                                              int32_t offsetIndex,
@@ -154,11 +149,9 @@ U_STABLE void U_EXPORT2 ucnv_cbToUWriteUChars (UConverterToUnicodeArgs *args,
  * @param offsetIndex the relative offset index from callback.
  * @param err error status <TT>U_BUFFER_OVERFLOW</TT>
  * @see ucnv_cbToUWriteUChars
- * @stable ICU 2.0
+ * @stable
  */
-U_STABLE void U_EXPORT2 ucnv_cbToUWriteSub (UConverterToUnicodeArgs *args,
+U_CAPI void U_EXPORT2 ucnv_cbToUWriteSub (UConverterToUnicodeArgs *args,
                        int32_t offsetIndex,
                        UErrorCode * err);
-#endif
-
 #endif

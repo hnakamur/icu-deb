@@ -1,27 +1,21 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
- ********************************************************************
- *
- * File CMSGTST.C
- *
- * Modification History:
- *        Name                     Description
- *     Madhu Katragadda              Creation
  ********************************************************************/
+/********************************************************************************
+*
+* File CMSGTST.C
+*
+* Modification History:
+*        Name                     Description
+*     Madhu Katragadda              Creation
+*********************************************************************************
+*/
 /* C API TEST FOR MESSAGE FORMAT */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
 #include "unicode/uloc.h"
+#include "unicode/utypes.h"
 #include "unicode/umsg.h"
 #include "unicode/udat.h"
 #include "unicode/umsg.h"
@@ -29,6 +23,7 @@
 #include "cintltst.h"
 #include "cmsgtst.h"
 #include "cformtst.h"
+#include "cstring.h"
 #include "cmemory.h"
 
 static const char* const txt_testCasePatterns[] = {
@@ -43,7 +38,7 @@ static const char* const txt_testResultStrings[] = {
     "Quotes ', {, a 1 {0}",
     "Quotes ', {, a 1 {0}",
     "You deposited 1 times an amount of $3,456.00 on 1/12/70",
-    "{2,time,full}, for 3,456, 1 is 5:46:40 AM Pacific Standard Time and full date is Monday, January 12, 1970",
+    "{2,time,full}, for 3,456, 1 is 5:46:40 AM PST and full date is Monday, January 12, 1970",
     "{1,number,percent} for 1 is 345,600%"
 };
 
@@ -62,14 +57,12 @@ static void InitStrings( void )
         return;
 
     for (i=0; i < cnt_testCases; i++ ) {
-        uint32_t strSize = (uint32_t)strlen(txt_testCasePatterns[i]) + 1;
-        testCasePatterns[i]=(UChar*)malloc(sizeof(UChar) * strSize);
-        u_uastrncpy(testCasePatterns[i], txt_testCasePatterns[i], strSize);
+        testCasePatterns[i]=(UChar*)malloc(sizeof(UChar) * (strlen(txt_testCasePatterns[i]) + 1));
+        u_uastrcpy(testCasePatterns[i], txt_testCasePatterns[i] );
     }
     for (i=0; i < cnt_testCases; i++ ) {
-        uint32_t strSize = (uint32_t)strlen(txt_testResultStrings[i]) + 1;
-        testResultStrings[i] = (UChar*)malloc(sizeof(UChar) * strSize);
-        u_uastrncpy(testResultStrings[i], txt_testResultStrings[i], strSize);
+        testResultStrings[i] = (UChar*)malloc(sizeof(UChar) * (strlen(txt_testResultStrings[i]) + 1));
+        u_uastrcpy(testResultStrings[i], txt_testResultStrings[i] );
     }
 
     strings_initialized = TRUE;
@@ -90,20 +83,6 @@ static void FreeStrings( void )
     strings_initialized = FALSE;
 }
 
-#if (U_PLATFORM == U_PF_LINUX) /* add platforms here .. */
-/* Keep the #if above in sync with the one below that has the same "add platforms here .." comment. */
-#else
-/* Platform dependent test to detect if this type will return NULL when interpreted as a pointer. */
-static UBool returnsNullForType(int firstParam, ...) {
-    UBool isNULL;
-    va_list marker;
-    va_start(marker, firstParam);
-    isNULL = (UBool)(va_arg(marker, void*) == NULL);
-    va_end(marker);
-    return isNULL;
-}
-#endif
-
 /* Test u_formatMessage() with various test patterns() */
 static void MessageFormatTest( void ) 
 {
@@ -112,14 +91,11 @@ static void MessageFormatTest( void )
     int32_t resultLengthOut,resultlength,i, patternlength;
     UErrorCode status = U_ZERO_ERROR;
     UDate d1=1000000000.0;
-
-    ctest_setTimeZone(NULL, &status);
-
     str=(UChar*)malloc(sizeof(UChar) * 7);
-    u_uastrncpy(str, "MyDisk", 7);
+    u_uastrcpy(str, "MyDisk");
     resultlength=1;
     result=(UChar*)malloc(sizeof(UChar) * 1);
-    log_verbose("Testing u_formatMessage()\n");
+    log_verbose("Testing u_formatMessage90\n");
     InitStrings();
     for (i = 0; i < cnt_testCases; i++) {
         status=U_ZERO_ERROR;
@@ -135,8 +111,7 @@ static void MessageFormatTest( void )
                 &status, 1, 3456.00, d1);
         }
         if(U_FAILURE(status)){
-            log_data_err("ERROR: failure in message format on testcase %d:  %s (Are you missing data?)\n", i, myErrorName(status) );
-            continue;
+            log_err("ERROR: failure in message format on testcase %d:  %s\n", i, myErrorName(status) );
         }
         if(u_strcmp(result, testResultStrings[i])==0){
             log_verbose("PASS: MessagFormat successful on testcase : %d\n", i);
@@ -147,7 +122,6 @@ static void MessageFormatTest( void )
         }
     }
     free(result);
-    result = NULL;
     free(str);
     {
 
@@ -162,12 +136,12 @@ static void MessageFormatTest( void )
             {
                 status=U_ZERO_ERROR;
                 resultlength=resultLengthOut+1;
-                result=(UChar*)malloc(sizeof(UChar) * resultlength);
+                result=(UChar*)uprv_malloc(sizeof(UChar) * resultlength);
                 u_formatMessage( "en_US",testCasePatterns[i], patternlength, result, resultlength, 
                     &status, 1, 3456.00, d1);
             }
             if(U_FAILURE(status)){
-                log_data_err("ERROR: failure in message format on testcase %d:  %s (Are you missing data?)\n", i, myErrorName(status) );
+                log_err("ERROR: failure in message format on testcase %d:  %s\n", i, myErrorName(status) );
                 continue;
             }
             if(u_strcmp(result, testResultStrings[i])==0){
@@ -177,7 +151,7 @@ static void MessageFormatTest( void )
                 log_err("FAIL: Error in MessageFormat on testcase : %d\n GOT %s EXPECTED %s\n", i, 
                     austrdup(result), austrdup(testResultStrings[i]) );
             }
-            free(result);
+            uprv_free(result);
             result=NULL;
         }
     }
@@ -188,7 +162,7 @@ static void MessageFormatTest( void )
         UMessageFormat formatter = umsg_open(testCasePatterns[0],patternLength,"en_US",NULL,&ec);
 
         if(U_FAILURE(ec)){
-            log_data_err("umsg_open() failed for testCasePattens[0]. -> %s (Are you missing data?)\n", u_errorName(ec));
+            log_err("umsg_open() failed for testCasePattens[%d].\n",i);
             return;
         }
         for(i = 0;i<cnt_testCases; i++){
@@ -199,9 +173,8 @@ static void MessageFormatTest( void )
             UDate d2=0;
     
             result=NULL;
-            // Alternate between specifying the length and using NUL-termination.
-            patternLength = ((i & 1) == 0) ? u_strlen(testCasePatterns[i]) : -1;
-
+            patternLength = u_strlen(testCasePatterns[i]);
+            
             umsg_applyPattern(formatter,testCasePatterns[i],patternLength,&parseError,&ec);
             if(U_FAILURE(ec)){
                 log_err("umsg_applyPattern() failed for testCasePattens[%d].\n",i);
@@ -211,11 +184,11 @@ static void MessageFormatTest( void )
             resultLength = umsg_format(formatter,result,resultLength,&ec,1,3456.00,d1);
             if(ec==U_BUFFER_OVERFLOW_ERROR){
                 ec=U_ZERO_ERROR;
-                result = (UChar*) malloc(U_SIZEOF_UCHAR*resultLength+2);
+                result = (UChar*) uprv_malloc(U_SIZEOF_UCHAR*resultLength+2);
                 resultLength =  umsg_format(formatter,result,resultLength+2,&ec,1,3456.00,d1);
                 if(U_FAILURE(ec)){
                       log_err("ERROR: failure in message format on testcase %d:  %s\n", i, u_errorName(status) );
-                      free(result);
+                      uprv_free(result);
                       return;
                 }
             
@@ -227,52 +200,37 @@ static void MessageFormatTest( void )
                         austrdup(result), austrdup(testResultStrings[i]) );
                 }
 
-#if (U_PLATFORM == U_PF_LINUX) /* add platforms here .. */
-                log_verbose("Skipping potentially crashing test for mismatched varargs.\n");
+ /* ###TODO: Fix this after ICU 2.1. */
+#if !defined(HPUX)
+
+                umsg_parse(formatter,result,resultLength,&count,&ec,one,two,d2);
+                if(ec!=U_ILLEGAL_ARGUMENT_ERROR){
+                    log_err("FAIL: Did not get expected error for umsg_parse(). Expected: U_ILLEGAL_ARGUMENT_ERROR Got: %s \n",u_errorName(ec));
+                }else{
+                    ec = U_ZERO_ERROR;
+                }
+
 #else
-                log_verbose("Note: the next is a platform dependent test. If it crashes, add an exclusion for your platform near %s:%d\n", __FILE__, __LINE__); 
-
-                if (returnsNullForType(1, (double)2.0)) {
-                    /* HP/UX and possibly other platforms don't properly check for this case.
-                    We pass in a UDate, but the function expects a UDate *.  When va_arg is used,
-                    most compilers will return NULL, but HP-UX won't do that and will return 2
-                    in this case.  This is a platform dependent test.  It crashes on some systems.
-            
-                    If you get a crash here, see the definition of returnsNullForType.
-
-                    This relies upon "undefined" behavior, as indicated by C99 7.15.1.1 paragraph 2
-                    */
-                    umsg_parse(formatter,result,resultLength,&count,&ec,one,two,d2);
-                    if(ec!=U_ILLEGAL_ARGUMENT_ERROR){
-                        log_err("FAIL: Did not get expected error for umsg_parse(). Expected: U_ILLEGAL_ARGUMENT_ERROR Got: %s \n",u_errorName(ec));
-                    }else{
-                        ec = U_ZERO_ERROR;
-                    }
-                }
-                else {
-                    log_verbose("Warning: Returning NULL for a mismatched va_arg type isn't supported on this platform.\n", i);
-                }
+#if !((U_ICU_VERSION_MAJOR_NUM == 2) && (U_ICU_VERSION_MINOR_NUM ==1))
+                log_err("FAIL: Fix umsg_parse on HP/UX\n");
 #endif
-
+#endif            
                 umsg_parse(formatter,result,resultLength,&count,&ec,&one,&two,&d2);
                 if(U_FAILURE(ec)){
                     log_err("umsg_parse could not parse the pattern. Error: %s.\n",u_errorName(ec));
                 }
-                free(result);
+                uprv_free(result);
             }else{
                 log_err("FAIL: Expected U_BUFFER_OVERFLOW error while preflighting got: %s for testCasePatterns[%d]",u_errorName(ec),i);
             }
         }
-        umsg_close(formatter);
     }
     FreeStrings();
-
-    ctest_resetTimeZone();
 }
 
 
 /*test u_formatMessage() with sample patterns */
-static void TestSampleMessageFormat(void)
+static void TestSampleMessageFormat()
 {
     UChar *str;
     UChar *result;
@@ -280,9 +238,6 @@ static void TestSampleMessageFormat(void)
     int32_t resultLengthOut, resultlength;
     UDate d = 837039928046.0;
     UErrorCode status = U_ZERO_ERROR;
-
-    ctest_setTimeZone(NULL, &status);
-
     str=(UChar*)malloc(sizeof(UChar) * 15);
     u_uastrcpy(str, "abc");    
     
@@ -300,9 +255,9 @@ static void TestSampleMessageFormat(void)
         u_formatMessage( "en_US", pattern, u_strlen(pattern), result, resultlength, &status, str, d);
     }
     if(U_FAILURE(status)){
-        log_data_err("Error: failure in message format on test#1: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("Error: failure in message format on test#1: %s\n", myErrorName(status));
     }
-    else if(u_strcmp(result, expected)==0)
+    if(u_strcmp(result, expected)==0)
         log_verbose("PASS: MessagFormat successful on test#1\n");
     else{
         log_err("FAIL: Error in MessageFormat on test#1 \n GOT: %s EXPECTED: %s\n", 
@@ -331,9 +286,9 @@ static void TestSampleMessageFormat(void)
         u_formatMessage( "en_US", pattern, u_strlen(pattern), result, resultlength, &status, str, 23);
     }
     if(U_FAILURE(status)){
-        log_data_err("Error: failure in message format on test#2 : %s (Are you missing data?)\n", myErrorName(status));
+        log_err("Error: failure in message format on test#2 : %s\n", myErrorName(status));
     }
-    else if(u_strcmp(result, expected)==0)
+    if(u_strcmp(result, expected)==0)
         log_verbose("PASS: MessagFormat successful on test#2\n");
     else{
         log_err("FAIL: Error in MessageFormat on test#2\n GOT: %s EXPECTED: %s\n", 
@@ -356,9 +311,9 @@ static void TestSampleMessageFormat(void)
         u_formatMessage( "en_US", pattern, u_strlen(pattern), result, resultlength, &status, str, 500.00);
     }
     if(U_FAILURE(status)){
-        log_data_err("Error: failure in message format on test#3 : %s (Are you missing data?)\n", myErrorName(status));
+        log_err("Error: failure in message format on test#3 : %s\n", myErrorName(status));
     }
-    else if(u_strcmp(result, expected)==0)
+    if(u_strcmp(result, expected)==0)
         log_verbose("PASS: MessagFormat successful on test#3\n");
     else{
         log_err("FAIL: Error in MessageFormat on test#3\n GOT: %s EXPECTED %s\n", austrdup(result), 
@@ -367,15 +322,13 @@ static void TestSampleMessageFormat(void)
     
     free(result);
     free(str);
-
-    ctest_resetTimeZone();
 }
 
 /* Test umsg_format() and umsg_parse() , format and parse sequence and round trip */
 static void TestNewFormatAndParseAPI(void)
 {
 
-    UChar *result, tzID[4], str[25];
+    UChar *result, *tzID, *str;
     UChar pattern[100];
     UChar expected[100];
     int32_t resultLengthOut, resultlength;
@@ -383,21 +336,20 @@ static void TestNewFormatAndParseAPI(void)
     UDate d1,d;
     UDateFormat *def1;
     UErrorCode status = U_ZERO_ERROR;
-    int32_t value = 0;
+    double value;
     UChar ret[30];
     UParseError parseError;
     UMessageFormat* fmt = NULL;
     int32_t count=0;
-
-    ctest_setTimeZone(NULL, &status);
-
     log_verbose("Testing format and parse with parse error\n");
 
+    str=(UChar*)malloc(sizeof(UChar) * 25);
     u_uastrcpy(str, "disturbance in force");
+    tzID=(UChar*)malloc(sizeof(UChar) * 4);
     u_uastrcpy(tzID, "PST");
     cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_TRADITIONAL, &status);
     if(U_FAILURE(status)){
-        log_data_err("error in ucal_open caldef : %s - (Are you missing data?)\n", myErrorName(status) );
+        log_err("error in ucal_open caldef : %s\n", myErrorName(status) );
         return;
     }
     ucal_setDateTime(cal, 1999, UCAL_MARCH, 18, 0, 0, 0, &status);
@@ -413,7 +365,7 @@ static void TestNewFormatAndParseAPI(void)
     resultlength=1;
     fmt = umsg_open(pattern,u_strlen(pattern),"en_US",&parseError,&status);
     if(U_FAILURE(status)){
-        log_data_err("error in umsg_open  : %s (Are you missing data?)\n", u_errorName(status) );
+        log_err("error in umsg_open  : %s\n", u_errorName(status) );
         return;
     }
     result=(UChar*)malloc(sizeof(UChar) * resultlength);
@@ -445,7 +397,7 @@ static void TestNewFormatAndParseAPI(void)
     if(U_FAILURE(status)){
         log_err("ERROR: error in parsing: test#5: %s\n", myErrorName(status));
     }
-    if(value!=7 && u_strcmp(str,ret)!=0)
+    if(value!=7.00 && u_strcmp(str,ret)!=0)
         log_err("FAIL: Error in parseMessage on test#5 \n");
     else
         log_verbose("PASS: parseMessage successful on test#5\n");
@@ -463,13 +415,13 @@ static void TestNewFormatAndParseAPI(void)
                 austrdup(myDateFormat(def1,d)), austrdup(myDateFormat(def1,d1)) );
         }
     }
-    umsg_close(fmt);
     udat_close(def1);
     ucal_close(cal);
 
     free(result);
-
-    ctest_resetTimeZone();
+    free(str);
+    free(tzID);
+    
 }
 
 /* Test u_formatMessageWithError() and u_parseMessageWithError() , format and parse sequence and round trip */
@@ -478,18 +430,15 @@ static void TestSampleFormatAndParseWithError(void)
 
     UChar *result, *tzID, *str;
     UChar pattern[100];
-
     UChar expected[100];
     int32_t resultLengthOut, resultlength;
     UCalendar *cal;
     UDate d1,d;
     UDateFormat *def1;
     UErrorCode status = U_ZERO_ERROR;
-    int32_t value = 0;
+    double value;
     UChar ret[30];
     UParseError parseError;
-
-    ctest_setTimeZone(NULL, &status);
 
     log_verbose("Testing format and parse with parse error\n");
 
@@ -499,12 +448,12 @@ static void TestSampleFormatAndParseWithError(void)
     u_uastrcpy(tzID, "PST");
     cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_TRADITIONAL, &status);
     if(U_FAILURE(status)){
-        log_data_err("error in ucal_open caldef : %s - (Are you missing data?)\n", myErrorName(status) );
+        log_err("error in ucal_open caldef : %s\n", myErrorName(status) );
     }
     ucal_setDateTime(cal, 1999, UCAL_MARCH, 18, 0, 0, 0, &status);
     d1=ucal_getMillis(cal, &status);
     if(U_FAILURE(status)){
-            log_data_err("Error: failure in get millis: %s - (Are you missing data?)\n", myErrorName(status) );
+            log_err("Error: failure in get millis: %s\n", myErrorName(status) );
     }
     
     log_verbose("\nTesting with pattern test#4");
@@ -522,9 +471,9 @@ static void TestSampleFormatAndParseWithError(void)
         
     }
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in message format test#4: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in message format test#4: %s\n", myErrorName(status));
     }
-    else if(u_strcmp(result, expected)==0)
+    if(u_strcmp(result, expected)==0)
         log_verbose("PASS: MessagFormat successful on test#4\n");
     else{
         log_err("FAIL: Error in MessageFormat on test#4\n GOT: %s EXPECTED: %s\n", austrdup(result),
@@ -537,9 +486,9 @@ static void TestSampleFormatAndParseWithError(void)
 
     u_parseMessageWithError("en_US", pattern, u_strlen(pattern), result, u_strlen(result), &parseError,&status, &d, ret, &value);
     if(U_FAILURE(status)){
-        log_data_err("ERROR: error in parsing: test#5: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: error in parsing: test#5: %s\n", myErrorName(status));
     }
-    else if(value!=7 && u_strcmp(str,ret)!=0)
+    if(value!=7.00 && u_strcmp(str,ret)!=0)
         log_err("FAIL: Error in parseMessage on test#5 \n");
     else
         log_verbose("PASS: parseMessage successful on test#5\n");
@@ -547,7 +496,7 @@ static void TestSampleFormatAndParseWithError(void)
     def1 = udat_open(UDAT_DEFAULT,UDAT_DEFAULT ,NULL, NULL, 0, NULL,0,&status);
     if(U_FAILURE(status))
     {
-        log_data_err("error in creating the dateformat using short date and time style: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("error in creating the dateformat using short date and time style:\n %s\n", myErrorName(status));
     }else{
 
         if(u_strcmp(myDateFormat(def1, d), myDateFormat(def1, d1))==0)
@@ -564,11 +513,10 @@ static void TestSampleFormatAndParseWithError(void)
     free(str);
     free(tzID);
     
-    ctest_resetTimeZone();
 }
 
 /* Test u_formatMessage() and u_parseMessage() , format and parse sequence and round trip */
-static void TestSampleFormatAndParse(void)
+static void TestSampleFormatAndParse()
 {
 
     UChar *result, *tzID, *str;
@@ -579,11 +527,8 @@ static void TestSampleFormatAndParse(void)
     UDate d1,d;
     UDateFormat *def1;
     UErrorCode status = U_ZERO_ERROR;
-    int32_t value = 0;
+    double value;
     UChar ret[30];
-
-    ctest_setTimeZone(NULL, &status);
-
     log_verbose("Testing format and parse\n");
 
     str=(UChar*)malloc(sizeof(UChar) * 25);
@@ -592,12 +537,12 @@ static void TestSampleFormatAndParse(void)
     u_uastrcpy(tzID, "PST");
     cal=ucal_open(tzID, u_strlen(tzID), "en_US", UCAL_TRADITIONAL, &status);
     if(U_FAILURE(status)){
-        log_data_err("error in ucal_open caldef : %s - (Are you missing data?)\n", myErrorName(status) );
+        log_err("error in ucal_open caldef : %s\n", myErrorName(status) );
     }
     ucal_setDateTime(cal, 1999, UCAL_MARCH, 18, 0, 0, 0, &status);
     d1=ucal_getMillis(cal, &status);
     if(U_FAILURE(status)){
-            log_data_err("Error: failure in get millis: %s - (Are you missing data?)\n", myErrorName(status) );
+            log_err("Error: failure in get millis: %s\n", myErrorName(status) );
     }
     
     log_verbose("\nTesting with pattern test#4");
@@ -615,9 +560,9 @@ static void TestSampleFormatAndParse(void)
         
     }
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in message format test#4: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in message format test#4: %s\n", myErrorName(status));
     }
-    else if(u_strcmp(result, expected)==0)
+    if(u_strcmp(result, expected)==0)
         log_verbose("PASS: MessagFormat successful on test#4\n");
     else{
         log_err("FAIL: Error in MessageFormat on test#4\n GOT: %s EXPECTED: %s\n", austrdup(result),
@@ -630,9 +575,9 @@ static void TestSampleFormatAndParse(void)
 
     u_parseMessage("en_US", pattern, u_strlen(pattern), result, u_strlen(result), &status, &d, ret, &value);
     if(U_FAILURE(status)){
-        log_data_err("ERROR: error in parsing: test#5: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: error in parsing: test#5: %s\n", myErrorName(status));
     }
-    else if(value!=7 && u_strcmp(str,ret)!=0)
+    if(value!=7.00 && u_strcmp(str,ret)!=0)
         log_err("FAIL: Error in parseMessage on test#5 \n");
     else
         log_verbose("PASS: parseMessage successful on test#5\n");
@@ -640,7 +585,7 @@ static void TestSampleFormatAndParse(void)
     def1 = udat_open(UDAT_DEFAULT,UDAT_DEFAULT ,NULL, NULL, 0, NULL,0,&status);
     if(U_FAILURE(status))
     {
-        log_data_err("error in creating the dateformat using short date and time style: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("error in creating the dateformat using short date and time style:\n %s\n", myErrorName(status));
     }else{
 
         if(u_strcmp(myDateFormat(def1, d), myDateFormat(def1, d1))==0)
@@ -657,82 +602,10 @@ static void TestSampleFormatAndParse(void)
     free(str);
     free(tzID);
     
-    ctest_resetTimeZone();
-}
-
-/* Test message format with a Select option */
-static void TestMsgFormatSelect(void)
-{
-    UChar* str;
-    UChar* str1;
-    UErrorCode status = U_ZERO_ERROR;
-    UChar *result;
-    UChar pattern[100];
-    UChar expected[100];
-    int32_t resultlength,resultLengthOut;
-
-    str=(UChar*)malloc(sizeof(UChar) * 25);
-    u_uastrcpy(str, "Kirti");
-    str1=(UChar*)malloc(sizeof(UChar) * 25);
-    u_uastrcpy(str1, "female");
-    log_verbose("Testing message format with Select test #1\n:");
-    u_uastrcpy(pattern, "{0} est {1, select, female {all\\u00E9e} other {all\\u00E9}} \\u00E0 Paris.");
-    u_uastrcpy(expected, "Kirti est all\\u00E9e \\u00E0 Paris.");
-    resultlength=0;
-    resultLengthOut=u_formatMessage( "fr", pattern, u_strlen(pattern), NULL, resultlength, &status, str , str1);
-    if(status==U_BUFFER_OVERFLOW_ERROR)
-    {
-        status=U_ZERO_ERROR;
-        resultlength=resultLengthOut+1;
-        result=(UChar*)malloc(sizeof(UChar) * resultlength);
-        u_formatMessage( "fr", pattern, u_strlen(pattern), result, resultlength, &status, str , str1);
-        if(u_strcmp(result, expected)==0)
-            log_verbose("PASS: MessagFormat successful on Select test#1\n");
-        else{
-            log_err("FAIL: Error in MessageFormat on Select test#1\n GOT %s EXPECTED %s\n", austrdup(result),
-                austrdup(expected) );
-        }
-        free(result);
-    }
-    if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in message format on Select test#1 : %s \n", myErrorName(status));
-    }
-    free(str);
-    free(str1);
-
-    /*Test a nested pattern*/
-    str=(UChar*)malloc(sizeof(UChar) * 25);
-    u_uastrcpy(str, "Noname");
-    str1=(UChar*)malloc(sizeof(UChar) * 25);
-    u_uastrcpy(str1, "other");
-    log_verbose("Testing message format with Select test #2\n:");
-    u_uastrcpy(pattern, "{0} est {1, select, female {{2,number,integer} all\\u00E9e} other {all\\u00E9}} \\u00E0 Paris.");
-    u_uastrcpy(expected, "Noname est all\\u00E9 \\u00E0 Paris.");
-    resultlength=0;
-    resultLengthOut=u_formatMessage( "fr", pattern, u_strlen(pattern), NULL, resultlength, &status, str , str1,6);
-    if(status==U_BUFFER_OVERFLOW_ERROR)
-    {
-        status=U_ZERO_ERROR;
-        resultlength=resultLengthOut+1;
-        result=(UChar*)malloc(sizeof(UChar) * resultlength);
-        u_formatMessage( "fr", pattern, u_strlen(pattern), result, resultlength, &status, str , str1, 6);
-        if(u_strcmp(result, expected)==0)
-            log_verbose("PASS: MessagFormat successful on Select test#2\n");
-        else{
-            log_err("FAIL: Error in MessageFormat on Select test#2\n GOT %s EXPECTED %s\n", austrdup(result),
-                austrdup(expected) );
-        }
-        free(result);
-    }
-    if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in message format on Select test#2 : %s \n", myErrorName(status));
-    }
-    free(str);
-    free(str1);
 }
 
 /* test message format with a choice option */
-static void TestMsgFormatChoice(void)
+static void TestMsgFormatChoice()
 {
     UChar* str;
     UErrorCode status = U_ZERO_ERROR;
@@ -744,14 +617,8 @@ static void TestMsgFormatChoice(void)
     str=(UChar*)malloc(sizeof(UChar) * 25);
     u_uastrcpy(str, "MyDisk");
     log_verbose("Testing message format with choice test #6\n:");
-    /*
-     * Before ICU 4.8, umsg_xxx() did not detect conflicting argument types,
-     * and this pattern had {0,number,integer} as the inner argument.
-     * The choice argument has kDouble type while {0,number,integer} has kLong (int32_t).
-     * ICU 4.8 and above detects this as an error.
-     * We changed this pattern to work as intended.
-     */
-    u_uastrcpy(pattern, "The disk {1} contains {0,choice,0#no files|1#one file|1<{0,number} files}");
+    /*There {0,choice,0#are no files|1#is one file|1<are {0,number,integer} files}.*/
+    u_uastrcpy(pattern, "The disk {1} contains {0,choice,0#no files|1#one file|1<{0,number,integer} files}");
     u_uastrcpy(expected, "The disk MyDisk contains 100 files");
     resultlength=0;
     resultLengthOut=u_formatMessage( "en_US", pattern, u_strlen(pattern), NULL, resultlength, &status, 100., str);
@@ -770,7 +637,7 @@ static void TestMsgFormatChoice(void)
         free(result);
     }
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in message format on test#6 : %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in message format on test#6 : %s\n", myErrorName(status));
     }
 
     log_verbose("Testing message format with choice test #7\n:");
@@ -793,7 +660,7 @@ static void TestMsgFormatChoice(void)
         free(result);
     }
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in message format on test#7 : %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in message format on test#7 : %s\n", myErrorName(status));
     }
 
     log_verbose("Testing message format with choice test #8\n:");
@@ -817,7 +684,7 @@ static void TestMsgFormatChoice(void)
         free(result);
     }
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in message format on test#8 : %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in message format on test#8 : %s\n", myErrorName(status));
     }
 
     free(str);
@@ -825,7 +692,7 @@ static void TestMsgFormatChoice(void)
 }
 
 /*test u_parseMessage() with various test patterns */
-static void TestParseMessage(void)
+static void TestParseMessage()
 {
     UChar pattern[100];
     UChar source[100];
@@ -842,9 +709,9 @@ static void TestParseMessage(void)
         
     u_parseMessage( "en_US", pattern, u_strlen(pattern), source, u_strlen(source), &status, str, &value);
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in parse Message on test#9: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in parse Message on test#9: %s\n", myErrorName(status));
     }
-    else if(value==500.00  && u_strcmp(str,res)==0)
+    if(value==500.00  && u_strcmp(str,res)==0)
         log_verbose("PASS: parseMessage successful on test#9\n");
     else
         log_err("FAIL: Error in parseMessage on test#9 \n");
@@ -859,12 +726,15 @@ static void TestParseMessage(void)
         
     u_parseMessage( "en_US", pattern, u_strlen(pattern), source, u_strlen(source), &status, &value, str);
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in parse Message on test#10: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in parse Message on test#10: %s\n", myErrorName(status));
     }
-    else if(value==123.00 && u_strcmp(str,res)==0)
+    if(value==123.00 && u_strcmp(str,res)==0)
         log_verbose("PASS: parseMessage successful on test#10\n");
     else
         log_err("FAIL: Error in parseMessage on test#10 \n");
+
+
+    
 }
 
 static int32_t CallFormatMessage(const char* locale, UChar* testCasePattern, int32_t patternLength, 
@@ -887,9 +757,6 @@ static void TestMessageFormatWithValist( void )
     int32_t resultLengthOut,resultlength,i, patternlength;
     UErrorCode status = U_ZERO_ERROR;
     UDate d1=1000000000.0;
-
-    ctest_setTimeZone(NULL, &status);
-
     str=(UChar*)malloc(sizeof(UChar) * 7);
     u_uastrcpy(str, "MyDisk");
     resultlength=1;
@@ -910,9 +777,9 @@ static void TestMessageFormatWithValist( void )
                 &status, 1, 3456.00, d1);
         }
         if(U_FAILURE(status)){
-            log_data_err("ERROR: failure in message format on testcase %d:  %s (Are you missing data?)\n", i, myErrorName(status) );
+            log_err("ERROR: failure in message format on testcase %d:  %s\n", i, myErrorName(status) );
         }
-        else if(u_strcmp(result, testResultStrings[i])==0){
+        if(u_strcmp(result, testResultStrings[i])==0){
             log_verbose("PASS: MessagFormat successful on testcase : %d\n", i);
         }
         else{
@@ -923,8 +790,6 @@ static void TestMessageFormatWithValist( void )
     free(result);
     free(str);
     FreeStrings();
-
-    ctest_resetTimeZone();
 }
 
 static void CallParseMessage(const char* locale, UChar* pattern, int32_t patternLength, 
@@ -954,12 +819,12 @@ static void TestParseMessageWithValist(void)
 
     CallParseMessage( "en_US", pattern, u_strlen(pattern), source, u_strlen(source), &status, str, &value);
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in parse Message on test#9: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in parse Message on test#9: %s\n", myErrorName(status));
     }
-    else if(value==500.00  && u_strcmp(str,res)==0)
+    if(value==500.00  && u_strcmp(str,res)==0)
         log_verbose("PASS: parseMessage successful on test#9\n");
     else
-        log_err("FAIL: Error in parseMessage on test#9\n");
+        log_err("FAIL: Error in parseMessage on test#9 \n");
 
 
     log_verbose("\nTesting a sample for parse Message test#10\n");
@@ -970,9 +835,9 @@ static void TestParseMessageWithValist(void)
 
     CallParseMessage( "en_US", pattern, u_strlen(pattern), source, u_strlen(source), &status, &value, str);
     if(U_FAILURE(status)){
-        log_data_err("ERROR: failure in parse Message on test#10: %s (Are you missing data?)\n", myErrorName(status));
+        log_err("ERROR: failure in parse Message on test#10: %s\n", myErrorName(status));
     }
-    else if(value==123.00 && u_strcmp(str,res)==0)
+    if(value==123.00 && u_strcmp(str,res)==0)
         log_verbose("PASS: parseMessage successful on test#10\n");
     else
         log_err("FAIL: Error in parseMessage on test#10 \n");    
@@ -991,8 +856,6 @@ static void TestJ904(void) {
     const char* PAT = "Number {1,number,#0.000}, String {0}, Date {2,date,12:mm:ss.SSS}";
     const char* EXP = "Number 0,143, String foo, Date 12:34:56.789";
 
-    ctest_setTimeZone(NULL, &status);
-
     u_uastrcpy(string, "foo");
     /* Slight hack here -- instead of date pattern HH:mm:ss.SSS, use
      * 12:mm:ss.SSS.  Why?  So this test generates the same output --
@@ -1003,22 +866,19 @@ static void TestJ904(void) {
                              result, 256, &status,
                              string, 1/7.0,
                              789.0+1000*(56+60*(34+60*12)));
-    (void)length;   /* Suppress set but not used warning. */
 
-    u_austrncpy(cresult, result, sizeof(cresult));
+    u_austrcpy(cresult, result);
 
     /* This test passes if it DOESN'T CRASH.  However, we test the
      * output anyway.  If the string doesn't match in the date part,
      * check to see that the machine doesn't have an unusual time zone
      * offset, that is, one with a non-zero minutes/seconds offset
      * from GMT -- see above. */
-    if (strcmp(cresult, EXP) == 0) {
+    if (uprv_strcmp(cresult, EXP) == 0) {
         log_verbose("Ok: \"%s\"\n", cresult);
     } else {
-        log_data_err("FAIL: got \"%s\", expected \"%s\" -> %s (Are you missing data?)\n", cresult, EXP, u_errorName(status));
+        log_err("FAIL: got \"%s\", expected \"%s\"\n", cresult, EXP);
     }
-
-    ctest_resetTimeZone();
 }
 
 static void OpenMessageFormatTest(void)
@@ -1034,7 +894,7 @@ static void OpenMessageFormatTest(void)
     int32_t length=0;
     UErrorCode status = U_ZERO_ERROR;
 
-    u_uastrncpy(pattern, PAT, UPRV_LENGTHOF(pattern));
+    u_uastrcpy(pattern, PAT);
 
     /* Test umsg_open                   */
     f1 = umsg_open(pattern,length,NULL,NULL,&status);
@@ -1074,21 +934,20 @@ static void OpenMessageFormatTest(void)
 
     /* Test umsg_applyPattern           */
     status = U_ZERO_ERROR;
-    umsg_applyPattern(f1,pattern,(int32_t)strlen(PAT),NULL,&status);
+    umsg_applyPattern(f1,pattern,strlen(PAT),NULL,&status);
     if(U_FAILURE(status))
     {
-        log_data_err("umsg_applyPattern failed. Error %s (Are you missing data?)\n",u_errorName(status));
+        log_err("umsg_applyPattern failed. Error %s \n",u_errorName(status));
     }
 
     /* Test umsg_toPattern              */
     umsg_toPattern(f1,result,256,&status);
     if(U_FAILURE(status) ){
-        log_data_err("umsg_toPattern method failed. Error: %s (Are you missing data?)\n",u_errorName(status));
-    } else {
-        if(u_strcmp(result,pattern)!=0){
-            u_UCharsToChars(result,cresult,256);
-            log_err("umsg_toPattern method failed. Expected: %s Got: %s \n",PAT,cresult);
-        }
+        log_err("umsg_toPattern method failed. Error: %s \n",u_errorName(status));
+    }
+    if(u_strcmp(result,pattern)!=0){
+        u_UCharsToChars(result,cresult,256);
+        log_err("umsg_toPattern method failed. Expected: %s Got: %s \n",PAT,cresult);
     }
     /* umsg_format umsg_parse */
 
@@ -1097,83 +956,6 @@ static void OpenMessageFormatTest(void)
     umsg_close(f3);
 }
 
-static void MessageLength(void)
-{
-    UErrorCode status = U_ZERO_ERROR;
-    const char patChars[] = {"123{0}456{0}"};
-    const char expectedChars[] = {"123abc"};
-    UChar pattern[sizeof(patChars)];
-    UChar arg[] = {0x61,0x62,0x63,0};
-    UChar result[128] = {0};
-    UChar expected[sizeof(expectedChars)];
-
-    u_uastrncpy(pattern, patChars, UPRV_LENGTHOF(pattern));
-    u_uastrncpy(expected, expectedChars, UPRV_LENGTHOF(expected));
-
-    u_formatMessage("en_US", pattern, 6, result, UPRV_LENGTHOF(result), &status, arg);
-    if (U_FAILURE(status)) {
-        log_err("u_formatMessage method failed. Error: %s \n",u_errorName(status));
-    }
-    if (u_strcmp(result, expected) != 0) {
-        log_err("u_formatMessage didn't return expected result\n");
-    }
-}
-
-static void TestMessageWithUnusedArgNumber() {
-    UErrorCode errorCode = U_ZERO_ERROR;
-    U_STRING_DECL(pattern, "abc {1} def", 11);
-    UChar x[2] = { 0x78, 0 };  // "x"
-    UChar y[2] = { 0x79, 0 };  // "y"
-    U_STRING_DECL(expected, "abc y def", 9);
-    UChar result[20];
-    int32_t length;
-
-    U_STRING_INIT(pattern, "abc {1} def", 11);
-    U_STRING_INIT(expected, "abc y def", 9);
-    length = u_formatMessage("en", pattern, -1, result, UPRV_LENGTHOF(result), &errorCode, x, y);
-    if (U_FAILURE(errorCode) || length != u_strlen(expected) || u_strcmp(result, expected) != 0) {
-        log_err("u_formatMessage(pattern with only {1}, 2 args) failed: result length %d, UErrorCode %s \n",
-                (int)length, u_errorName(errorCode));
-    }
-}
-
-static void TestErrorChaining(void) {
-    UErrorCode status = U_USELESS_COLLATOR_ERROR;
-
-    umsg_open(NULL, 0, NULL, NULL, &status);
-    umsg_applyPattern(NULL, NULL, 0, NULL, &status);
-    umsg_toPattern(NULL, NULL, 0, &status);
-    umsg_clone(NULL, &status);
-    umsg_format(NULL, NULL, 0, &status);
-    umsg_parse(NULL, NULL, 0, NULL, &status);
-    umsg_close(NULL);
-
-    /* All of this code should have done nothing. */
-    if (status != U_USELESS_COLLATOR_ERROR) {
-        log_err("Status got changed to %s\n", u_errorName(status));
-    }
-
-    status = U_ZERO_ERROR;
-    umsg_open(NULL, 0, NULL, NULL, &status);
-    if (status != U_ILLEGAL_ARGUMENT_ERROR) {
-        log_err("Status should be U_ILLEGAL_ARGUMENT_ERROR instead of %s\n", u_errorName(status));
-    }
-    status = U_ZERO_ERROR;
-    umsg_applyPattern(NULL, NULL, 0, NULL, &status);
-    if (status != U_ILLEGAL_ARGUMENT_ERROR) {
-        log_err("Status should be U_ILLEGAL_ARGUMENT_ERROR instead of %s\n", u_errorName(status));
-    }
-    status = U_ZERO_ERROR;
-    umsg_toPattern(NULL, NULL, 0, &status);
-    if (status != U_ILLEGAL_ARGUMENT_ERROR) {
-        log_err("Status should be U_ILLEGAL_ARGUMENT_ERROR instead of %s\n", u_errorName(status));
-    }
-    status = U_ZERO_ERROR;
-    umsg_clone(NULL, &status);
-    if (status != U_ILLEGAL_ARGUMENT_ERROR) {
-        log_err("Status should be U_ILLEGAL_ARGUMENT_ERROR instead of %s\n", u_errorName(status));
-    }
-}
 
 void addMsgForTest(TestNode** root);
 
@@ -1190,10 +972,5 @@ void addMsgForTest(TestNode** root)
     addTest(root, &TestMessageFormatWithValist, "tsformat/cmsgtst/TestMessageFormatWithValist");
     addTest(root, &TestParseMessageWithValist, "tsformat/cmsgtst/TestParseMessageWithValist");
     addTest(root, &TestJ904, "tsformat/cmsgtst/TestJ904");
-    addTest(root, &MessageLength, "tsformat/cmsgtst/MessageLength");
-    addTest(root, &TestMessageWithUnusedArgNumber, "tsformat/cmsgtst/TestMessageWithUnusedArgNumber");
-    addTest(root, &TestErrorChaining, "tsformat/cmsgtst/TestErrorChaining");
-    addTest(root, &TestMsgFormatSelect, "tsformat/cmsgtst/TestMsgFormatSelect");
-}
 
-#endif /* #if !UCONFIG_NO_FORMATTING */
+}

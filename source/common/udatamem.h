@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1999-2010, International Business Machines
+*   Copyright (C) 1999-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************/
@@ -41,21 +39,15 @@ struct UDataMemory {
                                    /* Only non-null if a close operation should unmap */
                                    /*  the associated data, and additional info       */
                                    /*   beyond the mapAddr is needed to do that.      */
-    int32_t           length;      /* Length of the data in bytes; -1 if unknown.     */
 };
 
-U_CFUNC UDataMemory *UDataMemory_createNewInstance(UErrorCode *pErr);
-U_CFUNC void         UDatamemory_assign  (UDataMemory *dest, UDataMemory *source);
-U_CFUNC void         UDataMemory_init    (UDataMemory *This);
-U_CFUNC UBool        UDataMemory_isLoaded(const UDataMemory *This);
-U_CFUNC void         UDataMemory_setData (UDataMemory *This, const void *dataAddr);
+UDataMemory     *UDataMemory_createNewInstance(UErrorCode *pErr);
+void             UDatamemory_assign  (UDataMemory *dest, UDataMemory *source);
+void             UDataMemory_init    (UDataMemory *This);
+UBool            UDataMemory_isLoaded(UDataMemory *This);
+void             UDataMemory_setData (UDataMemory *This, const void *dataAddr);
 
-U_CFUNC const DataHeader *UDataMemory_normalizeDataPointer(const void *p);
 
-U_CAPI int32_t U_EXPORT2
-udata_getLength(const UDataMemory *pData);
-
-U_CAPI const void * U_EXPORT2
-udata_getRawMemory(const UDataMemory *pData);
-
+const DataHeader *UDataMemory_normalizeDataPointer(const void *p);
 #endif
+

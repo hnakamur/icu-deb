@@ -1,24 +1,18 @@
 /*
- *******************************************************************************
- *
- *   © 2016 and later: Unicode, Inc. and others.
- *   License & terms of use: http://www.unicode.org/copyright.html#License
- *
- *******************************************************************************
- *******************************************************************************
- *
- *   Copyright (C) 2001-2005, International Business Machines
- *   Corporation and others.  All Rights Reserved.
- *
- *******************************************************************************
- *   file name:  oldcol.cpp
- *   encoding:   UTF-8
- *   tab size:   8 (not used)
- *   indentation:4
- *
- *   created on: 2001jul24
- *   created by: Vladimir Weinstein
- */
+*******************************************************************************
+*
+*   Copyright (C) 2001, International Business Machines
+*   Corporation and others.  All Rights Reserved.
+*
+*******************************************************************************
+*   file name:  oldcol.cpp
+*   encoding:   US-ASCII
+*   tab size:   8 (not used)
+*   indentation:4
+*
+*   created on: 2001jul24
+*   created by: Vladimir Weinstein
+*/
 
 /******************************************************************************
  * This is the module that uses old collation
@@ -26,8 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unicode/putil.h>
-#include <unicode/ucol.h>
+#include "unicode/ucol.h"
 
 // Very simple example code - sticks a sortkey in the buffer
 // Not much error checking
@@ -87,7 +80,7 @@ void closeCollator_legacy(void) {
 }
 
 
-extern "C" void test_legacy(UChar data[][5], uint32_t size, uint32_t maxlen, uint8_t keys[4][32]) {
+void test_legacy(UChar data[][5], uint32_t size, uint32_t maxlen, uint8_t keys[4][32]) {
   uint32_t i = 0;
   int32_t keySize = 0;
 

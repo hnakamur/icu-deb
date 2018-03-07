@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * COPYRIGHT:
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -63,76 +61,22 @@ static  void TestDisplayNames(void);
  **/
  static void TestVariantParsing(void);
 
- /* Test getting keyword enumeratin */
- static void TestKeywordVariants(void);
+ /* Make sure that the locale data is good. */
+ static void TestLocaleStructure(void);
 
- static void TestKeywordSet(void);
- static void TestKeywordSetError(void);
-
- /* Test getting keyword values */
- static void TestKeywordVariantParsing(void);
- 
- /* Test warning for no data in getDisplay* */
- static void TestDisplayNameWarning(void);
-
- /* Test uloc_getLocaleForLCID */
- static void TestGetLocaleForLCID(void);
+ /* Make sure that Country information is the same across locales, within reason. */
+ static void TestConsistentCountryInfo(void);
 
 /**
  * routine to perform subtests, used by TestDisplayNames
  */
- static void doTestDisplayNames(const char* inLocale, int32_t compareIndex);
-
- static void TestCanonicalization(void);
-
- static void TestDisplayKeywords(void);
-
- static void TestDisplayKeywordValues(void);
-
- static void TestGetBaseName(void);
-
-static void TestTrailingNull(void);
-
-static void TestGetLocale(void);
+ static void doTestDisplayNames(const char* inLocale, int32_t compareIndex, int32_t defaultIsFrench);
 
 /**
  * additional intialization for datatables storing expected values
  */
 static void setUpDataTable(void);
 static void cleanUpDataTable(void);
-/*static void displayDataTable(void);*/
-static void TestAcceptLanguage(void);
-
-/**
- * test locale aliases 
-*/
-static void TestCalendar(void); 
-static void TestDateFormat(void);
-static void TestCollation(void);
-static void TestULocale(void);
-static void TestUResourceBundle(void);
-static void TestDisplayName(void);
-
-static void TestAcceptLanguage(void);
-
-static void TestOrientation(void);
-
-static void TestLikelySubtags(void);
-
-/**
- * lanuage tag
- */
-static void TestForLanguageTag(void);
-static void TestToLanguageTag(void);
-
-static void TestToUnicodeLocaleKey(void);
-static void TestToLegacyKey(void);
-static void TestToUnicodeLocaleType(void);
-static void TestToLegacyType(void);
-
-/**
- * locale data
- */
-static void TestEnglishExemplarCharacters(void);
+void displayDataTable(void);
 
 #endif

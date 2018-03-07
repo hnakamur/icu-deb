@@ -1,15 +1,10 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * COPYRIGHT:
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
+#include "cmemory.h"
 #include "unicode/coll.h"
 #include "unicode/tblcoll.h"
 #include "unicode/unistr.h"
@@ -18,7 +13,8 @@
 #include "unicode/schriter.h"
 #include "unicode/chariter.h"
 #include "unicode/uchar.h"
-#include "cmemory.h"
+
+#define ARRAY_LENGTH(array) (sizeof array / sizeof array[0])
 
 static UErrorCode status = U_ZERO_ERROR;
 
@@ -27,13 +23,6 @@ CollationIteratorTest::CollationIteratorTest()
    test2("has the highest probability of detecting", "")
 {
     en_us = (RuleBasedCollator *)Collator::createInstance(Locale::getUS(), status);
-    if(U_FAILURE(status)) {
-      delete en_us;
-      en_us = 0;
-      errcheckln(status, "Collator creation failed with %s", u_errorName(status));
-      return;
-    }
-
 }
 
 CollationIteratorTest::~CollationIteratorTest()
@@ -173,22 +162,10 @@ void CollationIteratorTest::TestPrevious(/* char* par */)
 void CollationIteratorTest::TestOffset(/* char* par */)
 {
     CollationElementIterator *iter = en_us->createCollationElementIterator(test1);
-    UErrorCode status = U_ZERO_ERROR;
-    // testing boundaries
-    iter->setOffset(0, status);
-    if (U_FAILURE(status) || iter->previous(status) != CollationElementIterator::NULLORDER) {
-        errln("Error: After setting offset to 0, we should be at the end "
-                "of the backwards iteration");
-    }
-    iter->setOffset(test1.length(), status);
-    if (U_FAILURE(status) || iter->next(status) != CollationElementIterator::NULLORDER) {
-        errln("Error: After setting offset to end of the string, we should "
-                "be at the end of the backwards iteration");
-    }
 
     // Run all the way through the iterator, then get the offset
     int32_t orderLength = 0;
-    Order *orders = getOrders(*iter, orderLength);
+    int32_t *orders = getOrders(*iter, orderLength);
 
     int32_t offset = iter->getOffset();
 
@@ -202,6 +179,7 @@ void CollationIteratorTest::TestOffset(/* char* par */)
 
     // Now set the offset back to the beginning and see if it works
     CollationElementIterator *pristine = en_us->createCollationElementIterator(test1);
+    UErrorCode status = U_ZERO_ERROR;
 
     iter->setOffset(0, status);
 
@@ -214,66 +192,11 @@ void CollationIteratorTest::TestOffset(/* char* par */)
         assertEqual(*iter, *pristine);
     }
 
+    // TODO: try iterating halfway through a messy string.
+
     delete pristine;
     delete[] orders;
     delete iter;
-
-    // setting offset in the middle of a contraction
-    UnicodeString contraction = "change";
-    status = U_ZERO_ERROR;
-    RuleBasedCollator tailored("& a < ch", status);
-    if (U_FAILURE(status)) {
-        errln("Error: in creation of Spanish collator - %s", u_errorName(status));
-        return;
-    }
-    iter = tailored.createCollationElementIterator(contraction);
-    Order *order = getOrders(*iter, orderLength);
-    iter->setOffset(1, status); // sets offset in the middle of ch
-    int32_t order2Length = 0;
-    Order *order2 = getOrders(*iter, order2Length);
-    if (orderLength != order2Length || uprv_memcmp(order, order2, orderLength * sizeof(Order)) != 0) {
-        errln("Error: setting offset in the middle of a contraction should be the same as setting it to the start of the contraction");
-    }
-    delete[] order;
-    delete[] order2;
-    delete iter;
-    contraction = "peache";
-    iter = tailored.createCollationElementIterator(contraction);
-    iter->setOffset(3, status);
-    order = getOrders(*iter, orderLength);
-    iter->setOffset(4, status); // sets offset in the middle of ch
-    order2 = getOrders(*iter, order2Length);
-    if (orderLength != order2Length || uprv_memcmp(order, order2, orderLength * sizeof(Order)) != 0) {
-        errln("Error: setting offset in the middle of a contraction should be the same as setting it to the start of the contraction");
-    }
-    delete[] order;
-    delete[] order2;
-    delete iter;
-    // setting offset in the middle of a surrogate pair
-    UnicodeString surrogate = UNICODE_STRING_SIMPLE("\\ud800\\udc00str").unescape();
-    iter = tailored.createCollationElementIterator(surrogate);
-    order = getOrders(*iter, orderLength);
-    iter->setOffset(1, status); // sets offset in the middle of surrogate
-    order2 = getOrders(*iter, order2Length);
-    if (orderLength != order2Length || uprv_memcmp(order, order2, orderLength * sizeof(Order)) != 0) {
-        errln("Error: setting offset in the middle of a surrogate pair should be the same as setting it to the start of the surrogate pair");
-    }
-    delete[] order;
-    delete[] order2;
-    delete iter;
-    surrogate = UNICODE_STRING_SIMPLE("simple\\ud800\\udc00str").unescape();
-    iter = tailored.createCollationElementIterator(surrogate);
-    iter->setOffset(6, status);
-    order = getOrders(*iter, orderLength);
-    iter->setOffset(7, status); // sets offset in the middle of surrogate
-    order2 = getOrders(*iter, order2Length);
-    if (orderLength != order2Length || uprv_memcmp(order, order2, orderLength * sizeof(Order)) != 0) {
-        errln("Error: setting offset in the middle of a surrogate pair should be the same as setting it to the start of the surrogate pair");
-    }
-    delete[] order;
-    delete[] order2;
-    delete iter;
-    // TODO: try iterating halfway through a messy string.
 }
 
 /**
@@ -325,19 +248,6 @@ void CollationIteratorTest::TestSetText(/* char* par */)
         assertEqual(*iter1, *iter2);
     }
    
-    // test for an empty string
-    UnicodeString empty("");
-    iter1->setText(empty, status);
-    if (U_FAILURE(status) 
-        || iter1->next(status) != (int32_t)CollationElementIterator::NULLORDER) {
-        errln("Empty string should have no CEs.");
-    }
-    ((StringCharacterIterator *)chariter)->setText(empty);
-    iter1->setText(*chariter, status);
-    if (U_FAILURE(status) 
-        || iter1->next(status) != (int32_t)CollationElementIterator::NULLORDER) {
-        errln("Empty string should have no CEs.");
-    }
     delete chariter;
     delete iter2;
     delete iter1;
@@ -365,11 +275,11 @@ void CollationIteratorTest::TestMaxExpansion(/* char* par */)
         order = iter->previous(status);
 
         /* thai management */
-        if (CollationElementIterator::isIgnorable(order))
+        if (order == 0)
             order = iter->previous(status);
 
         while (U_SUCCESS(status)
-            && iter->previous(status) != (int32_t)CollationElementIterator::NULLORDER)
+            && iter->previous(status) != (int32_t)UCOL_NULLORDER)
         {
             count ++; 
         }
@@ -483,52 +393,7 @@ void CollationIteratorTest::TestAssignment()
         errln("Fail collation iterator copy constructor does not produce the same elements");
     }
 
-    source = CharsToUnicodeString("a\\u0300\\u0325");
-    coll->setAttribute(UCOL_NORMALIZATION_MODE, UCOL_ON, status);
-    CollationElementIterator *iter4 
-                        = coll->createCollationElementIterator(source);
-    CollationElementIterator iter5(*iter4);
-    if (*iter4 != iter5) {
-        errln("collation iterator assignment does not produce the same elements");
-    }
-    iter4->next(status);
-    if (U_FAILURE(status) || *iter4 == iter5) {
-        errln("collation iterator not equal");
-    }
-    iter5.next(status);
-    if (U_FAILURE(status) || *iter4 != iter5) {
-        errln("collation iterator equal");
-    }
-    iter4->next(status);
-    if (U_FAILURE(status) || *iter4 == iter5) {
-        errln("collation iterator not equal");
-    }
-    iter5.next(status);
-    if (U_FAILURE(status) || *iter4 != iter5) {
-        errln("collation iterator equal");
-    }
-    CollationElementIterator iter6(*iter4);
-    if (*iter4 != iter6) {
-        errln("collation iterator equal");
-    }
-    iter4->next(status);
-    if (U_FAILURE(status) || *iter4 == iter5) {
-        errln("collation iterator not equal");
-    }
-    iter5.next(status);
-    if (U_FAILURE(status) || *iter4 != iter5) {
-        errln("collation iterator equal");
-    }
-    iter4->next(status);
-    if (U_FAILURE(status) || *iter4 == iter5) {
-        errln("collation iterator not equal");
-    }
-    iter5.next(status);
-    if (U_FAILURE(status) || *iter4 != iter5) {
-        errln("collation iterator equal");
-    }
     delete iter1;
-    delete iter4;
     delete coll;
 }
 
@@ -557,31 +422,7 @@ void CollationIteratorTest::TestConstructors()
     CollationElementIterator *iter2 = 
         coll->createCollationElementIterator(test1);
 
-    // initially the 2 collation element iterators should be the same
-    if (*iter1 != *iter1 || *iter2 != *iter2 || *iter1 != *iter2 
-        || *iter2 != *iter1) {
-        errln("CollationElementIterators constructed with the same string data should be the same at the start");
-    }
     assertEqual(*iter1, *iter2);
-
-    delete iter1;
-    delete iter2;
-
-    // tests empty strings
-    UnicodeString empty("");
-    iter1 = coll->createCollationElementIterator(empty);
-    chariter.setText(empty);
-    iter2 = coll->createCollationElementIterator(chariter);
-    if (*iter1 != *iter1 || *iter2 != *iter2 || *iter1 != *iter2 
-        || *iter2 != *iter1) {
-        errln("CollationElementIterators constructed with the same string data should be the same at the start");
-    } 
-    if (iter1->next(status) != (int32_t)CollationElementIterator::NULLORDER) {
-        errln("Empty string should have no CEs.");
-    }
-    if (iter2->next(status) != (int32_t)CollationElementIterator::NULLORDER) {
-        errln("Empty string should have no CEs.");
-    }
     delete iter1;
     delete iter2;
     delete coll;
@@ -632,6 +473,118 @@ void CollationIteratorTest::TestStrengthOrder()
     delete coll;
 }
 
+void CollationIteratorTest::backAndForth(CollationElementIterator &iter)
+{
+    // Run through the iterator forwards and stick it into an array
+    int32_t orderLength = 0;
+    int32_t *orders = getOrders(iter, orderLength);
+    UErrorCode status = U_ZERO_ERROR;
+
+    // Now go through it backwards and make sure we get the same values
+    int32_t index = orderLength;
+    int32_t o;
+
+    // reset the iterator
+    iter.reset();
+
+    while ((o = iter.previous(status)) != CollationElementIterator::NULLORDER)
+    {
+        if (o != orders[--index])
+        {
+            if (o == 0)
+                index ++;
+            else
+            {
+                while (index > 0 && orders[--index] == 0)
+                {
+                }
+                if (o != orders[index])
+                {
+                    errln("Mismatch at index %d: 0x%X vs 0x%X", index,
+                        orders[index], o);
+                    break;
+                }
+            }
+        }
+    }
+
+    while (index != 0 && orders[index - 1] == 0)
+    {
+      index --;
+    }
+
+    if (index != 0)
+    {
+        UnicodeString msg("Didn't get back to beginning - index is ");
+        errln(msg + index);
+
+        iter.reset();
+        err("next: ");
+        while ((o = iter.next(status)) != CollationElementIterator::NULLORDER)
+        {
+            UnicodeString hexString("0x");
+
+            appendHex(o, 8, hexString);
+            hexString += " ";
+            err(hexString);
+        }
+        errln("");
+
+        err("prev: ");
+        while ((o = iter.previous(status)) != CollationElementIterator::NULLORDER)
+        {
+            UnicodeString hexString("0x");
+
+            appendHex(o, 8, hexString);
+            hexString += " ";
+             err(hexString);
+        }
+        errln("");
+    }
+
+    delete[] orders;
+}
+
+/**
+ * Return an integer array containing all of the collation orders
+ * returned by calls to next on the specified iterator
+ */
+int32_t *CollationIteratorTest::getOrders(CollationElementIterator &iter, int32_t &orderLength)
+{
+    int32_t maxSize = 100;
+    int32_t size = 0;
+    int32_t *orders = new int32_t[maxSize];
+    UErrorCode status = U_ZERO_ERROR;
+
+    int32_t order;
+    while ((order = iter.next(status)) != CollationElementIterator::NULLORDER)
+    {
+        if (size == maxSize)
+        {
+            maxSize *= 2;
+            int32_t *temp = new int32_t[maxSize];
+
+            uprv_memcpy(temp, orders, size * sizeof(int32_t));
+            delete[] orders;
+            orders = temp;
+        }
+
+        orders[size++] = order;
+    }
+
+    if (maxSize > size)
+    {
+        int32_t *temp = new int32_t[size];
+
+        memcpy(temp, orders, size * sizeof(int32_t));
+        delete[] orders;
+        orders = temp;
+    }
+
+    orderLength = size;
+    return orders;
+}
+
 /**
  * Return a string containing all of the collation orders
  * returned by calls to next on the specified iterator
@@ -679,24 +632,18 @@ void CollationIteratorTest::runIndexedTest(int32_t index, UBool exec, const char
         logln("Collation Iteration Tests: ");
     }
 
-    if(en_us) {
-      switch (index)
-      {
-          case  0: name = "TestPrevious";      if (exec) TestPrevious(/* par */);     break;
-          case  1: name = "TestOffset";        if (exec) TestOffset(/* par */);       break;
-          case  2: name = "TestSetText";       if (exec) TestSetText(/* par */);      break;
-          case  3: name = "TestMaxExpansion";  if (exec) TestMaxExpansion(/* par */); break;
-          case  4: name = "TestClearBuffers";  if (exec) TestClearBuffers(/* par */); break;
-          case  5: name = "TestUnicodeChar";   if (exec) TestUnicodeChar(/* par */);  break;
-          case  6: name = "TestAssignment";    if (exec) TestAssignment(/* par */);    break;
-          case  7: name = "TestConstructors";  if (exec) TestConstructors(/* par */); break;
-          case  8: name = "TestStrengthOrder"; if (exec) TestStrengthOrder(/* par */); break;
-          default: name = ""; break;
-      }
-    } else {
-      dataerrln("Class iterator not instantiated");
-      name = "";
+    switch (index)
+    {
+        case  0: name = "TestPrevious";      if (exec) TestPrevious(/* par */);     break;
+        case  1: name = "TestOffset";        if (exec) TestOffset(/* par */);       break;
+        case  2: name = "TestSetText";       if (exec) TestSetText(/* par */);      break;
+        case  3: name = "TestMaxExpansion";  if (exec) TestMaxExpansion(/* par */); break;
+        case  4: name = "TestClearBuffers";  if (exec) TestClearBuffers(/* par */); break;
+        case  5: name = "TestUnicodeChar";   if (exec) TestUnicodeChar(/* par */);  break;
+        case  6: name = "TestAssignment";    if (exec) TestAssignment(/* par */);    break;
+        case  7: name = "TestConstructors";  if (exec) TestConstructors(/* par */); break;
+        case  8: name = "TestStrengthOrder"; if (exec) TestStrengthOrder(/* par */); break;
+        default: name = ""; break;
     }
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */

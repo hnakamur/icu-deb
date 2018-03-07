@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
- * Copyright (c) 1997-2009, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -24,11 +22,7 @@
  */
 
 #include <stdlib.h>
-
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "unicode/ucol.h"
 #include "unicode/uloc.h"
 #include "cintltst.h"
@@ -121,7 +115,7 @@ static void TestTertiary( )
     UErrorCode status = U_ZERO_ERROR;
     myCollation = ucol_open("ja_JP", &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n", myErrorName(status));
+        log_err("ERROR: in creation of rule based collator: %s\n", myErrorName(status));
         return;
     }
     log_verbose("Testing Kanna(Japan) Collation with Tertiary strength\n");
@@ -142,7 +136,7 @@ static void TestBase()
     myCollation = ucol_open("ja_JP", &status);
     if (U_FAILURE(status))
     {
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n",
+        log_err("ERROR: in creation of rule based collator: %s\n",
             myErrorName(status));
         return;
     }
@@ -163,7 +157,7 @@ static void TestPlainDakutenHandakuten(void)
     myCollation = ucol_open("ja_JP", &status);
     if (U_FAILURE(status))
     {
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n",
+        log_err("ERROR: in creation of rule based collator: %s\n",
             myErrorName(status));
         return;
     }
@@ -187,7 +181,7 @@ static void TestSmallLarge(void)
     myCollation = ucol_open("ja_JP", &status);
     if (U_FAILURE(status))
     {
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n",
+        log_err("ERROR: in creation of rule based collator: %s\n",
             myErrorName(status));
         return;
     }
@@ -212,7 +206,7 @@ static void TestKatakanaHiragana(void)
     myCollation = ucol_open("ja_JP", &status);
     if (U_FAILURE(status))
     {
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n",
+        log_err("ERROR: in creation of rule based collator: %s\n",
             myErrorName(status));
         return;
     }
@@ -238,13 +232,12 @@ static void TestChooonKigoo(void)
     myCollation = ucol_open("ja_JP", &status);
     if (U_FAILURE(status))
     {
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n",
+        log_err("ERROR: in creation of rule based collator: %s\n",
             myErrorName(status));
         return;
     }
 
     log_verbose("Testing Japanese Choo-on Kigoo Characters Collation\n");
-    ucol_setAttribute(myCollation, UCOL_STRENGTH, UCOL_QUATERNARY, &status);
     ucol_setAttribute(myCollation, UCOL_CASE_LEVEL, UCOL_ON, &status);
     for (i = 0; i < 7 ; i++) {
         doTest(myCollation, testChooonKigooCases[i], testChooonKigooCases[i + 1],
@@ -253,5 +246,3 @@ static void TestChooonKigoo(void)
 
     ucol_close(myCollation);
 }
-
-#endif /* #if !UCONFIG_NO_COLLATION */

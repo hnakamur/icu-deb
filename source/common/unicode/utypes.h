@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 1996-2016, International Business Machines
+*   Copyright (C) 1996-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -36,13 +34,8 @@
 
 
 #include "unicode/umachine.h"
+#include "unicode/utf.h"
 #include "unicode/uversion.h"
-#include "unicode/uconfig.h"
-#include <float.h>
-
-#if !U_NO_DEFAULT_INCLUDE_UTF_HEADERS
-#   include "unicode/utf.h"
-#endif
 
 /*!
  * \file
@@ -54,40 +47,56 @@
  * integer and other types.
  */
 
+/*===========================================================================*/
+/* char Character set family                                                 */
+/*===========================================================================*/
 
 /**
- * \def U_SHOW_CPLUSPLUS_API
- * @internal
+ * \def U_CHARSET_FAMILY
+ *
+ * <p>These definitions allow to specify the encoding of text
+ * in the char data type as defined by the platform and the compiler.
+ * It is enough to determine the code point values of "invariant characters",
+ * which are the ones shared by all encodings that are in use
+ * on a given platform.</p>
+ *
+ * <p>Those "invariant characters" should be all the uppercase and lowercase
+ * latin letters, the digits, the space, and "basic punctuation".
+ * Also, '\n', '\r', '\t' should be available.</p>
+ *
+ * <p>The list of "invariant characters" is:<br>
+ * \code
+ *    A-Z  a-z  0-9  SPACE  "  %  &amp;  '  (  )  *  +  ,  -  .  /  :  ;  <  =  >  ?  _
+ *\endcode
+ *<br>
+ * (52 letters + 10 numbers + 20 punc/sym = 82 total)</p>
+ *
+ * <p>In other words, all the graphic characters in 7-bit ASCII should
+ * be safely accessible except the following:</p>
+ * 
+ * \code
+ *    '\' <backslash>
+ *    '[' <left bracket>
+ *    ']' <right bracket>
+ *    '{' <left brace>
+ *    '}' <right brace>
+ *    '^' <circumflex>
+ *    '~' <tilde>
+ *    '!' <exclamation mark>
+ *    '#' <number sign>
+ *    '|' <vertical line>
+ *    '$' <dollar sign>
+ *    '@' <commercial at>
+ *    '`' <grave accent>
+ * \endcode
  */
-#ifdef __cplusplus
-#   ifndef U_SHOW_CPLUSPLUS_API
-#       define U_SHOW_CPLUSPLUS_API 1
-#   endif
-#else
-#   undef U_SHOW_CPLUSPLUS_API
-#   define U_SHOW_CPLUSPLUS_API 0
-#endif
 
-/** @{ API visibility control */
+#define U_ASCII_FAMILY 0
+#define U_EBCDIC_FAMILY 1
 
-/**
- * \def U_HIDE_DRAFT_API
- * Define this to 1 to request that draft API be "hidden"
- * @internal
- */
-/**
- * \def U_HIDE_INTERNAL_API
- * Define this to 1 to request that internal API be "hidden"
- * @internal
- */
-#if !U_DEFAULT_SHOW_DRAFT && !defined(U_SHOW_DRAFT_API)
-#define U_HIDE_DRAFT_API 1
+#ifndef U_CHARSET_FAMILY
+#   define U_CHARSET_FAMILY 0
 #endif
-#if !U_DEFAULT_SHOW_DRAFT && !defined(U_SHOW_INTERNAL_API)
-#define U_HIDE_INTERNAL_API 1
-#endif
-
-/** @} */
 
 /*===========================================================================*/
 /* ICUDATA naming scheme                                                     */
@@ -101,13 +110,6 @@
  * - l for little-endian, ASCII-family platforms
  * - e for big-endian, EBCDIC-family platforms
  * This letter is part of the common data file name.
- * @stable ICU 2.0
- */
-
-/**
- * \def U_ICUDATA_TYPE_LITLETTER
- * The non-string form of U_ICUDATA_TYPE_LETTER
- * @stable ICU 2.0
  */
 #if U_CHARSET_FAMILY
 #   if U_IS_BIG_ENDIAN
@@ -131,59 +133,54 @@
 #   endif
 #endif
 
-/**
- * A single string literal containing the icudata stub name. i.e. 'icudt18e' for
- * ICU 1.8.x on EBCDIC, etc..
- * @stable ICU 2.0
- */
+/** A single string literal containing the icudata stub name, i.e. 'icudt18e' for 
+   ICU 1.8.x on EBCDIC, etc.. */
 #define U_ICUDATA_NAME    "icudt" U_ICU_VERSION_SHORT U_ICUDATA_TYPE_LETTER
-#ifndef U_HIDE_INTERNAL_API
-#define U_USRDATA_NAME    "usrdt" U_ICU_VERSION_SHORT U_ICUDATA_TYPE_LETTER  /**< @internal */
-#define U_USE_USRDATA     0  /**< @internal */
-#endif  /* U_HIDE_INTERNAL_API */
 
-/**
- *  U_ICU_ENTRY_POINT is the name of the DLL entry point to the ICU data library.
+
+/*
+ *  Define U_ICU_ENTRY_POINT to be the name of the DLL entry point.
  *    Defined as a literal, not a string.
  *    Tricky Preprocessor use - ## operator replaces macro paramters with the literal string
  *                              from the corresponding macro invocation, _before_ other macro substitutions.
- *                              Need a nested \#defines to get the actual version numbers rather than
+ *                              Need a nested #defines to get the actual version numbers rather than
  *                              the literal text U_ICU_VERSION_MAJOR_NUM into the name.
  *                              The net result will be something of the form
- *                                  \#define U_ICU_ENTRY_POINT icudt19_dat
- * @stable ICU 2.4
+ *                                  #define U_ICU_ENTRY_POINT icudt19_dat
  */
-#define U_ICUDATA_ENTRY_POINT  U_DEF2_ICUDATA_ENTRY_POINT(U_ICU_VERSION_MAJOR_NUM,U_LIB_SUFFIX_C_NAME)
-
-#ifndef U_HIDE_INTERNAL_API
-/**
- * Do not use. Note that it's OK for the 2nd argument to be undefined (literal).
- * @internal
- */
-#define U_DEF2_ICUDATA_ENTRY_POINT(major,suff) U_DEF_ICUDATA_ENTRY_POINT(major,suff)
-
-/**
- * Do not use.
- * @internal
- */
-#ifndef U_DEF_ICUDATA_ENTRY_POINT
-/* affected by symbol renaming. See platform.h */
-#ifndef U_LIB_SUFFIX_C_NAME
-#define U_DEF_ICUDATA_ENTRY_POINT(major, suff) icudt##major##_dat
+#if U_HAVE_LIB_SUFFIX
+#define U_ICUDATA_ENTRY_POINT  U_DEF2_ICUDATA_ENTRY_POINT(U_ICU_VERSION_MAJOR_NUM, U_ICU_VERSION_MINOR_NUM, U_LIB_SUFFIX_C_NAME) 
+#define U_DEF2_ICUDATA_ENTRY_POINT(major, minor, suffix) U_DEF_ICUDATA_ENTRY_POINT(major, minor, suffix)
+#define U_DEF_ICUDATA_ENTRY_POINT(major, minor, suffix) icudt##major##minor##suffix##_dat
 #else
-#define U_DEF_ICUDATA_ENTRY_POINT(major, suff) icudt##suff ## major##_dat
+#define U_ICUDATA_ENTRY_POINT  U_DEF2_ICUDATA_ENTRY_POINT(U_ICU_VERSION_MAJOR_NUM, U_ICU_VERSION_MINOR_NUM) 
+#define U_DEF2_ICUDATA_ENTRY_POINT(major, minor) U_DEF_ICUDATA_ENTRY_POINT(major, minor)
+#define U_DEF_ICUDATA_ENTRY_POINT(major, minor) icudt##major##minor##_dat
 #endif
+
+/**
+ * \def U_CALLCONV
+ * Similar to U_CDECL_BEGIN/U_CDECL_END, this qualifier is necessary
+ * in callback function typedefs to make sure that the calling convention
+ * is compatible.
+ *
+ * This is only used for non-ICU-API functions.
+ * When a function is a public ICU API,
+ * you must use the U_CAPI and U_EXPORT2 qualifiers.
+ */
+#if defined(OS390) && defined(XP_CPLUSPLUS)
+#    define U_CALLCONV __cdecl
+#else
+#    define U_CALLCONV 
 #endif
-#endif  /* U_HIDE_INTERNAL_API */
 
 /**
  * \def NULL
- * Define NULL if necessary, to nullptr for C++ and to ((void *)0) for C.
- * @stable ICU 2.0
+ * Define NULL if necessary, to 0 for C++ and to ((void *)0) for C.
  */
 #ifndef NULL
-#ifdef __cplusplus
-#define NULL    nullptr
+#ifdef XP_CPLUSPLUS
+#define NULL    0
 #else
 #define NULL    ((void *)0)
 #endif
@@ -198,30 +195,63 @@
  * This is a primitive data type that holds the date and time
  * as the number of milliseconds since 1970-jan-01, 00:00 UTC.
  * UTC leap seconds are ignored.
- * @stable ICU 2.0
  */
 typedef double UDate;
 
-/** The number of milliseconds per second @stable ICU 2.0 */
+/* Common time manipulation constants */
 #define U_MILLIS_PER_SECOND        (1000)
-/** The number of milliseconds per minute @stable ICU 2.0 */
 #define U_MILLIS_PER_MINUTE       (60000)
-/** The number of milliseconds per hour @stable ICU 2.0 */
 #define U_MILLIS_PER_HOUR       (3600000)
-/** The number of milliseconds per day @stable ICU 2.0 */
 #define U_MILLIS_PER_DAY       (86400000)
 
-/** 
- * Maximum UDate value 
- * @stable ICU 4.8 
- */ 
-#define U_DATE_MAX DBL_MAX
+
+/*===========================================================================*/
+/* UClassID-based RTTI */
+/*===========================================================================*/
 
 /**
- * Minimum UDate value 
- * @stable ICU 4.8 
- */ 
-#define U_DATE_MIN -U_DATE_MAX
+ * UClassID is used to identify classes without using RTTI, since RTTI
+ * is not yet supported by all C++ compilers.  Each class hierarchy which needs
+ * to implement polymorphic clone() or operator==() defines two methods,
+ * described in detail below.  UClassID values can be compared using
+ * operator==(). Nothing else should be done with them.
+ *
+ * \par
+ * getDynamicClassID() is declared in the base class of the hierarchy as
+ * a pure virtual.  Each concrete subclass implements it in the same way:
+ *
+ * \code
+ *      class Base {
+ *      public:
+ *          virtual UClassID getDynamicClassID() const = 0;
+ *      }
+ *
+ *      class Derived {
+ *      public:
+ *          virtual UClassID getDynamicClassID() const
+ *            { return Derived::getStaticClassID(); }
+ *      }
+ * \endcode
+ *
+ * Each concrete class implements getStaticClassID() as well, which allows
+ * clients to test for a specific type.
+ *
+ * \code
+ *      class Derived {
+ *      public:
+ *          static UClassID getStaticClassID();
+ *      private:
+ *          static char fgClassID;
+ *      }
+ *
+ *      // In Derived.cpp:
+ *      UClassID Derived::getStaticClassID()
+ *        { return (UClassID)&Derived::fgClassID; }
+ *      char Derived::fgClassID = 0; // Value is irrelevant
+ * \endcode
+ */
+
+typedef void* UClassID;
 
 /*===========================================================================*/
 /* Shared library/DLL import-export API control                              */
@@ -238,136 +268,67 @@ typedef double UDate;
  * when all of ICU is in a single library.
  * This can be set as a compiler option while building ICU, and it
  * needs to be the first one tested to override U_COMMON_API, U_I18N_API, etc.
- * @stable ICU 2.0
- */
-
-/**
- * \def U_DATA_API
- * Set to export library symbols from inside the stubdata library,
- * and to import them from outside.
- * @stable ICU 3.0
  */
 
 /**
  * \def U_COMMON_API
  * Set to export library symbols from inside the common library,
  * and to import them from outside.
- * @stable ICU 2.0
  */
 
 /**
  * \def U_I18N_API
  * Set to export library symbols from inside the i18n library,
  * and to import them from outside.
- * @stable ICU 2.0
  */
 
 /**
  * \def U_LAYOUT_API
  * Set to export library symbols from inside the layout engine library,
  * and to import them from outside.
- * @stable ICU 2.0
  */
 
-/**
- * \def U_LAYOUTEX_API
- * Set to export library symbols from inside the layout extensions library,
- * and to import them from outside.
- * @stable ICU 2.6
- */
-
-/**
- * \def U_IO_API
- * Set to export library symbols from inside the ustdio library,
- * and to import them from outside.
- * @stable ICU 2.0
- */
-
-/**
- * \def U_TOOLUTIL_API
- * Set to export library symbols from inside the toolutil library,
- * and to import them from outside.
- * @stable ICU 3.4
- */
 
 #if defined(U_COMBINED_IMPLEMENTATION)
-#define U_DATA_API     U_EXPORT
-#define U_COMMON_API   U_EXPORT
-#define U_I18N_API     U_EXPORT
-#define U_LAYOUT_API   U_EXPORT
-#define U_LAYOUTEX_API U_EXPORT
-#define U_IO_API       U_EXPORT
-#define U_TOOLUTIL_API U_EXPORT
+#define U_COMMON_API  U_EXPORT
+#define U_I18N_API    U_EXPORT
+#define U_LAYOUT_API  U_EXPORT
+#define U_USTDIO_API  U_EXPORT
 #elif defined(U_STATIC_IMPLEMENTATION)
-#define U_DATA_API
 #define U_COMMON_API
 #define U_I18N_API
 #define U_LAYOUT_API
-#define U_LAYOUTEX_API
-#define U_IO_API
-#define U_TOOLUTIL_API
+#define U_USTDIO_API
 #elif defined(U_COMMON_IMPLEMENTATION)
-#define U_DATA_API     U_IMPORT
-#define U_COMMON_API   U_EXPORT
-#define U_I18N_API     U_IMPORT
-#define U_LAYOUT_API   U_IMPORT
-#define U_LAYOUTEX_API U_IMPORT
-#define U_IO_API       U_IMPORT
-#define U_TOOLUTIL_API U_IMPORT
+#define U_COMMON_API  U_EXPORT
+#define U_I18N_API    U_IMPORT
+#define U_LAYOUT_API  U_IMPORT
+#define U_USTDIO_API  U_IMPORT
 #elif defined(U_I18N_IMPLEMENTATION)
-#define U_DATA_API     U_IMPORT
-#define U_COMMON_API   U_IMPORT
-#define U_I18N_API     U_EXPORT
-#define U_LAYOUT_API   U_IMPORT
-#define U_LAYOUTEX_API U_IMPORT
-#define U_IO_API       U_IMPORT
-#define U_TOOLUTIL_API U_IMPORT
+#define U_COMMON_API  U_IMPORT
+#define U_I18N_API    U_EXPORT
+#define U_LAYOUT_API  U_IMPORT
+#define U_USTDIO_API  U_IMPORT
 #elif defined(U_LAYOUT_IMPLEMENTATION)
-#define U_DATA_API     U_IMPORT
-#define U_COMMON_API   U_IMPORT
-#define U_I18N_API     U_IMPORT
-#define U_LAYOUT_API   U_EXPORT
-#define U_LAYOUTEX_API U_IMPORT
-#define U_IO_API       U_IMPORT
-#define U_TOOLUTIL_API U_IMPORT
-#elif defined(U_LAYOUTEX_IMPLEMENTATION)
-#define U_DATA_API     U_IMPORT
-#define U_COMMON_API   U_IMPORT
-#define U_I18N_API     U_IMPORT
-#define U_LAYOUT_API   U_IMPORT
-#define U_LAYOUTEX_API U_EXPORT
-#define U_IO_API       U_IMPORT
-#define U_TOOLUTIL_API U_IMPORT
-#elif defined(U_IO_IMPLEMENTATION)
-#define U_DATA_API     U_IMPORT
-#define U_COMMON_API   U_IMPORT
-#define U_I18N_API     U_IMPORT
-#define U_LAYOUT_API   U_IMPORT
-#define U_LAYOUTEX_API U_IMPORT
-#define U_IO_API       U_EXPORT
-#define U_TOOLUTIL_API U_IMPORT
-#elif defined(U_TOOLUTIL_IMPLEMENTATION)
-#define U_DATA_API     U_IMPORT
-#define U_COMMON_API   U_IMPORT
-#define U_I18N_API     U_IMPORT
-#define U_LAYOUT_API   U_IMPORT
-#define U_LAYOUTEX_API U_IMPORT
-#define U_IO_API       U_IMPORT
-#define U_TOOLUTIL_API U_EXPORT
+#define U_COMMON_API  U_IMPORT
+#define U_I18N_API    U_IMPORT
+#define U_LAYOUT_API  U_EXPORT
+#define U_USTDIO_API  U_IMPORT
+#elif defined(U_USTDIO_IMPLEMENTATION)
+#define U_COMMON_API  U_IMPORT
+#define U_I18N_API    U_IMPORT
+#define U_LAYOUT_API  U_IMPORT
+#define U_USTDIO_API  U_EXPORT
 #else
-#define U_DATA_API     U_IMPORT
-#define U_COMMON_API   U_IMPORT
-#define U_I18N_API     U_IMPORT
-#define U_LAYOUT_API   U_IMPORT
-#define U_LAYOUTEX_API U_IMPORT
-#define U_IO_API       U_IMPORT
-#define U_TOOLUTIL_API U_IMPORT
+#define U_COMMON_API  U_IMPORT
+#define U_I18N_API    U_IMPORT
+#define U_LAYOUT_API  U_IMPORT
+#define U_USTDIO_API  U_IMPORT
 #endif
 
 /**
  * \def U_STANDARD_CPP_NAMESPACE
  * Control of C++ Namespace
- * @stable ICU 2.0
  */
 #ifdef __cplusplus
 #define U_STANDARD_CPP_NAMESPACE        ::
@@ -391,56 +352,54 @@ typedef double UDate;
  *
  * \par
  * Error codes should be tested using U_FAILURE() and U_SUCCESS().
- * @stable ICU 2.0
  */
-typedef enum UErrorCode {
+enum UErrorCode {
     /* The ordering of U_ERROR_INFO_START Vs U_USING_FALLBACK_WARNING looks weird
-     * and is that way because VC++ debugger displays first encountered constant,
+     * and is that way because VC++ debugger displays first encountered constant, 
      * which is not the what the code is used for
      */
 
     U_USING_FALLBACK_WARNING  = -128,   /**< A resource bundle lookup returned a fallback result (not an error) */
+    /** @deprecated use the enum that ends in _WARNING */
+    U_USING_FALLBACK_ERROR    = -128,   /**< A resource bundle lookup returned a fallback result (not an error) */
 
     U_ERROR_WARNING_START     = -128,   /**< Start of information results (semantically successful) */
 
+    /** @deprecated use the enum that ends in _WARNING */
+    U_ERROR_INFO_START        = U_ERROR_WARNING_START,   /**< Start of information results (semantically successful) */
+
     U_USING_DEFAULT_WARNING   = -127,   /**< A resource bundle lookup returned a result from the root locale (not an error) */
+    /** @deprecated use the enum that ends in _WARNING */
+    U_USING_DEFAULT_ERROR     = -127,   /**< A resource bundle lookup returned a result from the root locale (not an error) */
 
     U_SAFECLONE_ALLOCATED_WARNING = -126, /**< A SafeClone operation required allocating memory (informational only) */
-
+    /** @deprecated use the enum that ends in _WARNING */
+    U_SAFECLONE_ALLOCATED_ERROR = -126, /**< A SafeClone operation required allocating memory (informational only) */
+    
     U_STATE_OLD_WARNING       = -125,   /**< ICU has to use compatibility layer to construct the service. Expect performance/memory usage degradation. Consider upgrading */
 
     U_STRING_NOT_TERMINATED_WARNING = -124,/**< An output string could not be NUL-terminated because output length==destCapacity. */
+    U_SORT_KEY_TOO_SHORT_WARNING = -123,
 
-    U_SORT_KEY_TOO_SHORT_WARNING = -123, /**< Number of levels requested in getBound is higher than the number of levels in the sort key */
-
-    U_AMBIGUOUS_ALIAS_WARNING = -122,   /**< This converter alias can go to different converter implementations */
-
-    U_DIFFERENT_UCA_VERSION = -121,     /**< ucol_open encountered a mismatch between UCA version and collator image version, so the collator was constructed from rules. No impact to further function */
+    U_ERROR_WARNING_LIMIT,                 /**< This must always be the last warning value to indicate the limit for UErrorCode warnings (last warning code +1) */
     
-    U_PLUGIN_CHANGED_LEVEL_WARNING = -120, /**< A plugin caused a level change. May not be an error, but later plugins may not load. */
-
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal UErrorCode warning value.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_ERROR_WARNING_LIMIT,
-#endif  // U_HIDE_DEPRECATED_API
+    /** @deprecated use the enum that ends in _WARNING */
+    U_ERROR_INFO_LIMIT        = U_ERROR_WARNING_LIMIT,  /**< This must always be the last warning value to indicate the limit for UErrorCode warnings (last warning code +1) */        
 
     U_ZERO_ERROR              =  0,     /**< No error, no warning. */
 
     U_ILLEGAL_ARGUMENT_ERROR  =  1,     /**< Start of codes indicating failure */
-    U_MISSING_RESOURCE_ERROR  =  2,     /**< The requested resource cannot be found */
-    U_INVALID_FORMAT_ERROR    =  3,     /**< Data format is not what is expected */
-    U_FILE_ACCESS_ERROR       =  4,     /**< The requested file cannot be found */
+    U_MISSING_RESOURCE_ERROR  =  2,
+    U_INVALID_FORMAT_ERROR    =  3,
+    U_FILE_ACCESS_ERROR       =  4,
     U_INTERNAL_PROGRAM_ERROR  =  5,     /**< Indicates a bug in the library code */
-    U_MESSAGE_PARSE_ERROR     =  6,     /**< Unable to parse a message (message format) */
+    U_MESSAGE_PARSE_ERROR     =  6,
     U_MEMORY_ALLOCATION_ERROR =  7,     /**< Memory allocation error */
-    U_INDEX_OUTOFBOUNDS_ERROR =  8,     /**< Trying to access the index that is out of bounds */
+    U_INDEX_OUTOFBOUNDS_ERROR =  8,
     U_PARSE_ERROR             =  9,     /**< Equivalent to Java ParseException */
-    U_INVALID_CHAR_FOUND      = 10,     /**< Character conversion: Unmappable input sequence. In other APIs: Invalid character. */
-    U_TRUNCATED_CHAR_FOUND    = 11,     /**< Character conversion: Incomplete input sequence. */
-    U_ILLEGAL_CHAR_FOUND      = 12,     /**< Character conversion: Illegal input sequence/combination of input units. */
+    U_INVALID_CHAR_FOUND      = 10,     /**< In the Character conversion routines: Invalid character or sequence was encountered. In other APIs: Invalid character or code point name. */
+    U_TRUNCATED_CHAR_FOUND    = 11,     /**< In the Character conversion routines: More bytes are required to complete the conversion successfully */
+    U_ILLEGAL_CHAR_FOUND      = 12,     /**< In codeset conversion: a sequence that does NOT belong in the codepage has been encountered */
     U_INVALID_TABLE_FORMAT    = 13,     /**< Conversion table file found, but corrupted */
     U_INVALID_TABLE_FILE      = 14,     /**< Conversion table file not found */
     U_BUFFER_OVERFLOW_ERROR   = 15,     /**< A result would not fit in the supplied buffer */
@@ -452,238 +411,98 @@ typedef enum UErrorCode {
     U_CE_NOT_FOUND_ERROR      = 21,     /**< Currently used only while setting variable top, but can be used generally */
     U_PRIMARY_TOO_LONG_ERROR  = 22,     /**< User tried to set variable top to a primary that is longer than two bytes */
     U_STATE_TOO_OLD_ERROR     = 23,     /**< ICU cannot construct a service from this state, as it is no longer supported */
-    U_TOO_MANY_ALIASES_ERROR  = 24,     /**< There are too many aliases in the path to the requested resource.
-                                             It is very possible that a circular alias definition has occured */
-    U_ENUM_OUT_OF_SYNC_ERROR  = 25,     /**< UEnumeration out of sync with underlying collection */
-    U_INVARIANT_CONVERSION_ERROR = 26,  /**< Unable to convert a UChar* string to char* with the invariant converter. */
-    U_INVALID_STATE_ERROR     = 27,     /**< Requested operation can not be completed with ICU in its current state */
-    U_COLLATOR_VERSION_MISMATCH = 28,   /**< Collator version is not compatible with the base version */
-    U_USELESS_COLLATOR_ERROR  = 29,     /**< Collator is options only and no base is specified */
-    U_NO_WRITE_PERMISSION     = 30,     /**< Attempt to modify read-only or constant data. */
+    U_STANDARD_ERROR_LIMIT,             /**< This must always be the last value to indicate the limit for standard errors */
+    /* 
+     * the error code range 0x10000 0x10100 are reserved for Transliterator
+     */
+    U_BAD_VARIABLE_DEFINITION=0x10000,
+    U_PARSE_ERROR_START = 0x10000,      /**< start of Transliterator specific parse Errors */
+    U_MALFORMED_RULE,
+    U_MALFORMED_SET,
+    U_MALFORMED_SYMBOL_REFERENCE,
+    U_MALFORMED_UNICODE_ESCAPE,
+    U_MALFORMED_VARIABLE_DEFINITION,
+    U_MALFORMED_VARIABLE_REFERENCE,
+    U_MISMATCHED_SEGMENT_DELIMITERS,
+    U_MISPLACED_ANCHOR_START,
+    U_MISPLACED_CURSOR_OFFSET,
+    U_MISPLACED_QUANTIFIER,
+    U_MISSING_OPERATOR,
+    U_MISSING_SEGMENT_CLOSE,
+    U_MULTIPLE_ANTE_CONTEXTS,
+    U_MULTIPLE_CURSORS,
+    U_MULTIPLE_POST_CONTEXTS,
+    U_TRAILING_BACKSLASH,
+    U_UNDEFINED_SEGMENT_REFERENCE,
+    U_UNDEFINED_VARIABLE,
+    U_UNQUOTED_SPECIAL,
+    U_UNTERMINATED_QUOTE,
+    U_RULE_MASK_ERROR,
+    U_MISPLACED_COMPOUND_FILTER,
+    U_MULTIPLE_COMPOUND_FILTERS,
+    U_INVALID_RBT_SYNTAX,
+    U_INVALID_PROPERTY_PATTERN,
+    U_MALFORMED_PRAGMA,
+    U_UNCLOSED_SEGMENT,
+    U_ILLEGAL_CHAR_IN_SEGMENT,
+    U_VARIABLE_RANGE_EXHAUSTED,         /**< Too many stand-ins generated for the given variable range */
+    U_VARIABLE_RANGE_OVERLAP,           /**< The variable range overlaps characters used in rules */
+    U_ILLEGAL_CHARACTER,
+    U_INTERNAL_TRANSLITERATOR_ERROR,
+    U_INVALID_ID,
+    U_INVALID_FUNCTION,
+    U_PARSE_ERROR_LIMIT,                /**< end of Transliterator specific parse Errors */
 
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest standard error code.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
+    /* 
+     * the error code range 0x10100 0x10200 are reserved for formatting API parsing error
      */
-    U_STANDARD_ERROR_LIMIT,
-#endif  // U_HIDE_DEPRECATED_API
-
-    /*
-     * Error codes in the range 0x10000 0x10100 are reserved for Transliterator.
-     */
-    U_BAD_VARIABLE_DEFINITION=0x10000,/**< Missing '$' or duplicate variable name */
-    U_PARSE_ERROR_START = 0x10000,    /**< Start of Transliterator errors */
-    U_MALFORMED_RULE,                 /**< Elements of a rule are misplaced */
-    U_MALFORMED_SET,                  /**< A UnicodeSet pattern is invalid*/
-    U_MALFORMED_SYMBOL_REFERENCE,     /**< UNUSED as of ICU 2.4 */
-    U_MALFORMED_UNICODE_ESCAPE,       /**< A Unicode escape pattern is invalid*/
-    U_MALFORMED_VARIABLE_DEFINITION,  /**< A variable definition is invalid */
-    U_MALFORMED_VARIABLE_REFERENCE,   /**< A variable reference is invalid */
-    U_MISMATCHED_SEGMENT_DELIMITERS,  /**< UNUSED as of ICU 2.4 */
-    U_MISPLACED_ANCHOR_START,         /**< A start anchor appears at an illegal position */
-    U_MISPLACED_CURSOR_OFFSET,        /**< A cursor offset occurs at an illegal position */
-    U_MISPLACED_QUANTIFIER,           /**< A quantifier appears after a segment close delimiter */
-    U_MISSING_OPERATOR,               /**< A rule contains no operator */
-    U_MISSING_SEGMENT_CLOSE,          /**< UNUSED as of ICU 2.4 */
-    U_MULTIPLE_ANTE_CONTEXTS,         /**< More than one ante context */
-    U_MULTIPLE_CURSORS,               /**< More than one cursor */
-    U_MULTIPLE_POST_CONTEXTS,         /**< More than one post context */
-    U_TRAILING_BACKSLASH,             /**< A dangling backslash */
-    U_UNDEFINED_SEGMENT_REFERENCE,    /**< A segment reference does not correspond to a defined segment */
-    U_UNDEFINED_VARIABLE,             /**< A variable reference does not correspond to a defined variable */
-    U_UNQUOTED_SPECIAL,               /**< A special character was not quoted or escaped */
-    U_UNTERMINATED_QUOTE,             /**< A closing single quote is missing */
-    U_RULE_MASK_ERROR,                /**< A rule is hidden by an earlier more general rule */
-    U_MISPLACED_COMPOUND_FILTER,      /**< A compound filter is in an invalid location */
-    U_MULTIPLE_COMPOUND_FILTERS,      /**< More than one compound filter */
-    U_INVALID_RBT_SYNTAX,             /**< A "::id" rule was passed to the RuleBasedTransliterator parser */
-    U_INVALID_PROPERTY_PATTERN,       /**< UNUSED as of ICU 2.4 */
-    U_MALFORMED_PRAGMA,               /**< A 'use' pragma is invlalid */
-    U_UNCLOSED_SEGMENT,               /**< A closing ')' is missing */
-    U_ILLEGAL_CHAR_IN_SEGMENT,        /**< UNUSED as of ICU 2.4 */
-    U_VARIABLE_RANGE_EXHAUSTED,       /**< Too many stand-ins generated for the given variable range */
-    U_VARIABLE_RANGE_OVERLAP,         /**< The variable range overlaps characters used in rules */
-    U_ILLEGAL_CHARACTER,              /**< A special character is outside its allowed context */
-    U_INTERNAL_TRANSLITERATOR_ERROR,  /**< Internal transliterator system error */
-    U_INVALID_ID,                     /**< A "::id" rule specifies an unknown transliterator */
-    U_INVALID_FUNCTION,               /**< A "&fn()" rule specifies an unknown transliterator */
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal Transliterator error code.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_PARSE_ERROR_LIMIT,
-#endif  // U_HIDE_DEPRECATED_API
-
-    /*
-     * Error codes in the range 0x10100 0x10200 are reserved for the formatting API.
-     */
-    U_UNEXPECTED_TOKEN=0x10100,       /**< Syntax error in format pattern */
-    U_FMT_PARSE_ERROR_START=0x10100,  /**< Start of format library errors */
-    U_MULTIPLE_DECIMAL_SEPARATORS,    /**< More than one decimal separator in number pattern */
-    U_MULTIPLE_DECIMAL_SEPERATORS = U_MULTIPLE_DECIMAL_SEPARATORS, /**< Typo: kept for backward compatibility. Use U_MULTIPLE_DECIMAL_SEPARATORS */
-    U_MULTIPLE_EXPONENTIAL_SYMBOLS,   /**< More than one exponent symbol in number pattern */
-    U_MALFORMED_EXPONENTIAL_PATTERN,  /**< Grouping symbol in exponent pattern */
-    U_MULTIPLE_PERCENT_SYMBOLS,       /**< More than one percent symbol in number pattern */
-    U_MULTIPLE_PERMILL_SYMBOLS,       /**< More than one permill symbol in number pattern */
-    U_MULTIPLE_PAD_SPECIFIERS,        /**< More than one pad symbol in number pattern */
-    U_PATTERN_SYNTAX_ERROR,           /**< Syntax error in format pattern */
-    U_ILLEGAL_PAD_POSITION,           /**< Pad symbol misplaced in number pattern */
-    U_UNMATCHED_BRACES,               /**< Braces do not match in message pattern */
-    U_UNSUPPORTED_PROPERTY,           /**< UNUSED as of ICU 2.4 */
-    U_UNSUPPORTED_ATTRIBUTE,          /**< UNUSED as of ICU 2.4 */
-    U_ARGUMENT_TYPE_MISMATCH,         /**< Argument name and argument index mismatch in MessageFormat functions */
-    U_DUPLICATE_KEYWORD,              /**< Duplicate keyword in PluralFormat */
-    U_UNDEFINED_KEYWORD,              /**< Undefined Plural keyword */
-    U_DEFAULT_KEYWORD_MISSING,        /**< Missing DEFAULT rule in plural rules */
-    U_DECIMAL_NUMBER_SYNTAX_ERROR,    /**< Decimal number syntax error */
-    U_FORMAT_INEXACT_ERROR,           /**< Cannot format a number exactly and rounding mode is ROUND_UNNECESSARY @stable ICU 4.8 */
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal formatting API error code.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
+    U_UNEXPECTED_TOKEN=0x10100,
+    U_FMT_PARSE_ERROR_START=0x10100,
+    U_MULTIPLE_DECIMAL_SEPERATORS,
+    U_MULTIPLE_EXPONENTIAL_SYMBOLS,
+    U_MALFORMED_EXPONENTIAL_PATTERN,
+    U_MULTIPLE_PERCENT_SYMBOLS,
+    U_MULTIPLE_PERMILL_SYMBOLS,
+    U_MULTIPLE_PAD_SPECIFIERS,
+    U_PATTERN_SYNTAX_ERROR,
+    U_ILLEGAL_PAD_POSITION,
+    U_UNMATCHED_BRACES,
+    U_UNSUPPORTED_PROPERTY,
+    U_UNSUPPORTED_ATTRIBUTE,
     U_FMT_PARSE_ERROR_LIMIT,
-#endif  // U_HIDE_DEPRECATED_API
+   
+    U_ERROR_LIMIT=U_FMT_PARSE_ERROR_LIMIT /**< This must always be the last value to indicate the limit for UErrorCode (last error code +1) */
+};
 
-    /*
-     * Error codes in the range 0x10200 0x102ff are reserved for BreakIterator.
-     */
-    U_BRK_INTERNAL_ERROR=0x10200,          /**< An internal error (bug) was detected.             */
-    U_BRK_ERROR_START=0x10200,             /**< Start of codes indicating Break Iterator failures */
-    U_BRK_HEX_DIGITS_EXPECTED,             /**< Hex digits expected as part of a escaped char in a rule. */
-    U_BRK_SEMICOLON_EXPECTED,              /**< Missing ';' at the end of a RBBI rule.            */
-    U_BRK_RULE_SYNTAX,                     /**< Syntax error in RBBI rule.                        */
-    U_BRK_UNCLOSED_SET,                    /**< UnicodeSet witing an RBBI rule missing a closing ']'.  */
-    U_BRK_ASSIGN_ERROR,                    /**< Syntax error in RBBI rule assignment statement.   */
-    U_BRK_VARIABLE_REDFINITION,            /**< RBBI rule $Variable redefined.                    */
-    U_BRK_MISMATCHED_PAREN,                /**< Mis-matched parentheses in an RBBI rule.          */
-    U_BRK_NEW_LINE_IN_QUOTED_STRING,       /**< Missing closing quote in an RBBI rule.            */
-    U_BRK_UNDEFINED_VARIABLE,              /**< Use of an undefined $Variable in an RBBI rule.    */
-    U_BRK_INIT_ERROR,                      /**< Initialization failure.  Probable missing ICU Data. */
-    U_BRK_RULE_EMPTY_SET,                  /**< Rule contains an empty Unicode Set.               */
-    U_BRK_UNRECOGNIZED_OPTION,             /**< !!option in RBBI rules not recognized.            */
-    U_BRK_MALFORMED_RULE_TAG,              /**< The {nnn} tag on a rule is mal formed             */
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal BreakIterator error code.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_BRK_ERROR_LIMIT,
-#endif  // U_HIDE_DEPRECATED_API
-
-    /*
-     * Error codes in the range 0x10300-0x103ff are reserved for regular expression related errors.
-     */
-    U_REGEX_INTERNAL_ERROR=0x10300,       /**< An internal error (bug) was detected.              */
-    U_REGEX_ERROR_START=0x10300,          /**< Start of codes indicating Regexp failures          */
-    U_REGEX_RULE_SYNTAX,                  /**< Syntax error in regexp pattern.                    */
-    U_REGEX_INVALID_STATE,                /**< RegexMatcher in invalid state for requested operation */
-    U_REGEX_BAD_ESCAPE_SEQUENCE,          /**< Unrecognized backslash escape sequence in pattern  */
-    U_REGEX_PROPERTY_SYNTAX,              /**< Incorrect Unicode property                         */
-    U_REGEX_UNIMPLEMENTED,                /**< Use of regexp feature that is not yet implemented. */
-    U_REGEX_MISMATCHED_PAREN,             /**< Incorrectly nested parentheses in regexp pattern.  */
-    U_REGEX_NUMBER_TOO_BIG,               /**< Decimal number is too large.                       */
-    U_REGEX_BAD_INTERVAL,                 /**< Error in {min,max} interval                        */
-    U_REGEX_MAX_LT_MIN,                   /**< In {min,max}, max is less than min.                */
-    U_REGEX_INVALID_BACK_REF,             /**< Back-reference to a non-existent capture group.    */
-    U_REGEX_INVALID_FLAG,                 /**< Invalid value for match mode flags.                */
-    U_REGEX_LOOK_BEHIND_LIMIT,            /**< Look-Behind pattern matches must have a bounded maximum length.    */
-    U_REGEX_SET_CONTAINS_STRING,          /**< Regexps cannot have UnicodeSets containing strings.*/
-#ifndef U_HIDE_DEPRECATED_API
-    U_REGEX_OCTAL_TOO_BIG,                /**< Octal character constants must be <= 0377. @deprecated ICU 54. This error cannot occur. */
-#endif  /* U_HIDE_DEPRECATED_API */
-    U_REGEX_MISSING_CLOSE_BRACKET=U_REGEX_SET_CONTAINS_STRING+2, /**< Missing closing bracket on a bracket expression. */
-    U_REGEX_INVALID_RANGE,                /**< In a character range [x-y], x is greater than y.   */
-    U_REGEX_STACK_OVERFLOW,               /**< Regular expression backtrack stack overflow.       */
-    U_REGEX_TIME_OUT,                     /**< Maximum allowed match time exceeded                */
-    U_REGEX_STOPPED_BY_CALLER,            /**< Matching operation aborted by user callback fn.    */
-    U_REGEX_PATTERN_TOO_BIG,              /**< Pattern exceeds limits on size or complexity. @stable ICU 55 */
-    U_REGEX_INVALID_CAPTURE_GROUP_NAME,   /**< Invalid capture group name. @stable ICU 55 */
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal regular expression error code.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_REGEX_ERROR_LIMIT=U_REGEX_STOPPED_BY_CALLER+3,
-#endif  // U_HIDE_DEPRECATED_API
-
-    /*
-     * Error codes in the range 0x10400-0x104ff are reserved for IDNA related error codes.
-     */
-    U_IDNA_PROHIBITED_ERROR=0x10400,
-    U_IDNA_ERROR_START=0x10400,
-    U_IDNA_UNASSIGNED_ERROR,
-    U_IDNA_CHECK_BIDI_ERROR,
-    U_IDNA_STD3_ASCII_RULES_ERROR,
-    U_IDNA_ACE_PREFIX_ERROR,
-    U_IDNA_VERIFICATION_ERROR,
-    U_IDNA_LABEL_TOO_LONG_ERROR,
-    U_IDNA_ZERO_LENGTH_LABEL_ERROR,
-    U_IDNA_DOMAIN_NAME_TOO_LONG_ERROR,
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal IDNA error code.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_IDNA_ERROR_LIMIT,
-#endif  // U_HIDE_DEPRECATED_API
-    /*
-     * Aliases for StringPrep
-     */
-    U_STRINGPREP_PROHIBITED_ERROR = U_IDNA_PROHIBITED_ERROR,
-    U_STRINGPREP_UNASSIGNED_ERROR = U_IDNA_UNASSIGNED_ERROR,
-    U_STRINGPREP_CHECK_BIDI_ERROR = U_IDNA_CHECK_BIDI_ERROR,
-    
-    /*
-     * Error codes in the range 0x10500-0x105ff are reserved for Plugin related error codes.
-     */
-    U_PLUGIN_ERROR_START=0x10500,         /**< Start of codes indicating plugin failures */
-    U_PLUGIN_TOO_HIGH=0x10500,            /**< The plugin's level is too high to be loaded right now. */
-    U_PLUGIN_DIDNT_SET_LEVEL,             /**< The plugin didn't call uplug_setPlugLevel in response to a QUERY */
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal plug-in error code.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_PLUGIN_ERROR_LIMIT,
-#endif  // U_HIDE_DEPRECATED_API
-
-#ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal error code.
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_ERROR_LIMIT=U_PLUGIN_ERROR_LIMIT
-#endif  // U_HIDE_DEPRECATED_API
-} UErrorCode;
+#ifndef XP_CPLUSPLUS
+typedef enum UErrorCode UErrorCode;
+#endif
 
 /* Use the following to determine if an UErrorCode represents */
 /* operational success or failure. */
 
-#ifdef __cplusplus
+#ifdef XP_CPLUSPLUS
     /**
      * Does the error code indicate success?
-     * @stable ICU 2.0
+     * @stable
      */
     static
     inline UBool U_SUCCESS(UErrorCode code) { return (UBool)(code<=U_ZERO_ERROR); }
     /**
      * Does the error code indicate a failure?
-     * @stable ICU 2.0
+     * @stable
      */
     static
     inline UBool U_FAILURE(UErrorCode code) { return (UBool)(code>U_ZERO_ERROR); }
 #else
     /**
      * Does the error code indicate success?
-     * @stable ICU 2.0
+     * @stable
      */
 #   define U_SUCCESS(x) ((x)<=U_ZERO_ERROR)
     /**
      * Does the error code indicate a failure?
-     * @stable ICU 2.0
+     * @stable
      */
 #   define U_FAILURE(x) ((x)>U_ZERO_ERROR)
 #endif
@@ -692,10 +511,16 @@ typedef enum UErrorCode {
  * Return a string for a UErrorCode value.
  * The string will be the same as the name of the error code constant
  * in the UErrorCode enum above.
- * @stable ICU 2.0
  */
-U_STABLE const char * U_EXPORT2
+U_CAPI const char * U_EXPORT2
 u_errorName(UErrorCode code);
 
+
+
+/*===========================================================================*/
+/* Include header for platform utilies */
+/*===========================================================================*/
+
+#include "unicode/putil.h"
 
 #endif /* _UTYPES */

@@ -1,7 +1,5 @@
 //Microsoft Developer Studio generated resource script.
 //
-// Copyright (C) 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html#License
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -9,21 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-/*
-*******************************************************************************
-*
-*   Copyright (C) 2016 and later: Unicode, Inc. and others.
-*   License & terms of use: http://www.unicode.org/copyright.html#License
-*
-*******************************************************************************
-*******************************************************************************
-*
-*   Copyright (C) 2002-2003, International Business Machines
-*   Corporation and others.  All Rights Reserved.
-*
-*******************************************************************************
-*/
-#include <winresrc.h>
+#include "afxres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -42,7 +26,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Menu
 //
 
-LAYOUTSAMPLE MENU DISCARDABLE 
+LayoutSample MENU DISCARDABLE 
 BEGIN
     POPUP "&File"
     BEGIN
@@ -64,7 +48,7 @@ END
 // Accelerator
 //
 
-LAYOUTSAMPLE ACCELERATORS DISCARDABLE 
+LayoutSample ACCELERATORS DISCARDABLE 
 BEGIN
     "N",            IDM_FILE_NEWSAMPLE,     VIRTKEY, CONTROL, NOINVERT
     "O",            IDM_FILE_OPEN,          VIRTKEY, CONTROL, NOINVERT
@@ -86,15 +70,7 @@ END
 
 2 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "/*\r\n"
-    "*******************************************************************************\r\n"
-    "*\r\n"
-    "*   Copyright (C) 2002-2003, International Business Machines\r\n"
-    "*   Corporation and others.  All Rights Reserved.\r\n"
-    "*\r\n"
-    "*******************************************************************************\r\n"
-    "*/\r\n"
-    "#include <winresrc.h>\r\n"
+    "#include ""afxres.h""\r\n"
     "\0"
 END
 

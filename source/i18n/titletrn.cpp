@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 2001-2011, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -10,26 +8,44 @@
 **********************************************************************
 */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "unicode/uchar.h"
-#include "unicode/uniset.h"
-#include "unicode/ustring.h"
-#include "unicode/utf16.h"
 #include "titletrn.h"
-#include "umutex.h"
-#include "ucase.h"
+#include "unicode/uniset.h"
+#include "mutex.h"
+#include "ucln_in.h"
+#include "unicode/ustring.h"
+#include "ustr_imp.h"
 #include "cpputils.h"
 
 U_NAMESPACE_BEGIN
 
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(TitlecaseTransliterator)
+/**
+ * ID for this transliterator.
+ */
+const char TitlecaseTransliterator::_ID[] = "Any-Title";
 
-TitlecaseTransliterator::TitlecaseTransliterator() :
-    CaseMapTransliterator(UNICODE_STRING("Any-Title", 9), NULL)
-{
+/**
+ * Mutex for statics IN THIS FILE
+ */
+static UMTX MUTEX = 0;
+
+/**
+ * The set of characters we skip.  These are neither cased nor
+ * non-cased, to us; we copy them verbatim.
+ */
+static UnicodeSet* SKIP = NULL;
+
+/**
+ * The set of characters that cause the next non-SKIP character
+ * to be lowercased.
+ */
+static UnicodeSet* CASED = NULL;
+
+TitlecaseTransliterator::TitlecaseTransliterator(const Locale& theLoc) :
+    Transliterator(_ID, 0),
+    loc(theLoc), 
+    buffer(0) {
+    buffer = new UChar[u_getMaxCaseExpansion()];
     // Need to look back 2 characters in the case of "can't"
     setMaximumContextLength(2);
 }
@@ -38,24 +54,30 @@ TitlecaseTransliterator::TitlecaseTransliterator() :
  * Destructor.
  */
 TitlecaseTransliterator::~TitlecaseTransliterator() {
+    delete [] buffer;
 }
 
 /**
  * Copy constructor.
  */
 TitlecaseTransliterator::TitlecaseTransliterator(const TitlecaseTransliterator& o) :
-    CaseMapTransliterator(o)
-{
+    Transliterator(o),
+    loc(o.loc),
+    buffer(0) {
+    buffer = new UChar[u_getMaxCaseExpansion()];    
+    uprv_arrayCopy(o.buffer, 0, this->buffer, 0, u_getMaxCaseExpansion());
 }
 
 /**
  * Assignment operator.
  */
-/*TitlecaseTransliterator& TitlecaseTransliterator::operator=(
+TitlecaseTransliterator& TitlecaseTransliterator::operator=(
                              const TitlecaseTransliterator& o) {
-    CaseMapTransliterator::operator=(o);
+    Transliterator::operator=(o);
+    loc = o.loc;
+    uprv_arrayCopy(o.buffer, 0, this->buffer, 0, u_getMaxCaseExpansion());
     return *this;
-}*/
+}
 
 /**
  * Transliterator API.
@@ -69,102 +91,97 @@ Transliterator* TitlecaseTransliterator::clone(void) const {
  */
 void TitlecaseTransliterator::handleTransliterate(
                                   Replaceable& text, UTransPosition& offsets,
-                                  UBool isIncremental) const
-{
-    // TODO reimplement, see ustrcase.c
-    // using a real word break iterator
-    //   instead of just looking for a transition between cased and uncased characters
-    // call CaseMapTransliterator::handleTransliterate() for lowercasing? (set fMap)
-    // needs to take isIncremental into account because case mappings are context-sensitive
-    //   also detect when lowercasing function did not finish because of context
-
-    if (offsets.start >= offsets.limit) {
-        return;
+                                  UBool isIncremental) const {
+    if (SKIP == NULL) {
+        Mutex lock(&MUTEX);
+        if (SKIP == NULL) {
+            UErrorCode ec = U_ZERO_ERROR;
+            SKIP = new UnicodeSet(UNICODE_STRING_SIMPLE("[\\u00AD \\u2019 \\' [:Mn:] [:Me:] [:Cf:] [:Lm:] [:Sk:]]"), ec);
+            CASED = new UnicodeSet(UNICODE_STRING_SIMPLE("[[:Lu:] [:Ll:] [:Lt:]]"), ec);
+            ucln_i18n_registerCleanup();
+        }
     }
-
-    // case type: >0 cased (UCASE_LOWER etc.)  ==0 uncased  <0 case-ignorable
-    int32_t type;
 
     // Our mode; we are either converting letter toTitle or
     // toLower.
     UBool doTitle = TRUE;
     
-    // Determine if there is a preceding context of cased case-ignorable*,
+    // Determine if there is a preceding context of CASED SKIP*,
     // in which case we want to start in toLower mode.  If the
     // prior context is anything else (including empty) then start
     // in toTitle mode.
     UChar32 c;
     int32_t start;
-    for (start = offsets.start - 1; start >= offsets.contextStart; start -= U16_LENGTH(c)) {
+    for (start = offsets.start - 1; start >= offsets.contextStart; start -= UTF_CHAR_LENGTH(c)) {
         c = text.char32At(start);
-        type=ucase_getTypeOrIgnorable(c);
-        if(type>0) { // cased
-            doTitle=FALSE;
-            break;
-        } else if(type==0) { // uncased but not ignorable
-            break;
+        if (SKIP->contains(c)) {
+            continue;
         }
-        // else (type<0) case-ignorable: continue
+        doTitle = !CASED->contains(c);
+        break;
     }
     
-    // Convert things after a cased character toLower; things
-    // after an uncased, non-case-ignorable character toTitle.  Case-ignorable
+    // Convert things after a CASED character toLower; things
+    // after a non-CASED, non-SKIP character toTitle.  SKIP
     // characters are copied directly and do not change the mode.
-    UCaseContext csc;
-    uprv_memset(&csc, 0, sizeof(csc));
-    csc.p = &text;
-    csc.start = offsets.contextStart;
-    csc.limit = offsets.contextLimit;
+    int32_t textPos = offsets.start;
+    if (textPos >= offsets.limit) return;
 
-    UnicodeString tmp;
-    const UChar *s;
-    int32_t textPos, delta, result;
+    UnicodeString original;
+    text.extractBetween(offsets.contextStart, offsets.contextLimit, original);
 
-    for(textPos=offsets.start; textPos<offsets.limit;) {
-        csc.cpStart=textPos;
-        c=text.char32At(textPos);
-        csc.cpLimit=textPos+=U16_LENGTH(c);
+    UCharIterator iter;
+    uiter_setReplaceable(&iter, &text);
+    iter.start = offsets.contextStart;
+    iter.limit = offsets.contextLimit;
 
-        type=ucase_getTypeOrIgnorable(c);
-        if(type>=0) { // not case-ignorable
-            if(doTitle) {
-                result=ucase_toFullTitle(c, utrans_rep_caseContextIterator, &csc, &s, UCASE_LOC_ROOT);
+    // Walk through original string
+    // If there is a case change, modify corresponding position in replaceable
+
+    int32_t i = textPos - offsets.contextStart;
+    int32_t limit = offsets.limit - offsets.contextStart;
+    UChar32 cp;
+    int32_t oldLen;
+    int32_t newLen;
+
+    for (; i < limit; ) {
+        UTF_GET_CHAR(original.getBuffer(), 0, i, original.length(), cp);
+        oldLen = UTF_CHAR_LENGTH(cp);
+        i += oldLen;
+        iter.index = i; // Point _past_ current char
+        if (!SKIP->contains(cp)) {
+            if (doTitle) {
+                newLen = u_internalToTitle(cp, &iter, buffer, u_getMaxCaseExpansion(), loc.getName());
             } else {
-                result=ucase_toFullLower(c, utrans_rep_caseContextIterator, &csc, &s, UCASE_LOC_ROOT);
+                newLen = u_internalToLower(cp, &iter, buffer, u_getMaxCaseExpansion(), loc.getName());
             }
-            doTitle = (UBool)(type==0); // doTitle=isUncased
-
-            if(csc.b1 && isIncremental) {
-                // fMap() tried to look beyond the context limit
-                // wait for more input
-                offsets.start=csc.cpStart;
-                return;
-            }
-
-            if(result>=0) {
-                // replace the current code point with its full case mapping result
-                // see UCASE_MAX_STRING_LENGTH
-                if(result<=UCASE_MAX_STRING_LENGTH) {
-                    // string s[result]
-                    tmp.setTo(FALSE, s, result);
-                    delta=result-U16_LENGTH(c);
-                } else {
-                    // single code point
-                    tmp.setTo(result);
-                    delta=tmp.length()-U16_LENGTH(c);
-                }
-                text.handleReplaceBetween(csc.cpStart, textPos, tmp);
-                if(delta!=0) {
-                    textPos+=delta;
-                    csc.limit=offsets.contextLimit+=delta;
-                    offsets.limit+=delta;
+            doTitle = !CASED->contains(cp);
+            if (newLen >= 0) {
+                UnicodeString temp(buffer, newLen);
+                text.handleReplaceBetween(textPos, textPos + oldLen, temp);
+                if (newLen != oldLen) {
+                    textPos += newLen;
+                    offsets.limit += newLen - oldLen;
+                    offsets.contextLimit += newLen - oldLen;
+                    continue;
                 }
             }
         }
+        textPos += oldLen;
     }
-    offsets.start=textPos;
+    offsets.start = offsets.limit;
+}
+
+/**
+ * Static memory cleanup function.
+ */
+void TitlecaseTransliterator::cleanup() {
+    if (SKIP != NULL) {
+        delete SKIP; SKIP = NULL;
+        delete CASED; CASED = NULL;
+        umtx_destroy(&MUTEX);
+    }
 }
 
 U_NAMESPACE_END
 
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */

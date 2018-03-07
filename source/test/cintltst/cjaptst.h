@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2001, International Business Machines Corporation and
@@ -26,9 +24,6 @@
 #ifndef _CJACOLLTST
 #define _CJACOLLTST
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "cintltst.h"
 
@@ -59,7 +54,5 @@ static void TestKatakanaHiragana(void);
 * Test Choo-on kigoo
 */
 static void TestChooonKigoo(void);
-
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

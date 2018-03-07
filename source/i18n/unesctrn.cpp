@@ -1,25 +1,17 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
- **********************************************************************
- *   Copyright (c) 2001-2011, International Business Machines
- *   Corporation and others.  All Rights Reserved.
- **********************************************************************
- *   Date        Name        Description
- *   11/19/2001  aliu        Creation.
- **********************************************************************
- */
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
-#include "unicode/uchar.h"
-#include "unicode/utf16.h"
-#include "unesctrn.h"
-#include "util.h"
+**********************************************************************
+*   Copyright (c) 2001, International Business Machines
+*   Corporation and others.  All Rights Reserved.
+**********************************************************************
+*   Date        Name        Description
+*   11/19/2001  aliu        Creation.
+**********************************************************************
+*/
 
 #include "cmemory.h"
+#include "unesctrn.h"
+#include "util.h"
+#include "unicode/uchar.h"
 
 U_NAMESPACE_BEGIN
 
@@ -76,44 +68,28 @@ static const UChar SPEC_Any[] = {
     END
 };
 
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(UnescapeTransliterator)
-
-static UChar* copySpec(const UChar* spec) {
-    int32_t len = 0;
-    while (spec[len] != END) {
-        ++len;
-    }
-    ++len;
-    UChar *result = (UChar *)uprv_malloc(len*sizeof(UChar));
-    // Check for memory allocation error. 
-    if (result != NULL) {
-    	uprv_memcpy(result, spec, (size_t)len*sizeof(result[0]));
-    }
-    return result;
-}
-
 /**
  * Factory methods.  Ignore the context.
  */
-static Transliterator* _createUnicode(const UnicodeString& ID, Transliterator::Token /*context*/) {
+Transliterator* UnescapeTransliterator::_createUnicode(const UnicodeString& ID, Token /*context*/) {
     return new UnescapeTransliterator(ID, SPEC_Unicode);
 }
-static Transliterator* _createJava(const UnicodeString& ID, Transliterator::Token /*context*/) {
+Transliterator* UnescapeTransliterator::_createJava(const UnicodeString& ID, Token /*context*/) {
     return new UnescapeTransliterator(ID, SPEC_Java);
 }
-static Transliterator* _createC(const UnicodeString& ID, Transliterator::Token /*context*/) {
+Transliterator* UnescapeTransliterator::_createC(const UnicodeString& ID, Token /*context*/) {
     return new UnescapeTransliterator(ID, SPEC_C);
 }
-static Transliterator* _createXML(const UnicodeString& ID, Transliterator::Token /*context*/) {
+Transliterator* UnescapeTransliterator::_createXML(const UnicodeString& ID, Token /*context*/) {
     return new UnescapeTransliterator(ID, SPEC_XML);
 }
-static Transliterator* _createXML10(const UnicodeString& ID, Transliterator::Token /*context*/) {
+Transliterator* UnescapeTransliterator::_createXML10(const UnicodeString& ID, Token /*context*/) {
     return new UnescapeTransliterator(ID, SPEC_XML10);
 }
-static Transliterator* _createPerl(const UnicodeString& ID, Transliterator::Token /*context*/) {
+Transliterator* UnescapeTransliterator::_createPerl(const UnicodeString& ID, Token /*context*/) {
     return new UnescapeTransliterator(ID, SPEC_Perl);
 }
-static Transliterator* _createAny(const UnicodeString& ID, Transliterator::Token /*context*/) {
+Transliterator* UnescapeTransliterator::_createAny(const UnicodeString& ID, Token /*context*/) {
     return new UnescapeTransliterator(ID, SPEC_Any);
 }
 
@@ -124,19 +100,19 @@ static Transliterator* _createAny(const UnicodeString& ID, Transliterator::Token
 void UnescapeTransliterator::registerIDs() {
     Token t = integerToken(0);
 
-    Transliterator::_registerFactory(UNICODE_STRING_SIMPLE("Hex-Any/Unicode"), _createUnicode, t);
+    Transliterator::_registerFactory("Hex-Any/Unicode", _createUnicode, t);
 
-    Transliterator::_registerFactory(UNICODE_STRING_SIMPLE("Hex-Any/Java"), _createJava, t);
+    Transliterator::_registerFactory("Hex-Any/Java", _createJava, t);
 
-    Transliterator::_registerFactory(UNICODE_STRING_SIMPLE("Hex-Any/C"), _createC, t);
+    Transliterator::_registerFactory("Hex-Any/C", _createC, t);
 
-    Transliterator::_registerFactory(UNICODE_STRING_SIMPLE("Hex-Any/XML"), _createXML, t);
+    Transliterator::_registerFactory("Hex-Any/XML", _createXML, t);
 
-    Transliterator::_registerFactory(UNICODE_STRING_SIMPLE("Hex-Any/XML10"), _createXML10, t);
+    Transliterator::_registerFactory("Hex-Any/XML10", _createXML10, t);
 
-    Transliterator::_registerFactory(UNICODE_STRING_SIMPLE("Hex-Any/Perl"), _createPerl, t);
+    Transliterator::_registerFactory("Hex-Any/Perl", _createPerl, t);
 
-    Transliterator::_registerFactory(UNICODE_STRING_SIMPLE("Hex-Any"), _createAny, t);
+    Transliterator::_registerFactory("Hex-Any", _createAny, t);
 }
 
 /**
@@ -158,7 +134,7 @@ UnescapeTransliterator::UnescapeTransliterator(const UnescapeTransliterator& o) 
 }
 
 UnescapeTransliterator::~UnescapeTransliterator() {
-    uprv_free(spec);
+    delete spec;
 }
 
 /**
@@ -166,6 +142,17 @@ UnescapeTransliterator::~UnescapeTransliterator() {
  */
 Transliterator* UnescapeTransliterator::clone() const {
     return new UnescapeTransliterator(*this);
+}
+
+UChar* UnescapeTransliterator::copySpec(const UChar* spec) {
+    int32_t len = 0;
+    while (spec[len] != END) {
+        ++len;
+    }
+    ++len;
+    UChar *result = new UChar[len];
+    uprv_memcpy(result, spec, len*sizeof(result[0]));
+    return result;
 }
 
 /**
@@ -232,7 +219,7 @@ void UnescapeTransliterator::handleTransliterate(Replaceable& text, UTransPositi
                     if (digit < 0) {
                         break;
                     }
-                    s += U16_LENGTH(ch);
+                    s += UTF_CHAR_LENGTH(ch);
                     u = (u * radix) + digit;
                     if (++digitCount == maxDigits) {
                         break;
@@ -276,7 +263,7 @@ void UnescapeTransliterator::handleTransliterate(Replaceable& text, UTransPositi
         }
 
         if (start < limit) {
-            start += U16_LENGTH(text.char32At(start));
+            start += UTF_CHAR_LENGTH(text.char32At(start));
         }
     }
 
@@ -287,7 +274,5 @@ void UnescapeTransliterator::handleTransliterate(Replaceable& text, UTransPositi
 }
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 //eof

@@ -1,25 +1,27 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***************************************************************************
-*
-*   Copyright (C) 2000-2016, International Business Machines
-*   Corporation and others.  All Rights Reserved.
-*
+/*
+*****************************************************************************************
+*                                                                                       *
+* COPYRIGHT:                                                                            *
+*   (C) Copyright International Business Machines Corporation,  2001                    *
+*   Licensed Material - Program-Property of IBM - All Rights Reserved.                  *
+*   US Government Users Restricted Rights - Use, duplication, or disclosure             *
+*   restricted by GSA ADP Schedule Contract with IBM Corp.                              *
+*                                                                                       *
+*****************************************************************************************
 ************************************************************************
 *   Date        Name        Description
 *   03/09/2000   Madhu        Creation.
 ************************************************************************/
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
+#include "ittrans.h"
 #include "cpdtrtst.h"
 #include "unicode/utypes.h"
 #include "unicode/translit.h"
-#include "unicode/uniset.h"
-#include "cpdtrans.h"
+#include "unicode/cpdtrans.h"
+#include "intltest.h"
 #include "cmemory.h"
+#include <string.h>
+#include <stdio.h>
 
 //---------------------------------------------
 // runIndexedTest
@@ -48,7 +50,7 @@ void CompoundTransliteratorTest::TestConstruction(){
    Transliterator* t3=Transliterator::createInstance(names[2], UTRANS_FORWARD, parseError, status);
    Transliterator* t4=Transliterator::createInstance(names[3], UTRANS_FORWARD, parseError, status);
    if(U_FAILURE(status)){
-       dataerrln("Transliterator construction failed - %s", u_errorName(status));
+       errln("Transliterator construction failed");
        return;
    }
 
@@ -119,7 +121,7 @@ void CompoundTransliteratorTest::TestCloneEqual(){
     UParseError parseError;
     CompoundTransliterator  *ct1=new CompoundTransliterator("Greek-Latin;Latin-Devanagari",parseError,status);
     if(U_FAILURE(status)){
-        dataerrln("construction failed - %s", u_errorName(status));
+        errln("construction failed");
         delete ct1;
         return;
     }
@@ -195,17 +197,12 @@ void CompoundTransliteratorTest::TestGetCount(){
     CompoundTransliterator *ct1=new CompoundTransliterator("Halfwidth-Fullwidth;Fullwidth-Halfwidth", parseError, status);
     CompoundTransliterator *ct2=new CompoundTransliterator("Any-Hex;Hex-Any;Cyrillic-Latin;Latin-Cyrillic", parseError, status);
     CompoundTransliterator *ct3=(CompoundTransliterator*)ct1;
-    if (U_FAILURE(status)) {
-        dataerrln("FAILED: CompoundTransliterator constructor failed - %s", u_errorName(status));
-        return;
-    }
     CompoundTransliterator *ct4=new CompoundTransliterator("Latin-Devanagari", parseError, status);
     CompoundTransliterator *ct5=new CompoundTransliterator(*ct4);
 
     if (U_FAILURE(status)) {
         errln("FAILED: CompoundTransliterator constructor failed");
-        return;
-    }
+    } else
     if(ct1->getCount() == ct2->getCount() || ct1->getCount() != ct3->getCount() || 
         ct2->getCount() == ct3->getCount() || 
         ct4->getCount() != ct5->getCount() || ct4->getCount() == ct1->getCount() ||
@@ -213,23 +210,6 @@ void CompoundTransliteratorTest::TestGetCount(){
         ct5->getCount() == ct2->getCount() || ct5->getCount() == ct3->getCount()  ) {
         errln("Error: getCount() failed");
     }
-
-    /* Quick test getTargetSet(), only test that it doesn't die.  TODO:  a better test. */
-    UnicodeSet ts;
-    UnicodeSet *retUS = NULL;
-    retUS = &ct1->getTargetSet(ts);
-    if (retUS != &ts || ts.size() == 0) {
-        errln("CompoundTransliterator::getTargetSet() failed.\n");
-    }
-
-    /* Quick test getSourceSet(), only test that it doesn't die.  TODO:  a better test. */
-    UnicodeSet ss;
-    retUS = NULL;
-    retUS = &ct1->getSourceSet(ss);
-    if (retUS != &ss || ss.size() == 0) {
-        errln("CompoundTransliterator::getSourceSet() failed.\n");
-    }
-
     delete ct1;
     delete ct2;
     delete ct4;
@@ -243,7 +223,7 @@ void CompoundTransliteratorTest::TestGetSetAdoptTransliterator(){
     UParseError parseError;
     CompoundTransliterator *ct1=new CompoundTransliterator(ID, parseError, status);
     if(U_FAILURE(status)){
-        dataerrln("CompoundTransliterator construction failed - %s", u_errorName(status));
+        errln("CompoundTransliterator construction failed");
         return;
     }
     int32_t count=ct1->getCount();
@@ -297,7 +277,7 @@ void CompoundTransliteratorTest::TestGetSetAdoptTransliterator(){
     }*/
     logln("Testing adoptTransliterator() API of CompoundTransliterator");
     UnicodeString ID3("Latin-Katakana");
-    Transliterator **transarray2=(Transliterator **)uprv_malloc(sizeof(Transliterator*)*1);
+    Transliterator **transarray2=new Transliterator*[1];
     transarray2[0] = Transliterator::createInstance(ID3,UTRANS_FORWARD,parseError,status);
     if (transarray2[0] != 0) {
         ct1->adoptTransliterators(transarray2, 1);
@@ -351,9 +331,6 @@ void CompoundTransliteratorTest::TestTransliterate(){
     if(U_FAILURE(status)){
         errln("CompoundTransliterator construction failed");
     }else {
-#if 0
-    // handleTransliterate is a protected method that was erroneously made
-    // public.  It is not public API that needs to be tested.
         UnicodeString s("abcabc");
         expect(*ct1, s, s);
         UTransPosition index = { 0, 0, 0, 0 };
@@ -366,7 +343,7 @@ void CompoundTransliteratorTest::TestTransliterate(){
         UnicodeString rsource3(s);
         ct1->handleTransliterate(rsource3, index, TRUE); 
         expectAux(ct1->getID() + ":String, index(1,2,3), incremental=TRUE", rsource3 + "->" + rsource3, rsource3==expectedResult, expectedResult);
-#endif
+
     }
     delete ct1;
     UnicodeString Data[]={
@@ -387,12 +364,12 @@ void CompoundTransliteratorTest::TestTransliterate(){
                                                                  CharsToUnicodeString("vavivuvevohuzizuzonyinyunyasesuzezu"),  
     };
     uint32_t i;
-    for(i=0; i<UPRV_LENGTHOF(Data); i=i+3){
+    for(i=0; i<sizeof(Data)/sizeof(Data[0]); i=i+3){
         UErrorCode status = U_ZERO_ERROR;
 
         CompoundTransliterator *ct2=new CompoundTransliterator(Data[i+0], parseError, status);
         if(U_FAILURE(status)){
-            dataerrln("CompoundTransliterator construction failed for " + Data[i+0] + " - " + u_errorName(status));
+            errln("CompoundTransliterator construction failed for " + Data[i+0]);
         } else {
             expect(*ct2, Data[i+1], Data[i+2]);
         }
@@ -414,7 +391,7 @@ void CompoundTransliteratorTest::expect(const CompoundTransliterator& t,
     t.transliterate(rsource);
     expectAux(t.getID() + ":Replaceable", source + "->" + rsource, rsource==expectedResult, expectedResult);
 
-    // Test transliterate (incremental) transliteration -- 
+    // Test handleTransliterate (incremental) transliteration -- 
     rsource.remove();
     rsource.append(source);
     UTransPosition index;
@@ -422,8 +399,7 @@ void CompoundTransliteratorTest::expect(const CompoundTransliterator& t,
     index.contextLimit = source.length();
     index.start = 0;
     index.limit = source.length();
-    UErrorCode ec = U_ZERO_ERROR;
-    t.transliterate(rsource, index, ec);
+    t.handleTransliterate(rsource, index, TRUE);
     t.finishTransliteration(rsource,index);
     expectAux(t.getID() + ":handleTransliterate ", source + "->" + rsource, rsource==expectedResult, expectedResult);
 
@@ -441,4 +417,3 @@ void CompoundTransliteratorTest::expectAux(const UnicodeString& tag,
     }
 }
 
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */

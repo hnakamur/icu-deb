@@ -1,14 +1,8 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "unicode/coll.h"
 #include "unicode/tblcoll.h"
@@ -16,9 +10,9 @@
 #include "unicode/sortkey.h"
 #include "g7coll.h"
 #include "sfwdchit.h"
-#include "cmemory.h"
 
-static const UChar testCases[][G7CollationTest::MAX_TOKEN_LEN] = {
+
+const UChar G7CollationTest::testCases[][G7CollationTest::MAX_TOKEN_LEN] = {
     {  0x0062 /*'b'*/, 0x006c /*'l'*/, 0x0061 /*'a'*/, 0x0062 /*'c'*/, 0x006b /*'k'*/, 
         0x0062 /*'b'*/, 0x0069 /*'i'*/, 0x0072 /*'r'*/, 0x0064 /*'d'*/, 0x0073 /*'s'*/, 0x0000},                    /* 9 */
     { 0x0050 /*'P'*/, 0x0061 /*'a'*/, 0x0074/*'t'*/, 0x0000},                                                    /* 1 */
@@ -58,11 +52,11 @@ static const UChar testCases[][G7CollationTest::MAX_TOKEN_LEN] = {
     { 0x007a /*'z'*/, 0x0065  /*'e'*/, 0x0062 /*'b'*/, 0x0072 /*'r'*/, 0x0061 /*'a'*/, 0x0000}                    /* 29 */
 };
 
-static const int32_t results[G7CollationTest::TESTLOCALES][G7CollationTest::TOTALTESTSET] = {
+const int32_t G7CollationTest::results[G7CollationTest::TESTLOCALES][G7CollationTest::TOTALTESTSET] = {
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* en_US */
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* en_GB */
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* en_CA */
-    { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* fr_FR */
+    { 12, 13, 9, 0, 14, 1, 11, 3, 2, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* fr_FR */
     { 12, 13, 9, 0, 14, 1, 11, 3, 2, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* fr_CA */
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* de_DE */
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* it_IT */
@@ -77,7 +71,21 @@ static const int32_t results[G7CollationTest::TESTLOCALES][G7CollationTest::TOTA
     { 19, 22, 21, 24, 23, 25, 12, 13, 9, 0, 17, 16, 28, 26, 27, 15, 18, 14, 1, 11, 2, 3, 4, 5, 20, 6, 8, 10, 7, 29 }
 };
 
-G7CollationTest::~G7CollationTest() {}
+
+void G7CollationTest::doTest( Collator* myCollation, UnicodeString source, UnicodeString target, Collator::EComparisonResult result)
+{
+    Collator::EComparisonResult compareResult = myCollation->compare(source, target);
+    CollationKey sortKey1, sortKey2;
+    UErrorCode key1status = U_ZERO_ERROR, key2status = U_ZERO_ERROR; //nos
+    myCollation->getCollationKey(source, /*nos*/ sortKey1, key1status );
+    myCollation->getCollationKey(target, /*nos*/ sortKey2, key2status );
+    if (U_FAILURE(key1status) || U_FAILURE(key2status)) {
+        errln("SortKey generation Failed.\n");
+        return;
+    }
+    Collator::EComparisonResult keyResult = sortKey1.compareTo(sortKey2);
+    reportCResult( source, target, sortKey1, sortKey2, compareResult, keyResult, compareResult, result );
+}
 
 void G7CollationTest::TestG7Locales(/* char* par */)
 {
@@ -93,39 +101,42 @@ void G7CollationTest::TestG7Locales(/* char* par */)
         Locale("ja", "JP", "")
     };
 
-    for (i = 0; i < UPRV_LENGTHOF(locales); i++)
+
+    for (i = 0; i < 8; i++)
     {
+        Collator *myCollation= 0;
         UnicodeString dispName;
         UErrorCode status = U_ZERO_ERROR;
+        RuleBasedCollator* tblColl1 = 0;
 
-        const Locale &locale = locales[i];
-        LocalPointer<Collator> myCollation(Collator::createInstance(locale, status));
-        if(U_FAILURE(status)) {
-          errcheckln(status, "Couldn't instantiate collator. Error: %s", u_errorName(status));
-          return;
-        }
+        myCollation = Collator::createInstance(locales[i], status);
         myCollation->setStrength(Collator::QUATERNARY);
         myCollation->setAttribute(UCOL_ALTERNATE_HANDLING, UCOL_SHIFTED, status);
-        if (U_FAILURE(status)) {
-            errln("Locale %s creation failed - %s", locale.getName(), u_errorName(status));
+        if (U_FAILURE(status))
+        {
+            UnicodeString msg;
+
+            msg += "Locale ";
+            msg += locales[i].getDisplayName(dispName);
+            msg += "creation failed.";
+
+            errln(msg);
             continue;
         }
 
-        const UnicodeString &rules = ((RuleBasedCollator*)myCollation.getAlias())->getRules();
-        if (rules.isEmpty() &&
-                (locale == Locale::getCanadaFrench() || locale == Locale::getJapanese())) {
-            dataerrln("%s Collator missing rule string", locale.getName());
-            if (logKnownIssue("10671", "TestG7Locales does not test ignore-punctuation")) {
-                continue;
-            }
-        } else {
-            status = U_ZERO_ERROR;
-            RuleBasedCollator *tblColl1 = new RuleBasedCollator(rules, status);
-            if (U_FAILURE(status)) {
-                errln("Recreate %s collation failed - %s", locale.getName(), u_errorName(status));
-                continue;
-            }
-            myCollation.adoptInstead(tblColl1);
+//        const UnicodeString& defRules = ((RuleBasedCollator*)myCollation)->getRules();
+        status = U_ZERO_ERROR;
+        tblColl1 = new RuleBasedCollator(((RuleBasedCollator*)myCollation)->getRules(), status);
+        if (U_FAILURE(status))
+        {
+            UnicodeString msg, name;
+
+            msg += "Recreate ";
+            msg += locales[i].getDisplayName(name);
+            msg += "collation failed.";
+
+            errln(msg);
+            continue;
         }
 
         UnicodeString msg;
@@ -140,9 +151,12 @@ void G7CollationTest::TestG7Locales(/* char* par */)
         {
             for (n = j+1; n < FIXEDTESTSET; n++)
             {
-                doTest(myCollation.getAlias(), testCases[results[i][j]], testCases[results[i][n]], Collator::LESS);
+                doTest(tblColl1, testCases[results[i][j]], testCases[results[i][n]], Collator::LESS);
             }
         }
+
+        delete myCollation;
+        delete tblColl1;
     }
 }
 
@@ -151,11 +165,6 @@ void G7CollationTest::TestDemo1(/* char* par */)
     logln("Demo Test 1 : Create a new table collation with rules \"& Z < p, P\"");
     UErrorCode status = U_ZERO_ERROR;
     Collator *col = Collator::createInstance("en_US", status);
-    if(U_FAILURE(status)) {
-      delete col;
-      errcheckln(status, "Couldn't instantiate collator. Error: %s", u_errorName(status));
-      return;
-    }
     const UnicodeString baseRules = ((RuleBasedCollator*)col)->getRules();
     UnicodeString newRules(" & Z < p, P");
     newRules.insert(0, baseRules);
@@ -185,11 +194,6 @@ void G7CollationTest::TestDemo2(/* char* par */)
     logln("Demo Test 2 : Create a new table collation with rules \"& C < ch , cH, Ch, CH\"");
     UErrorCode status = U_ZERO_ERROR;
     Collator *col = Collator::createInstance("en_US", status);
-    if(U_FAILURE(status)) {
-      delete col;
-      errcheckln(status, "Couldn't instantiate collator. Error: %s", u_errorName(status));
-      return;
-    }
     const UnicodeString baseRules = ((RuleBasedCollator*)col)->getRules();
     UnicodeString newRules("& C < ch , cH, Ch, CH");
     newRules.insert(0, baseRules);
@@ -219,11 +223,6 @@ void G7CollationTest::TestDemo3(/* char* par */)
     logln("Demo Test 3 : Create a new table collation with rules \"& Question'-'mark ; '?' & Hash'-'mark ; '#' & Ampersand ; '&'\"");
     UErrorCode status = U_ZERO_ERROR;
     Collator *col = Collator::createInstance("en_US", status);
-    if(U_FAILURE(status)) {
-      errcheckln(status, "Couldn't instantiate collator. Error: %s", u_errorName(status));
-      delete col;
-      return;
-    }
     const UnicodeString baseRules = ((RuleBasedCollator*)col)->getRules();
     UnicodeString newRules = "& Question'-'mark ; '?' & Hash'-'mark ; '#' & Ampersand ; '&'";
     newRules.insert(0, baseRules);
@@ -253,16 +252,16 @@ void G7CollationTest::TestDemo4(/* char* par */)
     logln("Demo Test 4 : Create a new table collation with rules \" & aa ; a'-' & ee ; e'-' & ii ; i'-' & oo ; o'-' & uu ; u'-' \"");
     UErrorCode status = U_ZERO_ERROR;
     Collator *col = Collator::createInstance("en_US", status);
-    if(U_FAILURE(status)) {
-      delete col;
-      errcheckln(status, "Couldn't instantiate collator. Error: %s", u_errorName(status));
-      return;
-    }
-
     const UnicodeString baseRules = ((RuleBasedCollator*)col)->getRules();
     UnicodeString newRules = " & aa ; a'-' & ee ; e'-' & ii ; i'-' & oo ; o'-' & uu ; u'-' ";
     newRules.insert(0, baseRules);
     RuleBasedCollator *myCollation = new RuleBasedCollator(newRules, status);
+
+    if (U_FAILURE(status))
+    {
+        errln( "Demo Test 4 Table Collation object creation failed." );
+        return;
+    }
 
     int32_t j, n;
     for (j = 0; j < TOTALTESTSET; j++)
@@ -290,4 +289,4 @@ void G7CollationTest::runIndexedTest( int32_t index, UBool exec, const char* &na
     }
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */
+

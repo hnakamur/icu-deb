@@ -1,9 +1,9 @@
 ## -*-makefile-*-
-## Copyright (C) 2016 and later: Unicode, Inc. and others.
-## License & terms of use: http://www.unicode.org/copyright.html
 ## Linux-specific setup
-## Copyright (c) 1999-2009, International Business Machines Corporation and
+## Copyright (c) 1999-2000, International Business Machines Corporation and
 ## others. All Rights Reserved.
+##
+## $Id: mh-alpha-linux-gcc,v 1.5 2002/01/04 23:48:42 yves-oss Exp $
 
 ## Commands to generate dependency files
 GEN_DEPS.c=	$(CC) -E -MM $(DEFS) $(CPPFLAGS)
@@ -15,23 +15,23 @@ SHAREDLIBCXXFLAGS = -fPIC
 SHAREDLIBCPPFLAGS = -DPIC
 
 ## Additional flags when building libraries and with threads
+LIBCPPFLAGS = -D_REENTRANT
 THREADSCPPFLAGS = -D_REENTRANT
-LIBCPPFLAGS =
 
-# The tests need complete IEEE floating point support
-CFLAGS += -mieee
-CXXFLAGS += -mieee
+## Commands to compile
+COMPILE.c=	$(CC) $(DEFS) $(CPPFLAGS) $(CFLAGS) -c -mieee
+COMPILE.cc=	$(CXX) $(DEFS) $(CPPFLAGS) $(CXXFLAGS) -c -mieee
+
+## Commands to make a shared library
+SHLIB.c=	$(CC) $(DEFS) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -shared
+SHLIB.cc=	$(CXX) $(DEFS) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -shared
 
 ## Compiler switch to embed a runtime search path
 LD_RPATH=	
 LD_RPATH_PRE=	-Wl,-rpath,
 
 ## Compiler switch to embed a library name
-LD_SONAME = -Wl,-soname -Wl,$(notdir $(MIDDLE_SO_TARGET))
-
-
-## Shared library options
-LD_SOOPTIONS= -Wl,-Bsymbolic
+LD_SONAME = -Wl,-soname -Wl,$(MIDDLE_SO_TARGET)
 
 ## Shared object suffix
 SO = so
@@ -49,6 +49,8 @@ STATIC_O = ao
 %.o: $(srcdir)/%.cpp
 	$(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS) -o $@ $<
 
+../data/%.o: ../data/%.c
+	$(COMPILE.c) $(DYNAMICCPPFLAGS) $(DYNAMICCFLAGS) -o $@ $<
 
 ## Dependency rules
 %.d: $(srcdir)/%.c
@@ -66,17 +68,17 @@ STATIC_O = ao
 ## Versioned libraries rules
 
 %.$(SO).$(SO_TARGET_VERSION_MAJOR): %.$(SO).$(SO_TARGET_VERSION)
-	$(RM) $@ && ln -s ${<F} $@
+	$(RM) $@ && ln -s $< $@
 %.$(SO): %.$(SO).$(SO_TARGET_VERSION_MAJOR)
-	$(RM) $@ && ln -s ${*F}.$(SO).$(SO_TARGET_VERSION) $@
-
-# The type of assembly to write for generating an object file
-GENCCODE_ASSEMBLY=-a gcc
+	$(RM) $@ && ln -s $*.$(SO).$(SO_TARGET_VERSION) $@
 
 ##  Bind internal references
 
 # LDflags that pkgdata will use
 BIR_LDFLAGS= -Wl,-Bsymbolic
+
+# CPPflags for genccode/gencmn
+BIR_CPPFLAGS= -DU_HAVE_BIND_INTERNAL_REFERENCES
 
 # Dependencies [i.e. map files] for the final library
 BIR_DEPS=

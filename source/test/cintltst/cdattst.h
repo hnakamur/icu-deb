@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -18,18 +16,12 @@
 #ifndef _CDATFRMTST
 #define _CDATFRMTST
 
-#include "unicode/utypes.h"
-#include "unicode/udat.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "cintltst.h"
 
     /**
-     * The functions used to test the Date format API
+     * The function used to test the Date format API
      **/
     static void TestDateFormat(void);
-    static void TestRelativeDateFormat(void);
 
     /**
      * The function used to test API  udat_getSymbols(), udat_setSymbols() and udat_countSymbols()
@@ -52,14 +44,5 @@
      * test subroutine used by the testing functions
      **/
     static UChar* myNumformat(const UNumberFormat* numfor, double d);
-    static int getCurrentYear(void);
-
-    /**
-     * Test DateFormat override number format API
-     */
-     static void TestOverrideNumberFormat(void);
-
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif

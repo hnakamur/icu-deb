@@ -1,7 +1,3 @@
-Copyright (C) 2016 and later: Unicode, Inc. and others.
-License & terms of use: http://www.unicode.org/copyright.html#License
-
-Copyright (c) 2002-2005, International Business Machines Corporation and others. All Rights Reserved.
 props: Unicode Character Properties
 
 This sample demonstrates
@@ -10,12 +6,12 @@ This sample demonstrates
          
 Files:
     props.cpp      Main source file in C++
-    props.sln      Windows MSVC workspace.  Double-click this to get started.
-    props.vcproj   Windows MSVC project file
+    props.dsw      Windows MSVC workspace.  Double-click this to get started.
+    props.dsp      Windows MSVC project file
 
 To Build props on Windows
     1.  Install and build ICU
-    2.  In MSVC, open the workspace file icu\samples\props\props.sln
+    2.  In MSVC, open the workspace file icu\samples\props\props.dsw
     3.  Choose a Debug or Release build.
     4.  Build.
 	

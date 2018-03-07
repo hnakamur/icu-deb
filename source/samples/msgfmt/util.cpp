@@ -1,13 +1,3 @@
-/**********************************************************************
- * © 2016 and later: Unicode, Inc. and others.
- * License & terms of use: http://www.unicode.org/copyright.html#License
- ***********************************************************************
- ***********************************************************************
- * COPYRIGHT:
- * Copyright (c) 1999-2010, International Business Machines Corporation and
- * others. All Rights Reserved.
- ***********************************************************************/
-
 #include "unicode/unistr.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,5 +53,5 @@ void uprintf(const UnicodeString &str) {
     actualLen = str.extract(0, len, buf/*, bufLen*/); // Default codepage conversion
     buf[actualLen] = 0;
     printf("%s", buf);
-    delete [] buf;
+    delete buf;
 }

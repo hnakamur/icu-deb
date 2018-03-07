@@ -2,13 +2,11 @@
 .\"
 .\" uconv.1: manual page for the uconv utility.
 .\"
-.\" Copyright (C) 2016 and later: Unicode, Inc. and others.
-.\" License & terms of use: http://www.unicode.org/copyright.html
-.\" Copyright (C) 2000-2013 IBM, Inc. and others.
+.\" Copyright (C) 2000-2001 IBM, Inc. and others.
 .\"
 .\" Manual page by Yves Arrouye <yves@realnames.com>.
 .\"
-.TH UCONV 1 "2005-jul-1" "ICU MANPAGE" "ICU @VERSION@ Manual"
+.TH UCONV 1 "16 February 2002" "ICU MANPAGE" "ICU @VERSION@ Manual"
 .SH NAME
 .B uconv
 \- convert data from one encoding to another
@@ -69,16 +67,10 @@
 .BI "\-t\fP, \fB\-\-to\-code" " encoding"
 ]
 [
-.BI "\-\-add\-signature"
-]
-[
-.BI "\-\-remove\-signature"
+.IR file .\|.\|.
 ]
 [
 .BI "\-o\fP, \fB\-\-output" " file"
-]
-[
-.IR file .\|.\|.
 ]
 .SH DESCRIPTION
 .B uconv
@@ -109,7 +101,7 @@ When calling
 it is possible to specify callbacks that are used to handle invalid
 characters in the input, or characters that cannot be transcoded to
 the destination encoding. Some encodings, for example, offer a default
-substitution character that can be used to represent the occurrence of
+substitution character that can be used to represent the occurence of
 such characters in the input. Other callbacks offer a useful visual
 representation of the invalid data.
 .PP
@@ -122,14 +114,14 @@ after the data have been transcoded to Unicode.
 The
 .I transliteration
 can be either a list of semicolon-separated transliterator names,
-or an arbitrarily complex set of rules in the ICU transliteration
+or an arbitrary complex set of rules in the ICU transliteration
 rules format.
 .PP
 For transcoding purposes,
 .B uconv
 options are compatible with those of
 .BR iconv (1),
-making it easy to replace it in scripts. It is not necessarily the case,
+making it easy to replace it in scripts. It is not necessary the case,
 however, that the encoding names used by
 .B uconv
 and ICU are the same as the ones used by
@@ -188,7 +180,7 @@ Run the given
 .IR transliteration
 on the transcoded Unicode data,
 and use the transliterated data as input for the transcoding to
-the destination encoding.
+the the destination encoding.
 .TP
 .BI "\-\-to\-callback" " callback"
 Use
@@ -248,13 +240,6 @@ Set the original encoding of the data to
 Transcode the data to
 .IR encoding .
 .TP
-.BI "\-\-add\-signature"
-Add a U+FEFF Unicode signature character (BOM) if the output charset
-supports it and does not add one anyway.
-.TP
-.BI "\-\-remove\-signature"
-Remove a U+FEFF Unicode signature character (BOM).
-.TP
 .BI "\-o\fP, \fB\-\-output" " file"
 Write the transcoded data to
 .IR file .
@@ -270,7 +255,7 @@ option.
 .PP
 The following is a list of valid
 .I callback
-names, along with a description of their behavior. The list of
+names, alonmg with a description of their behavior. The list of
 callbacks actually supported by
 .B uconv
 is displayed when it is called with
@@ -278,7 +263,7 @@ is displayed when it is called with
 .PP
 .TP \w'\fBescape-unicode'u+3n
 .B substitute
-Write the encoding's substitute sequence, or the Unicode
+Write the the encoding's substitute sequence, or the Unicode
 replacement character
 .B U+FFFD
 when transcoding to Unicode.
@@ -343,7 +328,7 @@ is the hexadecimal value of the Unicode codepoint.
 .TP
 .B escape-xml-dec
 Replace the missing characters with a string of the format
-.BR &#\fInnnn\fP; ,
+.BR &#x\fInnnn\fP; ,
 where
 .I nnnn
 is the decimal value of the Unicode codepoint.
@@ -357,7 +342,7 @@ is the hexadecimal value of the Unicode codepoint.
 That hexadecimal string is of variable length and can use from 4 to
 6 digits.
 This is the format universally used to denote a Unicode codepoint in
-the literature, delimited by curly braces for easy recognition of those
+the litterature, delimited by curly braces for easy recognition of those
 substitutions in the output.
 .SH EXAMPLES
 Convert data from a given
@@ -418,10 +403,10 @@ and map Katakana to Hiragana:
 .B "      \-x '::nfkc; [:Cc:] >; ::katakana-hiragana;'"
 .SH CAVEATS AND BUGS
 .B uconv
-does report errors as occurring at the first invalid byte
+does report errors as occuring at the first invalid byte
 encountered. This may be confusing to users of GNU
 .BR iconv (1),
-which reports errors as occurring at the first byte of an invalid
+which reports errors as occuring at the first byte of an invalid
 sequence. For multi-byte character sets or encodings, this means that
 .BR uconv
 error positions may be at a later offset in the input stream than
@@ -432,7 +417,13 @@ The reporting of error positions when a transliterator is used may be
 inaccurate or unavailable, in which case
 .BR uconv
 will report the offset in the output stream at which the error
-occurred.
+occured.
+.SH FILES
+.TP 15
+.B @thepkgicudatadir@/@PACKAGE@/@VERSION@/uconvmsg.dat
+Compiled resource bundle containing localized messages printed
+by
+.BR uconv .
 .SH AUTHORS
 Jonas Utterstroem
 .br
@@ -440,6 +431,8 @@ Yves Arrouye
 .SH VERSION
 @VERSION@
 .SH COPYRIGHT
-Copyright (C) 2000-2005 IBM, Inc. and others.
+Copyright (C) 2001 IBM, Inc. and others.
 .SH SEE ALSO
+.BR convrtrs.txt (5)
+.br
 .BR iconv (1)

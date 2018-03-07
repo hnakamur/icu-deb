@@ -1,30 +1,20 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
- **********************************************************************
- *   Copyright (C) 1999-2011, International Business Machines
- *   Corporation and others.  All Rights Reserved.
- **********************************************************************
- *   Date        Name        Description
- *   11/17/99    aliu        Creation.
- **********************************************************************
- */
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
-#include "unicode/unistr.h"
-#include "unicode/uniset.h"
-#include "unicode/utf16.h"
+**********************************************************************
+*   Copyright (C) 1999, International Business Machines
+*   Corporation and others.  All Rights Reserved.
+**********************************************************************
+*   Date        Name        Description
+*   11/17/99    aliu        Creation.
+**********************************************************************
+*/
 #include "rbt_set.h"
 #include "rbt_rule.h"
+#include "unicode/unistr.h"
 #include "cmemory.h"
-#include "putilimp.h"
 
 U_CDECL_BEGIN
-static void U_CALLCONV _deleteRule(void *rule) {
-    delete (icu::TransliterationRule *)rule;
+static void U_EXPORT2 U_CALLCONV _deleteRule(void *rule) {
+    delete (U_NAMESPACE_QUALIFIER TransliterationRule *)rule;
 }
 U_CDECL_END
 
@@ -93,7 +83,7 @@ UnicodeString& _escape(const UnicodeString &source,
                        UnicodeString &target) {
     for (int32_t i = 0; i < source.length(); ) {
         UChar32 ch = source.char32At(i);
-        i += U16_LENGTH(ch);
+        i += UTF_CHAR_LENGTH(ch);
         if (ch < 0x09 || (ch > 0x0A && ch < 0x20)|| ch > 0x7E) {
             if (ch <= 0xFFFF) {
                 target += "\\u";
@@ -108,9 +98,11 @@ UnicodeString& _escape(const UnicodeString &source,
     }
     return target;
 }
+#endif
 
 inline void _debugOut(const char* msg, TransliterationRule* rule,
                       const Replaceable& theText, UTransPosition& pos) {
+#ifdef DEBUG_RBT
     UnicodeString buf(msg, "");
     if (rule) {
         UnicodeString r;
@@ -123,12 +115,9 @@ inline void _debugOut(const char* msg, TransliterationRule* rule,
     UnicodeString esc;
     _escape(buf, esc);
     CharString cbuf(esc);
-    printf("%s\n", (const char*) cbuf);
-}
-
-#else
-#define _debugOut(msg, rule, theText, pos)
+    printf("%s\n", (char*) cbuf);
 #endif
+}
 
 //----------------------------------------------------------------------
 // END Debugging support
@@ -136,10 +125,10 @@ inline void _debugOut(const char* msg, TransliterationRule* rule,
 
 // Fill the precontext and postcontext with the patterns of the rules
 // that are masking one another.
-static void maskingError(const icu::TransliterationRule& rule1,
-                         const icu::TransliterationRule& rule2,
+static void maskingError(const U_NAMESPACE_QUALIFIER TransliterationRule& rule1,
+                         const U_NAMESPACE_QUALIFIER TransliterationRule& rule2,
                          UParseError& parseError) {
-    icu::UnicodeString r;
+    U_NAMESPACE_QUALIFIER UnicodeString r;
     int32_t len;
 
     parseError.line = parseError.offset = -1;
@@ -163,23 +152,19 @@ U_NAMESPACE_BEGIN
 /**
  * Construct a new empty rule set.
  */
-TransliterationRuleSet::TransliterationRuleSet(UErrorCode& status) : UMemory() {
+TransliterationRuleSet::TransliterationRuleSet(UErrorCode& status) {
     ruleVector = new UVector(&_deleteRule, NULL, status);
-    if (U_FAILURE(status)) {
-        return;
-    }
+    rules = NULL;
+    maxContextLength = 0;
     if (ruleVector == NULL) {
         status = U_MEMORY_ALLOCATION_ERROR;
     }
-    rules = NULL;
-    maxContextLength = 0;
 }
 
 /**
  * Copy constructor.
  */
 TransliterationRuleSet::TransliterationRuleSet(const TransliterationRuleSet& other) :
-    UMemory(other),
     ruleVector(0),
     rules(0),
     maxContextLength(other.maxContextLength) {
@@ -191,19 +176,11 @@ TransliterationRuleSet::TransliterationRuleSet(const TransliterationRuleSet& oth
     if (other.ruleVector != 0 && ruleVector != 0 && U_SUCCESS(status)) {
         len = other.ruleVector->size();
         for (i=0; i<len && U_SUCCESS(status); ++i) {
-            TransliterationRule *tempTranslitRule = new TransliterationRule(*(TransliterationRule*)other.ruleVector->elementAt(i));
-            // Null pointer test
-            if (tempTranslitRule == NULL) {
-                status = U_MEMORY_ALLOCATION_ERROR;
-                break;
-            }
-            ruleVector->addElement(tempTranslitRule, status);
-            if (U_FAILURE(status)) {
-                break;
-            }
+            ruleVector->addElement(new TransliterationRule(
+              *(TransliterationRule*)other.ruleVector->elementAt(i)), status);
         }
     }
-    if (other.rules != 0 && U_SUCCESS(status)) {
+    if (other.rules != 0) {
         UParseError p;
         freeze(p, status);
     }
@@ -214,7 +191,7 @@ TransliterationRuleSet::TransliterationRuleSet(const TransliterationRuleSet& oth
  */
 TransliterationRuleSet::~TransliterationRuleSet() {
     delete ruleVector; // This deletes the contained rules
-    uprv_free(rules);
+    delete[] rules;
 }
 
 void TransliterationRuleSet::setData(const TransliterationRuleData* d) {
@@ -258,7 +235,7 @@ void TransliterationRuleSet::addRule(TransliterationRule* adoptedRule,
         maxContextLength = len;
     }
 
-    uprv_free(rules);
+    delete rules;
     rules = 0;
 }
 
@@ -302,11 +279,6 @@ void TransliterationRuleSet::freeze(UParseError& parseError,UErrorCode& status) 
      * Be careful not to call malloc(0).
      */
     int16_t* indexValue = (int16_t*) uprv_malloc( sizeof(int16_t) * (n > 0 ? n : 1) );
-    /* test for NULL */
-    if (indexValue == 0) {
-        status = U_MEMORY_ALLOCATION_ERROR;
-        return;
-    }
     for (j=0; j<n; ++j) {
         TransliterationRule* r = (TransliterationRule*) ruleVector->elementAt(j);
         indexValue[j] = r->getIndexValue();
@@ -335,19 +307,8 @@ void TransliterationRuleSet::freeze(UParseError& parseError,UErrorCode& status) 
 
     /* Freeze things into an array.
      */
-    uprv_free(rules); // Contains alias pointers
-
-    /* You can't do malloc(0)! */
-    if (v.size() == 0) {
-        rules = NULL;
-        return;
-    }
-    rules = (TransliterationRule **)uprv_malloc(v.size() * sizeof(TransliterationRule *));
-    /* test for NULL */
-    if (rules == 0) {
-        status = U_MEMORY_ALLOCATION_ERROR;
-        return;
-    }
+    delete[] rules; // Contains alias pointers
+    rules = new TransliterationRule*[v.size()];
     for (j=0; j<v.size(); ++j) {
         rules[j] = (TransliterationRule*) v.elementAt(j);
     }
@@ -419,7 +380,7 @@ UBool TransliterationRuleSet::transliterate(Replaceable& text,
         }
     }
     // No match or partial match from any rule
-    pos.start += U16_LENGTH(text.char32At(pos.start));
+    pos.start += UTF_CHAR_LENGTH(text.char32At(pos.start));
     _debugOut("no match", NULL, text, pos);
     return TRUE;
 }
@@ -443,27 +404,4 @@ UnicodeString& TransliterationRuleSet::toRules(UnicodeString& ruleSource,
     return ruleSource;
 }
 
-/**
- * Return the set of all characters that may be modified
- * (getTarget=false) or emitted (getTarget=true) by this set.
- */
-UnicodeSet& TransliterationRuleSet::getSourceTargetSet(UnicodeSet& result,
-                               UBool getTarget) const
-{
-    result.clear();
-    int32_t count = ruleVector->size();
-    for (int32_t i=0; i<count; ++i) {
-        TransliterationRule* r =
-            (TransliterationRule*) ruleVector->elementAt(i);
-        if (getTarget) {
-            r->addTargetSetTo(result);
-        } else {
-            r->addSourceSetTo(result);
-        }
-    }
-    return result;
-}
-
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */

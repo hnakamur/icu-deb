@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2002,2008, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -18,15 +16,10 @@
 #ifndef _CDTFRRGSTST
 #define _CDTFRRGSTST
 
-#include "unicode/utypes.h"
-#include "unicode/udat.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "cintltst.h"
 
     /**
-     * DateFormat Regression tests
+     * DateFormat Regresstion tests
      **/
 
     void Test4029195(void); 
@@ -37,7 +30,6 @@
     void Test4073003(void); 
     void Test4162071(void); 
     void Test714(void);
-    void Test_GEec(void);
 
     /**
      * test subroutine
@@ -48,7 +40,5 @@
      * test subroutine used by the testing functions
      **/
     UChar* myFormatit(UDateFormat* datdef, UDate d1);
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif

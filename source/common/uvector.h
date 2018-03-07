@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 1999-2016, International Business Machines
+*   Copyright (C) 1999-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -15,10 +13,7 @@
 #define UVECTOR_H
 
 #include "unicode/utypes.h"
-#include "unicode/uobject.h"
-#include "cmemory.h"
-#include "uarrsort.h"
-#include "uelement.h"
+#include "uhash.h"
 
 U_NAMESPACE_BEGIN
 
@@ -61,7 +56,7 @@ U_NAMESPACE_BEGIN
  *
  * <p>In order to implement methods such as contains() and indexOf(),
  * UVector needs a way to compare objects for equality.  To do so, it
- * uses a comparison function, or "comparer."  If the comparer is not
+ * uses a comparison frunction, or "comparer."  If the comparer is not
  * set, or is set to zero, then all such methods will act as if the
  * vector contains no element.  That is, indexOf() will always return
  * -1, contains() will always return FALSE, etc.
@@ -72,9 +67,9 @@ U_NAMESPACE_BEGIN
  *
  * @author Alan Liu
  */
-class U_COMMON_API UVector : public UObject {
+class U_COMMON_API UVector {
     // NOTE: UVector uses the UHashKey (union of void* and int32_t) as
-    // its basic storage type.  It uses UElementsAreEqual as its
+    // its basic storage type.  It uses UKeyComparator as its
     // comparison function.  It uses UObjectDeleter as its deleter
     // function.  These are named for hashtables, but used here as-is
     // rather than duplicating the type.  This allows sharing of
@@ -85,40 +80,21 @@ private:
 
     int32_t capacity;
 
-    UElement* elements;
+    UHashTok* elements;
 
-    UObjectDeleter *deleter;
+    UObjectDeleter deleter;
 
-    UElementsAreEqual *comparer;
+    UKeyComparator comparer;
 
 public:
     UVector(UErrorCode &status);
 
     UVector(int32_t initialCapacity, UErrorCode &status);
 
-    UVector(UObjectDeleter *d, UElementsAreEqual *c, UErrorCode &status);
+    UVector(UObjectDeleter d, UKeyComparator c, UErrorCode &status);
 
-    UVector(UObjectDeleter *d, UElementsAreEqual *c, int32_t initialCapacity, UErrorCode &status);
-
-    virtual ~UVector();
-
-    /**
-     * Assign this object to another (make this a copy of 'other').
-     * Use the 'assign' function to assign each element.
-     */
-    void assign(const UVector& other, UElementAssigner *assign, UErrorCode &ec);
-
-    /**
-     * Compare this vector with another.  They will be considered
-     * equal if they are of the same size and all elements are equal,
-     * as compared using this object's comparer.
-     */
-    UBool operator==(const UVector& other);
-
-    /**
-     * Equivalent to !operator==()
-     */
-    inline UBool operator!=(const UVector& other);
+    UVector(UObjectDeleter d, UKeyComparator c, int32_t initialCapacity, UErrorCode &status);
+    ~UVector();
 
     //------------------------------------------------------------
     // java.util.Vector API
@@ -134,13 +110,9 @@ public:
 
     void insertElementAt(void* obj, int32_t index, UErrorCode &status);
 
-    void insertElementAt(int32_t elem, int32_t index, UErrorCode &status);
-    
     void* elementAt(int32_t index) const;
 
     int32_t elementAti(int32_t index) const;
-
-    UBool equals(const UVector &other) const;
 
     void* firstElement(void) const;
 
@@ -155,12 +127,6 @@ public:
     UBool contains(void* obj) const;
 
     UBool contains(int32_t obj) const;
-
-    UBool containsAll(const UVector& other) const;
-
-    UBool removeAll(const UVector& other);
-
-    UBool retainAll(const UVector& other);
 
     void removeElementAt(int32_t index);
 
@@ -178,9 +144,9 @@ public:
      * Change the size of this vector as follows: If newSize is
      * smaller, then truncate the array, possibly deleting held
      * elements for i >= newSize.  If newSize is larger, grow the
-     * array, filling in new slots with NULL.
+     * array, filling in new slows with NULL.
      */
-    void setSize(int32_t newSize, UErrorCode &status);
+    void setSize(int32_t newSize);
 
     /**
      * Fill in the given array with all elements of this vector.
@@ -191,9 +157,9 @@ public:
     // New API
     //------------------------------------------------------------
 
-    UObjectDeleter *setDeleter(UObjectDeleter *d);
+    UObjectDeleter setDeleter(UObjectDeleter d);
 
-    UElementsAreEqual *setComparer(UElementsAreEqual *c);
+    UKeyComparator setComparer(UKeyComparator c);
 
     void* operator[](int32_t index) const;
 
@@ -208,73 +174,14 @@ public:
      */
     void* orphanElementAt(int32_t index);
 
-    /**
-     * Returns true if this vector contains none of the elements
-     * of the given vector.
-     * @param other vector to be checked for containment
-     * @return true if the test condition is met
-     */
-    UBool containsNone(const UVector& other) const;
-
-    /**
-     * Insert the given object into this vector at its sorted position
-     * as defined by 'compare'.  The current elements are assumed to
-     * be sorted already.
-     */
-    void sortedInsert(void* obj, UElementComparator *compare, UErrorCode& ec);
-
-    /**
-     * Insert the given integer into this vector at its sorted position
-     * as defined by 'compare'.  The current elements are assumed to
-     * be sorted already.
-     */
-    void sortedInsert(int32_t obj, UElementComparator *compare, UErrorCode& ec);
-
-    /**
-     * Sort the contents of the vector, assuming that the contents of the
-     * vector are of type int32_t.
-     */
-    void sorti(UErrorCode &ec);
-
-    /**
-      * Sort the contents of this vector, using a caller-supplied function
-      * to do the comparisons.  (It's confusing that
-      *  UVector's UElementComparator function is different from the
-      *  UComparator function type defined in uarrsort.h)
-      */
-    void sort(UElementComparator *compare, UErrorCode &ec);
-
-    /**
-     * Stable sort the contents of this vector using a caller-supplied function
-     * of type UComparator to do the comparison.  Provides more flexibility
-     * than UVector::sort() because an additional user parameter can be passed to
-     * the comparison function.
-     */
-    void sortWithUComparator(UComparator *compare, const void *context, UErrorCode &ec);
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     */
-    static UClassID U_EXPORT2 getStaticClassID();
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     */
-    virtual UClassID getDynamicClassID() const;
-
 private:
     void _init(int32_t initialCapacity, UErrorCode &status);
-
-    int32_t indexOf(UElement key, int32_t startIndex = 0, int8_t hint = 0) const;
-
-    void sortedInsert(UElement e, UElementComparator *compare, UErrorCode& ec);
 
     // Disallow
     UVector(const UVector&);
 
     // Disallow
     UVector& operator=(const UVector&);
-
 };
 
 
@@ -300,11 +207,9 @@ public:
 
     UStack(int32_t initialCapacity, UErrorCode &status);
 
-    UStack(UObjectDeleter *d, UElementsAreEqual *c, UErrorCode &status);
+    UStack(UObjectDeleter d, UKeyComparator c, UErrorCode &status);
 
-    UStack(UObjectDeleter *d, UElementsAreEqual *c, int32_t initialCapacity, UErrorCode &status);
-
-    virtual ~UStack();
+    UStack(UObjectDeleter d, UKeyComparator c, int32_t initialCapacity, UErrorCode &status);
 
     // It's okay not to have a virtual destructor (in UVector)
     // because UStack has no special cleanup to do.
@@ -323,21 +228,7 @@ public:
 
     int32_t push(int32_t i, UErrorCode &status);
 
-    /*
-    If the object o occurs as an item in this stack,
-    this method returns the 1-based distance from the top of the stack.
-    */
     int32_t search(void* obj) const;
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     */
-    static UClassID U_EXPORT2 getStaticClassID();
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     */
-    virtual UClassID getDynamicClassID() const;
 
 private:
     // Disallow
@@ -380,10 +271,6 @@ inline int32_t UVector::lastElementi(void) const {
 
 inline void* UVector::operator[](int32_t index) const {
     return elementAt(index);
-}
-
-inline UBool UVector::operator!=(const UVector& other) {
-    return !operator==(other);
 }
 
 // UStack inlines

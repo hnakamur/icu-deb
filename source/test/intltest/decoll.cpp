@@ -1,15 +1,8 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2009, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "decoll.h"
 
 #ifndef _COLL
@@ -40,7 +33,7 @@ CollationGermanTest::CollationGermanTest()
     UErrorCode status = U_ZERO_ERROR;
     myCollation = Collator::createInstance(Locale::getGermany(), status);
     if(!myCollation || U_FAILURE(status)) {
-        errcheckln(status, __FILE__ "failed to create! err " + UnicodeString(u_errorName(status)));
+        errln(__FILE__ "failed to create! err " + UnicodeString(u_errorName(status)));
         /* if it wasn't already: */
         delete myCollation;
         myCollation = NULL;
@@ -101,36 +94,54 @@ const Collator::EComparisonResult CollationGermanTest::results[][2] =
         { Collator::EQUAL,        Collator::GREATER }
 };
 
+void CollationGermanTest::doTest( UnicodeString source, UnicodeString target, Collator::EComparisonResult result)
+{
+    if(myCollation == NULL ) {
+        errln("decoll: cannot start test, collator is null\n");
+        return;
+    }
+    Collator::EComparisonResult compareResult = myCollation->compare(source, target);
+    CollationKey sortKey1, sortKey2;
+    UErrorCode key1status = U_ZERO_ERROR, key2status = U_ZERO_ERROR; //nos
+    myCollation->getCollationKey(source, /*nos*/ sortKey1, key1status );
+    myCollation->getCollationKey(target, /*nos*/ sortKey2, key2status );
+    if (U_FAILURE(key1status) || U_FAILURE(key2status))
+    {
+        errln("SortKey generation Failed.\n");
+        return;
+    }
+
+    Collator::EComparisonResult keyResult = sortKey1.compareTo(sortKey2);
+    reportCResult( source, target, sortKey1, sortKey2, compareResult, keyResult, compareResult, result );
+}
 
 void CollationGermanTest::TestTertiary(/* char* par */)
 {
     if(myCollation == NULL ) {
-        dataerrln("decoll: cannot start test, collator is null\n");
+        errln("decoll: cannot start test, collator is null\n");
         return;
     }
 
     int32_t i = 0;
-    UErrorCode status = U_ZERO_ERROR;
     myCollation->setStrength(Collator::TERTIARY);
-    myCollation->setAttribute(UCOL_NORMALIZATION_MODE, UCOL_ON, status);
+    myCollation->setDecomposition(Normalizer::COMPOSE_COMPAT);
     for (i = 0; i < 12 ; i++)
     {
-        doTest(myCollation, testSourceCases[i], testTargetCases[i], results[i][1]);
+        doTest(testSourceCases[i], testTargetCases[i], results[i][1]);
     }
 }
 void CollationGermanTest::TestPrimary(/* char* par */)
 {
     if(myCollation == NULL ) {
-        dataerrln("decoll: cannot start test, collator is null\n");
+        errln("decoll: cannot start test, collator is null\n");
         return;
     }
     int32_t i;
-    UErrorCode status = U_ZERO_ERROR;
     myCollation->setStrength(Collator::PRIMARY);
-    myCollation->setAttribute(UCOL_NORMALIZATION_MODE, UCOL_ON, status);
+    myCollation->setDecomposition(Normalizer::DECOMP);
     for (i = 0; i < 12 ; i++)
     {
-        doTest(myCollation, testSourceCases[i], testTargetCases[i], results[i][0]);
+        doTest(testSourceCases[i], testTargetCases[i], results[i][0]);
     }
 }
 
@@ -145,4 +156,4 @@ void CollationGermanTest::runIndexedTest( int32_t index, UBool exec, const char*
     }
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */
+

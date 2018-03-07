@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 2001, International Business Machines Corporation and
@@ -17,10 +15,6 @@
 #ifndef REPTEST_H
 #define REPTEST_H
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "unicode/translit.h"
 #include "intltest.h"
 
@@ -35,11 +29,14 @@ public:
     /*Tests the Replaceable class according to the API documentation. */
     void TestReplaceableClass(void);
 private:
-    void check( const UnicodeString& transliteratorName, 
+    void Check( const UnicodeString& transliteratorName, 
                 const UnicodeString& test, 
+                const UnicodeString& styles, 
                 const UnicodeString& shouldProduceStyles);
 };
 
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
-
 #endif
+
+
+
+

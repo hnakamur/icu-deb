@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (c) 2001-2007, International Business Machines
+*   Copyright (c) 2001-2002, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -11,10 +9,6 @@
 */
 #ifndef ESCTRN_H
 #define ESCTRN_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
 
 #include "unicode/translit.h"
 
@@ -43,7 +37,7 @@ U_NAMESPACE_BEGIN
  *
  * @author Alan Liu
  */
-class EscapeTransliterator : public Transliterator {
+class U_I18N_API EscapeTransliterator : public Transliterator {
 
  private:
 
@@ -117,28 +111,27 @@ class EscapeTransliterator : public Transliterator {
      */
     virtual Transliterator* clone() const;
 
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     */
-    virtual UClassID getDynamicClassID() const;
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     */
-    U_I18N_API static UClassID U_EXPORT2 getStaticClassID();
-
  protected:
 
     /**
      * Implements {@link Transliterator#handleTransliterate}.
      */
-    virtual void handleTransliterate(Replaceable& text, UTransPosition& offset,
+    void handleTransliterate(Replaceable& text, UTransPosition& offset,
                              UBool isIncremental) const;
 
+ private:
+
+    /**
+     * Factory methods
+     */
+    static Transliterator* _createUnicode(const UnicodeString& ID, Token context);
+    static Transliterator* _createJava(const UnicodeString& ID, Token context);
+    static Transliterator* _createC(const UnicodeString& ID, Token context);
+    static Transliterator* _createXML(const UnicodeString& ID, Token context);
+    static Transliterator* _createXML10(const UnicodeString& ID, Token context);
+    static Transliterator* _createPerl(const UnicodeString& ID, Token context);
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif

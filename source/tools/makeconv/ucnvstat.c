@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
  ******************************************************************************
  *
- *   Copyright (C) 1998-2006, International Business Machines
+ *   Copyright (C) 1998-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  ******************************************************************************
@@ -66,4 +64,3 @@ const UConverterStaticData *ucnv_converterStaticData[UCNV_NUMBER_OF_SUPPORTED_CO
     NULL/*ISO2022*/,
     /* LMBCS */ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
-

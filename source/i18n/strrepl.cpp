@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (c) 2002-2012, International Business Machines Corporation
+*   Copyright (c) 2002, International Business Machines Corporation
 *   and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -10,20 +8,13 @@
 **********************************************************************
 */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
-#include "unicode/uniset.h"
-#include "unicode/utf16.h"
 #include "strrepl.h"
 #include "rbt_data.h"
 #include "util.h"
 
 U_NAMESPACE_BEGIN
 
-UnicodeReplacer::~UnicodeReplacer() {}
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(StringReplacer)
+const UChar EMPTY[] = { 0 }; // empty string: ""
 
 /**
  * Construct a StringReplacer that sets the emits the given output
@@ -67,10 +58,7 @@ StringReplacer::StringReplacer(const UnicodeString& theOutput,
 /**
  * Copy constructor.
  */
-StringReplacer::StringReplacer(const StringReplacer& other) :
-    UnicodeFunctor(other),
-    UnicodeReplacer(other)
-{
+StringReplacer::StringReplacer(const StringReplacer& other) {
     output = other.output;
     cursorPos = other.cursorPos;
     hasCursor = other.hasCursor;
@@ -95,7 +83,7 @@ UnicodeFunctor* StringReplacer::clone() const {
  * Implement UnicodeFunctor
  */
 UnicodeReplacer* StringReplacer::toReplacer() const {
-  return const_cast<StringReplacer *>(this);
+    return (UnicodeReplacer*) this;
 }
 
 /**
@@ -129,32 +117,11 @@ int32_t StringReplacer::replace(Replaceable& text,
          * the integrity of indices into the key and surrounding context while
          * generating the output text.
          */
+        int32_t destStart = text.length(); // copy new text to here
+        int32_t destLimit = destStart;
         UnicodeString buf;
         int32_t oOutput; // offset into 'output'
         isComplex = FALSE;
-
-        // The temporary buffer starts at tempStart, and extends
-        // to destLimit.  The start of the buffer has a single
-        // character from before the key.  This provides style
-        // data when addition characters are filled into the
-        // temporary buffer.  If there is nothing to the left, use
-        // the non-character U+FFFF, which Replaceable subclasses
-        // should treat specially as a "no-style character."
-        // destStart points to the point after the style context
-        // character, so it is tempStart+1 or tempStart+2.
-        int32_t tempStart = text.length(); // start of temp buffer
-        int32_t destStart = tempStart; // copy new text to here
-        if (start > 0) {
-            int32_t len = U16_LENGTH(text.char32At(start-1));
-            text.copy(start-len, start, tempStart);
-            destStart += len;
-        } else {
-            UnicodeString str((UChar) 0xFFFF);
-            text.handleReplaceBetween(tempStart, tempStart, str);
-            destStart++;
-        }
-        int32_t destLimit = destStart;
-
         for (oOutput=0; oOutput<output.length(); ) {
             if (oOutput == cursorPos) {
                 // Record the position of the cursor
@@ -179,7 +146,7 @@ int32_t StringReplacer::replace(Replaceable& text,
                 int32_t len = r->replace(text, destLimit, destLimit, cursor);
                 destLimit += len;
             }
-            oOutput += U16_LENGTH(c);
+            oOutput += UTF_CHAR_LENGTH(c);
         }
         // Insert any accumulated straight text.
         if (buf.length() > 0) {
@@ -195,10 +162,10 @@ int32_t StringReplacer::replace(Replaceable& text,
 
         // Copy new text to start, and delete it
         text.copy(destStart, destLimit, start);
-        text.handleReplaceBetween(tempStart + outLen, destLimit + outLen, UnicodeString());
+        text.handleReplaceBetween(destStart + outLen, destLimit + outLen, EMPTY);
 
         // Delete the old text (the key)
-        text.handleReplaceBetween(start + outLen, limit + outLen, UnicodeString());
+        text.handleReplaceBetween(start + outLen, limit + outLen, EMPTY);
     }        
 
     if (hasCursor) {
@@ -211,7 +178,7 @@ int32_t StringReplacer::replace(Replaceable& text,
             int32_t n = cursorPos;
             // Outside the output string, cursorPos counts code points
             while (n < 0 && newStart > 0) {
-                newStart -= U16_LENGTH(text.char32At(newStart-1));
+                newStart -= UTF_CHAR_LENGTH(text.char32At(newStart-1));
                 ++n;
             }
             newStart += n;
@@ -220,7 +187,7 @@ int32_t StringReplacer::replace(Replaceable& text,
             int32_t n = cursorPos - output.length();
             // Outside the output string, cursorPos counts code points
             while (n > 0 && newStart < text.length()) {
-                newStart += U16_LENGTH(text.char32At(newStart));
+                newStart += UTF_CHAR_LENGTH(text.char32At(newStart));
                 --n;
             }
             newStart += n;
@@ -291,22 +258,6 @@ UnicodeString& StringReplacer::toReplacerPattern(UnicodeString& rule,
 }
 
 /**
- * Implement UnicodeReplacer
- */
-void StringReplacer::addReplacementSetTo(UnicodeSet& toUnionTo) const {
-    UChar32 ch;
-    for (int32_t i=0; i<output.length(); i+=U16_LENGTH(ch)) {
-    ch = output.char32At(i);
-    UnicodeReplacer* r = data->lookupReplacer(ch);
-    if (r == NULL) {
-        toUnionTo.add(ch);
-    } else {
-        r->addReplacementSetTo(toUnionTo);
-    }
-    }
-}
-
-/**
  * UnicodeFunctor API
  */
 void StringReplacer::setData(const TransliterationRuleData* d) {
@@ -318,12 +269,10 @@ void StringReplacer::setData(const TransliterationRuleData* d) {
         if (f != NULL) {
             f->setData(data);
         }
-        i += U16_LENGTH(c);
+        i += UTF_CHAR_LENGTH(c);
     }
 }
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 //eof

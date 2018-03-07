@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2010, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /*
@@ -15,10 +13,6 @@
 ********************************************************************************
 */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "caltztst.h"
 #include "unicode/smpdtfmt.h"
 #include "mutex.h"
@@ -26,15 +20,11 @@
 DateFormat*         CalendarTimeZoneTest::fgDateFormat = 0;
 Calendar*           CalendarTimeZoneTest::fgCalendar   = 0;
 
-UBool CalendarTimeZoneTest::failure(UErrorCode status, const char* msg, UBool possibleDataError)
+UBool CalendarTimeZoneTest::failure(UErrorCode status, const char* msg)
 {
     if (U_FAILURE(status))
     {
-        if (possibleDataError) {
-            dataerrln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
-        } else {
-            errcheckln(status, UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
-        }
+        errln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
         return TRUE;
     }
     return FALSE;
@@ -63,7 +53,7 @@ DateFormat*   CalendarTimeZoneTest::getDateFormat()
         {
             delete theFormat;
             theFormat = 0;
-            dataerrln("FAIL: Could not create SimpleDateFormat - %s", u_errorName(status));
+            errln("FAIL: Could not create SimpleDateFormat");
         }
     }
 
@@ -110,7 +100,7 @@ Calendar*  CalendarTimeZoneTest::getCalendar()
         {
             delete theCalendar;
             theCalendar = 0;
-            dataerrln("FAIL: Calendar::createInstance failed: %s", u_errorName(status));
+            errln("FAIL: Calendar::createInstance failed");
         }
     }
     return theCalendar;
@@ -158,25 +148,6 @@ CalendarTimeZoneTest::dateToString(UDate d, UnicodeString& str)
     return str;
 }
 
-UnicodeString&
-CalendarTimeZoneTest::dateToString(UDate d, UnicodeString& str,
-                                   const TimeZone& tz)
-{
-    str.remove();
-    DateFormat* format = getDateFormat();
-    if (format == 0)
-    {
-        str += "DATE_FORMAT_FAILURE";
-        return str;
-    }
-    TimeZone* save = format->getTimeZone().clone();
-    format->setTimeZone(tz);
-    format->format(d, str);
-    format->adoptTimeZone(save);
-    releaseDateFormat(format);
-    return str;
-}
-
 // Utility methods to create a date.  This is useful for converting Java constructs
 // which create a Date object.
 UDate
@@ -191,7 +162,7 @@ CalendarTimeZoneTest::date(int32_t y, int32_t m, int32_t d, int32_t hr, int32_t 
     releaseCalendar(cal);
     if (U_FAILURE(status))
     {
-        errln("FAIL: Calendar::getTime failed: %s", u_errorName(status));
+        errln("FAIL: Calendar::getTime failed");
         return 0.0;
     }
     return dt;
@@ -224,12 +195,12 @@ CalendarTimeZoneTest::dateToFields(UDate date, int32_t& y, int32_t& m, int32_t& 
     if (cal == 0) return;
     UErrorCode status = U_ZERO_ERROR;
     cal->setTime(date, status);
-    y = cal->get(UCAL_YEAR, status) - 1900;
-    m = cal->get(UCAL_MONTH, status);
-    d = cal->get(UCAL_DATE, status);
-    hr = cal->get(UCAL_HOUR_OF_DAY, status);
-    min = cal->get(UCAL_MINUTE, status);
-    sec = cal->get(UCAL_SECOND, status);
+    y = cal->get(Calendar::YEAR, status) - 1900;
+    m = cal->get(Calendar::MONTH, status);
+    d = cal->get(Calendar::DATE, status);
+    hr = cal->get(Calendar::HOUR_OF_DAY, status);
+    min = cal->get(Calendar::MINUTE, status);
+    sec = cal->get(Calendar::SECOND, status);
     releaseCalendar(cal);
 }
 
@@ -240,7 +211,5 @@ void CalendarTimeZoneTest::cleanup()
     delete fgCalendar;
     fgCalendar   = 0;
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 //eof

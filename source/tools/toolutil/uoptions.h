@@ -1,14 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2000-2011, International Business Machines
+*   Copyright (C) 2000, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
 *   file name:  uoptions.h
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -24,11 +22,10 @@
 #include "unicode/utypes.h"
 
 /* This should usually be called before calling u_parseArgs */
-/*#if U_PLATFORM == U_PF_OS390 && (U_CHARSET_FAMILY == U_ASCII_FAMILY)*/
+#if defined(OS390) && (U_CHARSET_FAMILY == U_ASCII_FAMILY)
     /* translate args from EBCDIC to ASCII */
-/*#   define U_MAIN_INIT_ARGS(argc, argv) __argvtoascii_a(argc, argv)*/
-/*#elif defined(XP_MAC_CONSOLE)*/
-#if defined(XP_MAC_CONSOLE)
+#   define U_MAIN_INIT_ARGS(argc, argv) __argvtoascii_a(argc, argv)
+#elif defined(XP_MAC_CONSOLE)
 #   include <console.h>
     /* Get the arguments from the GUI, since old Macs don't have a console Window. */
 #   define U_MAIN_INIT_ARGS(argc, argv) argc = ccommand((char***)&argv)
@@ -76,9 +73,8 @@ struct UOption {
 #define UOPTION_SOURCEDIR           UOPTION_DEF("sourcedir", 's', UOPT_REQUIRES_ARG)
 #define UOPTION_ENCODING            UOPTION_DEF("encoding", 'e', UOPT_REQUIRES_ARG)
 #define UOPTION_ICUDATADIR          UOPTION_DEF("icudatadir", 'i', UOPT_REQUIRES_ARG)
-#define UOPTION_WRITE_JAVA          UOPTION_DEF("write-java", 'j', UOPT_OPTIONAL_ARG)
-#define UOPTION_PACKAGE_NAME        UOPTION_DEF("package-name", 'p', UOPT_REQUIRES_ARG)
-#define UOPTION_BUNDLE_NAME         UOPTION_DEF("bundle-name", 'b', UOPT_REQUIRES_ARG)
+#define UOPTION_WRITE_JAVA          UOPTION_DEF("write-java", 'j', UOPT_NO_ARG)
+
 
 /**
  * C Command line argument parser.

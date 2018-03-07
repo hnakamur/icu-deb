@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2005, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -10,9 +8,6 @@
 #define __TimeZoneBoundaryTest__
  
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "unicode/timezone.h"
 #include "unicode/simpletz.h"
 #include "caltztst.h"
@@ -81,8 +76,7 @@ public: // package
      * Use a stepwise march to find boundaries.
      */ 
     virtual void TestStepwise(void);
-    void verifyMapping(Calendar& cal, int year, int month, int dom, int hour,
-                    double epochHours) ;
+
 private:
     const UDate ONE_SECOND;
     const UDate ONE_MINUTE;
@@ -95,7 +89,5 @@ private:
     static const UDate PST_1997_END;
     static const UDate INTERVAL;
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
  
 #endif // __TimeZoneBoundaryTest__

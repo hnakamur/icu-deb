@@ -1,18 +1,16 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * Copyright (c) 1997-2009,2014, International Business Machines
- * Corporation and others. All Rights Reserved.
- ********************************************************************
- *
- * File CFINTST.C
- *
- * Modification History:
- *        Name                     Description            
- *     Madhu Katragadda            Ported for C API
- ********************************************************************
- */
-
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
+ ********************************************************************/
+/********************************************************************************
+*
+* File CFINTST.C
+*
+* Modification History:
+*        Name                     Description            
+*     Madhu Katragadda            Ported for C API
+*********************************************************************************/
 /**
  * CollationFinnishTest is a third level test class.  This tests the locale
  * specific primary, secondary and tertiary rules.  For example, the ignorable
@@ -21,11 +19,7 @@
  */
 
 #include <stdlib.h>
-
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "unicode/ucol.h"
 #include "unicode/uloc.h"
 #include "cintltst.h"
@@ -58,7 +52,7 @@ const static UCollationResult results[] = {
     UCOL_GREATER,
     UCOL_LESS,
     /* test primary > 4*/
-    UCOL_GREATER    /* v < w per cldrbug 6615 */
+    UCOL_EQUAL
 };
 
 
@@ -67,8 +61,8 @@ void addFinnishCollTest(TestNode** root)
 {
     
     
-    addTest(root, &TestPrimary, "tscoll/cfintst/TestPrimary");
-    addTest(root, &TestTertiary, "tscoll/cfintst/TestTertiary");
+    addTest(root, &TestPrimary, "tscoll/cficoll/TestPrimary");
+    addTest(root, &TestTertiary, "tscoll/cficoll/TestTertiary");
     
 
 
@@ -80,9 +74,9 @@ static void TestTertiary( )
     
     int32_t i;
     UErrorCode status = U_ZERO_ERROR;
-    myCollation = ucol_open("fi_FI@collation=standard", &status);
+    myCollation = ucol_open("fi_FI", &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n", myErrorName(status));
+        log_err("ERROR: in creation of rule based collator: %s\n", myErrorName(status));
     }
     log_verbose("Testing Finnish Collation with Tertiary strength\n");
     ucol_setStrength(myCollation, UCOL_TERTIARY);
@@ -98,17 +92,16 @@ static void TestPrimary()
     
     int32_t i;
     UErrorCode status = U_ZERO_ERROR;
-    myCollation = ucol_open("fi_FI@collation=standard", &status);
+    myCollation = ucol_open("fi_FI", &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n", myErrorName(status));
+        log_err("ERROR: in creation of rule based collator: %s\n", myErrorName(status));
     }
-    log_verbose("Testing Finnish Collation with Primary strength\n");
+    log_verbose("Testing Finnish Collation with Tertiary strength\n");
     ucol_setStrength(myCollation, UCOL_PRIMARY);
-    for (i = 4; i < 5; i++)
+    for (i = 4; i < 4; i++)
     {
         doTest(myCollation, testSourceCases[i], testTargetCases[i], results[i]);
     }
     ucol_close(myCollation);
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */

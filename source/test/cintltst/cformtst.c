@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines
- * Corporation and others. All Rights Reserved.
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
 *
@@ -17,28 +15,16 @@
 
 /* FormatTest is a medium top level test for everything in the  C FORMAT API */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "cintltst.h"
 #include "cformtst.h"
 
 void addCalTest(TestNode**);
 void addDateForTest(TestNode**);
-void addDateTimePatternGeneratorTest(TestNode**);
-void addDateIntervalFormatTest(TestNode**);
-void addRelativeDateFormatTest(TestNode**);
 void addNumForTest(TestNode**);
 void addMsgForTest(TestNode**);
 void addDateForRgrTest(TestNode**);
 void addNumFrDepTest(TestNode**);
 void addDtFrDepTest(TestNode**);
-void addUtmsTest(TestNode**);
-void addCurrencyTest(TestNode**);
-void addPluralRulesTest(TestNode**);
-void addURegionTest(TestNode** root);
-void addUListFmtTest(TestNode** root);
 
 void addFormatTest(TestNode** root);
 
@@ -46,23 +32,14 @@ void addFormatTest(TestNode** root)
 {
     addCalTest(root);
     addDateForTest(root);
-    addDateTimePatternGeneratorTest(root);
-    addDateIntervalFormatTest(root);
-#if !UCONFIG_NO_BREAK_ITERATION
-    addRelativeDateFormatTest(root);
-#endif /* !UCONFIG_NO_BREAK_ITERATION */
     addNumForTest(root);
     addNumFrDepTest(root);
     addMsgForTest(root);
     addDateForRgrTest(root);
     addDtFrDepTest(root);
-    addUtmsTest(root);
-    addCurrencyTest(root);
-    addPluralRulesTest(root);
-    addURegionTest(root);
-    addUListFmtTest(root);
+
 }
-/*Internal functions used*/
+/*INternal functions used*/
 
 UChar* myDateFormat(UDateFormat* dat, UDate d1)
 {
@@ -88,5 +65,3 @@ UChar* myDateFormat(UDateFormat* dat, UDate d1)
     return result1;
 
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

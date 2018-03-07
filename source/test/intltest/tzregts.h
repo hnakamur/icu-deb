@@ -1,18 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1998-2005, International Business Machines Corporation and
+ * Copyright (c) 1998-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #ifndef _TIMEZONEREGRESSIONTEST_
 #define _TIMEZONEREGRESSIONTEST_
  
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "unicode/timezone.h"
 #include "unicode/gregocal.h"
 #include "unicode/simpletz.h"
@@ -43,11 +37,10 @@ public:
     void Test4154650(void);
     void Test4154525(void);
     void Test4162593(void);
-    void Test4176686(void);
     void TestJ186(void);
     void TestJ449(void);
     void TestJDK12API(void);
-    void Test4184229(void);
+
     UBool checkCalendar314(GregorianCalendar *testCal, TimeZone *testTZ);
 
 
@@ -57,7 +50,6 @@ protected:
     UBool failure(UErrorCode status, const char* msg);
 };
 
-#endif /* #if !UCONFIG_NO_FORMATTING */
  
 #endif // _CALENDARREGRESSIONTEST_
 //eof

@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
  ********************************************************************
- * COPYRIGHT:
- * Copyright (c) 1996-2015, International Business Machines Corporation and
+ * COPYRIGHT: 
+ * Copyright (c) 1996-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************
  */
@@ -12,44 +10,29 @@
 #define NORMLZR_H
 
 #include "unicode/utypes.h"
-
-/**
- * \file 
- * \brief C++ API: Unicode Normalization
- */
- 
-#if !UCONFIG_NO_NORMALIZATION
-
-#include "unicode/chariter.h"
-#include "unicode/normalizer2.h"
 #include "unicode/unistr.h"
+#include "unicode/chariter.h"
 #include "unicode/unorm.h"
-#include "unicode/uobject.h"
+
+struct UCharIterator;
+typedef struct UCharIterator UCharIterator;
 
 U_NAMESPACE_BEGIN
 /**
- * Old Unicode normalization API.
- *
- * This API has been replaced by the Normalizer2 class and is only available
- * for backward compatibility. This class simply delegates to the Normalizer2 class.
- * There is one exception: The new API does not provide a replacement for Normalizer::compare().
- *
- * The Normalizer class supports the standard normalization forms described in
- * <a href="http://www.unicode.org/unicode/reports/tr15/" target="unicode">
- * Unicode Standard Annex #15: Unicode Normalization Forms</a>.
+ * \brief C++ API: Unicode Normalization 
  *
  * The Normalizer class consists of two parts:
  * - static functions that normalize strings or test if strings are normalized
  * - a Normalizer object is an iterator that takes any kind of text and
  *   provides iteration over its normalized form
  *
- * The Normalizer class is not suitable for subclassing.
- *
+ * The static functions are basically wrappers around the C implementation,
+ * using UnicodeString instead of UChar*.
  * For basic information about normalization forms and details about the C API
  * please see the documentation in unorm.h.
  *
  * The iterator API with the Normalizer constructors and the non-static functions
- * use a CharacterIterator as input. It is possible to pass a string which
+ * uses a CharacterIterator as input. It is possible to pass a string which
  * is then internally wrapped in a CharacterIterator.
  * The input text is not normalized all at once, but incrementally where needed
  * (providing efficient random access).
@@ -65,7 +48,7 @@ U_NAMESPACE_BEGIN
  * and previous() could not be used after setIndex(), next(), first(), and current().
  *
  * Normalizer allows to start normalizing from anywhere in the input text by
- * calling setIndexOnly(), first(), or last().
+ * calling setIndexOnly(), setIndex(), first(), or last().
  * Without calling any of these, the iterator will start at the beginning of the text.
  *
  * At any time, next() returns the next normalized code point (UChar32),
@@ -73,11 +56,13 @@ U_NAMESPACE_BEGIN
  * previous() returns the previous normalized code point (UChar32),
  * with pre-decrement semantics (like CharacterIterator::previous32()).
  *
- * current() returns the current code point
+ * current() and setIndex() return the current code point
  * (respectively the one at the newly set index) without moving
  * the getIndex(). Note that if the text at the current position
  * needs to be normalized, then these functions will do that.
  * (This is why current() is not const.)
+ * If you call setIndex() and then previous() then you normalize a piece of
+ * text (and get a code point from setIndex()) that you probably do not need.
  * It is more efficient to call setIndexOnly() instead, which does not
  * normalize.
  *
@@ -120,24 +105,16 @@ U_NAMESPACE_BEGIN
  * then the internal index is 0 and one can return to this getIndex()
  * later with setIndexOnly().
  *
- * Note: While the setIndex() and getIndex() refer to indices in the
- * underlying Unicode input text, the next() and previous() methods
- * iterate through characters in the normalized output.
- * This means that there is not necessarily a one-to-one correspondence
- * between characters returned by next() and previous() and the indices
- * passed to and returned from setIndex() and getIndex().
- * It is for this reason that Normalizer does not implement the CharacterIterator interface.
- *
  * @author Laura Werner, Mark Davis, Markus Scherer
- * @stable ICU 2.0
+ * @draft ICU 2.0
  */
-class U_COMMON_API Normalizer : public UObject {
+class U_COMMON_API Normalizer
+{
 public:
-#ifndef U_HIDE_DEPRECATED_API
   /**
    * If DONE is returned from an iteration function that returns a code point,
    * then there are no more normalization results available.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   enum {
       DONE=0xffff
@@ -153,10 +130,10 @@ public:
    *              will start at the beginning of the string.
    *
    * @param mode  The normalization mode.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   Normalizer(const UnicodeString& str, UNormalizationMode mode);
-
+    
   /**
    * Creates a new <code>Normalizer</code> object for iterating over the
    * normalized form of a given string.
@@ -166,9 +143,9 @@ public:
    *
    * @param length Length of the string, or -1 if NUL-terminated.
    * @param mode  The normalization mode.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
-  Normalizer(ConstChar16Ptr str, int32_t length, UNormalizationMode mode);
+  Normalizer(const UChar* str, int32_t length, UNormalizationMode mode);
 
   /**
    * Creates a new <code>Normalizer</code> object for iterating over the
@@ -178,45 +155,45 @@ public:
    *              will start at the beginning of the string.
    *
    * @param mode  The normalization mode.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   Normalizer(const CharacterIterator& iter, UNormalizationMode mode);
-#endif  /* U_HIDE_DEPRECATED_API */
 
   /**
    * Copy constructor.
-   * @param copy The object to be copied.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   Normalizer(const Normalizer& copy);
 
   /**
    * Destructor
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
-  virtual ~Normalizer();
+  ~Normalizer();
 
 
   //-------------------------------------------------------------------------
   // Static utility methods
   //-------------------------------------------------------------------------
 
-#ifndef U_HIDE_DEPRECATED_API
   /**
    * Normalizes a <code>UnicodeString</code> according to the specified normalization mode.
    * This is a wrapper for unorm_normalize(), using UnicodeString's.
-   *
+   * <p>
    * The <code>options</code> parameter specifies which optional
    * <code>Normalizer</code> features are to be enabled for this operation.
-   *
+   * Currently the only available option is deprecated.
+   * If you want the default behavior corresponding to one of the standard
+   * Unicode Normalization Forms, use 0 for this argument.
+   * <p>
    * @param source    the input string to be normalized.
    * @param mode      the normalization mode
    * @param options   the optional features to be enabled (0 for no options)
    * @param result    The normalized string (on output).
    * @param status    The error code.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
-  static void U_EXPORT2 normalize(const UnicodeString& source,
+  static void normalize(const UnicodeString& source,
                         UNormalizationMode mode, int32_t options,
                         UnicodeString& result,
                         UErrorCode &status);
@@ -225,10 +202,14 @@ public:
    * Compose a <code>UnicodeString</code>.
    * This is equivalent to normalize() with mode UNORM_NFC or UNORM_NFKC.
    * This is a wrapper for unorm_normalize(), using UnicodeString's.
-   *
+   * <p>
    * The <code>options</code> parameter specifies which optional
    * <code>Normalizer</code> features are to be enabled for this operation.
-   *
+   * Currently the only available option is deprecated.
+   * If you want the default behavior corresponding
+   * to Unicode Normalization Form <b>C</b> or <b>KC</b>,
+   * use 0 for this argument.
+   * <p>
    * @param source    the string to be composed.
    * @param compat    Perform compatibility decomposition before composition.
    *                  If this argument is <code>FALSE</code>, only canonical
@@ -236,9 +217,9 @@ public:
    * @param options   the optional features to be enabled (0 for no options)
    * @param result    The composed string (on output).
    * @param status    The error code.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
-  static void U_EXPORT2 compose(const UnicodeString& source,
+  static void compose(const UnicodeString& source,
                       UBool compat, int32_t options,
                       UnicodeString& result,
                       UErrorCode &status);
@@ -247,10 +228,15 @@ public:
    * Static method to decompose a <code>UnicodeString</code>.
    * This is equivalent to normalize() with mode UNORM_NFD or UNORM_NFKD.
    * This is a wrapper for unorm_normalize(), using UnicodeString's.
-   *
+   * <p>
    * The <code>options</code> parameter specifies which optional
    * <code>Normalizer</code> features are to be enabled for this operation.
-   *
+   * Currently the only available option is deprecated.
+   * The desired options should be OR'ed together to determine the value
+   * of this argument.  If you want the default behavior corresponding
+   * to Unicode Normalization Form <b>D</b> or <b>KD</b>,
+   * use 0 for this argument.
+   * <p>
    * @param source    the string to be decomposed.
    * @param compat    Perform compatibility decomposition.
    *                  If this argument is <code>FALSE</code>, only canonical
@@ -258,112 +244,53 @@ public:
    * @param options   the optional features to be enabled (0 for no options)
    * @param result    The decomposed string (on output).
    * @param status    The error code.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
-  static void U_EXPORT2 decompose(const UnicodeString& source,
+  static void decompose(const UnicodeString& source,
                         UBool compat, int32_t options,
                         UnicodeString& result,
                         UErrorCode &status);
 
   /**
-   * Performing quick check on a string, to quickly determine if the string is
+   * Performing quick check on a string, to quickly determine if the string is 
    * in a particular normalization format.
    * This is a wrapper for unorm_quickCheck(), using a UnicodeString.
    *
    * Three types of result can be returned UNORM_YES, UNORM_NO or
    * UNORM_MAYBE. Result UNORM_YES indicates that the argument
    * string is in the desired normalized format, UNORM_NO determines that
-   * argument string is not in the desired normalized format. A
-   * UNORM_MAYBE result indicates that a more thorough check is required,
-   * the user may have to put the string in its normalized form and compare the
+   * argument string is not in the desired normalized format. A 
+   * UNORM_MAYBE result indicates that a more thorough check is required, 
+   * the user may have to put the string in its normalized form and compare the 
    * results.
    * @param source       string for determining if it is in a normalized format
-   * @param mode         normalization format
-   * @param status A reference to a UErrorCode to receive any errors
+   * @paran mode         normalization format
+   * @param status A pointer to a UErrorCode to receive any errors
    * @return UNORM_YES, UNORM_NO or UNORM_MAYBE
-   *
-   * @see isNormalized
-   * @deprecated ICU 56 Use Normalizer2 instead.
-   */
-  static inline UNormalizationCheckResult
-  quickCheck(const UnicodeString &source, UNormalizationMode mode, UErrorCode &status);
-
-  /**
-   * Performing quick check on a string; same as the other version of quickCheck
-   * but takes an extra options parameter like most normalization functions.
-   *
-   * @param source       string for determining if it is in a normalized format
-   * @param mode         normalization format
-   * @param options      the optional features to be enabled (0 for no options)
-   * @param status A reference to a UErrorCode to receive any errors
-   * @return UNORM_YES, UNORM_NO or UNORM_MAYBE
-   *
-   * @see isNormalized
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   static UNormalizationCheckResult
-  quickCheck(const UnicodeString &source, UNormalizationMode mode, int32_t options, UErrorCode &status);
+  quickCheck(const UnicodeString &source, UNormalizationMode mode, UErrorCode &status);
 
-  /**
-   * Test if a string is in a given normalization form.
-   * This is semantically equivalent to source.equals(normalize(source, mode)) .
-   *
-   * Unlike unorm_quickCheck(), this function returns a definitive result,
-   * never a "maybe".
-   * For NFD, NFKD, and FCD, both functions work exactly the same.
-   * For NFC and NFKC where quickCheck may return "maybe", this function will
-   * perform further tests to arrive at a TRUE/FALSE result.
-   *
-   * @param src        String that is to be tested if it is in a normalization format.
-   * @param mode       Which normalization form to test for.
-   * @param errorCode  ICU error code in/out parameter.
-   *                   Must fulfill U_SUCCESS before the function call.
-   * @return Boolean value indicating whether the source string is in the
-   *         "mode" normalization form.
-   *
-   * @see quickCheck
-   * @deprecated ICU 56 Use Normalizer2 instead.
-   */
-  static inline UBool
-  isNormalized(const UnicodeString &src, UNormalizationMode mode, UErrorCode &errorCode);
-
-  /**
-   * Test if a string is in a given normalization form; same as the other version of isNormalized
-   * but takes an extra options parameter like most normalization functions.
-   *
-   * @param src        String that is to be tested if it is in a normalization format.
-   * @param mode       Which normalization form to test for.
-   * @param options      the optional features to be enabled (0 for no options)
-   * @param errorCode  ICU error code in/out parameter.
-   *                   Must fulfill U_SUCCESS before the function call.
-   * @return Boolean value indicating whether the source string is in the
-   *         "mode" normalization form.
-   *
-   * @see quickCheck
-   * @deprecated ICU 56 Use Normalizer2 instead.
-   */
-  static UBool
-  isNormalized(const UnicodeString &src, UNormalizationMode mode, int32_t options, UErrorCode &errorCode);
-
-  /**
+  /*
    * Concatenate normalized strings, making sure that the result is normalized as well.
    *
    * If both the left and the right strings are in
-   * the normalization form according to "mode/options",
+   * the normalization form according to "mode",
    * then the result will be
    *
    * \code
-   *     dest=normalize(left+right, mode, options)
+   *     dest=normalize(left+right, mode)
    * \endcode
    *
    * For details see unorm_concatenate in unorm.h.
    *
    * @param left Left source string.
    * @param right Right source string.
-   * @param result The output string.
+   * @param dest The output string.
    * @param mode The normalization mode.
    * @param options A bit set of normalization options.
-   * @param errorCode ICU error code in/out parameter.
+   * @param pErrorCode ICU error code in/out parameter.
    *                   Must fulfill U_SUCCESS before the function call.
    * @return result
    *
@@ -372,96 +299,25 @@ public:
    * @see unorm_next
    * @see unorm_previous
    *
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.1
    */
   static UnicodeString &
-  U_EXPORT2 concatenate(const UnicodeString &left, const UnicodeString &right,
+  concatenate(UnicodeString &left, UnicodeString &right,
               UnicodeString &result,
               UNormalizationMode mode, int32_t options,
               UErrorCode &errorCode);
-#endif  /* U_HIDE_DEPRECATED_API */
 
-  /**
-   * Compare two strings for canonical equivalence.
-   * Further options include case-insensitive comparison and
-   * code point order (as opposed to code unit order).
-   *
-   * Canonical equivalence between two strings is defined as their normalized
-   * forms (NFD or NFC) being identical.
-   * This function compares strings incrementally instead of normalizing
-   * (and optionally case-folding) both strings entirely,
-   * improving performance significantly.
-   *
-   * Bulk normalization is only necessary if the strings do not fulfill the FCD
-   * conditions. Only in this case, and only if the strings are relatively long,
-   * is memory allocated temporarily.
-   * For FCD strings and short non-FCD strings there is no memory allocation.
-   *
-   * Semantically, this is equivalent to
-   *   strcmp[CodePointOrder](NFD(foldCase(s1)), NFD(foldCase(s2)))
-   * where code point order and foldCase are all optional.
-   *
-   * UAX 21 2.5 Caseless Matching specifies that for a canonical caseless match
-   * the case folding must be performed first, then the normalization.
-   *
-   * @param s1 First source string.
-   * @param s2 Second source string.
-   *
-   * @param options A bit set of options:
-   *   - U_FOLD_CASE_DEFAULT or 0 is used for default options:
-   *     Case-sensitive comparison in code unit order, and the input strings
-   *     are quick-checked for FCD.
-   *
-   *   - UNORM_INPUT_IS_FCD
-   *     Set if the caller knows that both s1 and s2 fulfill the FCD conditions.
-   *     If not set, the function will quickCheck for FCD
-   *     and normalize if necessary.
-   *
-   *   - U_COMPARE_CODE_POINT_ORDER
-   *     Set to choose code point order instead of code unit order
-   *     (see u_strCompare for details).
-   *
-   *   - U_COMPARE_IGNORE_CASE
-   *     Set to compare strings case-insensitively using case folding,
-   *     instead of case-sensitively.
-   *     If set, then the following case folding options are used.
-   *
-   *   - Options as used with case-insensitive comparisons, currently:
-   *
-   *   - U_FOLD_CASE_EXCLUDE_SPECIAL_I
-   *    (see u_strCaseCompare for details)
-   *
-   *   - regular normalization options shifted left by UNORM_COMPARE_NORM_OPTIONS_SHIFT
-   *
-   * @param errorCode ICU error code in/out parameter.
-   *                  Must fulfill U_SUCCESS before the function call.
-   * @return <0 or 0 or >0 as usual for string comparisons
-   *
-   * @see unorm_compare
-   * @see normalize
-   * @see UNORM_FCD
-   * @see u_strCompare
-   * @see u_strCaseCompare
-   *
-   * @stable ICU 2.2
-   */
-  static inline int32_t
-  compare(const UnicodeString &s1, const UnicodeString &s2,
-          uint32_t options,
-          UErrorCode &errorCode);
-
-#ifndef U_HIDE_DEPRECATED_API
   //-------------------------------------------------------------------------
   // Iteration API
   //-------------------------------------------------------------------------
-
+  
   /**
    * Return the current character in the normalized text.
    * current() may need to normalize some text at getIndex().
    * The getIndex() is not changed.
    *
    * @return the current normalized code point
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   UChar32              current(void);
 
@@ -471,7 +327,7 @@ public:
    * (Post-increment semantics.)
    *
    * @return the first normalized code point
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   UChar32              first(void);
 
@@ -481,41 +337,50 @@ public:
    * (Pre-decrement semantics.)
    *
    * @return the last normalized code point
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   UChar32              last(void);
 
   /**
    * Return the next character in the normalized text.
    * (Post-increment semantics.)
-   * If the end of the text has already been reached, DONE is returned.
-   * The DONE value could be confused with a U+FFFF non-character code point
-   * in the text. If this is possible, you can test getIndex()<endIndex()
-   * before calling next(), or (getIndex()<endIndex() || last()!=DONE)
-   * after calling next(). (Calling last() will change the iterator state!)
-   *
-   * The C API unorm_next() is more efficient and does not have this ambiguity.
+   * If the end of the text has already been reached, {@link #DONE} is returned.
    *
    * @return the next normalized code point
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   UChar32              next(void);
 
   /**
-   * Return the previous character in the normalized text and decrement.
+   * Return the previous character in the normalized text. and decrement
    * (Pre-decrement semantics.)
-   * If the beginning of the text has already been reached, DONE is returned.
-   * The DONE value could be confused with a U+FFFF non-character code point
-   * in the text. If this is possible, you can test
-   * (getIndex()>startIndex() || first()!=DONE). (Calling first() will change
-   * the iterator state!)
-   *
-   * The C API unorm_previous() is more efficient and does not have this ambiguity.
+   * If the beginning of the text has already been reached, {@link #DONE} is returned.
    *
    * @return the previous normalized code point
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   UChar32              previous(void);
+
+  /**
+   * Set the iteration position in the input text that is being normalized
+   * and return the first normalized character at that position.
+   * This is equivalent to setIndexOnly() followed by current().
+   * After setIndex(), getIndex() will return the same index that is
+   * specified here.
+   *
+   * Note that setIndex() normalizes some text starting at the specified index
+   * and returns the first code point from that normalization.
+   * If the next call is to previous() then this piece of text probably
+   * did not need to be normalized.
+   *
+   * This function is deprecated.
+   * It is recommended to use setIndexOnly() instead of setIndex().
+   *
+   * @param index the desired index in the input text.
+   * @return      the normalized character from the text at index
+   * @deprecated To be removed after 2002-aug-31. Use setIndexOnly().
+   */
+  UChar32              setIndex(int32_t index);
 
   /**
    * Set the iteration position in the input text that is being normalized,
@@ -524,14 +389,14 @@ public:
    * specified here.
    *
    * @param index the desired index in the input text.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   void                 setIndexOnly(int32_t index);
 
   /**
    * Reset the index to the beginning of the text.
    * This is equivalent to setIndexOnly(startIndex)).
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   void                reset(void);
 
@@ -547,7 +412,7 @@ public:
    * was returned from with previous().
    *
    * @return the current index in the input text
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   int32_t            getIndex(void) const;
 
@@ -557,7 +422,7 @@ public:
    * over which this <code>Normalizer</code> is iterating.
    *
    * @return the smallest index in the input text where the Normalizer operates
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   int32_t            startIndex(void) const;
 
@@ -569,7 +434,7 @@ public:
    * before this index.
    *
    * @return the first index in the input text where the Normalizer does not operate
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   int32_t            endIndex(void) const;
 
@@ -579,7 +444,7 @@ public:
    *
    * @param that a Normalizer object to compare this one to
    * @return comparison result
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   UBool        operator==(const Normalizer& that) const;
 
@@ -589,15 +454,15 @@ public:
    *
    * @param that a Normalizer object to compare this one to
    * @return comparison result
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   inline UBool        operator!=(const Normalizer& that) const;
 
   /**
    * Returns a pointer to a new Normalizer that is a clone of this one.
    * The caller is responsible for deleting the new clone.
-   * @return a pointer to a new Normalizer
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   *
+   * @stable
    */
   Normalizer*        clone(void) const;
 
@@ -605,7 +470,7 @@ public:
    * Generates a hash code for this iterator.
    *
    * @return the hash code
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   int32_t                hashCode(void) const;
 
@@ -617,16 +482,16 @@ public:
    * Set the normalization mode for this object.
    * <p>
    * <b>Note:</b>If the normalization mode is changed while iterating
-   * over a string, calls to {@link #next() } and {@link #previous() } may
+   * over a string, calls to {@link #next} and {@link #previous} may
    * return previously buffers characters in the old normalization mode
    * until the iteration is able to re-sync at the next base character.
-   * It is safest to call {@link #setIndexOnly }, {@link #reset() },
-   * {@link #setText }, {@link #first() },
-   * {@link #last() }, etc. after calling <code>setMode</code>.
+   * It is safest to call {@link #setIndexOnly}, {@link #reset},
+   * {@link #setText setText()}, {@link #first},
+   * {@link #last}, etc. after calling <code>setMode</code>.
    * <p>
    * @param newMode the new mode for this <code>Normalizer</code>.
    * @see #getUMode
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   void setMode(UNormalizationMode newMode);
 
@@ -638,7 +503,7 @@ public:
    *
    * @return the mode for this <code>Normalizer</code>
    * @see #setMode
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @draft ICU 2.0
    */
   UNormalizationMode getUMode(void) const;
 
@@ -647,7 +512,7 @@ public:
    * Options do not change the basic composition or decomposition operation
    * that is being performed, but they control whether
    * certain optional portions of the operation are done.
-   * Currently the only available option is obsolete.
+   * Currently the only available option is deprecated.
    *
    * It is possible to specify multiple options that are all turned on or off.
    *
@@ -656,9 +521,9 @@ public:
    *                  turn the option(s) on and <code>FALSE</code> to turn it/them off.
    *
    * @see #getOption
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
-  void setOption(int32_t option,
+  void setOption(int32_t option, 
          UBool value);
 
   /**
@@ -669,7 +534,7 @@ public:
    * @param option the option(s) that are to be checked
    * @return TRUE if any of the option(s) are set
    * @see #setOption
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   UBool getOption(int32_t option) const;
 
@@ -679,9 +544,9 @@ public:
    *
    * @param newText a string that replaces the current input text
    * @param status a UErrorCode
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
-  void setText(const UnicodeString& newText,
+  void setText(const UnicodeString& newText, 
            UErrorCode &status);
 
   /**
@@ -690,9 +555,9 @@ public:
    *
    * @param newText a CharacterIterator object that replaces the current input text
    * @param status a UErrorCode
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
-  void setText(const CharacterIterator& newText,
+  void setText(const CharacterIterator& newText, 
            UErrorCode &status);
 
   /**
@@ -702,61 +567,383 @@ public:
    * @param newText a string that replaces the current input text
    * @param length the length of the string, or -1 if NUL-terminated
    * @param status a UErrorCode
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
-  void setText(ConstChar16Ptr newText,
+  void setText(const UChar* newText,
                     int32_t length,
             UErrorCode &status);
   /**
    * Copies the input text into the UnicodeString argument.
    *
    * @param result Receives a copy of the text under iteration.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * @stable
    */
   void            getText(UnicodeString&  result);
 
-  /**
-   * ICU "poor man's RTTI", returns a UClassID for this class.
-   * @returns a UClassID for this class.
-   * @deprecated ICU 56 Use Normalizer2 instead.
-   */
-  static UClassID U_EXPORT2 getStaticClassID();
-#endif  /* U_HIDE_DEPRECATED_API */
+  //-------------------------------------------------------------------------
+  // Deprecated APIs
+  //-------------------------------------------------------------------------
 
   /**
-   * ICU "poor man's RTTI", returns a UClassID for the actual class.
-   * @return a UClassID for the actual class.
-   * @deprecated ICU 56 Use Normalizer2 instead.
+   * This tells us what the bits in the "mode" mean.
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
    */
-  virtual UClassID getDynamicClassID() const;
+  enum {
+    COMPAT_BIT         = 1,
+    DECOMP_BIT         = 2,
+    COMPOSE_BIT        = 4,
+    FCD_BIT            = 8
+  };
+
+  /**
+   * The mode of a Normalizer object
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  enum EMode {
+    /**
+     * Null operation for use with the {@link #Normalizer constructors}
+     * and the static {@link #normalize normalize} method.  This value tells
+     * the <code>Normalizer</code> to do nothing but return unprocessed characters
+     * from the underlying UnicodeString or CharacterIterator.  If you have code which
+     * requires raw text at some times and normalized text at others, you can
+     * use <code>NO_OP</code> for the cases where you want raw text, rather
+     * than having a separate code path that bypasses <code>Normalizer</code>
+     * altogether.
+     * <p>
+     * @see #setMode
+     * @deprecated To be removed after 2002-sep-30. Use UNORM_NONE from UNormalizationMode.
+     */
+    NO_OP         = 0,
+    
+    /**
+     * Canonical decomposition followed by canonical composition.  Used with 
+     * the {@link #Normalizer constructors} and the static 
+     * {@link #normalize normalize}
+     * method to determine the operation to be performed.
+     * <p>
+     * If all optional features (<i>e.g.</i> {@link #IGNORE_HANGUL}) are turned
+     * off, this operation produces output that is in
+     * <a href=http://www.unicode.org/unicode/reports/tr15/>Unicode Canonical
+     * Form</a>
+     * <b>C</b>.
+     * <p>
+     * @see #setMode
+     * @deprecated To be removed after 2002-sep-30. Use UNORM_NFC from UNormalizationMode.
+     */
+    COMPOSE         = COMPOSE_BIT,
+
+    /**
+     * Compatibility decomposition followed by canonical composition.
+     * Used with the {@link #Normalizer constructors} and the static
+     * {@link #normalize normalize} method to determine the operation to be
+     * performed.
+     * <p>
+     * If all optional features (<i>e.g.</i> {@link #IGNORE_HANGUL}) are turned
+     * off, this operation produces output that is in
+     * <a href=http://www.unicode.org/unicode/reports/tr15/>Unicode Canonical
+     * Form</a>
+     * <b>KC</b>.
+     * <p>
+     * @see #setMode
+     * @deprecated To be removed after 2002-sep-30. Use UNORM_NFKC from UNormalizationMode.
+     */
+    COMPOSE_COMPAT     = COMPOSE_BIT | COMPAT_BIT,
+
+    /**
+     * Canonical decomposition.  This value is passed to the
+     * {@link #Normalizer constructors} and the static 
+     * {@link #normalize normalize}
+     * method to determine the operation to be performed.
+     * <p>
+     * If all optional features (<i>e.g.</i> {@link #IGNORE_HANGUL}) are turned
+     * off, this operation produces output that is in
+     * <a href=http://www.unicode.org/unicode/reports/tr15/>Unicode Canonical 
+     * Form</a>
+     * <b>D</b>.
+     * <p>
+     * @see #setMode
+     * @deprecated To be removed after 2002-sep-30. Use UNORM_NFD from UNormalizationMode.
+     */
+    DECOMP         = DECOMP_BIT,
+
+    /**
+     * Compatibility decomposition.  This value is passed to the
+     * {@link #Normalizer constructors} and the static 
+     * {@link #normalize normalize}
+     * method to determine the operation to be performed.
+     * <p>
+     * If all optional features (<i>e.g.</i> {@link #IGNORE_HANGUL}) are turned
+     * off, this operation produces output that is in
+     * <a href=http://www.unicode.org/unicode/reports/tr15/>Unicode Canonical 
+     * Form</a>
+     * <b>KD</b>.
+     * <p>
+     * @see #setMode
+     * @deprecated To be removed after 2002-sep-30. Use UNORM_NFKD from UNormalizationMode.
+     */
+    DECOMP_COMPAT     = DECOMP_BIT | COMPAT_BIT,
+
+    /**
+     * @deprecated To be removed after 2002-sep-30. Use UNORM_FCD from UNormalizationMode.
+     */
+    FCD = FCD_BIT
+  };
+
+  /** The options for a Normalizer object */
+  enum {
+    /**
+     * Option to disable Hangul/Jamo composition and decomposition.
+     * This option applies to Korean text, 
+     * which can be represented either in the Jamo alphabet or in Hangul
+     * characters, which are really just two or three Jamo combined
+     * into one visual glyph.  Since Jamo takes up more storage space than
+     * Hangul, applications that process only Hangul text may wish to turn
+     * this option on when decomposing text.
+     * <p>
+     * The Unicode standard treates Hangul to Jamo conversion as a 
+     * canonical decomposition, so this option must be turned <b>off</b> if you
+     * wish to transform strings into one of the standard
+     * <a href="http://www.unicode.org/unicode/reports/tr15/" target="unicode">
+     * Unicode Normalization Forms</a>.
+     * <p>
+     * @see #setOption
+     * @deprecated To be removed (or moved to private for documentation) after 2002-aug-31. Obsolete option.
+     */
+    IGNORE_HANGUL     = 0x001
+  };
+
+  /**
+   * Creates a new <code>Normalizer</code> object for iterating over the
+   * normalized form of a given string.
+   * <p>
+   * @param str   The string to be normalized.  The normalization
+   *              will start at the beginning of the string.
+   *
+   * @param mode  The normalization mode.
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  Normalizer(const UnicodeString& str, 
+         EMode mode);
+    
+  /**
+   * Creates a new <code>Normalizer</code> object for iterating over the
+   * normalized form of a given string.
+   * <p>
+   * The <code>options</code> parameter specifies which optional
+   * <code>Normalizer</code> features are to be enabled for this object.
+   * <p>
+   * @param str   The string to be normalized.  The normalization
+   *              will start at the beginning of the string.
+   *
+   * @param mode  The normalization mode.
+   *
+   * @param opt   Any optional features to be enabled.
+   *              Currently the only available option is {@link #IGNORE_HANGUL}
+   *              If you want the default behavior corresponding to one of the
+   *              standard Unicode Normalization Forms, use 0 for this argument
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  Normalizer(const UnicodeString& str, 
+         EMode mode, 
+         int32_t opt);
+
+  /**
+   * Creates a new <code>Normalizer</code> object for iterating over the
+   * normalized form of a given UChar string.
+   * <p>
+   * @param str   The string to be normalized.  The normalization
+   *              will start at the beginning of the string.
+   *
+   * @param length Lenght of the string
+   * @param mode  The normalization mode.
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  Normalizer(const UChar* str,
+         int32_t length,
+         EMode mode);
+
+  /**
+   * Creates a new <code>Normalizer</code> object for iterating over the
+   * normalized form of a given UChar string.
+   * <p>
+   * @param str   The string to be normalized.  The normalization
+   *              will start at the beginning of the string.
+   *
+   * @param length Lenght of the string
+   * @param mode  The normalization mode.
+   * @param opt   Any optional features to be enabled.
+   *              Currently the only available option is {@link #IGNORE_HANGUL}
+   *              If you want the default behavior corresponding to one of the
+   *              standard Unicode Normalization Forms, use 0 for this argument
+   * @unimplemented 
+   */
+  Normalizer(const UChar* str,
+         int32_t length,
+         EMode mode,
+         int32_t option);
+
+  /**
+   * Creates a new <code>Normalizer</code> object for iterating over the
+   * normalized form of the given text.
+   * <p>
+   * @param iter  The input text to be normalized.  The normalization
+   *              will start at the beginning of the string.
+   *
+   * @param mode  The normalization mode.
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  Normalizer(const CharacterIterator& iter, 
+         EMode mode);
+
+  /**
+   * Creates a new <code>Normalizer</code> object for iterating over the
+   * normalized form of the given text.
+   * <p>
+   * @param iter  The input text to be normalized.  The normalization
+   *              will start at the beginning of the string.
+   *
+   * @param mode  The normalization mode.
+   *
+   * @param opt   Any optional features to be enabled.
+   *              Currently the only available option is {@link #IGNORE_HANGUL}
+   *              If you want the default behavior corresponding to one of the
+   *              standard Unicode Normalization Forms, use 0 for this argument
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  Normalizer(const CharacterIterator& iter, 
+         EMode mode, 
+         int32_t opt);
+
+  /**
+   * Normalizes a <code>UnicodeString</code> using the given normalization operation.
+   * <p>
+   * The <code>options</code> parameter specifies which optional
+   * <code>Normalizer</code> features are to be enabled for this operation.
+   * Currently the only available option is {@link #IGNORE_HANGUL}.
+   * If you want the default behavior corresponding to one of the standard
+   * Unicode Normalization Forms, use 0 for this argument.
+   * <p>
+   * @param source    the input string to be normalized.
+   *
+   * @param aMode     the normalization mode
+   *
+   * @param options   the optional features to be enabled.
+   *
+   * @param result    The normalized string (on output).
+   *
+   * @param status    The error code.
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  inline static void
+  normalize(const UnicodeString& source, 
+            EMode mode, 
+            int32_t options,
+            UnicodeString& result, 
+            UErrorCode &status);
+
+  /**
+   * Performing quick check on a string, to quickly determine if the string is 
+   * in a particular normalization format.
+   * Three types of result can be returned UNORM_YES, UNORM_NO or
+   * UNORM_MAYBE. Result UNORM_YES indicates that the argument
+   * string is in the desired normalized format, UNORM_NO determines that
+   * argument string is not in the desired normalized format. A 
+   * UNORM_MAYBE result indicates that a more thorough check is required, 
+   * the user may have to put the string in its normalized form and compare the 
+   * results.
+   * @param source       string for determining if it is in a normalized format
+   * @paran mode         normalization format
+   * @param status A pointer to an UErrorCode to receive any errors
+   * @return UNORM_YES, UNORM_NO or UNORM_MAYBE
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  inline static UNormalizationCheckResult
+  quickCheck(const UnicodeString& source,
+             EMode                mode, 
+             UErrorCode&          status);
+
+  /**
+   * Converts C's Normalizer::EMode to UNormalizationMode
+   * @param mode member of the enum Normalizer::EMode
+   * @param status error codes status
+   * @return UNormalizationMode equivalent of Normalizer::EMode
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  inline static UNormalizationMode getUNormalizationMode(EMode mode, 
+                                                  UErrorCode& status);
+
+  /**
+  * Converts C++'s UNormalizationMode to Normalizer::EMode
+  * @param mode member of the enum UNormalizationMode
+  * @param status error codes status
+  * @return Normalizer::EMode equivalent of UNormalizationMode
+  * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+  */
+  inline static EMode getNormalizerEMode(UNormalizationMode mode, 
+                                         UErrorCode& status);
+
+  /**
+   * Set the normalization mode for this object.
+   * <p>
+   * <b>Note:</b>If the normalization mode is changed while iterating
+   * over a string, calls to {@link #next} and {@link #previous} may
+   * return previously buffers characters in the old normalization mode
+   * until the iteration is able to re-sync at the next base character.
+   * It is safest to call {@link #setText setText()}, {@link #first},
+   * {@link #last}, etc. after calling <code>setMode</code>.
+   * <p>
+   * @param newMode the new mode for this <code>Normalizer</code>.
+   * The supported modes are:
+   * <ul>
+   *  <li>{@link #COMPOSE}        - Unicode canonical decompositiion
+   *                                  followed by canonical composition.
+   *  <li>{@link #COMPOSE_COMPAT} - Unicode compatibility decompositiion
+   *                                  follwed by canonical composition.
+   *  <li>{@link #DECOMP}         - Unicode canonical decomposition
+   *  <li>{@link #DECOMP_COMPAT}  - Unicode compatibility decomposition.
+   *  <li>{@link #NO_OP}          - Do nothing but return characters
+   *                                  from the underlying input text.
+   * </ul>
+   *
+   * @see #getMode
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  inline void setMode(EMode newMode);
+
+  /**
+   * Return the basic operation performed by this <code>Normalizer</code>
+   *
+   * @see #setMode
+   * @deprecated To be removed after 2002-sep-30. Use UNormalizationMode.
+   */
+  inline EMode getMode(void) const;
 
 private:
   //-------------------------------------------------------------------------
   // Private functions
   //-------------------------------------------------------------------------
 
-  Normalizer(); // default constructor not implemented
-  Normalizer &operator=(const Normalizer &that); // assignment operator not implemented
-
   // Private utility methods for iteration
   // For documentation, see the source code
   UBool nextNormalize();
   UBool previousNormalize();
 
-  void    init();
+  void    init(CharacterIterator *iter);
   void    clearBuffer(void);
+
+  // Helper, without UErrorCode, for easier transitional code
+  // remove after 2002-sep-30 with EMode etc.
+  inline static UNormalizationMode getUMode(EMode mode);
 
   //-------------------------------------------------------------------------
   // Private data
   //-------------------------------------------------------------------------
 
-  FilteredNormalizer2*fFilteredNorm2;  // owned if not NULL
-  const Normalizer2  *fNorm2;  // not owned; may be equal to fFilteredNorm2
-  UNormalizationMode  fUMode;  // deprecated
+  UNormalizationMode  fUMode;
   int32_t             fOptions;
 
   // The input text and our position in it
-  CharacterIterator  *text;
+  UCharIterator       *text;
 
   // The normalization buffer is the result of normalization
   // of the source in [currentIndex..nextIndex[ .
@@ -771,39 +958,108 @@ private:
 // Inline implementations
 //-------------------------------------------------------------------------
 
-#ifndef U_HIDE_DEPRECATED_API
 inline UBool
 Normalizer::operator!= (const Normalizer& other) const
 { return ! operator==(other); }
 
+inline void 
+Normalizer::normalize(const UnicodeString& source, 
+                      EMode mode, int32_t options,
+                      UnicodeString& result, 
+                      UErrorCode &status) {
+  normalize(source, getUNormalizationMode(mode, status), options, result, status);
+}
+
 inline UNormalizationCheckResult
 Normalizer::quickCheck(const UnicodeString& source,
-                       UNormalizationMode mode,
+                       EMode mode, 
                        UErrorCode &status) {
-    return quickCheck(source, mode, 0, status);
+  return quickCheck(source, getUNormalizationMode(mode, status), status);
 }
 
-inline UBool
-Normalizer::isNormalized(const UnicodeString& source,
-                         UNormalizationMode mode,
-                         UErrorCode &status) {
-    return isNormalized(source, mode, 0, status);
+inline void
+Normalizer::setMode(EMode newMode) {
+  UErrorCode status = U_ZERO_ERROR;
+  fUMode = getUNormalizationMode(newMode, status);
 }
-#endif  /* U_HIDE_DEPRECATED_API */
 
-inline int32_t
-Normalizer::compare(const UnicodeString &s1, const UnicodeString &s2,
-                    uint32_t options,
-                    UErrorCode &errorCode) {
-  // all argument checking is done in unorm_compare
-  return unorm_compare(toUCharPtr(s1.getBuffer()), s1.length(),
-                       toUCharPtr(s2.getBuffer()), s2.length(),
-                       options,
-                       &errorCode);
+inline Normalizer::EMode
+Normalizer::getMode() const {
+  UErrorCode status = U_ZERO_ERROR;
+  return getNormalizerEMode(fUMode, status);
+}
+
+inline UNormalizationMode Normalizer::getUNormalizationMode(
+                                   Normalizer::EMode  mode, UErrorCode &status)
+{
+  if (U_SUCCESS(status))
+  { 
+    switch (mode)
+    {
+    case Normalizer::NO_OP : 
+      return UNORM_NONE;
+    case Normalizer::COMPOSE :
+      return UNORM_NFC;
+    case Normalizer::COMPOSE_COMPAT :
+      return UNORM_NFKC;
+    case Normalizer::DECOMP :
+      return UNORM_NFD;
+    case Normalizer::DECOMP_COMPAT :
+      return UNORM_NFKD;
+    case Normalizer::FCD:
+      return UNORM_FCD;
+    default : 
+      status = U_ILLEGAL_ARGUMENT_ERROR; 
+    }
+  }
+  return UNORM_DEFAULT;
+}
+
+inline UNormalizationMode
+Normalizer::getUMode(Normalizer::EMode mode) {
+  switch(mode) {
+  case Normalizer::NO_OP : 
+    return UNORM_NONE;
+  case Normalizer::COMPOSE :
+    return UNORM_NFC;
+  case Normalizer::COMPOSE_COMPAT :
+    return UNORM_NFKC;
+  case Normalizer::DECOMP :
+    return UNORM_NFD;
+  case Normalizer::DECOMP_COMPAT :
+    return UNORM_NFKD;
+  case Normalizer::FCD:
+    return UNORM_FCD;
+  default : 
+    return UNORM_DEFAULT;
+  }
+}
+
+inline Normalizer::EMode Normalizer::getNormalizerEMode(
+                                  UNormalizationMode mode, UErrorCode &status)
+{
+  if (U_SUCCESS(status))
+  {
+    switch (mode)
+    {
+    case UNORM_NONE :
+      return Normalizer::NO_OP;
+    case UNORM_NFD :
+      return Normalizer::DECOMP;
+    case UNORM_NFKD :
+      return Normalizer::DECOMP_COMPAT;
+    case UNORM_NFC :
+      return Normalizer::COMPOSE;
+    case UNORM_NFKC :
+      return Normalizer::COMPOSE_COMPAT;
+    case UNORM_FCD:
+      return Normalizer::FCD;
+    default : 
+      status = U_ILLEGAL_ARGUMENT_ERROR; 
+    }
+  }
+  return Normalizer::DECOMP_COMPAT;
 }
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_NORMALIZATION */
-
-#endif // NORMLZR_H
+#endif // _NORMLZR

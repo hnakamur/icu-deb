@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2009, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -21,11 +19,7 @@
  */
 
 #include <stdlib.h>
-
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "unicode/ucol.h"
 #include "unicode/uloc.h"
 #include "cintltst.h"
@@ -106,11 +100,11 @@ static void TestTertiary( )
     UErrorCode status = U_ZERO_ERROR;
     myCollation = ucol_open("de_DE", &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of rule based collator: %s\n", myErrorName(status));
+        log_err("ERROR: in creation of rule based collator: %s\n", myErrorName(status));
         return;
     }
     log_verbose("Testing German Collation with Tertiary strength\n");
-    ucol_setAttribute(myCollation, UCOL_NORMALIZATION_MODE, UCOL_ON, &status);
+    ucol_setNormalization(myCollation, UNORM_NFC);
     ucol_setStrength(myCollation, UCOL_TERTIARY);
     for (i = 0; i < 12 ; i++)
     {
@@ -126,7 +120,7 @@ static void TestPrimary()
     UErrorCode status = U_ZERO_ERROR;
     myCollation = ucol_open("de_DE", &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: %s: in creation of rule based collator: %s\n", __FILE__, myErrorName(status));
+        log_err("ERROR: %s: in creation of rule based collator: %s\n", __FILE__, myErrorName(status));
         return;
     }
     log_verbose("Testing German Collation with primary strength\n");
@@ -137,5 +131,3 @@ static void TestPrimary()
     }
     ucol_close(myCollation);
 }
-
-#endif /* #if !UCONFIG_NO_COLLATION */

@@ -1,18 +1,16 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ***************************************************************************/
-/*****************************************************************************
+/*******************************************************************************
 *
 * File NCNVCBTS
 *
 * Modification History:
 *      Name              Date                  Description            
 * Madhu Katragadda    06/23/2000     Tests for Conveter FallBack API and Functionality
-******************************************************************************
+**********************************************************************************
 */
 #include <stdio.h>
 #include "unicode/uloc.h"
@@ -25,7 +23,6 @@
 #include "cmemory.h"
 #include "cstring.h"
 
-#if !UCONFIG_NO_LEGACY_CONVERSION
 #define NEW_MAX_BUFFER 999
 
 
@@ -34,16 +31,6 @@
 static int32_t  gInBufferSize = 0;
 static int32_t  gOutBufferSize = 0;
 static char     gNuConvTestName[1024];
-
-static UConverter *my_ucnv_open(const char *cnv, UErrorCode *err)
-{
-  if(cnv && cnv[0] == '@') {
-    return ucnv_openPackage("testdata", cnv+1, err);
-  } else {
-    return ucnv_open(cnv, err);
-  }
-}
-
 
 static void printSeq(const unsigned char* a, int len)
 {
@@ -106,9 +93,7 @@ void addTestConverterFallBack(TestNode** root);
 
 void addTestConverterFallBack(TestNode** root)
 {
-#if !UCONFIG_NO_FILE_IO
    addTest(root, &TestConverterFallBack, "tsconv/ncnvfbts/TestConverterFallBack");
-#endif
  
 }
 
@@ -120,40 +105,40 @@ void addTestConverterFallBack(TestNode** root)
 
 static void setNuConvTestName(const char *codepage, const char *direction)
 {
-    sprintf(gNuConvTestName, "[Testing %s %s Unicode, InputBufSiz=%d, OutputBufSiz=%d]",
-        codepage,
-        direction,
-        (int)gInBufferSize,
-        (int)gOutBufferSize);
+  sprintf(gNuConvTestName, "[Testing %s %s Unicode, InputBufSiz=%d, OutputBufSiz=%d]",
+      codepage,
+      direction,
+      gInBufferSize,
+      gOutBufferSize);
 }
 
 
 static UBool testConvertFromUnicode(const UChar *source, int sourceLen,  const uint8_t *expect, int expectLen, 
-                const char *codepage, UBool fallback, const int32_t *expectOffsets)
+                const char *codepage, UBool fallback, int32_t *expectOffsets)
 {
 
 
     UErrorCode status = U_ZERO_ERROR;
     UConverter *conv = 0;
-    char junkout[NEW_MAX_BUFFER]; /* FIX */
+    uint8_t junkout[NEW_MAX_BUFFER]; /* FIX */
     int32_t junokout[NEW_MAX_BUFFER]; /* FIX */
     const UChar *src;
-    char *end;
-    char *targ;
+    uint8_t *end;
+    uint8_t *targ;
     int32_t *offs;
     int i;
     int32_t   realBufferSize;
-    char *realBufferEnd;
+    uint8_t *realBufferEnd;
     const UChar *realSourceEnd;
     const UChar *sourceLimit;
     UBool checkOffsets = TRUE;
     UBool doFlush;
     UBool action=FALSE;
-    char *p;
+    uint8_t *p;
 
 
     for(i=0;i<NEW_MAX_BUFFER;i++)
-        junkout[i] = (char)0xF0;
+        junkout[i] = 0xF0;
     for(i=0;i<NEW_MAX_BUFFER;i++)
         junokout[i] = 0xFF;
     setNuConvTestName(codepage, "FROM");
@@ -161,11 +146,11 @@ static UBool testConvertFromUnicode(const UChar *source, int sourceLen,  const u
     log_verbose("\nTesting========= %s  FROM \n  inputbuffer= %d   outputbuffer= %d\n", codepage, gInBufferSize, 
             gOutBufferSize);
 
-    conv = my_ucnv_open(codepage, &status);
+    conv = ucnv_open(codepage, &status);
     if(U_FAILURE(status))
     {
-        log_data_err("Couldn't open converter %s\n",codepage);
-        return TRUE;
+        log_err("Couldn't open converter %s\n",codepage);
+        return FALSE;
     }
 
     log_verbose("Converter opened..\n");
@@ -180,7 +165,7 @@ static UBool testConvertFromUnicode(const UChar *source, int sourceLen,  const u
     targ = junkout;
     offs = junokout;
 
-    realBufferSize = UPRV_LENGTHOF(junkout);
+    realBufferSize = (sizeof(junkout)/sizeof(junkout[0]));
     realBufferEnd = junkout + realBufferSize;
     realSourceEnd = source + sourceLen;
 
@@ -226,7 +211,7 @@ static UBool testConvertFromUnicode(const UChar *source, int sourceLen,  const u
 
     log_verbose("\nConversion done [%d uchars in -> %d chars out]. \nResult :",
         sourceLen, targ-junkout);
-    if(getTestOption(VERBOSITY_OPTION))
+    if(VERBOSITY)
     {
         char junk[9999];
         char offset_str[9999];
@@ -255,7 +240,7 @@ static UBool testConvertFromUnicode(const UChar *source, int sourceLen,  const u
     {
         log_err("Expected %d chars out, got %d %s\n", expectLen, targ-junkout, gNuConvTestName);
         log_verbose("Expected %d chars out, got %d %s\n", expectLen, targ-junkout, gNuConvTestName);
-        printSeqErr((const unsigned char*)junkout, (int32_t)(targ-junkout));
+        printSeqErr((const unsigned char*)junkout, targ-junkout);
         printSeqErr((const unsigned char*)expect, expectLen);
         return FALSE;
     }
@@ -266,7 +251,7 @@ static UBool testConvertFromUnicode(const UChar *source, int sourceLen,  const u
         if(uprv_memcmp(junokout,expectOffsets,(targ-junkout) * sizeof(int32_t) )){
             log_err("\ndid not get the expected offsets while %s \n", gNuConvTestName);
             log_err("Got  : ");
-            printSeqErr((const unsigned char*)junkout, (int32_t)(targ-junkout));
+            printSeqErr((const unsigned char*)junkout, targ-junkout);
             for(p=junkout;p<targ;p++)
                 log_err("%d, ", junokout[p-junkout]); 
             log_err("\nExpected: ");
@@ -292,15 +277,15 @@ static UBool testConvertFromUnicode(const UChar *source, int sourceLen,  const u
 }
 
 static UBool testConvertToUnicode( const uint8_t *source, int sourcelen, const UChar *expect, int expectlen, 
-               const char *codepage, UBool fallback, const int32_t *expectOffsets)
+               const char *codepage, UBool fallback, int32_t *expectOffsets)
 {
     UErrorCode status = U_ZERO_ERROR;
     UConverter *conv = 0;
     UChar   junkout[NEW_MAX_BUFFER]; /* FIX */
     int32_t junokout[NEW_MAX_BUFFER]; /* FIX */
-    const char *src;
-    const char *realSourceEnd;
-    const char *srcLimit;
+    const uint8_t *src;
+    const uint8_t *realSourceEnd;
+    const uint8_t *srcLimit;
     UChar *targ;
     UChar *end;
     int32_t *offs;
@@ -325,20 +310,20 @@ static UBool testConvertToUnicode( const uint8_t *source, int sourcelen, const U
 
     log_verbose("\n=========  %s\n", gNuConvTestName);
 
-    conv = my_ucnv_open(codepage, &status);
+    conv = ucnv_open(codepage, &status);
     if(U_FAILURE(status))
     {
-        log_data_err("Couldn't open converter %s\n",gNuConvTestName);
-        return TRUE; /* because it has been logged */
+        log_err("Couldn't open converter %s\n",gNuConvTestName);
+        return FALSE;
     }
 
     log_verbose("Converter opened..\n");
 
-    src = (const char *)source;
+    src = source;
     targ = junkout;
     offs = junokout;
 
-    realBufferSize = UPRV_LENGTHOF(junkout);
+    realBufferSize = (sizeof(junkout)/sizeof(junkout[0]));
     realBufferEnd = junkout + realBufferSize;
     realSourceEnd = src + sourcelen;
     /*----setting the fallback routine----*/
@@ -389,7 +374,7 @@ static UBool testConvertToUnicode( const uint8_t *source, int sourcelen, const U
 
     log_verbose("\nConversion done. %d bytes -> %d chars.\nResult :",
         sourcelen, targ-junkout);
-    if(getTestOption(VERBOSITY_OPTION))
+    if(VERBOSITY)
     {
 
         junk[0] = 0;
@@ -429,7 +414,7 @@ static UBool testConvertToUnicode( const uint8_t *source, int sourcelen, const U
             for(i=0; i<(targ-junkout); i++)
                 log_err("0x%04X,", junkout[i]);
             log_err("");
-            for(i=0; i<(src-(const char *)source); i++)
+            for(i=0; i<(src-source); i++)
                 log_err("0x%04X,", (unsigned char)source[i]);
         }
     }
@@ -455,44 +440,43 @@ static UBool testConvertToUnicode( const uint8_t *source, int sourcelen, const U
 static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize ) 
 {
 
-    static const UChar    SBCSText[] = 
+    UChar    SBCSText[] = 
      { 0x0021, 0xFF01, 0x0022, 0xFF02, 0x0023, 0xFF03, 0x003A, 0xFF1A, 0x003B, 0xFF1B, 0x003C, 0xFF1C };
      /* 21, ?, 22, ?, 23, ?, 3a, ?, 3b, ?, 3c, ? SBCS*/
-    static const uint8_t expectedNative[] = 
+    const uint8_t expectedNative[] = 
      {  0x21, 0x21, 0x22, 0x22, 0x23, 0x23, 0x3a, 0x3a, 0x3b, 0x3b, 0x3c, 0x3c};
-    static const UChar retrievedSBCSText[]=
+    UChar retrievedSBCSText[]=
        { 0x0021, 0x0021, 0x0022, 0x0022, 0x0023, 0x0023, 0x003A, 0x003A, 0x003B, 0x003B, 0x003C, 0x003C };
-    static const int32_t  toNativeOffs    [] = 
+    int32_t  toNativeOffs    [] = 
      {  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b};
-    static const int32_t fromNativeoffs []  = 
+    int32_t fromNativeoffs []  = 
     {  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
    
     
-    /* 1363 isn't DBCS, but it has the DBCS section */
-    static const UChar    DBCSText[] = 
+    UChar    DBCSText[] = 
      { 0x00a1, 0x00ad, 0x2010, 0x00b7, 0x30fb};
-    static const uint8_t expectedIBM1363_DBCS[] = 
+    const uint8_t expectedIBM1362[] = 
      {  0xa2, 0xae, 0xa1 ,0xa9, 0xa1, 0xa9,0xa1 ,0xa4, 0xa1, 0xa4};
-    static const UChar retrievedDBCSText[]=
+    UChar retrievedDBCSText[]=
         { 0x00a1, 0x2010, 0x2010, 0x30fb, 0x30fb };
-    static const int32_t  toIBM1363Offs_DBCS[] = 
+    int32_t  toIBM1362Offs    [] = 
         {  0x00, 0x00, 0x01,0x01, 0x02, 0x02,  0x03, 0x03, 0x04, 0x04};
-    static const int32_t fromIBM1363offs_DBCS[]  = 
+    int32_t fromIBM1362offs []  = 
     {  0, 2, 4, 6, 8};
 
 
-    static const UChar    MBCSText[] = 
+    UChar    MBCSText[] = 
      { 0x0001, 0x263a, 0x2013, 0x2014, 0x263b, 0x0002};
-    static const  uint8_t expectedIBM950[] = 
+    const uint8_t expectedIBM1370[] = 
      {  0x01, 0x01, 0xa1, 0x56, 0xa1, 0x56, 0x02, 0x02};
-    static const UChar retrievedMBCSText[]=
+    UChar retrievedMBCSText[]=
        { 0x0001, 0x0001, 0x2014, 0x2014, 0x0002, 0x0002};
-    static const int32_t  toIBM950Offs    [] = 
+    int32_t  toIBM1370Offs    [] = 
      {  0x00, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04, 0x05};
-    static const int32_t fromIBM950offs []  = 
+    int32_t fromIBM1370offs []  = 
     {  0, 1, 2, 4, 6, 7};
 
-    static const UChar    MBCSText1363[] = 
+    UChar    MBCSText1363[] = 
      { 0x0005, 
        0xffe8, 
        0x0007, 
@@ -502,7 +486,7 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
        0x3016, 
        0x30fb, 
        0x9a36};
-    static const uint8_t expectedIBM1363[] = 
+    const uint8_t expectedIBM1363[] = 
      {  0x05, 
         0x05, 
         0x07, 
@@ -512,21 +496,18 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
         0xa1, 0xe0, 
         0xa1, 0xa4, 
         0xf5, 0xe2};
-    static const UChar retrievedMBCSText1363[]=
+    UChar retrievedMBCSText1363[]=
        { 0x0005, 0x0005, 0x0007, 0x0007, 0x001a,  0x30fb, 0x25a1, 0x30fb, 0x9a36};
-    static const int32_t  toIBM1363Offs    [] = 
+    int32_t  toIBM1363Offs    [] = 
      {  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x05, 0x06, 0x06, 0x07, 0x07, 0x08, 0x08};
-    static const int32_t fromIBM1363offs []  = 
+    int32_t fromIBM1363offs []  = 
     {  0, 1, 2, 3, 4, 5, 7, 9, 11};
 
 
     
-    static const char* nativeCodePage[]={
+    const char* nativeCodePage[]={
         /*NLCS Mapping*/
-        "ibm-437",
-        "ibm-850",
-        "ibm-878",
-        "ibm-923",
+        "ibm-367",
         "ibm-1051",
         "ibm-1089",
         "ibm-1250",
@@ -537,6 +518,7 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
         "ibm-1256",
         "ibm-1257",
         "ibm-1258",
+        "ibm-1275",
         "ibm-1276"
     };
 
@@ -544,53 +526,53 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
     gInBufferSize = insize;
     gOutBufferSize = outsize;
 
-    for(i=0; i<UPRV_LENGTHOF(nativeCodePage); i++){
+    for(i=0; i<sizeof(nativeCodePage)/sizeof(nativeCodePage[0]); i++){
         log_verbose("Testing %s\n", nativeCodePage[i]);
-        if(!testConvertFromUnicode(SBCSText, UPRV_LENGTHOF(SBCSText),
+        if(!testConvertFromUnicode(SBCSText, sizeof(SBCSText)/sizeof(SBCSText[0]),
             expectedNative, sizeof(expectedNative), nativeCodePage[i], TRUE, toNativeOffs ))
             log_err("u-> %s(SBCS) with FallBack did not match.\n", nativeCodePage[i]);
 
         if(!testConvertToUnicode(expectedNative, sizeof(expectedNative), 
-            retrievedSBCSText, UPRV_LENGTHOF(retrievedSBCSText), nativeCodePage[i], TRUE, fromNativeoffs ))
+            retrievedSBCSText, sizeof(retrievedSBCSText)/sizeof(retrievedSBCSText[0]), nativeCodePage[i], TRUE, fromNativeoffs ))
             log_err("%s->u(SBCS) with Fallback did not match.\n", nativeCodePage[i]);
     }
     
     /*DBCS*/
-    if(!testConvertFromUnicode(DBCSText, UPRV_LENGTHOF(DBCSText),
-        expectedIBM1363_DBCS, sizeof(expectedIBM1363_DBCS), "ibm-1363", TRUE, toIBM1363Offs_DBCS ))
-       log_err("u-> ibm-1363(DBCS portion) with FallBack did not match.\n");
+    if(!testConvertFromUnicode(DBCSText, sizeof(DBCSText)/sizeof(DBCSText[0]),
+        expectedIBM1362, sizeof(expectedIBM1362), "ibm-1362", TRUE, toIBM1362Offs ))
+       log_err("u-> ibm-1362(DBCS) with FallBack did not match.\n");
 
-    if(!testConvertToUnicode(expectedIBM1363_DBCS, sizeof(expectedIBM1363_DBCS), 
-        retrievedDBCSText, UPRV_LENGTHOF(retrievedDBCSText),"ibm-1363", TRUE, fromIBM1363offs_DBCS ))
-        log_err("ibm-1363->u(DBCS portion) with Fallback did not match.\n");
+    if(!testConvertToUnicode(expectedIBM1362, sizeof(expectedIBM1362), 
+        retrievedDBCSText, sizeof(retrievedDBCSText)/sizeof(retrievedDBCSText[0]),"ibm-1362", TRUE, fromIBM1362offs ))
+        log_err("ibm-1362->u(DBCS) with Fallback did not match.\n");
 
   
     /*MBCS*/
-    if(!testConvertFromUnicode(MBCSText, UPRV_LENGTHOF(MBCSText),
-        expectedIBM950, sizeof(expectedIBM950), "ibm-950", TRUE, toIBM950Offs ))
-       log_err("u-> ibm-950(MBCS) with FallBack did not match.\n");
+    if(!testConvertFromUnicode(MBCSText, sizeof(MBCSText)/sizeof(MBCSText[0]),
+        expectedIBM1370, sizeof(expectedIBM1370), "ibm-1370", TRUE, toIBM1370Offs ))
+       log_err("u-> ibm-1370(MBCS) with FallBack did not match.\n");
 
-    if(!testConvertToUnicode(expectedIBM950, sizeof(expectedIBM950), 
-        retrievedMBCSText, UPRV_LENGTHOF(retrievedMBCSText),"ibm-950", TRUE, fromIBM950offs ))
-        log_err("ibm-950->u(MBCS) with Fallback did not match.\n");
+    if(!testConvertToUnicode(expectedIBM1370, sizeof(expectedIBM1370), 
+        retrievedMBCSText, sizeof(retrievedMBCSText)/sizeof(retrievedMBCSText[0]),"ibm-1370", TRUE, fromIBM1370offs ))
+        log_err("ibm-1370->u(MBCS) with Fallback did not match.\n");
     
    /*commented untill data table is available*/
     log_verbose("toUnicode fallback with fallback data for MBCS\n");
     {
-        const uint8_t IBM950input[] =   {  
+        const uint8_t IBM1370input[] =   {  
             0xf4, 0x87, 0xa4, 0x4a, 0xf4, 0x88, 0xa4, 0x4b,
                 0xf9, 0x92, 0xdc, 0xb0, };
         UChar expectedUnicodeText[]= { 0x5165, 0x5165, 0x516b, 0x516b, 0x9ef9, 0x9ef9};
-        int32_t fromIBM950inputOffs []  =   {  0, 2, 4, 6, 8, 10};
+        int32_t fromIBM1370inputOffs []  =   {  0, 2, 4, 6, 8, 10};
         /* for testing reverse fallback behavior */
         UChar expectedFallbackFalse[]= { 0x5165, 0x5165, 0x516b, 0x516b, 0x9ef9, 0x9ef9};
 
-        if(!testConvertToUnicode(IBM950input, sizeof(IBM950input), 
-                expectedUnicodeText, UPRV_LENGTHOF(expectedUnicodeText),"ibm-950", TRUE, fromIBM950inputOffs ))
-            log_err("ibm-950->u(MBCS) with Fallback did not match.\n");
-        if(!testConvertToUnicode(IBM950input, sizeof(IBM950input), 
-                expectedFallbackFalse, UPRV_LENGTHOF(expectedFallbackFalse),"ibm-950", FALSE, fromIBM950inputOffs ))
-            log_err("ibm-950->u(MBCS) with Fallback  did not match.\n");
+        if(!testConvertToUnicode(IBM1370input, sizeof(IBM1370input), 
+                expectedUnicodeText, sizeof(expectedUnicodeText)/sizeof(expectedUnicodeText[0]),"ibm-1370", TRUE, fromIBM1370inputOffs ))
+            log_err("ibm-1370->u(MBCS) with Fallback did not match.\n");
+        if(!testConvertToUnicode(IBM1370input, sizeof(IBM1370input), 
+                expectedFallbackFalse, sizeof(expectedFallbackFalse)/sizeof(expectedFallbackFalse[0]),"ibm-1370", FALSE, fromIBM1370inputOffs ))
+            log_err("ibm-1370->u(MBCS) with Fallback  did not match.\n");
 
     }
     log_verbose("toUnicode fallback with fallback data for euc-tw\n");
@@ -605,11 +587,11 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
         UChar expectedFallbackFalse[]= { 0x5C6E, 0x5C6E, 0x81FC, 0x81FC, 0x8278, 0x8278};
 
         if(!testConvertToUnicode(euc_tw_input, sizeof(euc_tw_input), 
-                expectedUnicodeText, UPRV_LENGTHOF(expectedUnicodeText),"euc-tw", TRUE, from_euc_tw_offs ))
+                expectedUnicodeText, sizeof(expectedUnicodeText)/sizeof(expectedUnicodeText[0]),"euc-tw", TRUE, from_euc_tw_offs ))
             log_err("from euc-tw->u with Fallback did not match.\n");
 
         if(!testConvertToUnicode(euc_tw_input, sizeof(euc_tw_input), 
-                expectedFallbackFalse, UPRV_LENGTHOF(expectedFallbackFalse),"euc-tw", FALSE, from_euc_tw_offs ))
+                expectedFallbackFalse, sizeof(expectedFallbackFalse)/sizeof(expectedFallbackFalse[0]),"euc-tw", FALSE, from_euc_tw_offs ))
             log_err("from euc-tw->u with Fallback false did not match.\n");
 
 
@@ -619,29 +601,29 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
         UChar inputText[]= { 0x0001, 0x008e, 0x203e, 0x2223, 0xff5c, 0x5296, 
                              0x5C6E, 0x5C6E, 0x81FC, 0x81FC, 0x8278, 0x8278, 0xEDEC};
         const uint8_t expected_euc_tw[] =   {  
-            0x01, 0x1a, 0xa2, 0xa3, 
+            0x01, 0xfd, 0xfe, 0xa2, 0xa3, 
             0xa2, 0xde, 0xa2, 0xde, 
             0x8e, 0xa2, 0xe5, 0xb9,
             0x8e, 0xa2, 0xa1, 0xab, 0x8e, 0xa2, 0xa1, 0xab,
             0xc8, 0xde, 0xc8, 0xde,
             0x8e, 0xa2, 0xa2, 0xea, 0x8e, 0xa2, 0xa2, 0xea,
             0x8e, 0xac, 0xc6, 0xf7};
-        int32_t to_euc_tw_offs []  =   {  0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 6, 6, 
+        int32_t to_euc_tw_offs []  =   {  0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 6, 6, 
             6, 6, 7, 7, 7, 7, 8, 8, 9, 9, 10, 10, 10, 10, 11, 11, 11, 11, 12, 12, 12, 12};
 
-        if(!testConvertFromUnicode(inputText, UPRV_LENGTHOF(inputText),
+        if(!testConvertFromUnicode(inputText, sizeof(inputText)/sizeof(inputText[0]),
                 expected_euc_tw, sizeof(expected_euc_tw), "euc-tw", TRUE, to_euc_tw_offs ))
             log_err("u-> euc-tw with FallBack did not match.\n");
 
     }
 
     /*MBCS 1363*/
-    if(!testConvertFromUnicode(MBCSText1363, UPRV_LENGTHOF(MBCSText1363),
+    if(!testConvertFromUnicode(MBCSText1363, sizeof(MBCSText1363)/sizeof(MBCSText1363[0]),
         expectedIBM1363, sizeof(expectedIBM1363), "ibm-1363", TRUE, toIBM1363Offs ))
        log_err("u-> ibm-1363(MBCS) with FallBack did not match.\n");
 
     if(!testConvertToUnicode(expectedIBM1363, sizeof(expectedIBM1363), 
-        retrievedMBCSText1363, UPRV_LENGTHOF(retrievedMBCSText1363),"ibm-1363", TRUE, fromIBM1363offs ))
+        retrievedMBCSText1363, sizeof(retrievedMBCSText1363)/sizeof(retrievedMBCSText1363[0]),"ibm-1363", TRUE, fromIBM1363offs ))
         log_err("ibm-1363->u(MBCS) with Fallback did not match.\n");
 
 
@@ -659,13 +641,13 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
         int32_t fromtest1Offs[]       = { 0, 1, 2, 3, 3, 4,5};
 
         /*from Unicode*/
-        if(!testConvertFromUnicode(unicodeInput, UPRV_LENGTHOF(unicodeInput),
-                expectedtest1, sizeof(expectedtest1), "@test1", TRUE, totest1Offs ))
+        if(!testConvertFromUnicode(unicodeInput, sizeof(unicodeInput)/sizeof(unicodeInput[0]),
+                expectedtest1, sizeof(expectedtest1), "test1", TRUE, totest1Offs ))
             log_err("u-> test1(MBCS conversion with single-byte) did not match.\n");
         
         /*to Unicode*/
         if(!testConvertToUnicode(test1input, sizeof(test1input),
-               expectedUnicode, UPRV_LENGTHOF(expectedUnicode), "@test1", TRUE, fromtest1Offs ))
+               expectedUnicode, sizeof(expectedUnicode)/sizeof(expectedUnicode[0]), "test1", TRUE, fromtest1Offs ))
             log_err("test1(MBCS conversion with single-byte) -> u  did not match.\n");
 
     }
@@ -686,13 +668,13 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
         int32_t fromtest3Offs[]       = { 0, 1, 2, 3, 6, 6, 7, 7, 10, 13, 13, 16, 17};  
 
         /*from Unicode*/
-        if(!testConvertFromUnicode(unicodeInput, UPRV_LENGTHOF(unicodeInput),
-                expectedtest3, sizeof(expectedtest3), "@test3", TRUE, totest3Offs ))
+        if(!testConvertFromUnicode(unicodeInput, sizeof(unicodeInput)/sizeof(unicodeInput[0]),
+                expectedtest3, sizeof(expectedtest3), "test3", TRUE, totest3Offs ))
             log_err("u-> test3(MBCS conversion with three-byte) did not match.\n");
         
         /*to Unicode*/
         if(!testConvertToUnicode(test3input, sizeof(test3input),
-               expectedUnicode, UPRV_LENGTHOF(expectedUnicode), "@test3", TRUE, fromtest3Offs ))
+               expectedUnicode, sizeof(expectedUnicode)/sizeof(expectedUnicode[0]), "test3", TRUE, fromtest3Offs ))
             log_err("test3(MBCS conversion with three-byte) -> u  did not match.\n"); 
 
     }
@@ -716,38 +698,37 @@ static void TestConvertFallBackWithBufferSizes(int32_t outsize, int32_t insize )
                 0x01, 0x02, 0x03, 0x0a, 0x01, 0x02, 0x03, 0x0e, 0x01, 0x02, 0x03, 0x0d, 0x03, 0x01, 0x02, 0x03, 0x0c,};
         const UChar expectedUnicode[] = 
                 { 0x20ac, 0x0005, 0x0006, 0x000b, 0xdbc4, 0xde34, 0xdbba, 0xdfcd,
-                  0xd84d, 0xdc56, 0x000e, 0xd891, 0xdd67, 0x1a, 0xfffd}; 
+                  0xd84d, 0xdc56, 0x000e, 0xd891, 0xdd67, 0xfffd, 0xfffd}; 
         int32_t fromtest4Offs[]       = 
                 { 0, 1, 2, 3, 7, 7, 8, 8, 9, 9, 13, 17, 17, 21, 22,};
 
         /*from Unicode*/
-        if(!testConvertFromUnicode(unicodeInput, UPRV_LENGTHOF(unicodeInput),
-                expectedtest4, sizeof(expectedtest4), "@test4", TRUE, totest4Offs ))
+        if(!testConvertFromUnicode(unicodeInput, sizeof(unicodeInput)/sizeof(unicodeInput[0]),
+                expectedtest4, sizeof(expectedtest4), "test4", TRUE, totest4Offs ))
             log_err("u-> test4(MBCS conversion with four-byte) did not match.\n");
         
         /*to Unicode*/
         if(!testConvertToUnicode(test4input, sizeof(test4input),
-               expectedUnicode, UPRV_LENGTHOF(expectedUnicode), "@test4", TRUE, fromtest4Offs ))
+               expectedUnicode, sizeof(expectedUnicode)/sizeof(expectedUnicode[0]), "test4", TRUE, fromtest4Offs ))
             log_err("test4(MBCS conversion with four-byte) -> u  did not match.\n"); 
 
     }
     /* Test for jitterbug 509 EBCDIC_STATEFUL Converters*/
     {                                    
         const UChar unicodeInput[]    = {0x00AF,         0x2013,     0x2223,    0x004C,    0x5F5D,         0xFF5E };
-        const uint8_t expectedtest1[] = {0x0E,0x42,0xA1, 0x44,0x4A,  0x42,0x4F, 0x0F,0xD3, 0x0E,0x65,0x60, 0x43,0xA1,0x0f };
-        int32_t  totest1Offs[]        = {0,   0,   0,    1,   1,     2,   2,    3,   3,    4,   4,   4,    5,   5,   5 };
-        const uint8_t test1input[]    = {0x0E,0x42,0xA1, 0x44,0x4A,  0x42,0x4F, 0x0F,0xD3, 0x0E,0x65,0x60, 0x43,0xA1 };
+        const uint8_t expectedtest1[] = {0x0E,0x42,0xA1, 0x44,0x4A,  0x42,0x4F, 0x0F,0xD3, 0x0E,0x65,0x60, 0x43,0xA1};
+        int32_t  totest1Offs[]        = {0,   0,   0,    1,   1,     2,   2,    3,   3,    4,   4,   4,    5,   5};         
+        const uint8_t test1input[]    = {0x0E,0x42,0xA1, 0x44,0x4A,  0x42,0x4F, 0x0F,0xD3, 0x0E,0x65,0x60, 0x43,0xA1};
         const UChar expectedUnicode[] = {0x203e,         0x2014,     0xff5c,    0x004c,    0x5f5e,         0x223c };
-        int32_t fromtest1Offs[]       = {1,              3,          5,         8,         10,             12 };
+        int32_t fromtest1Offs[]       = {1,              3,          5,         8,         10,             12};       
         /*from Unicode*/
-        if(!testConvertFromUnicode(unicodeInput, UPRV_LENGTHOF(unicodeInput),
+        if(!testConvertFromUnicode(unicodeInput, sizeof(unicodeInput)/sizeof(unicodeInput[0]),
                 expectedtest1, sizeof(expectedtest1), "ibm-1371", TRUE, totest1Offs ))
             log_err("u-> ibm-1371(MBCS conversion with single-byte) did not match.,\n");
         /*to Unicode*/
         if(!testConvertToUnicode(test1input, sizeof(test1input),
-               expectedUnicode, UPRV_LENGTHOF(expectedUnicode), "ibm-1371", TRUE, fromtest1Offs ))
+               expectedUnicode, sizeof(expectedUnicode)/sizeof(expectedUnicode[0]), "ibm-1371", TRUE, fromtest1Offs ))
             log_err("ibm-1371(MBCS conversion with single-byte) -> u  did not match.,\n");
     }
 
 }
-#endif

@@ -1,8 +1,3 @@
-Copyright (C) 2016 and later: Unicode, Inc. and others.
-License & terms of use: http://www.unicode.org/copyright.html#License
-
-Copyright (c) 2001-2010 International Business Machines
-Corporation and others. All Rights Reserved.
 uresb: Resource Bundle
 
 This sample demonstrates
@@ -12,8 +7,8 @@ This sample demonstrates
          
 Files:
     uresb.c        Main source file in C
-    uresb.sln      Windows MSVC workspace.  Double-click this to get started.
-    uresb.vcproj   Windows MSVC project file
+    uresb.dsw      Windows MSVC workspace.  Double-click this to get started.
+    uresb.dsp      Windows MSVC project file
     resources.dsp  Windows project file for resources
     resources.mak  Windows makefile for resources
 
@@ -23,7 +18,7 @@ Files:
 
 To Build uresb on Windows
     1.  Install and build ICU
-    2.  In MSVC, open the workspace file icu\samples\uresb\uresb.sln
+    2.  In MSVC, open the workspace file icu\samples\uresb\uresb.dsw
     3.  Choose a Debug or Release build.
     4.  Build.
 	
@@ -36,7 +31,6 @@ To Run on Windows
             cd c:\icu\source\samples\uresb\debug
     4.  Run it  (with a locale name, ex. english)
             uresb  en
-    WARNING: The .txt files must be in the same directory as the executable, which is not the case by default on some systems.
 
 To Build on Unixes
     1.  Build ICU.  

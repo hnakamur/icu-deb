@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 2001, International Business Machines Corporation and
@@ -16,9 +14,6 @@
 #ifndef INTLTRANSLIT_H
 #define INTLTRANSLIT_H
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
 
 #include "intltest.h"
 
@@ -28,6 +23,7 @@ public:
     void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL );
 };
 
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif
+
+

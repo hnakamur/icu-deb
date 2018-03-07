@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT:
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -20,17 +18,10 @@
  */
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "unicode/ucol.h"
-#include "unicode/ucoleitr.h"
 #include "unicode/uloc.h"
 #include "unicode/uchar.h"
 #include "unicode/ustring.h"
-#include "unicode/utf16.h"
-#include "unicode/putil.h"
-#include "callcoll.h"
 #include "cmemory.h"
 #include "cintltst.h"
 #include "citertst.h"
@@ -38,7 +29,7 @@
 #include "filestrm.h"
 #include "cstring.h"
 #include "ucol_imp.h"
-#include "uparse.h"
+#include "ucol_tok.h"
 #include <stdio.h>
 
 extern uint8_t ucol_uprv_getCaseBits(const UChar *, uint32_t, UErrorCode *);
@@ -56,8 +47,11 @@ void addCollIterTest(TestNode** root)
     addTest(root, &TestBug672, "tscoll/citertst/TestBug672");
     addTest(root, &TestBug672Normalize, "tscoll/citertst/TestBug672Normalize");
     addTest(root, &TestSmallBuffer, "tscoll/citertst/TestSmallBuffer");
+    addTest(root, &TestCEs, "tscoll/citertst/TestCEs");
     addTest(root, &TestDiscontiguos, "tscoll/citertst/TestDiscontiguos");
-    addTest(root, &TestSearchCollatorElements, "tscoll/citertst/TestSearchCollatorElements");
+    addTest(root, &TestCEBufferOverflow, "tscoll/citertst/TestCEBufferOverflow");
+    addTest(root, &TestCEValidity, "tscoll/citertst/TestCEValidity");
+    addTest(root, &TestSortKeyValidity, "tscoll/citertst/TestSortKeyValidity");
 }
 
 /* The locales we support */
@@ -81,7 +75,7 @@ static void TestBug672() {
         UCollationElements *titer = ucol_openElements(coll, text, -1,
                                                      &status);
         if (U_FAILURE(status)) {
-            log_err_status(status, "ERROR: in creation of either the collator or the collation iterator :%s\n",
+            log_err("ERROR: in creation of either the collator or the collation iterator :%s\n",
                     myErrorName(status));
             return;
         }
@@ -157,7 +151,7 @@ static void TestBug672Normalize() {
         pitr = ucol_openElements(coll, pattern, -1, &status);
         titer = ucol_openElements(coll, text, -1, &status);
         if (U_FAILURE(status)) {
-            log_err_status(status, "ERROR: in creation of either the collator or the collation iterator :%s\n",
+            log_err("ERROR: in creation of either the collator or the collation iterator :%s\n",
                     myErrorName(status));
             return;
         }
@@ -227,7 +221,7 @@ static void TestUnicodeChar()
     UChar *test;
     en_us = ucol_open("en_US", &status);
     if (U_FAILURE(status)){
-       log_err_status(status, "ERROR: in creation of collation data using ucol_open()\n %s\n",
+       log_err("ERROR: in creation of collation data using ucol_open()\n %s\n",
               myErrorName(status));
        return;
     }
@@ -294,7 +288,7 @@ static void TestNormalizedUnicodeChar()
     /* thai should have normalization on */
     th_th = ucol_open("th_TH", &status);
     if (U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of thai collation using ucol_open()\n %s\n",
+        log_err("ERROR: in creation of thai collation using ucol_open()\n %s\n",
               myErrorName(status));
         return;
     }
@@ -370,24 +364,24 @@ static void TestNormalization()
     coll = ucol_openRules(rule, rulelen, UCOL_ON, UCOL_TERTIARY, NULL, &status);
     ucol_setAttribute(coll, UCOL_NORMALIZATION_MODE, UCOL_ON, &status);
     if (U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of collator using ucol_openRules()\n %s\n",
+        log_err("ERROR: in creation of collator using ucol_openRules()\n %s\n",
               myErrorName(status));
         return;
     }
 
     srclen = u_unescape(testdata[0], source, 10);
-    iter = ucol_openElements(coll, source, srclen, &status);
+    iter = ucol_openElements(coll, source, srclen - 1, &status);
     backAndForth(iter);
     ucol_closeElements(iter);
 
     srclen = u_unescape(testdata[1], source, 10);
-    iter = ucol_openElements(coll, source, srclen, &status);
+    iter = ucol_openElements(coll, source, srclen - 1, &status);
     backAndForth(iter);
     ucol_closeElements(iter);
 
     while (count < 12) {
         srclen = u_unescape(testdata[count], source, 10);
-        iter = ucol_openElements(coll, source, srclen, &status);
+        iter = ucol_openElements(coll, source, srclen - 1, &status);
 
         if (U_FAILURE(status)){
             log_err("ERROR: in creation of collator element iterator\n %s\n",
@@ -425,9 +419,9 @@ static void TestPrevious()
     UCollator *c1, *c2, *c3;
     UCollationElements *iter;
     UErrorCode status = U_ZERO_ERROR;
-    UChar test1[50];
-    UChar test2[50];
 
+    test1=(UChar*)malloc(sizeof(UChar) * 50);
+    test2=(UChar*)malloc(sizeof(UChar) * 50);
     u_uastrcpy(test1, "What subset of all possible test cases?");
     u_uastrcpy(test2, "has the highest probability of detecting");
     coll = ucol_open("en_US", &status);
@@ -435,7 +429,7 @@ static void TestPrevious()
     iter=ucol_openElements(coll, test1, u_strlen(test1), &status);
     log_verbose("English locale testing back and forth\n");
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of collation element iterator using ucol_openElements()\n %s\n",
+        log_err("ERROR: in creation of collation element iterator using ucol_openElements()\n %s\n",
             myErrorName(status));
         ucol_close(coll);
         return;
@@ -552,6 +546,8 @@ static void TestPrevious()
     ucol_close(coll);
 
     free(source);
+    free(test1);
+    free(test2);
 }
 
 /**
@@ -563,36 +559,22 @@ static void TestOffset()
     UCollator *en_us=NULL;
     UCollationElements *iter, *pristine;
     int32_t offset;
-    OrderAndOffset *orders;
+    int32_t *orders;
     int32_t orderLength=0;
     int     count = 0;
-    UChar test1[50];
-    UChar test2[50];
-
+    test1=(UChar*)malloc(sizeof(UChar) * 50);
+    test2=(UChar*)malloc(sizeof(UChar) * 50);
     u_uastrcpy(test1, "What subset of all possible test cases?");
     u_uastrcpy(test2, "has the highest probability of detecting");
     en_us = ucol_open("en_US", &status);
-    log_verbose("Testing getOffset and setOffset for collations\n");
+    log_verbose("Testing getOffset and setOffset for CollationElements\n");
     iter = ucol_openElements(en_us, test1, u_strlen(test1), &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of collation element iterator using ucol_openElements()\n %s\n",
+        log_err("ERROR: in creation of collation element iterator using ucol_openElements()\n %s\n",
             myErrorName(status));
         ucol_close(en_us);
         return;
     }
-
-    /* testing boundaries */
-    ucol_setOffset(iter, 0, &status);
-    if (U_FAILURE(status) || ucol_previous(iter, &status) != UCOL_NULLORDER) {
-        log_err("Error: After setting offset to 0, we should be at the end "
-                "of the backwards iteration");
-    }
-    ucol_setOffset(iter, u_strlen(test1), &status);
-    if (U_FAILURE(status) || ucol_next(iter, &status) != UCOL_NULLORDER) {
-        log_err("Error: After setting offset to end of the string, we should "
-                "be at the end of the backwards iteration");
-    }
-
     /* Run all the way through the iterator, then get the offset */
 
     orders = getOrders(iter, &orderLength);
@@ -650,7 +632,7 @@ static void TestOffset()
         switch (count) {
         case 0:
             if (ucol_getOffset(iter) != 1) {
-                log_err("ERROR: Offset of iteration should be 1\n");
+                log_err("ERROR: Offset of iteration should be 0\n");
             }
             break;
         case 3:
@@ -672,14 +654,8 @@ static void TestOffset()
         U_SUCCESS(status)) {
         switch (count) {
         case 0:
-        case 1:
             if (ucol_getOffset(iter) != 3) {
                 log_err("ERROR: Offset of iteration should be 3\n");
-            }
-            break;
-        case 2:
-            if (ucol_getOffset(iter) != 1) {
-                log_err("ERROR: Offset of iteration should be 1\n");
             }
             break;
         default:
@@ -697,6 +673,8 @@ static void TestOffset()
 
     ucol_closeElements(iter);
     ucol_close(en_us);
+    free(test1);
+    free(test2);
 }
 
 /**
@@ -708,16 +686,15 @@ static void TestSetText()
     UErrorCode status = U_ZERO_ERROR;
     UCollator *en_us=NULL;
     UCollationElements *iter1, *iter2;
-    UChar test1[50];
-    UChar test2[50];
-
+    test1=(UChar*)malloc(sizeof(UChar) * 50);
+    test2=(UChar*)malloc(sizeof(UChar) * 50);
     u_uastrcpy(test1, "What subset of all possible test cases?");
     u_uastrcpy(test2, "has the highest probability of detecting");
     en_us = ucol_open("en_US", &status);
     log_verbose("testing setText for Collation elements\n");
     iter1=ucol_openElements(en_us, test1, u_strlen(test1), &status);
     if(U_FAILURE(status)){
-        log_err_status(status, "ERROR: in creation of collation element iterator1 using ucol_openElements()\n %s\n",
+        log_err("ERROR: in creation of collation element iterator1 using ucol_openElements()\n %s\n",
             myErrorName(status));
     ucol_close(en_us);
         return;
@@ -761,15 +738,85 @@ static void TestSetText()
 
     /* Now set it to point to a null string with fake length*/
     ucol_setText(iter2, NULL, 2, &status);
-    if (status != U_ILLEGAL_ARGUMENT_ERROR)
+    if (U_FAILURE(status))
     {
-        log_err("call to iter2->setText(null, 2) should yield an illegal-argument-error - %s\n",
-                myErrorName(status));
+        log_err("call to iter2->setText(null) failed. %s\n", myErrorName(status));
+    }
+    else
+    {
+        if (ucol_next(iter2, &status) != UCOL_NULLORDER) {
+            log_err("iter2 with null text expected to return UCOL_NULLORDER\n");
+        }
     }
 
     ucol_closeElements(iter2);
     ucol_closeElements(iter1);
     ucol_close(en_us);
+    free(test1);
+    free(test2);
+}
+
+
+
+static void backAndForth(UCollationElements *iter)
+{
+    /* Run through the iterator forwards and stick it into an array */
+    int32_t index, o;
+    UErrorCode status = U_ZERO_ERROR;
+    int32_t orderLength = 0;
+    int32_t *orders;
+    orders= getOrders(iter, &orderLength);
+
+
+    /* Now go through it backwards and make sure we get the same values */
+    index = orderLength;
+    ucol_reset(iter);
+
+    /* synwee : changed */
+    while ((o = ucol_previous(iter, &status)) != UCOL_NULLORDER)
+    {
+      if (o != orders[-- index])
+      {
+        if (o == 0)
+          index ++;
+        else
+        {
+          while (index > 0 && orders[-- index] == 0)
+          {
+          }
+          if (o != orders[index])
+          {
+            log_err("Mismatch at index : 0x%x\n", index);
+            return;
+          }
+
+        }
+      }
+    }
+
+    while (index != 0 && orders[index - 1] == 0) {
+      index --;
+    }
+
+    if (index != 0)
+    {
+        log_err("Didn't get back to beginning - index is %d\n", index);
+
+        ucol_reset(iter);
+        log_err("\nnext: ");
+        if ((o = ucol_next(iter, &status)) != UCOL_NULLORDER)
+        {
+            log_err("Error at %x\n", o);
+        }
+        log_err("\nprev: ");
+        if ((o = ucol_previous(iter, &status)) != UCOL_NULLORDER)
+        {
+            log_err("Error at %x\n", o);
+        }
+        log_verbose("\n");
+    }
+
+    free(orders);
 }
 
 /** @bug 4108762
@@ -780,10 +827,7 @@ static void TestMaxExpansion()
     UErrorCode          status = U_ZERO_ERROR;
     UCollator          *coll   ;/*= ucol_open("en_US", &status);*/
     UChar               ch     = 0;
-    UChar32             unassigned = 0xEFFFD;
-    UChar               supplementary[2];
-    uint32_t            stringOffset = 0;
-    UBool               isError = FALSE;
+    UChar               supplementary[2] = {0xD800, 0xDC00};
     uint32_t            sorder = 0;
     UCollationElements *iter   ;/*= ucol_openElements(coll, &ch, 1, &status);*/
     uint32_t            temporder = 0;
@@ -792,119 +836,164 @@ static void TestMaxExpansion()
     u_uastrcpy(rule, "&a < ab < c/aba < d < z < ch");
     coll = ucol_openRules(rule, u_strlen(rule), UCOL_DEFAULT,
         UCOL_DEFAULT_STRENGTH,NULL, &status);
-    if(U_SUCCESS(status) && coll) {
-      iter = ucol_openElements(coll, &ch, 1, &status);
+    iter = ucol_openElements(coll, &ch, 1, &status);
 
-      while (ch < 0xFFFF && U_SUCCESS(status)) {
-          int      count = 1;
-          uint32_t order;
-          int32_t  size = 0;
+    while (ch < 0xFFFF && U_SUCCESS(status)) {
+        int      count = 1;
+        uint32_t order;
+        int32_t  size = 0;
 
-          ch ++;
+        ch ++;
 
-          ucol_setText(iter, &ch, 1, &status);
-          order = ucol_previous(iter, &status);
+        ucol_setText(iter, &ch, 1, &status);
+        order = ucol_previous(iter, &status);
 
-          /* thai management */
-          if (order == 0)
-              order = ucol_previous(iter, &status);
+        /* thai management */
+        if (order == 0)
+            order = ucol_previous(iter, &status);
 
-          while (U_SUCCESS(status) &&
-              ucol_previous(iter, &status) != UCOL_NULLORDER) {
-              count ++;
-          }
+        while (U_SUCCESS(status) &&
+            ucol_previous(iter, &status) != UCOL_NULLORDER) {
+            count ++;
+        }
 
-          size = ucol_getMaxExpansion(iter, order);
-          if (U_FAILURE(status) || size < count) {
-              log_err("Failure at codepoint %d, maximum expansion count < %d\n",
-                  ch, count);
-          }
-      }
-
-      /* testing for exact max expansion */
-      ch = 0;
-      while (ch < 0x61) {
-          uint32_t order;
-          int32_t  size;
-          ucol_setText(iter, &ch, 1, &status);
-          order = ucol_previous(iter, &status);
-          size  = ucol_getMaxExpansion(iter, order);
-          if (U_FAILURE(status) || size != 1) {
-              log_err("Failure at codepoint %d, maximum expansion count < %d\n",
-                  ch, 1);
-          }
-          ch ++;
-      }
-
-      ch = 0x63;
-      ucol_setText(iter, &ch, 1, &status);
-      temporder = ucol_previous(iter, &status);
-
-      if (U_FAILURE(status) || ucol_getMaxExpansion(iter, temporder) != 3) {
-          log_err("Failure at codepoint %d, maximum expansion count != %d\n",
-                  ch, 3);
-      }
-
-      ch = 0x64;
-      ucol_setText(iter, &ch, 1, &status);
-      temporder = ucol_previous(iter, &status);
-
-      if (U_FAILURE(status) || ucol_getMaxExpansion(iter, temporder) != 1) {
-          log_err("Failure at codepoint %d, maximum expansion count != %d\n",
-                  ch, 3);
-      }
-
-      U16_APPEND(supplementary, stringOffset, 2, unassigned, isError);
-      (void)isError;    /* Suppress set but not used warning. */
-      ucol_setText(iter, supplementary, 2, &status);
-      sorder = ucol_previous(iter, &status);
-
-      if (U_FAILURE(status) || ucol_getMaxExpansion(iter, sorder) != 2) {
-          log_err("Failure at codepoint %d, maximum expansion count < %d\n",
-                  ch, 2);
-      }
-
-      /* testing jamo */
-      ch = 0x1165;
-
-      ucol_setText(iter, &ch, 1, &status);
-      temporder = ucol_previous(iter, &status);
-      if (U_FAILURE(status) || ucol_getMaxExpansion(iter, temporder) > 3) {
-          log_err("Failure at codepoint %d, maximum expansion count > %d\n",
-                  ch, 3);
-      }
-
-      ucol_closeElements(iter);
-      ucol_close(coll);
-
-      /* testing special jamo &a<\u1160 */
-      rule[0] = 0x26;
-      rule[1] = 0x71;
-      rule[2] = 0x3c;
-      rule[3] = 0x1165;
-      rule[4] = 0x2f;
-      rule[5] = 0x71;
-      rule[6] = 0x71;
-      rule[7] = 0x71;
-      rule[8] = 0x71;
-      rule[9] = 0;
-
-      coll = ucol_openRules(rule, u_strlen(rule), UCOL_DEFAULT,
-          UCOL_DEFAULT_STRENGTH,NULL, &status);
-      iter = ucol_openElements(coll, &ch, 1, &status);
-
-      temporder = ucol_previous(iter, &status);
-      if (U_FAILURE(status) || ucol_getMaxExpansion(iter, temporder) != 6) {
-          log_err("Failure at codepoint %d, maximum expansion count > %d\n",
-                  ch, 5);
-      }
-
-      ucol_closeElements(iter);
-      ucol_close(coll);
-    } else {
-      log_err_status(status, "Couldn't open collator -> %s\n", u_errorName(status));
+        size = ucol_getMaxExpansion(iter, order);
+        if (U_FAILURE(status) || size < count) {
+            log_err("Failure at codepoint %d, maximum expansion count < %d\n",
+                ch, count);
+        }
     }
 
+    /* testing for exact max expansion */
+    ch = 0;
+    while (ch < 0x61) {
+        uint32_t order;
+        int32_t  size;
+        ucol_setText(iter, &ch, 1, &status);
+        order = ucol_previous(iter, &status);
+        size  = ucol_getMaxExpansion(iter, order);
+        if (U_FAILURE(status) || size != 1) {
+            log_err("Failure at codepoint %d, maximum expansion count < %d\n",
+                ch, 1);
+        }
+        ch ++;
+    }
+
+    ch = 0x63;
+    ucol_setText(iter, &ch, 1, &status);
+    temporder = ucol_previous(iter, &status);
+
+    if (U_FAILURE(status) || ucol_getMaxExpansion(iter, temporder) != 3) {
+        log_err("Failure at codepoint %d, maximum expansion count != %d\n",
+                ch, 3);
+    }
+
+    ch = 0x64;
+    ucol_setText(iter, &ch, 1, &status);
+    temporder = ucol_previous(iter, &status);
+
+    if (U_FAILURE(status) || ucol_getMaxExpansion(iter, temporder) != 1) {
+        log_err("Failure at codepoint %d, maximum expansion count != %d\n",
+                ch, 3);
+    }
+
+    ucol_setText(iter, supplementary, 2, &status);
+    sorder = ucol_previous(iter, &status);
+
+    if (U_FAILURE(status) || ucol_getMaxExpansion(iter, sorder) != 2) {
+        log_err("Failure at codepoint %d, maximum expansion count < %d\n",
+                ch, 2);
+    }
+
+    /* testing jamo */
+    ch = 0x1165;
+
+    ucol_setText(iter, &ch, 1, &status);
+    temporder = ucol_previous(iter, &status);
+    if (U_FAILURE(status) || ucol_getMaxExpansion(iter, temporder) > 3) {
+        log_err("Failure at codepoint %d, maximum expansion count > %d\n",
+                ch, 3);
+    }
+
+    ucol_closeElements(iter);
+    ucol_close(coll);
+
+    /* testing special jamo &a<\u1160 */
+    rule[0] = 0x26;
+    rule[1] = 0x71;
+    rule[2] = 0x3c;
+    rule[3] = 0x1165;
+    rule[4] = 0x2f;
+    rule[5] = 0x71;
+    rule[6] = 0x71;
+    rule[7] = 0x71;
+    rule[8] = 0x71;
+    rule[9] = 0;
+
+    coll = ucol_openRules(rule, u_strlen(rule), UCOL_DEFAULT,
+        UCOL_DEFAULT_STRENGTH,NULL, &status);
+    iter = ucol_openElements(coll, &ch, 1, &status);
+
+    temporder = ucol_previous(iter, &status);
+    if (U_FAILURE(status) || ucol_getMaxExpansion(iter, temporder) != 6) {
+        log_err("Failure at codepoint %d, maximum expansion count > %d\n",
+                ch, 5);
+    }
+
+    ucol_closeElements(iter);
+    ucol_close(coll);
+
+}
+
+/**
+ * Return an integer array containing all of the collation orders
+ * returned by calls to next on the specified iterator
+ */
+static int32_t* getOrders(UCollationElements *iter, int32_t *orderLength)
+{
+    UErrorCode status;
+    int32_t order;
+    int32_t maxSize = 100;
+    int32_t size = 0;
+    int32_t *temp;
+    int32_t *orders =(int32_t*)malloc(sizeof(int32_t) * maxSize);
+    status= U_ZERO_ERROR;
+
+
+    while ((order=ucol_next(iter, &status)) != UCOL_NULLORDER)
+    {
+        if (size == maxSize)
+        {
+            maxSize *= 2;
+            temp = (int32_t*)malloc(sizeof(int32_t) * maxSize);
+
+            memcpy(temp, orders, size * sizeof(int32_t));
+            free(orders);
+            orders = temp;
+
+        }
+
+        orders[size++] = order;
+    }
+
+    if (maxSize > size)
+    {
+        if (size == 0) {
+            size = 1;
+            temp = (int32_t*)malloc(sizeof(int32_t) * size);
+            temp[0] = 0;
+        }
+        else {
+            temp = (int32_t*)malloc(sizeof(int32_t) * size);
+            memcpy(temp, orders, size * sizeof(int32_t));
+        }
+
+        free(orders);
+        orders = temp;
+    }
+
+    *orderLength = size;
+    return orders;
 }
 
 
@@ -940,7 +1029,7 @@ static void TestSmallBuffer()
     UCollationElements *testiter,
                        *iter;
     int32_t             count = 0;
-    OrderAndOffset     *testorders,
+    int32_t            *testorders,
                        *orders;
 
     UChar teststr[500];
@@ -959,48 +1048,348 @@ static void TestSmallBuffer()
     }
 
     coll = ucol_open("th_TH", &status);
-    if(U_SUCCESS(status) && coll) {
-      testiter = ucol_openElements(coll, teststr, 500, &status);
-      iter = ucol_openElements(coll, str, 2, &status);
+    testiter = ucol_openElements(coll, teststr, 500, &status);
+    iter = ucol_openElements(coll, str, 2, &status);
 
-      orders     = getOrders(iter, &count);
-      if (count != 2) {
-          log_err("Error collation elements size is not 2 for \\u0300\\u031A\n");
-      }
-
-      /*
-      this will rearrange the string data to 250 characters of 0x300 first then
-      250 characters of 0x031A
-      */
-      testorders = getOrders(testiter, &count);
-
-      if (count != 500) {
-          log_err("Error decomposition does not give the right sized collation elements\n");
-      }
-
-      while (count != 0) {
-          /* UCA collation element for 0x0F76 */
-          if ((count > 250 && testorders[-- count].order != orders[1].order) ||
-              (count <= 250 && testorders[-- count].order != orders[0].order)) {
-              log_err("Error decomposition does not give the right collation element at %d count\n", count);
-              break;
-          }
-      }
-
-      free(testorders);
-      free(orders);
-
-      ucol_reset(testiter);
-
-      /* ensures closing of elements done properly to clear writable buffer */
-      ucol_next(testiter, &status);
-      ucol_next(testiter, &status);
-      ucol_closeElements(testiter);
-      ucol_closeElements(iter);
-      ucol_close(coll);
-    } else {
-      log_err_status(status, "Couldn't open collator -> %s\n", u_errorName(status));
+    orders     = getOrders(iter, &count);
+    if (count != 2) {
+        log_err("Error collation elements size is not 2 for \\u0300\\u031A\n");
     }
+
+    /*
+    this will rearrange the string data to 250 characters of 0x300 first then
+    250 characters of 0x031A
+    */
+    testorders = getOrders(testiter, &count);
+
+    if (count != 500) {
+        log_err("Error decomposition does not give the right sized collation elements\n");
+    }
+
+    while (count != 0) {
+        /* UCA collation element for 0x0F76 */
+        if ((count > 250 && testorders[-- count] != orders[1]) ||
+            (count <= 250 && testorders[-- count] != orders[0])) {
+            log_err("Error decomposition does not give the right collation element at %d count\n", count);
+            break;
+        }
+    }
+
+    free(testorders);
+    free(orders);
+
+    ucol_reset(testiter);
+    /* ensures that the writable buffer was cleared */
+    if (testiter->iteratordata_.writableBuffer !=
+        testiter->iteratordata_.stackWritableBuffer) {
+        log_err("Error Writable buffer in collation element iterator not reset\n");
+    }
+
+    /* ensures closing of elements done properly to clear writable buffer */
+    ucol_next(testiter, &status);
+    ucol_next(testiter, &status);
+    ucol_closeElements(testiter);
+    ucol_closeElements(iter);
+    ucol_close(coll);
+}
+
+/**
+* Sniplets of code from genuca
+*/
+static int32_t hex2num(char hex) {
+    if(hex>='0' && hex <='9') {
+        return hex-'0';
+    } else if(hex>='a' && hex<='f') {
+        return hex-'a'+10;
+    } else if(hex>='A' && hex<='F') {
+        return hex-'A'+10;
+    } else {
+        return 0;
+    }
+}
+
+/**
+* Getting codepoints from a string
+* @param str character string contain codepoints seperated by space and ended
+*        by a semicolon
+* @param codepoints array for storage, assuming size > 5
+* @return position at the end of the codepoint section
+*/
+static char * getCodePoints(char *str, UChar *codepoints) {
+    char *pStartCP = str;
+    char *pEndCP   = str + 4;
+
+    *codepoints = (UChar)((hex2num(*pStartCP) << 12) |
+                          (hex2num(*(pStartCP + 1)) << 8) |
+                          (hex2num(*(pStartCP + 2)) << 4) |
+                          (hex2num(*(pStartCP + 3))));
+    codepoints ++;
+    while (*pEndCP != ';') {
+        pStartCP = pEndCP + 1;
+        *codepoints = (UChar)((hex2num(*pStartCP) << 12) |
+                          (hex2num(*(pStartCP + 1)) << 8) |
+                          (hex2num(*(pStartCP + 2)) << 4) |
+                          (hex2num(*(pStartCP + 3))));
+        codepoints ++;
+        pEndCP = pStartCP + 4;
+    }
+    *codepoints = 0;
+    return pEndCP + 1;
+}
+
+/**
+* Sniplets of code from genuca
+*/
+static int32_t
+readElement(char **from, char *to, char separator, UErrorCode *status)
+{
+    if (U_SUCCESS(*status)) {
+        char    buffer[1024];
+        int32_t i = 0;
+        while (**from != separator) {
+            if (**from != ' ') {
+                *(buffer+i++) = **from;
+            }
+            (*from)++;
+        }
+        (*from)++;
+        *(buffer + i) = 0;
+        strcpy(to, buffer);
+        return i/2;
+    }
+
+    return 0;
+}
+
+/**
+* Sniplets of code from genuca
+*/
+static uint32_t
+getSingleCEValue(char *primary, char *secondary, char *tertiary,
+                          UErrorCode *status)
+{
+    if (U_SUCCESS(*status)) {
+        uint32_t  value    = 0;
+        char      primsave = '\0';
+        char      secsave  = '\0';
+        char      tersave  = '\0';
+        char     *primend  = primary+4;
+        char     *secend   = secondary+2;
+        char     *terend   = tertiary+2;
+        uint32_t  primvalue;
+        uint32_t  secvalue;
+        uint32_t  tervalue;
+
+        if (uprv_strlen(primary) > 4) {
+            primsave = *primend;
+            *primend = '\0';
+        }
+
+        if (uprv_strlen(secondary) > 2) {
+            secsave = *secend;
+            *secend = '\0';
+        }
+
+        if (uprv_strlen(tertiary) > 2) {
+            tersave = *terend;
+            *terend = '\0';
+        }
+
+        primvalue = (*primary!='\0')?strtoul(primary, &primend, 16):0;
+        secvalue  = (*secondary!='\0')?strtoul(secondary, &secend, 16):0;
+        tervalue  = (*tertiary!='\0')?strtoul(tertiary, &terend, 16):0;
+        if(primvalue <= 0xFF) {
+          primvalue <<= 8;
+        }
+
+        value = ((primvalue << UCOL_PRIMARYORDERSHIFT) & UCOL_PRIMARYORDERMASK)
+           | ((secvalue << UCOL_SECONDARYORDERSHIFT) & UCOL_SECONDARYORDERMASK)
+           | (tervalue & UCOL_TERTIARYORDERMASK);
+
+        if(primsave!='\0') {
+            *primend = primsave;
+        }
+        if(secsave!='\0') {
+            *secend = secsave;
+        }
+        if(tersave!='\0') {
+            *terend = tersave;
+        }
+        return value;
+    }
+    return 0;
+}
+
+/**
+* Getting collation elements generated from a string
+* @param str character string contain collation elements contained in [] and
+*        seperated by space
+* @param ce array for storage, assuming size > 20
+* @param status error status
+* @return position at the end of the codepoint section
+*/
+static char * getCEs(char *str, uint32_t *ces, UErrorCode *status) {
+    char       *pStartCP     = uprv_strchr(str, '[');
+    int         count        = 0;
+    char       *pEndCP;
+    char        primary[100];
+    char        secondary[100];
+    char        tertiary[100];
+
+    while (*pStartCP == '[') {
+        uint32_t primarycount   = 0;
+        uint32_t secondarycount = 0;
+        uint32_t tertiarycount  = 0;
+        uint32_t CEi = 1;
+        pEndCP = strchr(pStartCP, ']');
+        if(pEndCP == NULL) {
+            break;
+        }
+        pStartCP ++;
+
+        primarycount   = readElement(&pStartCP, primary, ',', status);
+        secondarycount = readElement(&pStartCP, secondary, ',', status);
+        tertiarycount  = readElement(&pStartCP, tertiary, ']', status);
+
+        /* I want to get the CEs entered right here, including continuation */
+        ces[count ++] = getSingleCEValue(primary, secondary, tertiary, status);
+        if (U_FAILURE(*status)) {
+            break;
+        }
+
+        while (2 * CEi < primarycount || CEi < secondarycount ||
+               CEi < tertiarycount) {
+            uint32_t value = UCOL_CONTINUATION_MARKER; /* Continuation marker */
+            if (2 * CEi < primarycount) {
+                value |= ((hex2num(*(primary + 4 * CEi)) & 0xF) << 28);
+                value |= ((hex2num(*(primary + 4 * CEi + 1)) & 0xF) << 24);
+            }
+
+            if (2 * CEi + 1 < primarycount) {
+                value |= ((hex2num(*(primary + 4 * CEi + 2)) & 0xF) << 20);
+                value |= ((hex2num(*(primary + 4 * CEi + 3)) &0xF) << 16);
+            }
+
+            if (CEi < secondarycount) {
+                value |= ((hex2num(*(secondary + 2 * CEi)) & 0xF) << 12);
+                value |= ((hex2num(*(secondary + 2 * CEi + 1)) & 0xF) << 8);
+            }
+
+            if (CEi < tertiarycount) {
+                value |= ((hex2num(*(tertiary + 2 * CEi)) & 0x3) << 4);
+                value |= (hex2num(*(tertiary + 2 * CEi + 1)) & 0xF);
+            }
+
+            CEi ++;
+            ces[count ++] = value;
+        }
+
+      pStartCP = pEndCP + 1;
+    }
+    ces[count] = 0;
+    return pStartCP;
+}
+
+/**
+* Getting the FractionalUCA.txt file stream
+*/
+static FileStream * getFractionalUCA(void)
+{
+    char        newPath[256];
+    char        backupPath[256];
+    FileStream *result = NULL;
+
+    /* Look inside ICU_DATA first */
+    uprv_strcpy(newPath, u_getDataDirectory());
+    uprv_strcat(newPath, "unidata" U_FILE_SEP_STRING );
+    uprv_strcat(newPath, "FractionalUCA.txt");
+
+    /* As a fallback, try to guess where the source data was located
+     *   at the time ICU was built, and look there.
+     */
+    #if defined (U_TOPSRCDIR)
+        strcpy(backupPath, U_TOPSRCDIR  U_FILE_SEP_STRING "data");
+    #else
+        strcpy(backupPath, u_getDataDirectory());
+        strcat(backupPath, ".." U_FILE_SEP_STRING ".." U_FILE_SEP_STRING "data");
+    #endif
+    strcat(backupPath, U_FILE_SEP_STRING "unidata" U_FILE_SEP_STRING "FractionalUCA.txt");
+
+    result = T_FileStream_open(newPath, "rb");
+
+    if (result == NULL) {
+        result = T_FileStream_open(backupPath, "rb");
+        if (result == NULL) {
+            log_err("Failed to open either %s or %s\n", newPath, backupPath);
+        }
+    }
+    return result;
+}
+
+/**
+* Testing the CEs returned by the iterator
+*/
+static void TestCEs() {
+    FileStream *file = NULL;
+    char        line[300];
+    char       *str;
+    UChar       codepoints[5];
+    uint32_t    ces[20];
+    UErrorCode  status = U_ZERO_ERROR;
+    UCollator          *coll = ucol_open("", &status);
+
+    if (U_FAILURE(status)) {
+        log_err("Error in opening root collator\n");
+        return;
+    }
+
+    file = getFractionalUCA();
+
+    if (file == NULL) {
+        log_err("*** unable to open input FractionalUCA.txt file ***\n");
+        return;
+    }
+
+    while (T_FileStream_readLine(file, line, sizeof(line)) != NULL) {
+        int                 count = 0;
+        UCollationElements *iter;
+        /* skip this line if it is empty or a comment or is a return value
+        or start of some variable section */
+        if(line[0] == 0 || line[0] == '#' || line[0] == '\n' ||
+            line[0] == 0x000D || line[0] == '[') {
+            continue;
+        }
+
+        str = getCodePoints(line, codepoints);
+        getCEs(str, ces, &status);
+        if (U_FAILURE(status)) {
+            log_err("Error in parsing collation elements in FractionalUCA.txt\n");
+            break;
+        }
+        iter = ucol_openElements(coll, codepoints, -1, &status);
+        if (U_FAILURE(status)) {
+            log_err("Error in opening collation elements\n");
+            break;
+        }
+        for (;;) {
+            uint32_t ce = (uint32_t)ucol_next(iter, &status);
+            if (ce == 0xFFFFFFFF) {
+                ce = 0;
+            }
+            if (ce != ces[count] || U_FAILURE(status)) {
+                log_err("Collation elements in FractionalUCA.txt and iterators do not match!\n");
+                break;
+            }
+            if (ces[count] == 0) {
+                break;
+            }
+            count ++;
+        }
+        ucol_closeElements(iter);
+    }
+
+    T_FileStream_close(file);
+    ucol_close(coll);
 }
 
 /**
@@ -1054,7 +1443,7 @@ static void TestDiscontiguos() {
     resultiter = ucol_openElements(coll, rule, 1, &status);
 
     if (U_FAILURE(status)) {
-        log_err_status(status, "Error opening collation rules -> %s\n", u_errorName(status));
+        log_err("Error opening collation rules\n");
         return;
     }
 
@@ -1081,7 +1470,7 @@ static void TestDiscontiguos() {
             if (e == 0) {
                 e = u_strchr(s, 0);
             }
-            ucol_setText(resultiter, s, (int32_t)(e - s), &status);
+            ucol_setText(resultiter, s, e - s, &status);
             ce = ucol_next(resultiter, &status);
             if (U_FAILURE(status)) {
                 log_err("Error manipulating collation iterator\n");
@@ -1113,149 +1502,459 @@ static void TestDiscontiguos() {
     ucol_close(coll);
 }
 
-/**
-* TestSearchCollatorElements tests iterator behavior (forwards and backwards) with
-* normalization on AND jamo tailoring, among other things.
-*
-* Note: This test is sensitive to changes of the root collator,
-* for example whether the ae-ligature maps to three CEs (as in the DUCET)
-* or to two CEs (as in the CLDR 24 FractionalUCA.txt).
-* It is also sensitive to how those CEs map to the iterator's 32-bit CE encoding.
-* For example, the DUCET's artificial secondary CE in the ae-ligature
-* may map to two 32-bit iterator CEs (as it did until ICU 52).
-*/
-static const UChar tsceText[] = {   /* Nothing in here should be ignorable */
-    0x0020, 0xAC00,                 /* simple LV Hangul */
-    0x0020, 0xAC01,                 /* simple LVT Hangul */
-    0x0020, 0xAC0F,                 /* LVTT, last jamo expands for search */
-    0x0020, 0xAFFF,                 /* LLVVVTT, every jamo expands for search */
-    0x0020, 0x1100, 0x1161, 0x11A8, /* 0xAC01 as conjoining jamo */
-    0x0020, 0x3131, 0x314F, 0x3131, /* 0xAC01 as compatibility jamo */
-    0x0020, 0x1100, 0x1161, 0x11B6, /* 0xAC0F as conjoining jamo; last expands for search */
-    0x0020, 0x1101, 0x1170, 0x11B6, /* 0xAFFF as conjoining jamo; all expand for search */
-    0x0020, 0x00E6,                 /* small letter ae, expands */
-    0x0020, 0x1E4D,                 /* small letter o with tilde and acute, decomposes */
-    0x0020
-};
-enum { kLen_tsceText = UPRV_LENGTHOF(tsceText) };
-
-static const int32_t rootStandardOffsets[] = {
-    0,  1,2,
-    2,  3,4,4,
-    4,  5,6,6,
-    6,  7,8,8,
-    8,  9,10,11,
-    12, 13,14,15,
-    16, 17,18,19,
-    20, 21,22,23,
-    24, 25,26,  /* plus another 1-2 offset=26 if ae-ligature maps to three CEs */
-    26, 27,28,28,
-    28,
-    29
-};
-enum { kLen_rootStandardOffsets = UPRV_LENGTHOF(rootStandardOffsets) };
-
-static const int32_t rootSearchOffsets[] = {
-    0,  1,2,
-    2,  3,4,4,
-    4,  5,6,6,6,
-    6,  7,8,8,8,8,8,8,
-    8,  9,10,11,
-    12, 13,14,15,
-    16, 17,18,19,20,
-    20, 21,22,22,23,23,23,24,
-    24, 25,26,  /* plus another 1-2 offset=26 if ae-ligature maps to three CEs */
-    26, 27,28,28,
-    28,
-    29
-};
-enum { kLen_rootSearchOffsets = UPRV_LENGTHOF(rootSearchOffsets) };
-
-typedef struct {
-    const char *    locale;
-    const int32_t * offsets;
-    int32_t         offsetsLen;
-} TSCEItem;
-
-static const TSCEItem tsceItems[] = {
-    { "root",                  rootStandardOffsets, kLen_rootStandardOffsets },
-    { "root@collation=search", rootSearchOffsets,   kLen_rootSearchOffsets   },
-    { NULL,                    NULL,                0                        }
-};
-
-static void TestSearchCollatorElements(void)
+static void TestCEBufferOverflow()
 {
-    const TSCEItem * tsceItemPtr;
-    for (tsceItemPtr = tsceItems; tsceItemPtr->locale != NULL; tsceItemPtr++) {
-        UErrorCode status = U_ZERO_ERROR;
-        UCollator* ucol = ucol_open(tsceItemPtr->locale, &status);
-        if ( U_SUCCESS(status) ) {
-            UCollationElements * uce = ucol_openElements(ucol, tsceText, kLen_tsceText, &status);
-            if ( U_SUCCESS(status) ) {
-                int32_t offset, element;
-                const int32_t * nextOffsetPtr;
-                const int32_t * limitOffsetPtr;
+    UChar               str[UCOL_EXPAND_CE_BUFFER_SIZE + 1];
+    UErrorCode          status = U_ZERO_ERROR;
+    UChar               rule[10];
+    UCollator          *coll;
+    UCollationElements *iter;
 
-                nextOffsetPtr = tsceItemPtr->offsets;
-                limitOffsetPtr = tsceItemPtr->offsets + tsceItemPtr->offsetsLen;
-                do {
-                    offset = ucol_getOffset(uce);
-                    element = ucol_next(uce, &status);
-                    log_verbose("(%s) offset=%2d  ce=%08x\n", tsceItemPtr->locale, offset, element);
-                    if ( element == 0 ) {
-                        log_err("error, locale %s, ucol_next returned element 0\n", tsceItemPtr->locale );
-                    }
-                    if ( nextOffsetPtr < limitOffsetPtr ) {
-                        if (offset != *nextOffsetPtr) {
-                            log_err("error, locale %s, expected ucol_next -> ucol_getOffset %d, got %d\n",
-                                                            tsceItemPtr->locale, *nextOffsetPtr, offset );
-                            nextOffsetPtr = limitOffsetPtr;
-                            break;
-                        }
-                        nextOffsetPtr++;
-                    } else {
-                        log_err("error, locale %s, ucol_next returned more elements than expected\n", tsceItemPtr->locale );
-                    }
-                } while ( U_SUCCESS(status) && element != UCOL_NULLORDER );
-                if ( nextOffsetPtr < limitOffsetPtr ) {
-                    log_err("error, locale %s, ucol_next returned fewer elements than expected\n", tsceItemPtr->locale );
-                }
-
-                ucol_setOffset(uce, kLen_tsceText, &status);
-                status = U_ZERO_ERROR;
-                nextOffsetPtr = tsceItemPtr->offsets + tsceItemPtr->offsetsLen;
-                limitOffsetPtr = tsceItemPtr->offsets;
-                do {
-                    offset = ucol_getOffset(uce);
-                    element = ucol_previous(uce, &status);
-                    if ( element == 0 ) {
-                        log_err("error, locale %s, ucol_previous returned element 0\n", tsceItemPtr->locale );
-                    }
-                    if ( nextOffsetPtr > limitOffsetPtr ) {
-                        nextOffsetPtr--;
-                        if (offset != *nextOffsetPtr) {
-                            log_err("error, locale %s, expected ucol_previous -> ucol_getOffset %d, got %d\n",
-                                                                tsceItemPtr->locale, *nextOffsetPtr, offset );
-                            nextOffsetPtr = limitOffsetPtr;
-                            break;
-                        }
-                   } else {
-                        log_err("error, locale %s, ucol_previous returned more elements than expected\n", tsceItemPtr->locale );
-                    }
-                } while ( U_SUCCESS(status) && element != UCOL_NULLORDER );
-                if ( nextOffsetPtr > limitOffsetPtr ) {
-                    log_err("error, locale %s, ucol_previous returned fewer elements than expected\n", tsceItemPtr->locale );
-                }
-
-                ucol_closeElements(uce);
-            } else {
-                log_err("error, locale %s, ucol_openElements failed: %s\n", tsceItemPtr->locale, u_errorName(status) );
-            }
-            ucol_close(ucol);
-        } else {
-            log_data_err("error, locale %s, ucol_open failed: %s\n", tsceItemPtr->locale, u_errorName(status) );
-        }
+    u_uastrcpy(rule, "&z < AB");
+    coll = ucol_openRules(rule, u_strlen(rule), UCOL_OFF, UCOL_DEFAULT_STRENGTH, NULL,&status);
+    if (U_FAILURE(status)) {
+        log_err("Rule based collator not created for testing ce buffer overflow\n");
     }
+
+    /* 0xDCDC is a trail surrogate hence deemed unsafe by the heuristic
+    test. this will cause an overflow in getPrev */
+    str[0] = 0x0041;    /* 'A' */
+    /*uprv_memset(str + 1, 0xE0, sizeof(UChar) * UCOL_EXPAND_CE_BUFFER_SIZE);*/
+    uprv_memset(str + 1, 0xDC, sizeof(UChar) * UCOL_EXPAND_CE_BUFFER_SIZE);
+    str[UCOL_EXPAND_CE_BUFFER_SIZE] = 0x0042;   /* 'B' */
+    iter = ucol_openElements(coll, str, UCOL_EXPAND_CE_BUFFER_SIZE + 1,
+                             &status);
+    if (ucol_previous(iter, &status) != UCOL_NULLORDER ||
+        status != U_BUFFER_OVERFLOW_ERROR) {
+        log_err("CE buffer expected to overflow with long string of trail surrogates\n");
+    }
+    ucol_closeElements(iter);
+    ucol_close(coll);
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */
+/**
+* Byte bounds checks. Checks if each byte in data is between upper and lower
+* inclusive.
+*/
+static UBool checkByteBounds(uint32_t data, char upper, char lower)
+{
+    int count = 4;
+    while (count > 0) {
+        char b = (char)(data & 0xFF);
+        if (b > upper || b < lower) {
+            return FALSE;
+        }
+        data = data >> 8;
+        count --;
+    }
+    return TRUE;
+}
+
+/**
+* Determines case of the string of codepoints.
+* If it is a multiple codepoints it has to treated as a contraction.
+*/
+#if 0
+static uint8_t getCase(const UChar *s, uint32_t len) {
+    UBool       lower = FALSE;
+    UBool       upper = FALSE;
+    UBool       title = FALSE;
+    UErrorCode  status = U_ZERO_ERROR;
+    UChar       str[256];
+    const UChar      *ps = s;
+
+    if (len == 0) {
+        return UCOL_LOWER_CASE;
+    }
+
+    while (len > 0) {
+        UChar c = *ps ++;
+
+        if (u_islower(c)) {
+            lower = TRUE;
+        }
+        if (u_isupper(c)) {
+            upper = TRUE;
+        }
+        if (u_istitle(c)) {
+            title = TRUE;
+        }
+
+        len --;
+    }
+    if ((lower && !upper && !title) || (!lower && !upper && !title)){
+        return UCOL_LOWER_CASE;
+    }
+    if (upper && !lower && !title) {
+        return UCOL_UPPER_CASE;
+    }
+    /* mix of cases here */
+    /* len = unorm_normalize(s, len, UNORM_NFKD, 0, str, 256, &status);
+    if (U_FAILURE(status)) {
+        log_err("Error normalizing data string\n");
+        return UCOL_LOWER_CASE;
+    }*/
+
+    if ((title && len >= 2) || (lower && upper)) {
+        return UCOL_MIXED_CASE;
+    }
+    if (u_isupper(s[0])) {
+        return UCOL_UPPER_CASE;
+    }
+    return UCOL_LOWER_CASE;
+}
+#endif
+
+/**
+* Checking collation element validity given the boundary arguments.
+*/
+static UBool checkCEValidity(const UCollator *coll, const UChar *codepoints,
+                             int length, uint32_t primarymax,
+                             uint32_t secondarymax)
+{
+    UErrorCode          status = U_ZERO_ERROR;
+    UCollationElements *iter   = ucol_openElements(coll, codepoints, length,
+                                                  &status);
+    uint32_t            ce;
+    UBool               first  = TRUE;
+/*
+    UBool               upper  = FALSE;
+    UBool               lower  = FALSE;
+*/
+
+    if (U_FAILURE(status)) {
+        log_err("Error creating iterator for testing validity\n");
+    }
+
+    ce = ucol_next(iter, &status);
+
+    while (ce != UCOL_NULLORDER) {
+       if (ce != 0) {
+           uint32_t primary   = UCOL_PRIMARYORDER(ce);
+           uint32_t secondary = UCOL_SECONDARYORDER(ce);
+           uint32_t tertiary  = UCOL_TERTIARYORDER(ce);
+/*           uint32_t scasebits = tertiary & 0xC0;*/
+
+           if ((tertiary == 0 && secondary != 0) ||
+               (tertiary < 0xC0 && secondary == 0 && primary != 0)) {
+               /* n-1th level is not zero when the nth level is
+                  except for continuations, this is wrong */
+               log_err("Lower level weight not 0 when high level weight is 0\n");
+               goto fail;
+           }
+           else {
+               /* checks if any byte is illegal ie = 01 02 03. */
+               if (checkByteBounds(ce, 0x3, 0x1)) {
+                   log_err("Byte range in CE lies in illegal bounds 0x1 - 0x3\n");
+                   goto fail;
+               }
+           }
+           if ((primary != 0 && primary < primarymax) || (primary >= 0xFF00 && !isContinuation(ce))) {
+               log_err("UCA primary weight out of bounds\n");
+               goto fail;
+           }
+           /* case matching not done since data generated by ken */
+           if (first) {
+               if (secondary >= 6 && secondary <= secondarymax) {
+                   log_err("Secondary weight out of range\n");
+                   goto fail;
+               }
+               first = FALSE;
+           }
+       }
+       ce   = ucol_next(iter, &status);
+   }
+   ucol_closeElements(iter);
+   return TRUE;
+fail :
+   ucol_closeElements(iter);
+   return FALSE;
+}
+
+static void TestCEValidity()
+{
+    /* testing UCA collation elements */
+    UErrorCode  status      = U_ZERO_ERROR;
+    /* en_US has no tailorings */
+    UCollator  *coll        = ucol_open("en_US", &status);
+    /* tailored locales */
+    char        locale[][6] = {"fr_FR\0", "ko_KR\0", "sh_YU\0", "th_TH\0", "zh_CN\0"};
+    FileStream *file = getFractionalUCA();
+    char        line[300];
+    UChar       codepoints[5];
+    int         count = 0;
+    UParseError parseError;
+    if (U_FAILURE(status)) {
+        log_err("en_US collator creation failed\n");
+        return;
+    }
+    log_verbose("Testing UCA elements\n");
+    if (file == NULL) {
+        log_err("Fractional UCA data can not be opened\n");
+        return;
+    }
+
+    while (T_FileStream_readLine(file, line, sizeof(line)) != NULL) {
+        if(line[0] == 0 || line[0] == '#' || line[0] == '\n' ||
+            line[0] == 0x000D || line[0] == '[') {
+            continue;
+        }
+
+        getCodePoints(line, codepoints);
+        checkCEValidity(coll, codepoints, u_strlen(codepoints), 5, 86);
+    }
+
+    log_verbose("Testing UCA elements for the whole range of unicode characters\n");
+    codepoints[0] = 0;
+    while (codepoints[0] < 0xFFFF) {
+        if (u_isdefined((UChar32)codepoints[0])) {
+            checkCEValidity(coll, codepoints, 1, 5, 86);
+        }
+        codepoints[0] ++;
+    }
+
+    ucol_close(coll);
+
+    /* testing tailored collation elements */
+    log_verbose("Testing tailored elements\n");
+    while (count < 5) {
+        const UChar *rules = NULL,
+                    *current = NULL;
+        UChar *rulesCopy = NULL;
+        int32_t ruleLen = 0;
+
+        uint32_t chOffset = 0;
+        uint32_t chLen = 0;
+        uint32_t exOffset = 0;
+        uint32_t exLen = 0;
+        uint32_t prefixOffset = 0;
+        uint32_t prefixLen = 0;
+        UBool    startOfRules = TRUE;
+        UColOptionSet opts;
+
+        UColTokenParser src;
+        uint32_t strength = 0;
+        uint16_t specs = 0;
+
+        coll      = ucol_open(locale[count], &status);
+        if (U_FAILURE(status)) {
+            log_err("%s collator creation failed\n", locale[count]);
+            return;
+        }
+
+        src.opts = &opts;
+        rules = ucol_getRules(coll, &ruleLen);
+
+        if (ruleLen > 0) {
+            rulesCopy = (UChar *)uprv_malloc((ruleLen +
+                UCOL_TOK_EXTRA_RULE_SPACE_SIZE) * sizeof(UChar));
+            uprv_memcpy(rulesCopy, rules, ruleLen * sizeof(UChar));
+            src.source = src.current = rulesCopy;
+            src.end = rulesCopy + ruleLen;
+            src.extraCurrent = src.end;
+            src.extraEnd = src.end + UCOL_TOK_EXTRA_RULE_SPACE_SIZE;
+
+            while ((current = ucol_tok_parseNextToken(&src, startOfRules, &parseError,&status)) != NULL) {
+              strength = src.parsedToken.strength;
+              chOffset = src.parsedToken.charsOffset;
+              chLen = src.parsedToken.charsLen;
+              exOffset = src.parsedToken.extensionOffset;
+              exLen = src.parsedToken.extensionLen;
+              prefixOffset = src.parsedToken.prefixOffset;
+              prefixLen = src.parsedToken.prefixLen;
+              specs = src.parsedToken.flags;
+
+                startOfRules = FALSE;
+                uprv_memcpy(codepoints, rules + chOffset,
+                                                       chLen * sizeof(UChar));
+                codepoints[chLen] = 0;
+                checkCEValidity(coll, codepoints, u_strlen(codepoints), 4, 85);
+            }
+            uprv_free(rulesCopy);
+        }
+
+        ucol_close(coll);
+        count ++;
+    }
+    T_FileStream_close(file);
+}
+
+static void printSortKeyError(const UChar   *codepoints, int length,
+                                    uint8_t *sortkey, int sklen)
+{
+    int count = 0;
+    log_err("Sortkey not valid for ");
+    while (length > 0) {
+        log_err("0x%04x ", *codepoints);
+        length --;
+        codepoints ++;
+    }
+    log_err("\nSortkey : ");
+    while (count < sklen) {
+        log_err("0x%02x ", sortkey[count]);
+        count ++;
+    }
+    log_err("\n");
+}
+
+/**
+* Checking sort key validity for all levels
+*/
+static UBool checkSortKeyValidity(UCollator *coll,
+                                  const UChar *codepoints,
+                                  int length)
+{
+    UErrorCode status  = U_ZERO_ERROR;
+    UCollationStrength strength[5] = {UCOL_PRIMARY, UCOL_SECONDARY,
+                                      UCOL_TERTIARY, UCOL_QUATERNARY,
+                                      UCOL_IDENTICAL};
+    int        strengthlen = 5;
+    int        index       = 0;
+    int        caselevel   = 0;
+
+    while (caselevel < 1) {
+        if (caselevel == 0) {
+            ucol_setAttribute(coll, UCOL_CASE_LEVEL, UCOL_OFF, &status);
+        }
+        else {
+            ucol_setAttribute(coll, UCOL_CASE_LEVEL, UCOL_ON, &status);
+        }
+
+        while (index < strengthlen) {
+            int        count01 = 0;
+            uint32_t   count   = 0;
+            uint8_t    sortkey[128];
+            uint32_t   sklen;
+
+            ucol_setStrength(coll, strength[index]);
+            sklen = ucol_getSortKey(coll, codepoints, length, sortkey, 128);
+            while (sortkey[count] != 0) {
+                if (sortkey[count] == 2 || (sortkey[count] == 3 && count01 > 0 && index != 4)) {
+                    printSortKeyError(codepoints, length, sortkey, sklen);
+                    return FALSE;
+                }
+                if (sortkey[count] == 1) {
+                    count01 ++;
+                }
+                count ++;
+            }
+
+            if (count + 1 != sklen || (count01 != index + caselevel)) {
+                printSortKeyError(codepoints, length, sortkey, sklen);
+                return FALSE;
+            }
+            index ++;
+        }
+        caselevel ++;
+    }
+    return TRUE;
+}
+
+static void TestSortKeyValidity(void)
+{
+    /* testing UCA collation elements */
+    UErrorCode  status      = U_ZERO_ERROR;
+    /* en_US has no tailorings */
+    UCollator  *coll        = ucol_open("en_US", &status);
+    /* tailored locales */
+    char        locale[][6] = {"fr_FR\0", "ko_KR\0", "sh_YU\0", "th_TH\0", "zh_CN\0"};
+    FileStream *file = getFractionalUCA();
+    char        line[300];
+    UChar       codepoints[5];
+    int         count = 0;
+    UParseError parseError;
+    if (U_FAILURE(status)) {
+        log_err("en_US collator creation failed\n");
+        return;
+    }
+    log_verbose("Testing UCA elements\n");
+    if (file == NULL) {
+        log_err("Fractional UCA data can not be opened\n");
+        return;
+    }
+
+    while (T_FileStream_readLine(file, line, sizeof(line)) != NULL) {
+        if(line[0] == 0 || line[0] == '#' || line[0] == '\n' ||
+            line[0] == 0x000D || line[0] == '[') {
+            continue;
+        }
+
+        getCodePoints(line, codepoints);
+        checkSortKeyValidity(coll, codepoints, u_strlen(codepoints));
+    }
+
+    log_verbose("Testing UCA elements for the whole range of unicode characters\n");
+    codepoints[0] = 0;
+
+    while (codepoints[0] < 0xFFFF) {
+        if (u_isdefined((UChar32)codepoints[0])) {
+            checkSortKeyValidity(coll, codepoints, 1);
+        }
+        codepoints[0] ++;
+    }
+
+    ucol_close(coll);
+
+    /* testing tailored collation elements */
+    log_verbose("Testing tailored elements\n");
+    while (count < 5) {
+        const UChar *rules = NULL,
+                    *current = NULL;
+        UChar *rulesCopy = NULL;
+        int32_t ruleLen = 0;
+
+        uint32_t chOffset = 0;
+        uint32_t chLen = 0;
+        uint32_t exOffset = 0;
+        uint32_t exLen = 0;
+        uint32_t prefixOffset = 0;
+        uint32_t prefixLen = 0;
+        UBool    startOfRules = TRUE;
+        UColOptionSet opts;
+
+        UColTokenParser src;
+        uint32_t strength = 0;
+        uint16_t specs = 0;
+
+        coll      = ucol_open(locale[count], &status);
+        if (U_FAILURE(status)) {
+            log_err("%s collator creation failed\n", locale[count]);
+            return;
+        }
+
+        src.opts = &opts;
+        rules = ucol_getRules(coll, &ruleLen);
+
+        if (ruleLen > 0) {
+            rulesCopy = (UChar *)uprv_malloc((ruleLen +
+                UCOL_TOK_EXTRA_RULE_SPACE_SIZE) * sizeof(UChar));
+            uprv_memcpy(rulesCopy, rules, ruleLen * sizeof(UChar));
+            src.source = src.current = rulesCopy;
+            src.end = rulesCopy + ruleLen;
+            src.extraCurrent = src.end;
+            src.extraEnd = src.end + UCOL_TOK_EXTRA_RULE_SPACE_SIZE;
+
+            while ((current = ucol_tok_parseNextToken(&src, startOfRules,&parseError, &status)) != NULL) {
+                strength = src.parsedToken.strength;
+                chOffset = src.parsedToken.charsOffset;
+                chLen = src.parsedToken.charsLen;
+                exOffset = src.parsedToken.extensionOffset;
+                exLen = src.parsedToken.extensionLen;
+                prefixOffset = src.parsedToken.prefixOffset;
+                prefixLen = src.parsedToken.prefixLen;
+                specs = src.parsedToken.flags;
+
+                startOfRules = FALSE;
+                uprv_memcpy(codepoints, rules + chOffset,
+                                                       chLen * sizeof(UChar));
+                codepoints[chLen] = 0;
+                checkSortKeyValidity(coll, codepoints, u_strlen(codepoints));
+            }
+            uprv_free(rulesCopy);
+        }
+
+        ucol_close(coll);
+        count ++;
+    }
+    T_FileStream_close(file);
+}

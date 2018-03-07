@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 2001-2007, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -12,82 +10,74 @@
 #ifndef NAME2UNI_H
 #define NAME2UNI_H
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "unicode/translit.h"
-#include "unicode/uniset.h"
 
 U_NAMESPACE_BEGIN
 
 /**
  * A transliterator that performs name to character mapping.
- * It recognizes the Perl syntax \N{name}.
  * @author Alan Liu
+ * @draft ICU 2.0
  */
-class NameUnicodeTransliterator : public Transliterator {
-public:
+class U_I18N_API NameUnicodeTransliterator : public Transliterator {
+
+    UChar32 openDelimiter;
+    UChar32 closeDelimiter;
+
+ public:
 
     /**
      * Constructs a transliterator.
-     * @param adoptedFilter    the filter for this transliterator.
+     * @draft ICU 2.0
+     */
+    NameUnicodeTransliterator(UChar32 openDelimiter, UChar32 closeDelimiter,
+                              UnicodeFilter* adoptedFilter = 0);
+
+    /**
+     * Constructs a transliterator with the default delimiters '{' and
+     * '}'.
+     * @draft ICU 2.0
      */
     NameUnicodeTransliterator(UnicodeFilter* adoptedFilter = 0);
 
     /**
      * Destructor.
+     * @draft ICU 2.0
      */
     virtual ~NameUnicodeTransliterator();
 
     /**
      * Copy constructor.
+     * @draft ICU 2.0
      */
     NameUnicodeTransliterator(const NameUnicodeTransliterator&);
 
     /**
+     * Assignment operator.
+     * @draft ICU 2.0
+     */
+    NameUnicodeTransliterator& operator=(const NameUnicodeTransliterator&);
+
+    /**
      * Transliterator API.
-     * @return    A copy of the object.
+     * @draft ICU 2.0
      */
-    virtual Transliterator* clone(void) const;
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     */
-    virtual UClassID getDynamicClassID() const;
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     */
-    U_I18N_API static UClassID U_EXPORT2 getStaticClassID();
+    Transliterator* clone(void) const;
 
  protected:
 
     /**
      * Implements {@link Transliterator#handleTransliterate}.
-     * @param text          the buffer holding transliterated and
-     *                      untransliterated text
-     * @param offset        the start and limit of the text, the position
-     *                      of the cursor, and the start and limit of transliteration.
-     * @param incremental   if true, assume more text may be coming after
-     *                      pos.contextLimit. Otherwise, assume the text is complete.
+     * @draft ICU 2.0
      */
     virtual void handleTransliterate(Replaceable& text, UTransPosition& offset,
                                      UBool isIncremental) const;
 
-    /**
-     * Set of characters which occur in Unicode character names.
-     */
-    UnicodeSet legal;
-private:
-    /**
-     * Assignment operator.
-     */
-    NameUnicodeTransliterator& operator=(const NameUnicodeTransliterator&);
+ private:
+
+    static const char _ID[];
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif

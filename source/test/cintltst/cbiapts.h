@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2001, International Business Machines Corporation and
@@ -18,10 +16,6 @@
 #ifndef _CBRKITRAPITST
 #define _CBRKITRAPITST
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_BREAK_ITERATION
-
 #include "cintltst.h"
 
 /**
@@ -31,7 +25,5 @@
 **/
 /* The function used to test the BreakIterator API*/
 static void TestBreakIteratorCAPI(void);
-
-#endif /* #if !UCONFIG_NO_BREAK_ITERATION */
 
 #endif

@@ -1,31 +1,24 @@
 /*
- *******************************************************************************
- *
- *   © 2016 and later: Unicode, Inc. and others.
- *   License & terms of use: http://www.unicode.org/copyright.html#License
- *
- *******************************************************************************
- *******************************************************************************
- *
- *   Copyright (C) 1999-2009, International Business Machines
- *   Corporation and others.  All Rights Reserved.
- *
- *******************************************************************************
- *   file name:  reader.c
- *   encoding:   UTF-8
- *   tab size:   8 (not used)
- *   indentation:4
- *
- *   created on: 2000sep5
- *   created by: Vladimir Weinstein
- */
+*******************************************************************************
+*
+*   Copyright (C) 1999-2000, International Business Machines
+*   Corporation and others.  All Rights Reserved.
+*
+*******************************************************************************
+*   file name:  reader.c
+*   encoding:   US-ASCII
+*   tab size:   8 (not used)
+*   indentation:4
+*
+*   created on: 2000sep5
+*   created by: Vladimir Weinstein
+*/
 
 /*******************************************************************************
  * Derived from Madhu Katragadda gentest
  *******************************************************************************/
 
 
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef WIN32
@@ -34,10 +27,9 @@
 #include <unistd.h>
 #endif
 #include "unicode/utypes.h"
-#include "unicode/putil.h"
 #include "unicode/udata.h"
 
-#define DATA_NAME "mypkg_example"
+#define DATA_NAME "example"
 #define DATA_TYPE "dat"
 
 /* UDataInfo cf. udata.h */
@@ -88,7 +80,7 @@ main(int argc, const char *argv[]) {
     uint16_t *intPointer = NULL;
 
     const void *dataMemory = NULL;
-    char curPathBuffer[1024];
+
  
 #ifdef WIN32
     char *currdir = _getcwd(NULL, 0);
@@ -96,17 +88,14 @@ main(int argc, const char *argv[]) {
     char *currdir = getcwd(NULL, 0);
 #endif
 
-    /* need to put  "current/dir" as path */
-    strcpy(curPathBuffer, currdir);
-
-    result=udata_openChoice(curPathBuffer, DATA_TYPE, DATA_NAME, isAcceptable, NULL, &status);
+    result=udata_openChoice(currdir, DATA_TYPE, DATA_NAME, isAcceptable, NULL, &status);
 
     if(currdir != NULL) {
         free(currdir);
     }
 
     if(U_FAILURE(status)){
-        printf("Failed to open data file example.dat in %s with error number %d\n", curPathBuffer, status);
+        printf("Failed to open data file with error number %d\n", status);
         return -1;
     }
 

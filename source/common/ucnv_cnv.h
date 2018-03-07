@@ -1,13 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 1999-2011, International Business Machines
+*   Copyright (C) 1999-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *
-*   ucnv_cnv.h:
-*   Definitions for converter implementations.
+*   uconv_cnv.h:
+*   defines all the low level conversion functions
+*   T_UnicodeConverter_{to,from}Unicode_$ConversionType
 *
 * Modification History:
 *
@@ -20,13 +19,15 @@
 #define UCNV_CNV_H
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_CONVERSION
-
-#include "unicode/ucnv.h"
 #include "unicode/ucnv_err.h"
-#include "unicode/uset.h"
-#include "uset_imp.h"
+#include "ucnv_bld.h"
+#include "ucnvmbcs.h"
+
+union UConverterTable
+  {
+    UConverterMBCSTable mbcs;
+  };
+
 
 U_CDECL_BEGIN
 
@@ -36,37 +37,17 @@ U_CDECL_BEGIN
 /*
  * #define missingUCharMarker 0xfffe
  *
- * commented out because there are actually two values used in toUnicode tables:
+ * there are actually two values used in toUnicode tables:
  * U+fffe "unassigned"
  * U+ffff "illegal"
  */
 
-/** Forward declaration, see ucnv_bld.h */
-struct UConverterSharedData;
-typedef struct UConverterSharedData UConverterSharedData;
 
-/* function types for UConverterImpl ---------------------------------------- */
 
-/* struct with arguments for UConverterLoad and ucnv_load() */
-typedef struct {
-    int32_t size;               /* sizeof(UConverterLoadArgs) */
-    int32_t nestedLoads;        /* count nested ucnv_load() calls */
-    UBool onlyTestIsLoadable;   /* input: don't actually load */
-    UBool reserved0;            /* reserved - for good alignment of the pointers */
-    int16_t reserved;           /* reserved - for good alignment of the pointers */
-    uint32_t options;
-    const char *pkg, *name, *locale;
-} UConverterLoadArgs;
-
-#define UCNV_LOAD_ARGS_INITIALIZER \
-    { (int32_t)sizeof(UConverterLoadArgs), 0, FALSE, FALSE, 0, 0, NULL, NULL, NULL }
-
-typedef void (*UConverterLoad) (UConverterSharedData *sharedData,
-                                UConverterLoadArgs *pArgs,
-                                const uint8_t *raw, UErrorCode *pErrorCode);
+typedef void (*UConverterLoad) (UConverterSharedData *sharedData, const uint8_t *raw, UErrorCode *pErrorCode);
 typedef void (*UConverterUnload) (UConverterSharedData *sharedData);
 
-typedef void (*UConverterOpen) (UConverter *cnv, UConverterLoadArgs *pArgs, UErrorCode *pErrorCode);
+typedef void (*UConverterOpen) (UConverter *cnv, const char *name, const char *locale,uint32_t options, UErrorCode *pErrorCode);
 typedef void (*UConverterClose) (UConverter *cnv);
 
 typedef enum UConverterResetChoice {
@@ -77,77 +58,11 @@ typedef enum UConverterResetChoice {
 
 typedef void (*UConverterReset) (UConverter *cnv, UConverterResetChoice choice);
 
-/*
- * Converter implementation function(s) for ucnv_toUnicode().
- * If the toUnicodeWithOffsets function pointer is NULL,
- * then the toUnicode function will be used and the offsets will be set to -1.
- *
- * Must maintain state across buffers. Use toUBytes[toULength] for partial input
- * sequences; it will be checked in ucnv.c at the end of the input stream
- * to detect truncated input.
- * Some converters may need additional detection and may then set U_TRUNCATED_CHAR_FOUND.
- *
- * The toUnicodeWithOffsets must write exactly as many offset values as target
- * units. Write offset values of -1 for when the source index corresponding to
- * the output unit is not known (e.g., the character started in an earlier buffer).
- * The pArgs->offsets pointer need not be moved forward.
- *
- * At function return, either one of the following conditions must be true:
- * - U_BUFFER_OVERFLOW_ERROR and the target is full: target==targetLimit
- * - another error code with toUBytes[toULength] set to the offending input
- * - no error, and the source is consumed: source==sourceLimit
- *
- * The ucnv.c code will handle the end of the input (reset)
- * (reset, and truncation detection) and callbacks.
- */
-typedef void (*UConverterToUnicode) (UConverterToUnicodeArgs *, UErrorCode *);
+typedef void (*T_ToUnicodeFunction) (UConverterToUnicodeArgs *, UErrorCode *);
 
-/*
- * Same rules as for UConverterToUnicode.
- * A lead surrogate is kept in fromUChar32 across buffers, and if an error
- * occurs, then the offending input code point must be put into fromUChar32
- * as well.
- */
-typedef void (*UConverterFromUnicode) (UConverterFromUnicodeArgs *, UErrorCode *);
+typedef void (*T_FromUnicodeFunction) (UConverterFromUnicodeArgs *, UErrorCode *);
 
-/*
- * Converter implementation function for ucnv_convertEx(), for direct conversion
- * between two charsets without pivoting through UTF-16.
- * The rules are the same as for UConverterToUnicode and UConverterFromUnicode.
- * In addition,
- * - The toUnicode side must behave and keep state exactly like the
- *   UConverterToUnicode implementation for the same source charset.
- * - A U_USING_DEFAULT_WARNING can be set to request to temporarily fall back
- *   to pivoting. When this function is called, the conversion framework makes
- *   sure that this warning is not set on input.
- * - Continuing a partial match and flushing the toUnicode replay buffer
- *   are handled by pivoting, using the toUnicode and fromUnicode functions.
- */
-typedef void (*UConverterConvert) (UConverterFromUnicodeArgs *pFromUArgs,
-                                   UConverterToUnicodeArgs *pToUArgs,
-                                   UErrorCode *pErrorCode);
-
-/*
- * Converter implementation function for ucnv_getNextUChar().
- * If the function pointer is NULL, then the toUnicode function will be used.
- *
- * Will be called at a character boundary (toULength==0).
- * May return with
- * - U_INDEX_OUTOFBOUNDS_ERROR if there was no output for the input
- *   (the return value will be ignored)
- * - U_TRUNCATED_CHAR_FOUND or another error code (never U_BUFFER_OVERFLOW_ERROR!)
- *   with toUBytes[toULength] set to the offending input
- *   (the return value will be ignored)
- * - return UCNV_GET_NEXT_UCHAR_USE_TO_U, without moving the source pointer,
- *   to indicate that the ucnv.c code shall call the toUnicode function instead
- * - return a real code point result
- *
- * Unless UCNV_GET_NEXT_UCHAR_USE_TO_U is returned, the source bytes must be consumed.
- *
- * The ucnv.c code will handle the end of the input (reset)
- * (except for truncation detection!) and callbacks.
- */
-typedef UChar32 (*UConverterGetNextUChar) (UConverterToUnicodeArgs *, UErrorCode *);
+typedef UChar32 (*T_GetNextUCharFunction) (UConverterToUnicodeArgs *, UErrorCode *);
 
 typedef void (*UConverterGetStarters)(const UConverter* converter,
                                       UBool starters[256],
@@ -172,46 +87,27 @@ typedef void (*UConverterWriteSub) (UConverterFromUnicodeArgs *pArgs, int32_t of
  * For converter-specific safeClone processing
  * If this function is not set, then ucnv_safeClone assumes that the converter has no private data that changes
  * after the converter is done opening.
- * If this function is set, then it is called just after a memcpy() of
- * converter data to the new, empty converter, and is expected to set up
- * the initial state of the converter.  It is not expected to increment the
- * reference counts of the standard data types such as the shared data.
  */
 typedef UConverter * (*UConverterSafeClone) (const UConverter   *cnv, 
                                              void               *stackBuffer,
                                              int32_t            *pBufferSize, 
                                              UErrorCode         *status);
 
-/**
- * Filters for some ucnv_getUnicodeSet() implementation code.
- */
-typedef enum UConverterSetFilter {
-    UCNV_SET_FILTER_NONE,
-    UCNV_SET_FILTER_DBCS_ONLY,
-    UCNV_SET_FILTER_2022_CN,
-    UCNV_SET_FILTER_SJIS,
-    UCNV_SET_FILTER_GR94DBCS,
-    UCNV_SET_FILTER_HZ,
-    UCNV_SET_FILTER_COUNT
-} UConverterSetFilter;
-
-/**
- * Fills the set of Unicode code points that can be converted by an ICU converter.
- * The API function ucnv_getUnicodeSet() clears the USet before calling
- * the converter's getUnicodeSet() implementation; the converter should only
- * add the appropriate code points to allow recursive use.
- * For example, the ISO-2022-JP converter will call each subconverter's
- * getUnicodeSet() implementation to consecutively add code points to
- * the same USet, which will result in a union of the sets of all subconverters.
- *
- * For more documentation, see ucnv_getUnicodeSet() in ucnv.h.
- */
-typedef void (*UConverterGetUnicodeSet) (const UConverter *cnv,
-                                         const USetAdder *sa,
-                                         UConverterUnicodeSet which,
-                                         UErrorCode *pErrorCode);
-
 UBool CONVERSION_U_SUCCESS (UErrorCode err);
+
+void ucnv_flushInternalUnicodeBuffer (UConverter * _this,
+                                 UChar * myTarget,
+                                 int32_t * myTargetIndex,
+                                 int32_t targetLength,
+                                 int32_t** offsets,
+                                 UErrorCode * err);
+
+void ucnv_flushInternalCharBuffer (UConverter * _this,
+                              char *myTarget,
+                              int32_t * myTargetIndex,
+                              int32_t targetLength,
+                              int32_t** offsets,
+                              UErrorCode * err);
 
 /**
  * UConverterImpl contains all the data and functions for a converter type.
@@ -239,20 +135,16 @@ struct UConverterImpl {
     UConverterClose close;
     UConverterReset reset;
 
-    UConverterToUnicode toUnicode;
-    UConverterToUnicode toUnicodeWithOffsets;
-    UConverterFromUnicode fromUnicode;
-    UConverterFromUnicode fromUnicodeWithOffsets;
-    UConverterGetNextUChar getNextUChar;
+    T_ToUnicodeFunction toUnicode;
+    T_ToUnicodeFunction toUnicodeWithOffsets;
+    T_FromUnicodeFunction fromUnicode;
+    T_FromUnicodeFunction fromUnicodeWithOffsets;
+    T_GetNextUCharFunction getNextUChar;
 
     UConverterGetStarters getStarters;
     UConverterGetName getName;
     UConverterWriteSub writeSub;
     UConverterSafeClone safeClone;
-    UConverterGetUnicodeSet getUnicodeSet;
-
-    UConverterConvert toUTF8;
-    UConverterConvert fromUTF8;
 };
 
 extern const UConverterSharedData
@@ -261,10 +153,43 @@ extern const UConverterSharedData
     _ISO2022Data, 
     _LMBCSData1,_LMBCSData2, _LMBCSData3, _LMBCSData4, _LMBCSData5, _LMBCSData6,
     _LMBCSData8,_LMBCSData11,_LMBCSData16,_LMBCSData17,_LMBCSData18,_LMBCSData19,
-    _HZData,_ISCIIData, _SCSUData, _ASCIIData,
-    _UTF7Data, _Bocu1Data, _UTF16Data, _UTF32Data, _CESU8Data, _IMAPData, _CompoundTextData;
+    _HZData,_ISCIIData, _SCSUData, _ASCIIData, _UTF7Data;
 
 U_CDECL_END
+
+/**
+ * This function is useful for implementations of getNextUChar().
+ * After a call to a callback function or to toUnicode(), an output buffer
+ * begins with a Unicode code point that needs to be returned as UChar32,
+ * and all following code units must be prepended to the - potentially
+ * prefilled - overflow buffer in the UConverter.
+ * The buffer should be at least of capacity UTF_MAX_CHAR_LENGTH so that a
+ * complete UChar32's UChars fit into it.
+ *
+ * @param cnv    The converter that will get remaining UChars copied to its overflow area.
+ * @param buffer An array of UChars that was passed into a callback function
+ *               or a toUnicode() function.
+ * @param length The number of code units (UChars) that are actually in the buffer.
+ *               This must be >0.
+ * @return The code point from the first UChars in the buffer.
+ */
+U_CFUNC UChar32
+ucnv_getUChar32KeepOverflow(UConverter *cnv, const UChar *buffer, int32_t length);
+
+/**
+ * This helper function updates the offsets array after a callback function call.
+ * It adds the sourceIndex to each offsets item, or sets each of them to -1 if
+ * sourceIndex==-1.
+ *
+ * @param offsets The pointer to offsets entry that corresponds to the first target
+ *                unit that the callback wrote.
+ * @param length  The number of output units that the callback wrote.
+ * @param sourceIndex The sourceIndex of the input sequence that the callback
+ *                    function was called for.
+ * @return offsets+length if offsets!=NULL, otherwise NULL
+ */
+U_CFUNC int32_t *
+ucnv_updateCallbackOffsets(int32_t *offsets, int32_t length, int32_t sourceIndex);
 
 /** Always use fallbacks from codepage to Unicode */
 #define TO_U_USE_FALLBACK(useFallback) TRUE
@@ -276,48 +201,29 @@ U_CDECL_END
 #define UCNV_FROM_U_USE_FALLBACK(cnv, c) FROM_U_USE_FALLBACK((cnv)->useFallback, c)
 
 /**
- * Magic number for ucnv_getNextUChar(), returned by a
- * getNextUChar() implementation to indicate to use the converter's toUnicode()
- * instead of the native function.
- * @internal
+ * This is a simple implementation of ucnv_getNextUChar() that uses the
+ * converter's toUnicode() function.
+ *
+ * \par
+ * A surrogate pair from a single byte sequence is always
+ * combined to a supplementary code point.
+ * A surrogate pair from consecutive byte sequences is only combined
+ * if collectPairs is set. This is necessary for SCSU
+ * but not allowed for most legacy codepages.
+ *
+ * @param pArgs The argument structure supplied by ucnv_getNextUChar()
+ * @param toU   A function pointer to the converter's toUnicode() function
+ * @param collectPairs indicates whether separate surrogate results from
+ *                     consecutive byte sequences should be combined into
+ *                     a single code point
+ * @param pErrorCode An ICU error code parameter
+ * @return The Unicode code point as a result of a conversion of a minimal
+ *         number of input bytes
  */
-#define UCNV_GET_NEXT_UCHAR_USE_TO_U -9
-
-U_CFUNC void
-ucnv_getCompleteUnicodeSet(const UConverter *cnv,
-                   const USetAdder *sa,
-                   UConverterUnicodeSet which,
-                   UErrorCode *pErrorCode);
-
-U_CFUNC void
-ucnv_getNonSurrogateUnicodeSet(const UConverter *cnv,
-                               const USetAdder *sa,
-                               UConverterUnicodeSet which,
-                               UErrorCode *pErrorCode);
-
-U_CFUNC void
-ucnv_fromUWriteBytes(UConverter *cnv,
-                     const char *bytes, int32_t length,
-                     char **target, const char *targetLimit,
-                     int32_t **offsets,
-                     int32_t sourceIndex,
-                     UErrorCode *pErrorCode);
-U_CFUNC void
-ucnv_toUWriteUChars(UConverter *cnv,
-                    const UChar *uchars, int32_t length,
-                    UChar **target, const UChar *targetLimit,
-                    int32_t **offsets,
-                    int32_t sourceIndex,
-                    UErrorCode *pErrorCode);
-
-U_CFUNC void
-ucnv_toUWriteCodePoint(UConverter *cnv,
-                       UChar32 c,
-                       UChar **target, const UChar *targetLimit,
-                       int32_t **offsets,
-                       int32_t sourceIndex,
-                       UErrorCode *pErrorCode);
-
-#endif
+U_CFUNC UChar32
+ucnv_getNextUCharFromToUImpl(UConverterToUnicodeArgs *pArgs,
+                             T_ToUnicodeFunction toU,
+                             UBool collectPairs,
+                             UErrorCode *pErrorCode);
 
 #endif /* UCNV_CNV */

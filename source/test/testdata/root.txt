@@ -1,8 +1,6 @@
-// Copyright (C) 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 //*******************************************************************************
 //*
-//*   Copyright (C) 1998-2016, International Business Machines
+//*   Copyright (C) 1998-2000, International Business Machines
 //*   Corporation and others.  All Rights Reserved.
 //*
 //*******************************************************************************
@@ -13,8 +11,6 @@
 root
 {
     Version { 44.0 }
-    ExpectCLDRVersionAtLeast { 32.0 } // 'base' cldr version. Allow up to version =.=.* of this
-    CurrentCLDRVersion { 32.0 } // Current CLDR version as of the test update. Warn if not an exact match.
 
     ShortLanguage { xxx }
 
@@ -57,7 +53,6 @@ root
         tag4 { ROOT4 } 
         tag9 { ROOT9 } 
         tag12 { ROOT12 } 
-    tag1 { ROOT1 }
     }
 
     string_in_Root_te { ROOT }
@@ -95,23 +90,6 @@ root
     {
         tag13 { ROOT13 } 
         tag8 { ROOT8 } 
-    }
-    rootAliasClient:alias {"/LOCALE/rootAliasDestination"}
-    rootAliasDestination {"wrong"}
-    nestedRootAliasClient:alias {"/LOCALE/rootAliasTable/destination"}
-    rootAliasTable {
-        destination { "correct" }
-    }
-    a {
-        a1{"ar1"}
-        a2{"ar2"}
-        a3{"ar3"}
-        a4{"ar4"}
-    }    
-
-    tableT7996 {
-        b7996:alias {"/LOCALE/tableT7996/c7996"}
-        c7996 {"string c7996 in tableT7996 for root"}
     }
 }
 

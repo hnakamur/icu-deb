@@ -1,12 +1,10 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2003, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /*   file name:  sfwdchit.cpp
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 */
@@ -23,7 +21,6 @@
 const int32_t SimpleFwdCharIterator::kInvalidHashCode = 0;
 const int32_t SimpleFwdCharIterator::kEmptyHashCode = 1;
 
-#if 0 // not used
 SimpleFwdCharIterator::SimpleFwdCharIterator(const UnicodeString& s) {
 
     fHashCode = kInvalidHashCode;
@@ -39,7 +36,6 @@ SimpleFwdCharIterator::SimpleFwdCharIterator(const UnicodeString& s) {
     }
     
 }
-#endif
 
 SimpleFwdCharIterator::SimpleFwdCharIterator(UChar *s, int32_t len, UBool adopt) {
 
@@ -69,7 +65,6 @@ SimpleFwdCharIterator::~SimpleFwdCharIterator() {
     delete[] fStart;
 }
 
-#if 0 // not used
 UBool SimpleFwdCharIterator::operator==(const ForwardCharacterIterator& that) const {
     if(this == &that) {
         return TRUE;
@@ -89,8 +84,7 @@ UBool SimpleFwdCharIterator::operator==(const ForwardCharacterIterator& that) co
 */
     return FALSE;
 }
-#endif
-
+     
 int32_t SimpleFwdCharIterator::hashCode(void) const {
     if (fHashCode == kInvalidHashCode)
     {

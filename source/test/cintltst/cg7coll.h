@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -15,7 +13,7 @@
 *********************************************************************************/
 /**
  * G7CollationTest is a third level test class.  This test performs the examples 
- * mentioned on the IBM Java international demos web site.  
+ * mentioned on the Taligent international demos web site.  
  * Sample Rules: & Z < p , P 
  * Effect :  Making P sort after Z.
  *
@@ -40,11 +38,6 @@
 #ifndef _CG7COLLTST
 #define _CG7COLLTST
 
-#include "unicode/utypes.h"
-#include "cmemory.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "cintltst.h"
 
 #define MAX_TOKEN_LEN 16
@@ -68,7 +61,5 @@
     /* perform test with added rules  */
     /* " & aa ; a'-' & ee ; e'-' & ii ; i'-' & oo ; o'-' & uu ; u'-' " */
     static void TestDemo4(void);
-
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

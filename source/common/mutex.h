@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1997-2013, International Business Machines
+*   Copyright (C) 1997-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -21,25 +19,32 @@
 //----------------------------------------------------------------------------
 #ifndef MUTEX_H
 #define MUTEX_H
-
 #include "unicode/utypes.h"
-#include "unicode/uobject.h"
+
 #include "umutex.h"
 
 U_NAMESPACE_BEGIN
 
 //----------------------------------------------------------------------------
-// Code within that accesses shared static or global data should
+// Code within this library which accesses protected data
 // should instantiate a Mutex object while doing so. You should make your own 
 // private mutex where possible.
 
 // For example:
 // 
-// UMutex myMutex;
+// UMTX myMutex;
 // 
+// int InitializeMyMutex()
+// {
+//    umtx_init( &myMutex );
+//    return 0;
+// }
+// 
+// static int initializeMyMutex = InitializeMyMutex();
+//
 // void Function(int arg1, int arg2)
 // {
-//    static Object* foo;     // Shared read-write object
+//    static Object* foo; // Shared read-write object
 //    Mutex mutex(&myMutex);  // or no args for the global lock
 //    foo->Method();
 //    // When 'mutex' goes out of scope and gets destroyed here, the lock is released
@@ -50,19 +55,17 @@ U_NAMESPACE_BEGIN
 //        compiler!!
 //
 
-class U_COMMON_API Mutex : public UMemory {
+class U_COMMON_API Mutex
+{
 public:
-  inline Mutex(UMutex *mutex = NULL);
+  inline Mutex(UMTX *mutex = NULL);
   inline ~Mutex();
 
 private:
-  UMutex   *fMutex;
-
-  Mutex(const Mutex &other); // forbid copying of this class
-  Mutex &operator=(const Mutex &other); // forbid copying of this class
+  UMTX   *fMutex;
 };
 
-inline Mutex::Mutex(UMutex *mutex)
+inline Mutex::Mutex(UMTX *mutex)
   : fMutex(mutex)
 {
   umtx_lock(fMutex);
@@ -77,3 +80,11 @@ U_NAMESPACE_END
 
 #endif //_MUTEX_
 //eof
+
+
+
+
+
+
+
+

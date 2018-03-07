@@ -1,18 +1,12 @@
 /*
 *******************************************************************************
 *
-*   © 2016 and later: Unicode, Inc. and others.
-*   License & terms of use: http://www.unicode.org/copyright.html#License
-*
-*******************************************************************************
-*******************************************************************************
-*
-*   Copyright (C) 2001 - 2005, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
 *   file name:  newcol.cpp
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -71,7 +65,7 @@ void closeCollator_current(void) {
 }
 
 
-extern "C" void test_current(UChar data[][5], uint32_t size, uint32_t maxlen, uint8_t keys[][32]) {
+void test_current(UChar data[][5], uint32_t size, uint32_t maxlen, uint8_t keys[][32]) {
   uint32_t i = 0;
   int32_t keySize = 0;
   UVersionInfo uvi;

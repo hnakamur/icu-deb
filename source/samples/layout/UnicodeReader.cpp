@@ -1,10 +1,6 @@
 /*
  ******************************************************************************
- * © 2016 and later: Unicode, Inc. and others.                    *
- * License & terms of use: http://www.unicode.org/copyright.html#License      *
- ******************************************************************************
- ******************************************************************************
- * Copyright (C) 1998-2005, International Business Machines Corporation and   *
+ * Copyright (C) 1998-2001, International Business Machines Corporation and   *
  * others. All Rights Reserved.                                               *
  ******************************************************************************
  */
@@ -16,12 +12,9 @@
 #include "unicode/utypes.h"
 #include "unicode/unistr.h"
 
-#include "layout/LETypes.h"
-
 #include "GUISupport.h"
 #include "UnicodeReader.h"
 
-#define BYTE(b) (((int) b) & 0xFF)
 
 /*
  * Read the text from a file. The text must start with a Unicode Byte
@@ -36,7 +29,7 @@ const UChar *UnicodeReader::readFile(const char *fileName, GUISupport *guiSuppor
     char *byteBuffer;
     char startBytes[4] = {'\xA5', '\xA5', '\xA5', '\xA5'};
     char errorMessage[128];
-    const char *cp = "";
+    char *cp = "";
     int32_t signatureLength = 0;
     
     f = fopen(fileName, "rb");
@@ -76,7 +69,7 @@ const UChar *UnicodeReader::readFile(const char *fileName, GUISupport *guiSuppor
         signatureLength = 4;
     } else {
         sprintf(errorMessage, "Couldn't detect the encoding of %s: (%2.2X, %2.2X, %2.2X, %2.2X)\n", fileName,
-                    BYTE(startBytes[0]), BYTE(startBytes[1]), BYTE(startBytes[2]), BYTE(startBytes[3]));
+                    startBytes[0], startBytes[1], startBytes[2], startBytes[3]);
         guiSupport->postErrorMessage(errorMessage, "Text File Error");
         fclose(f);
         return 0;
@@ -108,7 +101,7 @@ const UChar *UnicodeReader::readFile(const char *fileName, GUISupport *guiSuppor
     delete[] byteBuffer;
     
     charCount = myText.length();
-    charBuffer = LE_NEW_ARRAY(UChar, charCount + 1);
+    charBuffer = new UChar[charCount + 1];
     if(charBuffer == 0) {
         sprintf(errorMessage,"Couldn't get memory for reading %s: %s \n", fileName, strerror(errno));
         guiSupport->postErrorMessage(errorMessage, "Text File Error");

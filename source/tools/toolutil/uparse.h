@@ -1,14 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2000-2010, International Business Machines
+*   Copyright (C) 2000-2002, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
 *   file name:  uparse.h
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -25,12 +23,6 @@
 
 #include "unicode/utypes.h"
 
-/**
- * Is c an invariant-character whitespace?
- * @param c invariant character
- */
-#define U_IS_INV_WHITESPACE(c) ((c)==' ' || (c)=='\t' || (c)=='\r' || (c)=='\n')
-
 U_CDECL_BEGIN
 
 /**
@@ -41,15 +33,6 @@ U_CDECL_BEGIN
  */
 U_CAPI const char * U_EXPORT2
 u_skipWhitespace(const char *s);
-
-/**
- * Trim whitespace (including line endings) from the end of the string.
- *
- * @param s Pointer to the string.
- * @return Pointer to the new end of the string.
- */
-U_CAPI char * U_EXPORT2
-u_rtrim(char *s);
 
 /** Function type for u_parseDelimitedFile(). */
 typedef void U_CALLCONV
@@ -133,20 +116,6 @@ U_CAPI int32_t U_EXPORT2
 u_parseCodePointRange(const char *s,
                       uint32_t *pStart, uint32_t *pEnd,
                       UErrorCode *pErrorCode);
-
-/**
- * Same as u_parseCodePointRange() but the range may be terminated by
- * any character. The position of the terminating character is returned via
- * the *terminator output parameter.
- */
-U_CAPI int32_t U_EXPORT2
-u_parseCodePointRangeAnyTerminator(const char *s,
-                                   uint32_t *pStart, uint32_t *pEnd,
-                                   const char **terminator,
-                                   UErrorCode *pErrorCode);
-
-U_CAPI int32_t U_EXPORT2
-u_parseUTF8(const char *source, int32_t sLen, char *dest, int32_t destCapacity, UErrorCode *status);
 
 U_CDECL_END
 

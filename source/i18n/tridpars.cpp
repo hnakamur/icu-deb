@@ -1,24 +1,15 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (c) 2002-2014, International Business Machines Corporation
+*   Copyright (c) 2002, International Business Machines Corporation
 *   and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
 *   01/14/2002  aliu        Creation.
 **********************************************************************
 */
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "tridpars.h"
 #include "hash.h"
 #include "mutex.h"
-#include "transreg.h"
-#include "uassert.h"
 #include "ucln_in.h"
 #include "unicode/parsepos.h"
 #include "unicode/translit.h"
@@ -37,7 +28,7 @@ static const UChar VARIANT_SEP = 0x002F; // /
 static const UChar OPEN_REV    = 0x0028; // (
 static const UChar CLOSE_REV   = 0x0029; // )
 
-//static const UChar EMPTY[]     = {0}; // ""
+static const UChar EMPTY[]     = {0}; // ""
 static const UChar ANY[]       = {65,110,121,0}; // "Any"
 static const UChar ANY_NULL[]  = {65,110,121,45,78,117,108,108,0}; // "Any-Null"
 
@@ -45,12 +36,11 @@ static const int32_t FORWARD = UTRANS_FORWARD;
 static const int32_t REVERSE = UTRANS_REVERSE;
 
 static Hashtable* SPECIAL_INVERSES = NULL;
-static UInitOnce gSpecialInversesInitOnce = U_INITONCE_INITIALIZER;
 
 /**
  * The mutex controlling access to SPECIAL_INVERSES
  */
-static UMutex LOCK = U_MUTEX_INITIALIZER;
+static UMTX LOCK = 0;
 
 TransliteratorIDParser::Specs::Specs(const UnicodeString& s, const UnicodeString& t,
                                      const UnicodeString& v, UBool sawS,
@@ -77,7 +67,7 @@ TransliteratorIDParser::SingleID::SingleID(const UnicodeString& c, const Unicode
 Transliterator* TransliteratorIDParser::SingleID::createInstance() {
     Transliterator* t;
     if (basicID.length() == 0) {
-        t = createBasicInstance(UnicodeString(TRUE, ANY_NULL, 8), &canonID);
+        t = createBasicInstance(ANY_NULL, &canonID);
     } else {
         t = createBasicInstance(basicID, &canonID);
     }
@@ -95,6 +85,37 @@ Transliterator* TransliteratorIDParser::SingleID::createInstance() {
     return t;
 }
 
+/**
+ * Parse a basic ID from the given string.  A basic ID contains
+ * only a single source, target, and variant.  It does not contain
+ * a filter or an explicit inverse.
+ * @param id the id to be parsed
+ * @param pos INPUT-OUTPUT parameter.  On input, the position of
+ * the first character to parse.  On output, the position after
+ * the last character parsed.  If the parse fails pos will be
+ * unchanged.
+ * @return the parsed ID in canonical format, or NULL on parse
+ * failure.  If the parsed ID did not contain a source, the return
+ * ID will not.
+ */
+UnicodeString TransliteratorIDParser::parseBasicID(const UnicodeString& id, int32_t& pos) {
+    Specs* specs = parseFilterID(id, pos, FALSE);
+    if (specs != NULL) {
+        UnicodeString buf;
+        if (specs->sawSource) {
+            buf.append(specs->source);
+            buf.append(TARGET_SEP);
+        }
+        buf.append(specs->target);
+        if (specs->variant.length() != 0) {
+            buf.append(VARIANT_SEP);
+            buf.append(specs->variant);
+        }
+        delete specs;
+        return buf;
+    }
+    return EMPTY;
+}
 
 /**
  * Parse a single ID, that is, an ID of the general form
@@ -110,7 +131,7 @@ Transliterator* TransliteratorIDParser::SingleID::createInstance() {
  */
 TransliteratorIDParser::SingleID*
 TransliteratorIDParser::parseSingleID(const UnicodeString& id, int32_t& pos,
-                                      int32_t dir, UErrorCode& status) {
+                                      int32_t dir) {
 
     int32_t start = pos;
 
@@ -151,13 +172,6 @@ TransliteratorIDParser::parseSingleID(const UnicodeString& id, int32_t& pos,
         if (dir == FORWARD) {
             SingleID* b = specsToID(specsB, FORWARD);
             single = specsToID(specsA, FORWARD);
-            // Null pointers check
-            if (b == NULL || single == NULL) {
-            	delete b;
-            	delete single;
-            	status = U_MEMORY_ALLOCATION_ERROR;
-            	return NULL;
-            }
             single->canonID.append(OPEN_REV)
                 .append(b->canonID).append(CLOSE_REV);
             if (specsA != NULL) {
@@ -167,13 +181,6 @@ TransliteratorIDParser::parseSingleID(const UnicodeString& id, int32_t& pos,
         } else {
             SingleID* a = specsToID(specsA, FORWARD);
             single = specsToID(specsB, FORWARD);
-            // Check for null pointer.
-            if (a == NULL || single == NULL) {
-            	delete a;
-            	delete single;
-            	status = U_MEMORY_ALLOCATION_ERROR;
-            	return NULL;
-            }
             single->canonID.append(OPEN_REV)
                 .append(a->canonID).append(CLOSE_REV);
             if (specsB != NULL) {
@@ -186,15 +193,10 @@ TransliteratorIDParser::parseSingleID(const UnicodeString& id, int32_t& pos,
         if (dir == FORWARD) {
             single = specsToID(specsA, FORWARD);
         } else {
-            single = specsToSpecialInverse(*specsA, status);
+            single = specsToSpecialInverse(*specsA);
             if (single == NULL) {
                 single = specsToID(specsA, REVERSE);
             }
-        }
-        // Check for NULL pointer
-        if (single == NULL) {
-        	status = U_MEMORY_ALLOCATION_ERROR;
-        	return NULL;
         }
         single->filter = specsA->filter;
     }
@@ -202,35 +204,6 @@ TransliteratorIDParser::parseSingleID(const UnicodeString& id, int32_t& pos,
     delete specsA;
     delete specsB;
 
-    return single;
-}
-
-/**
- * Parse a filter ID, that is, an ID of the general form
- * "[f1] s1-t1/v1", with the filters optional, and the variants optional.
- * @param id the id to be parsed
- * @param pos INPUT-OUTPUT parameter.  On input, the position of
- * the first character to parse.  On output, the position after
- * the last character parsed.
- * @return a SingleID object or null if the parse fails
- */
-TransliteratorIDParser::SingleID*
-TransliteratorIDParser::parseFilterID(const UnicodeString& id, int32_t& pos) {
-
-    int32_t start = pos;
-
-    Specs* specs = parseFilterID(id, pos, TRUE);
-    if (specs == NULL) {
-        pos = start;
-        return NULL;
-    }
-
-    // Assemble return results
-    SingleID* single = specsToID(specs, FORWARD);
-    if (single != NULL) {
-        single->filter = specs->filter;
-    }
-    delete specs;
     return single;
 }
 
@@ -277,12 +250,7 @@ UnicodeSet* TransliteratorIDParser::parseGlobalFilter(const UnicodeString& id, i
     if (UnicodeSet::resemblesPattern(id, pos)) {
         ParsePosition ppos(pos);
         UErrorCode ec = U_ZERO_ERROR;
-        filter = new UnicodeSet(id, ppos, USET_IGNORE_SPACE, NULL, ec);
-        /* test for NULL */
-        if (filter == 0) {
-            pos = start;
-            return 0;
-        }
+        filter = new UnicodeSet(id, ppos, ec);
         if (U_FAILURE(ec)) {
             delete filter;
             pos = start;
@@ -327,7 +295,7 @@ static void U_CALLCONV _deleteSingleID(void* obj) {
     delete (TransliteratorIDParser::SingleID*) obj;
 }
 
-static void U_CALLCONV _deleteTransliteratorTrIDPars(void* obj) {
+static void U_CALLCONV _deleteTransliterator(void* obj) {
     delete (Transliterator*) obj;
 }
 U_CDECL_END
@@ -386,7 +354,7 @@ UBool TransliteratorIDParser::parseCompoundID(const UnicodeString& id, int32_t d
 
     UBool sawDelimiter = TRUE;
     for (;;) {
-        SingleID* single = parseSingleID(id, pos, dir, ec);
+        SingleID* single = parseSingleID(id, pos, dir);
         if (single == NULL) {
             break;
         }
@@ -444,7 +412,7 @@ UBool TransliteratorIDParser::parseCompoundID(const UnicodeString& id, int32_t d
     return TRUE;
 
  FAIL:
-    UObjectDeleter *save = list.setDeleter(_deleteSingleID);
+    UObjectDeleter save = list.setDeleter(_deleteSingleID);
     list.removeAllElements();
     list.setDeleter(save);
     delete globalFilter;
@@ -463,23 +431,41 @@ UBool TransliteratorIDParser::parseCompoundID(const UnicodeString& id, int32_t d
  * the reverse.  THIS MAY RESULT IN AN EMPTY VECTOR.  Convert
  * SingleID entries to actual transliterators.
  *
+ * Also, optionally, insert the given transliterator at the given
+ * position.  This effectively happens before anything else.
+ *
  * @param list vector of SingleID objects.  On exit, vector
  * of one or more Transliterators.
+ * @param insert Transliterator to insert, or NULL if none.
+ * Adopted.
+ * @param insertIndex index from 0..list.size()-1, at which
+ * to place 'insert', or -1 if none.
  * @return new value of insertIndex.  The index will shift if
  * there are empty items, like "(Lower)", with indices less than
  * insertIndex.
  */
-void TransliteratorIDParser::instantiateList(UVector& list,
+int32_t TransliteratorIDParser::instantiateList(UVector& list,
+                                                Transliterator* insert,
+                                                int32_t insertIndex,
                                                 UErrorCode& ec) {
     UVector tlist(ec);
     if (U_FAILURE(ec)) {
         goto RETURN;
     }
-    tlist.setDeleter(_deleteTransliteratorTrIDPars);
+    tlist.setDeleter(_deleteTransliterator);
 
     Transliterator* t;
     int32_t i;
     for (i=0; i<=list.size(); ++i) { // [sic]: i<=list.size()
+        if (insertIndex == i) {
+            insertIndex = tlist.size();
+            tlist.addElement(insert, ec);
+            if (U_FAILURE(ec)) {
+                goto RETURN;
+            }
+            insert = NULL;
+        }
+
         // We run the loop too long by one, so we can
         // do an insert after the last element
         if (i==list.size()) {
@@ -495,7 +481,6 @@ void TransliteratorIDParser::instantiateList(UVector& list,
             }
             tlist.addElement(t, ec);
             if (U_FAILURE(ec)) {
-                delete t;
                 goto RETURN;
             }
         }
@@ -503,37 +488,33 @@ void TransliteratorIDParser::instantiateList(UVector& list,
 
     // An empty list is equivalent to a NULL transliterator.
     if (tlist.size() == 0) {
-        t = createBasicInstance(UnicodeString(TRUE, ANY_NULL, 8), NULL);
+        t = createBasicInstance(ANY_NULL, NULL);
         if (t == NULL) {
             // Should never happen
             ec = U_INTERNAL_TRANSLITERATOR_ERROR;
         }
         tlist.addElement(t, ec);
-        if (U_FAILURE(ec)) {
-            delete t;
-        }
     }
 
  RETURN:
 
-    UObjectDeleter *save = list.setDeleter(_deleteSingleID);
+    UObjectDeleter save = list.setDeleter(_deleteSingleID);
     list.removeAllElements();
+    list.setDeleter(_deleteTransliterator);
 
-    if (U_SUCCESS(ec)) {
-        list.setDeleter(_deleteTransliteratorTrIDPars);
-
-        while (tlist.size() > 0) {
-            t = (Transliterator*) tlist.orphanElementAt(0);
-            list.addElement(t, ec);
-            if (U_FAILURE(ec)) {
-                delete t;
-                list.removeAllElements();
-                break;
-            }
+    while (tlist.size() > 0) {
+        t = (Transliterator*) tlist.orphanElementAt(0);
+        list.addElement(t, ec);
+        if (U_FAILURE(ec)) {
+            delete t;
+            list.removeAllElements();
+            break;
         }
     }
 
+    delete insert; // Clean up in case of failure
     list.setDeleter(save);
+    return insertIndex;
 }
 
 /**
@@ -552,7 +533,7 @@ void TransliteratorIDParser::IDtoSTV(const UnicodeString& id,
                                      UnicodeString& target,
                                      UnicodeString& variant,
                                      UBool& isSourcePresent) {
-    source.setTo(ANY, 3);
+    source = ANY;
     target.truncate(0);
     variant.truncate(0);
 
@@ -591,29 +572,6 @@ void TransliteratorIDParser::IDtoSTV(const UnicodeString& id,
 }
 
 /**
- * Given source, target, and variant strings, concatenate them into a
- * full ID.  If the source is empty, then "Any" will be used for the
- * source, so the ID will always be of the form s-t/v or s-t.
- */
-void TransliteratorIDParser::STVtoID(const UnicodeString& source,
-                                     const UnicodeString& target,
-                                     const UnicodeString& variant,
-                                     UnicodeString& id) {
-    id = source;
-    if (id.length() == 0) {
-        id.setTo(ANY, 3);
-    }
-    id.append(TARGET_SEP).append(target);
-    if (variant.length() != 0) {
-        id.append(VARIANT_SEP).append(variant);
-    }
-    // NUL-terminate the ID string for getTerminatedBuffer.
-    // This prevents valgrind and Purify warnings.
-    id.append((UChar)0);
-    id.truncate(id.length()-1);
-}
-
-/**
  * Register two targets as being inverses of one another.  For
  * example, calling registerSpecialInverse("NFC", "NFD", TRUE) causes
  * Transliterator to form the following inverse relationships:
@@ -647,33 +605,14 @@ void TransliteratorIDParser::STVtoID(const UnicodeString& source,
  */
 void TransliteratorIDParser::registerSpecialInverse(const UnicodeString& target,
                                                     const UnicodeString& inverseTarget,
-                                                    UBool bidirectional,
-                                                    UErrorCode &status) {
-    umtx_initOnce(gSpecialInversesInitOnce, init, status);
-    if (U_FAILURE(status)) {
-        return;
-    }
-
-    // If target == inverseTarget then force bidirectional => FALSE
-    if (bidirectional && 0==target.caseCompare(inverseTarget, U_FOLD_CASE_DEFAULT)) {
-        bidirectional = FALSE;
-    }
-
+                                                    UBool bidirectional) {
+    init();
     Mutex lock(&LOCK);
 
-    UnicodeString *tempus = new UnicodeString(inverseTarget);  // Used for null pointer check before usage.
-    if (tempus == NULL) {
-    	status = U_MEMORY_ALLOCATION_ERROR;
-    	return;
-    }
-    SPECIAL_INVERSES->put(target, tempus, status);
-    if (bidirectional) {
-    	tempus = new UnicodeString(target);
-    	if (tempus == NULL) {
-    		status = U_MEMORY_ALLOCATION_ERROR;
-    		return;
-    	}
-        SPECIAL_INVERSES->put(inverseTarget, tempus, status);
+    UErrorCode ec = U_ZERO_ERROR;
+    SPECIAL_INVERSES->put(target, new UnicodeString(inverseTarget), ec);
+    if (bidirectional && 0!=target.caseCompare(inverseTarget, U_FOLD_CASE_DEFAULT)) {
+        SPECIAL_INVERSES->put(inverseTarget, new UnicodeString(target), ec);
     }
 }
 
@@ -727,7 +666,7 @@ TransliteratorIDParser::parseFilterID(const UnicodeString& id, int32_t& pos,
 
             ParsePosition ppos(pos);
             UErrorCode ec = U_ZERO_ERROR;
-            UnicodeSet set(id, ppos, USET_IGNORE_SPACE, NULL, ec);
+            UnicodeSet set(id, ppos, ec);
             if (U_FAILURE(ec)) {
                 pos = start;
                 return NULL;
@@ -796,11 +735,11 @@ TransliteratorIDParser::parseFilterID(const UnicodeString& id, int32_t& pos,
     // Empty source or target defaults to ANY
     UBool sawSource = TRUE;
     if (source.length() == 0) {
-        source.setTo(ANY, 3);
+        source = ANY;
         sawSource = FALSE;
     }
     if (target.length() == 0) {
-        target.setTo(ANY, 3);
+        target = ANY;
     }
 
     return new Specs(source, target, variant, sawSource, filter);
@@ -852,21 +791,14 @@ TransliteratorIDParser::specsToID(const Specs* specs, int32_t dir) {
  * 'filter' field of NULL.
  */
 TransliteratorIDParser::SingleID*
-TransliteratorIDParser::specsToSpecialInverse(const Specs& specs, UErrorCode &status) {
-    if (0!=specs.source.caseCompare(ANY, 3, U_FOLD_CASE_DEFAULT)) {
+TransliteratorIDParser::specsToSpecialInverse(const Specs& specs) {
+    if (0!=specs.source.caseCompare(ANY, U_FOLD_CASE_DEFAULT)) {
         return NULL;
     }
-    umtx_initOnce(gSpecialInversesInitOnce, init, status);
-    if (U_FAILURE(status)) {
-        return NULL;
-    }
-
-    UnicodeString* inverseTarget;
-
-    umtx_lock(&LOCK);
-    inverseTarget = (UnicodeString*) SPECIAL_INVERSES->get(specs.target);
-    umtx_unlock(&LOCK);
-
+    init();
+    Mutex lock(&LOCK);
+    UnicodeString* inverseTarget = (UnicodeString*) SPECIAL_INVERSES->get(
+        specs.target);
     if (inverseTarget != NULL) {
         // If the original ID contained "Any-" then make the
         // special inverse "Any-Foo"; otherwise make it "Foo".
@@ -876,11 +808,11 @@ TransliteratorIDParser::specsToSpecialInverse(const Specs& specs, UErrorCode &st
             buf.append(specs.filter);
         }
         if (specs.sawSource) {
-            buf.append(ANY, 3).append(TARGET_SEP);
+            buf.append(ANY).append(TARGET_SEP);
         }
         buf.append(*inverseTarget);
 
-        UnicodeString basicID(TRUE, ANY, 3);
+        UnicodeString basicID(ANY);
         basicID.append(TARGET_SEP).append(*inverseTarget);
 
         if (specs.variant.length() != 0) {
@@ -902,18 +834,20 @@ Transliterator* TransliteratorIDParser::createBasicInstance(const UnicodeString&
 }
 
 /**
- * Initialize static memory. Called through umtx_initOnce only.
+ * Initialize static memory.
  */
-void U_CALLCONV TransliteratorIDParser::init(UErrorCode &status) {
-    U_ASSERT(SPECIAL_INVERSES == NULL);
-    ucln_i18n_registerCleanup(UCLN_I18N_TRANSLITERATOR, utrans_transliterator_cleanup);
-
-    SPECIAL_INVERSES = new Hashtable(TRUE, status);
-    if (SPECIAL_INVERSES == NULL) {
-    	status = U_MEMORY_ALLOCATION_ERROR;
-    	return;
+void TransliteratorIDParser::init() {
+    // Lock first, check static pointer second
+    Mutex lock(&LOCK);
+    if (SPECIAL_INVERSES != 0) {
+        // We were blocked by another thread in this method
+        return;
     }
-    SPECIAL_INVERSES->setValueDeleter(uprv_deleteUObject);
+
+    SPECIAL_INVERSES = new Hashtable(TRUE);
+    SPECIAL_INVERSES->setValueDeleter(uhash_deleteUnicodeString);
+
+    ucln_i18n_registerCleanup();
 }
 
 /**
@@ -924,11 +858,9 @@ void TransliteratorIDParser::cleanup() {
         delete SPECIAL_INVERSES;
         SPECIAL_INVERSES = NULL;
     }
-    gSpecialInversesInitOnce.reset();
+    umtx_destroy(&LOCK);
 }
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 //eof

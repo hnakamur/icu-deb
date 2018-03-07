@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-* Copyright (C) 1998-2012, International Business Machines Corporation and
-* others. All Rights Reserved.
+* Copyright (C) 1998-2001, International Business Machines Corporation and   *
+* others. All Rights Reserved.                                               *
 ******************************************************************************
 *
 * File schriter.cpp
@@ -15,14 +13,12 @@
 ******************************************************************************
 */
 
-#include "utypeinfo.h"  // for 'typeid' to work
-
 #include "unicode/chariter.h"
 #include "unicode/schriter.h"
 
 U_NAMESPACE_BEGIN
 
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(StringCharacterIterator)
+const char StringCharacterIterator::fgClassID = 0;
 
 StringCharacterIterator::StringCharacterIterator()
   : UCharCharacterIterator(),
@@ -32,31 +28,31 @@ StringCharacterIterator::StringCharacterIterator()
 }
 
 StringCharacterIterator::StringCharacterIterator(const UnicodeString& textStr)
-  : UCharCharacterIterator(textStr.getBuffer(), textStr.length()),
+  : UCharCharacterIterator(textStr.fArray, textStr.length()),
     text(textStr)
 {
     // we had set the input parameter's array, now we need to set our copy's array
-    UCharCharacterIterator::text = this->text.getBuffer();
+    UCharCharacterIterator::text = this->text.fArray;
 }
 
 StringCharacterIterator::StringCharacterIterator(const UnicodeString& textStr,
                                                  int32_t textPos)
-  : UCharCharacterIterator(textStr.getBuffer(), textStr.length(), textPos),
+  : UCharCharacterIterator(textStr.fArray, textStr.length(), textPos),
     text(textStr)
 {
     // we had set the input parameter's array, now we need to set our copy's array
-    UCharCharacterIterator::text = this->text.getBuffer();
+    UCharCharacterIterator::text = this->text.fArray;
 }
 
 StringCharacterIterator::StringCharacterIterator(const UnicodeString& textStr,
                                                  int32_t textBegin,
                                                  int32_t textEnd,
                                                  int32_t textPos)
-  : UCharCharacterIterator(textStr.getBuffer(), textStr.length(), textBegin, textEnd, textPos),
+  : UCharCharacterIterator(textStr.fArray, textStr.length(), textBegin, textEnd, textPos),
     text(textStr)
 {
     // we had set the input parameter's array, now we need to set our copy's array
-    UCharCharacterIterator::text = this->text.getBuffer();
+    UCharCharacterIterator::text = this->text.fArray;
 }
 
 StringCharacterIterator::StringCharacterIterator(const StringCharacterIterator& that)
@@ -64,7 +60,7 @@ StringCharacterIterator::StringCharacterIterator(const StringCharacterIterator& 
     text(that.text)
 {
     // we had set the input parameter's array, now we need to set our copy's array
-    UCharCharacterIterator::text = this->text.getBuffer();
+    UCharCharacterIterator::text = this->text.fArray;
 }
 
 StringCharacterIterator::~StringCharacterIterator() {
@@ -75,7 +71,7 @@ StringCharacterIterator::operator=(const StringCharacterIterator& that) {
     UCharCharacterIterator::operator=(that);
     text = that.text;
     // we had set the input parameter's array, now we need to set our copy's array
-    UCharCharacterIterator::text = this->text.getBuffer();
+    UCharCharacterIterator::text = this->text.fArray;
     return *this;
 }
 
@@ -89,7 +85,7 @@ StringCharacterIterator::operator==(const ForwardCharacterIterator& that) const 
     // because that checks for array pointer equality
     // while we compare UnicodeString objects
 
-    if (typeid(*this) != typeid(that)) {
+    if (getDynamicClassID() != that.getDynamicClassID()) {
         return FALSE;
     }
 
@@ -109,7 +105,7 @@ StringCharacterIterator::clone() const {
 void
 StringCharacterIterator::setText(const UnicodeString& newText) {
     text = newText;
-    UCharCharacterIterator::setText(text.getBuffer(), text.length());
+    UCharCharacterIterator::setText(text.fArray, text.length());
 }
 
 void

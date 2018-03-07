@@ -1,7 +1,5 @@
-# Copyright (C) 2016 and later: Unicode, Inc. and others.
-# License & terms of use: http://www.unicode.org/copyright.html
 #**********************************************************************
-#* Copyright (C) 1999-2008, International Business Machines Corporation
+#* Copyright (C) 1999-2000, International Business Machines Corporation
 #* and others.  All Rights Reserved.
 #**********************************************************************
 # nmake file for creating data files on win32
@@ -17,7 +15,7 @@ CFG=Debug
 !ENDIF
 
 #Here we test if a valid configuration is given
-!IF "$(CFG)" != "Release" && "$(CFG)" != "release" && "$(CFG)" != "Debug" && "$(CFG)" != "debug" && "$(CFG)" != "x86\Release" && "$(CFG)" != "x86\Debug" && "$(CFG)" != "x64\Release" && "$(CFG)" != "x64\Debug"
+!IF "$(CFG)" != "Release" && "$(CFG)" != "release" && "$(CFG)" != "Debug" && "$(CFG)" != "debug"
 !MESSAGE Invalid configuration "$(CFG)" specified.
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
@@ -39,7 +37,7 @@ CFG=Debug
 !ENDIF
 !MESSAGE ICU path is $(ICUP)
 RESNAME=uconvmsg
-RESDIR=resources
+RESDIR=.  #$(ICUP)\..\icuapps\uconv\$(RESNAME)
 RESFILES=resfiles.mk
 ICUDATA=$(ICUP)\data
 
@@ -47,31 +45,39 @@ DLL_OUTPUT=.\$(CFG)
 # set the following to 'static' or 'dll' depending
 PKGMODE=static
 
+
 ICD=$(ICUDATA)^\
 DATA_PATH=$(ICUP)\data^\
-
-!IF "$(CFG)" == "x64\Release" || "$(CFG)" == "x64\Debug"
-ICUTOOLS=$(ICUP)\bin64
-PATH = $(ICUP)\bin64;$(PATH)
-!ELSE
 ICUTOOLS=$(ICUP)\bin
-PATH = $(ICUP)\bin;$(PATH)
+
+# We have to prepare params for pkgdata - to help it find the tools
+!IF "$(CFG)" == "Debug" || "$(CFG)" == "debug"
+PKGOPT=D:$(ICUP)
+!ELSE
+PKGOPT=R:$(ICUP)
 !ENDIF
+
+# This appears in original Microsofts makefiles
+!IF "$(OS)" == "Windows_NT"
+NULL=
+!ELSE
+NULL=nul
+!ENDIF
+
+PATH = $(PATH);$(ICUP)\bin
 
 # Suffixes for data files
 .SUFFIXES : .ucm .cnv .dll .dat .res .txt .c
 
 # We're including a list of resource files.
-FILESEPCHAR=
+FILESEPCHAR=\\
 
 !IF EXISTS("$(RESFILES)")
 !INCLUDE "$(RESFILES)"
 !ELSE
 !ERROR ERROR: cannot find "$(RESFILES)"
 !ENDIF
-RES_FILES = $(RESSRC:.txt=.res)
-RB_FILES = resources\$(RES_FILES:.res =.res resources\)
-RESOURCESDIR=
+RB_FILES = $(RESSRC:.txt=.res)
 
 # This target should build all the data files
 !IF "$(PKGMODE)" == "dll"
@@ -80,29 +86,41 @@ OUTPUT = "$(DLL_OUTPUT)\$(RESNAME).dll"
 OUTPUT = "$(DLL_OUTPUT)\$(RESNAME).lib"
 !ENDIF
 
-ALL : $(OUTPUT)
+ALL : GODATA  $(OUTPUT) GOBACK #$(RESNAME).dat
 	@echo All targets are up to date (mode $(PKGMODE))
 
 
 # invoke pkgdata - static
-"$(DLL_OUTPUT)\$(RESNAME).lib" : $(RB_FILES) $(RESFILES)
+"$(DLL_OUTPUT)\$(RESNAME).lib" :  $(RB_FILES) $(RESFILES)
 	@echo Building $(RESNAME).lib
-	@"$(ICUTOOLS)\pkgdata" -f -v -m static -c -p $(RESNAME) -d "$(DLL_OUTPUT)" -s "$(RESDIR)" <<pkgdatain.txt
-$(RES_FILES:.res =.res
+	@"$(ICUTOOLS)\pkgdata" -v -m static -c -p $(RESNAME) -O "$(PKGOPT)" -d "$(DLL_OUTPUT)" -s "$(RESDIR)" <<pkgdatain.txt
+$(RB_FILES:.res =.res
 )
 <<KEEP
 
+# utility to send us to the right dir
+GODATA :
+#	cd "$(RESDIR)"
+
+# utility to get us back to the right dir
+GOBACK :
+#	cd "$(RESDIR)\.."
+
 # This is to remove all the data files
 CLEAN :
+	@cd "$(RESDIR)"
+	-@erase "*.res"
+	-@erase "uconvmsg*.*"
+	-@erase "*.obj"
+	-@erase "base*.*"
+	@cd "$(ICUTOOLS)"
     -@erase "$(RB_FILES)"
-	-@erase "$(CFG)\*uconvmsg*.*"
-    -@"$(ICUTOOLS)\pkgdata" -f --clean -v -m static -c -p $(RESNAME) -d "$(DLL_OUTPUT)" -s "$(RESDIR)" pkgdatain.txt
+    -@"$(ICUTOOLS)\pkgdata" --clean -v -m static -c -p $(RESNAME) -O "$(PKGOPT)" -d "$(DLL_OUTPUT)" -s "$(RESDIR)" pkgdatain.txt
 
 # Inference rule for creating resource bundles
-{$(RESDIR)}.txt{$(RESDIR)}.res:
+.txt.res:
 	@echo Making Resource Bundle files
 	"$(ICUTOOLS)\genrb" -s $(@D) -d $(@D) $(?F)
 
 
 $(RESSRC) : {"$(ICUTOOLS)"}genrb.exe
-

@@ -1,9 +1,5 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
-**********************************************************************
-* Copyright (C) 1999-2007, International Business Machines Corporation
-* and others. All Rights Reserved.
+* Copyright (C) {1999}, International Business Machines Corporation and others. All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
 *   11/17/99    aliu        Creation.
@@ -12,13 +8,8 @@
 #ifndef RBT_SET_H
 #define RBT_SET_H
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
-#include "unicode/uobject.h"
-#include "unicode/utrans.h"
 #include "uvector.h"
+#include "unicode/utrans.h"
 
 U_NAMESPACE_BEGIN
 
@@ -27,13 +18,12 @@ class TransliterationRule;
 class TransliterationRuleData;
 class UnicodeFilter;
 class UnicodeString;
-class UnicodeSet;
 
 /**
  * A set of rules for a <code>RuleBasedTransliterator</code>.
  * @author Alan Liu
  */
-class TransliterationRuleSet : public UMemory {
+class U_I18N_API TransliterationRuleSet {
     /**
      * Vector of rules, in the order added.  This is used while the
      * rule set is getting built.  After that, freeze() reorders and
@@ -67,7 +57,6 @@ public:
 
     /**
      * Construct a new empty rule set.
-     * @param status    Output parameter filled in with success or failure status.
      */
     TransliterationRuleSet(UErrorCode& status);
 
@@ -84,7 +73,6 @@ public:
     /**
      * Change the data object that this rule belongs to.  Used
      * internally by the TransliterationRuleData copy constructor.
-     * @param data    the new data value to be set.
      */
     void setData(const TransliterationRuleData* data);
 
@@ -115,9 +103,6 @@ public:
      * invalidates this object, and this method must be called again.
      * That is, <code>freeze()</code> may be called multiple times,
      * although for optimal performance it shouldn't be.
-     * @param parseError A pointer to UParseError to receive information about errors
-     *                   occurred.
-     * @param status     Output parameter filled in with success or failure status.
      */
     virtual void freeze(UParseError& parseError, UErrorCode& status);
     
@@ -142,26 +127,10 @@ public:
      * Create rule strings that represents this rule set.
      * @param result string to receive the rule strings.  Current
      * contents will be deleted.
-     * @param escapeUnprintable  True, will escape the unprintable characters
-     * @return    A reference to 'result'.
      */
     virtual UnicodeString& toRules(UnicodeString& result,
                                    UBool escapeUnprintable) const;
-
-    /**
-     * Return the set of all characters that may be modified
-     * (getTarget=false) or emitted (getTarget=true) by this set.
-     */
-    UnicodeSet& getSourceTargetSet(UnicodeSet& result,
-                   UBool getTarget) const;
-
-private:
-
-    TransliterationRuleSet &operator=(const TransliterationRuleSet &other); // forbid copying of this class
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
-
 #endif

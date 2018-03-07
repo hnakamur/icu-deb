@@ -1,25 +1,13 @@
-Copyright (C) 2016 and later: Unicode, Inc. and others.
-License & terms of use: http://www.unicode.org/copyright.html#License
+This is an exercise for the ICU Workshop (September 2000).
 
-Copyright (c) 2002-2010, International Business Machines Corporation and others. All Rights Reserved.
-
-
-IMPORTANT:
-
-This sample was originally intended as an exercise for the ICU Workshop (September 2000).
-The code currently provided in the solution file is the answer to the exercises, each step can still be found in the 'answers' subdirectory.
-
-
-
-
-  http://www.icu-project.org/docs/workshop_2000/agenda.html
+  http://oss.software.ibm.com/icu/docs/workshop_2000/agenda.html
 
   Day 2: September 12th 2000
   Pre-requisites:
   1. All the hardware and software requirements from Day 1.
   2. Attended or fully understand Day 1 material.
   3. Read through the ICU user's guide at
-  http://www.icu-project.org/userguide/.
+  http://oss.software.ibm.com/icu/userguide/.
 
   #Date/Time/Number Formatting Support
   9:30am - 10:30am
@@ -41,7 +29,7 @@ Microsoft Visual C++ 6.0.  It should work on other ICU releases and
 other platforms as well.
 
  MSVC:
-   Open the file "msgfmt.sln" in Microsoft Visual C++.
+   Open the file "msgfmt.dsw" in Microsoft Visual C++.
 
  Unix:
    - Build and install ICU with a prefix, for example '--prefix=/home/srl/ICU'

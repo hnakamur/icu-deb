@@ -1,14 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *
-*   Copyright (C) 2001-2011, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
 *   file name:  utrie.h
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -20,13 +18,11 @@
 #define __UTRIE_H__
 
 #include "unicode/utypes.h"
-#include "unicode/utf16.h"
-#include "udataswp.h"
 
 U_CDECL_BEGIN
 
 /**
- * \file
+ * /file
  *
  * This is a common implementation of a "folded" trie.
  * It is a kind of compressed, serializable table of 16- or 32-bit values associated with
@@ -84,7 +80,7 @@ enum {
 
     /**
      * Number of index (stage 1) entries per lead surrogate.
-     * Same as number of index entries for 1024 trail surrogates,
+     * Same as number of indexe entries for 1024 trail surrogates,
      * ==0x400>>UTRIE_SHIFT
      */
     UTRIE_SURROGATE_BLOCK_COUNT=(1<<UTRIE_SURROGATE_BLOCK_BITS),
@@ -114,23 +110,6 @@ enum {
 #define UTRIE_MAX_BUILD_TIME_DATA_LENGTH (0x110000+UTRIE_DATA_BLOCK_LENGTH+0x400)
 
 /**
- * Number of bytes for a dummy trie.
- * A dummy trie is an empty runtime trie, used when a real data trie cannot
- * be loaded.
- * The number of bytes works for Latin-1-linear tries with 32-bit data
- * (worst case).
- *
- * Calculation:
- *   BMP index + 1 index block for lead surrogate code points +
- *   Latin-1-linear array + 1 data block for lead surrogate code points
- *
- * Latin-1: if(UTRIE_SHIFT<=8) { 256 } else { included in first data block }
- *
- * @see utrie_unserializeDummy
- */
-#define UTRIE_DUMMY_SIZE ((UTRIE_BMP_INDEX_LENGTH+UTRIE_SURROGATE_BLOCK_COUNT)*2+(UTRIE_SHIFT<=8?256:UTRIE_DATA_BLOCK_LENGTH)*4+UTRIE_DATA_BLOCK_LENGTH*4)
-
-/**
  * Runtime UTrie callback function.
  * Extract from a lead surrogate's data the
  * index array offset of the indexes for that lead surrogate.
@@ -157,11 +136,6 @@ struct UTrie {
     /**
      * This function is not used in _FROM_LEAD, _FROM_BMP, and _FROM_OFFSET_TRAIL macros.
      * If convenience macros like _GET16 or _NEXT32 are used, this function must be set.
-     *
-     * utrie_unserialize() sets a default function which simply returns
-     * the lead surrogate's value itself - which is the inverse of the default
-     * folding function used by utrie_serialize().
-     *
      * @see UTrieGetFoldingOffset
      */
     UTrieGetFoldingOffset *getFoldingOffset;
@@ -171,9 +145,7 @@ struct UTrie {
     UBool isLatin1Linear;
 };
 
-#ifndef __UTRIE2_H__
 typedef struct UTrie UTrie;
-#endif
 
 /** Internal trie getter from an offset (0 if c16 is a BMP/lead units) and a 16-bit unit */
 #define _UTRIE_GET_RAW(trie, data, offset, c16) \
@@ -213,7 +185,7 @@ typedef struct UTrie UTrie;
         (result)=_UTRIE_GET_FROM_BMP(trie, data, c32); \
     } else if((uint32_t)(c32)<=0x10ffff) { \
         /* supplementary code point */ \
-        UChar __lead16=U16_LEAD(c32); \
+        UChar __lead16=UTF16_LEAD(c32); \
         _UTRIE_GET_FROM_PAIR(trie, data, __lead16, c32, result, resultType); \
     } else { \
         /* out of range */ \
@@ -223,10 +195,10 @@ typedef struct UTrie UTrie;
 /** Internal next-post-increment: get the next code point (c, c2) and its data */
 #define _UTRIE_NEXT(trie, data, src, limit, c, c2, result, resultType) { \
     (c)=*(src)++; \
-    if(!U16_IS_LEAD(c)) { \
+    if(!UTF_IS_LEAD(c)) { \
         (c2)=0; \
         (result)=_UTRIE_GET_RAW((trie), data, 0, (c)); \
-    } else if((src)!=(limit) && U16_IS_TRAIL((c2)=*(src))) { \
+    } else if((src)!=(limit) && UTF_IS_TRAIL((c2)=*(src))) { \
         ++(src); \
         _UTRIE_GET_FROM_PAIR((trie), data, (c), (c2), (result), resultType); \
     } else { \
@@ -239,12 +211,12 @@ typedef struct UTrie UTrie;
 /** Internal previous: get the previous code point (c, c2) and its data */
 #define _UTRIE_PREVIOUS(trie, data, start, src, c, c2, result, resultType) { \
     (c)=*--(src); \
-    if(!U16_IS_SURROGATE(c)) { \
+    if(!UTF_IS_SURROGATE(c)) { \
         (c2)=0; \
         (result)=_UTRIE_GET_RAW((trie), data, 0, (c)); \
-    } else if(!U16_IS_SURROGATE_LEAD(c)) { \
+    } else if(!UTF_IS_SURROGATE_FIRST(c)) { \
         /* trail surrogate */ \
-        if((start)!=(src) && U16_IS_LEAD((c2)=*((src)-1))) { \
+        if((start)!=(src) && UTF_IS_LEAD((c2)=*((src)-1))) { \
             --(src); \
             (result)=(c); (c)=(c2); (c2)=(UChar)(result); /* swap c, c2 */ \
             _UTRIE_GET_FROM_PAIR((trie), data, (c), (c2), (result), resultType); \
@@ -488,7 +460,7 @@ UTrieEnumRange(const void *context, UChar32 start, UChar32 limit, uint32_t value
  * @param context an opaque pointer that is passed on to the callback functions
  */
 U_CAPI void U_EXPORT2
-utrie_enum(const UTrie *trie,
+utrie_enum(UTrie *trie,
            UTrieEnumValue *enumValue, UTrieEnumRange *enumRange, const void *context);
 
 /**
@@ -503,46 +475,7 @@ utrie_enum(const UTrie *trie,
  * @return the number of bytes at data taken up by the trie data
  */
 U_CAPI int32_t U_EXPORT2
-utrie_unserialize(UTrie *trie, const void *data, int32_t length, UErrorCode *pErrorCode);
-
-/**
- * "Unserialize" a dummy trie.
- * A dummy trie is an empty runtime trie, used when a real data trie cannot
- * be loaded.
- *
- * The input memory is filled so that the trie always returns the initialValue,
- * or the leadUnitValue for lead surrogate code points.
- * The Latin-1 part is always set up to be linear.
- *
- * @param trie a pointer to the runtime trie structure
- * @param data a pointer to 32-bit-aligned memory to be filled with the dummy trie data
- * @param length the number of bytes available at data (recommended to use UTRIE_DUMMY_SIZE)
- * @param initialValue the initial value that is set for all code points
- * @param leadUnitValue the value for lead surrogate code _units_ that do not
- *                      have associated supplementary data
- * @param pErrorCode an in/out ICU UErrorCode
- *
- * @see UTRIE_DUMMY_SIZE
- * @see utrie_open
- */
-U_CAPI int32_t U_EXPORT2
-utrie_unserializeDummy(UTrie *trie,
-                       void *data, int32_t length,
-                       uint32_t initialValue, uint32_t leadUnitValue,
-                       UBool make16BitTrie,
-                       UErrorCode *pErrorCode);
-
-/**
- * Default implementation for UTrie.getFoldingOffset, set automatically by
- * utrie_unserialize().
- * Simply returns the lead surrogate's value itself - which is the inverse
- * of the default folding function used by utrie_serialize().
- * Exported for static const UTrie structures.
- *
- * @see UTrieGetFoldingOffset
- */
-U_CAPI int32_t U_EXPORT2
-utrie_defaultGetFoldingOffset(uint32_t data);
+utrie_unserialize(UTrie *trie, const uint8_t *data, int32_t length, UErrorCode *pErrorCode);
 
 /* Building a trie ----------------------------------------------------------*/
 
@@ -559,7 +492,6 @@ struct UNewTrie {
     int32_t index[UTRIE_MAX_INDEX_LENGTH];
     uint32_t *data;
 
-    uint32_t leadUnitValue;
     int32_t indexLength, dataCapacity, dataLength;
     UBool isAllocated, isDataAllocated;
     UBool isLatin1Linear, isCompacted;
@@ -614,8 +546,6 @@ UNewTrieGetFoldedValue(UNewTrie *trie, UChar32 start, int32_t offset);
  * @param maxDataLength the capacity of aliasData (if not NULL) or
  *                      the length of the data array to be allocated
  * @param initialValue the initial value that is set for all code points
- * @param leadUnitValue the value for lead surrogate code _units_ that do not
- *                      have associated supplementary data
  * @param latin1Linear a flag indicating whether the Latin-1 range is to be allocated and
  *                     kept in a linear, contiguous part of the data array
  * @return a pointer to the initialized fillIn or the allocated and initialized new UNewTrie
@@ -623,8 +553,7 @@ UNewTrieGetFoldedValue(UNewTrie *trie, UChar32 start, int32_t offset);
 U_CAPI UNewTrie * U_EXPORT2
 utrie_open(UNewTrie *fillIn,
            uint32_t *aliasData, int32_t maxDataLength,
-           uint32_t initialValue, uint32_t leadUnitValue,
-           UBool latin1Linear);
+           uint32_t initialValue, UBool latin1Linear);
 
 /**
  * Clone a build-time trie structure with all entries.
@@ -714,9 +643,7 @@ utrie_setRange32(UNewTrie *trie, UChar32 start, UChar32 limit, uint32_t value, U
  * @param capacity the number of bytes available at data
  * @param getFoldedValue a callback function that calculates the value for
  *                       a lead surrogate from all of its supplementary code points
- *                       and the folding offset;
- *                       if NULL, then a default function is used which returns just
- *                       the input offset when there are any non-initial-value entries
+ *                       and the folding offset
  * @param reduceTo16Bits flag for whether the values are to be reduced to a
  *                       width of 16 bits for serialization and runtime
  * @param pErrorCode a UErrorCode argument; among other possible error codes:
@@ -727,70 +654,10 @@ utrie_setRange32(UNewTrie *trie, UChar32 start, UChar32 limit, uint32_t value, U
  * @return the number of bytes written for the trie
  */
 U_CAPI int32_t U_EXPORT2
-utrie_serialize(UNewTrie *trie, void *data, int32_t capacity,
+utrie_serialize(UNewTrie *trie, uint8_t *data, int32_t capacity,
                 UNewTrieGetFoldedValue *getFoldedValue,
                 UBool reduceTo16Bits,
                 UErrorCode *pErrorCode);
-
-/**
- * Swap a serialized UTrie.
- * @internal
- */
-U_CAPI int32_t U_EXPORT2
-utrie_swap(const UDataSwapper *ds,
-           const void *inData, int32_t length, void *outData,
-           UErrorCode *pErrorCode);
-
-/* serialization ------------------------------------------------------------ */
-
-/**
- * Trie data structure in serialized form:
- *
- * UTrieHeader header;
- * uint16_t index[header.indexLength];
- * uint16_t data[header.dataLength];
- * @internal
- */
-typedef struct UTrieHeader {
-    /** "Trie" in big-endian US-ASCII (0x54726965) */
-    uint32_t signature;
-
-    /**
-     * options bit field:
-     *     9    1=Latin-1 data is stored linearly at data+UTRIE_DATA_BLOCK_LENGTH
-     *     8    0=16-bit data, 1=32-bit data
-     *  7..4    UTRIE_INDEX_SHIFT   // 0..UTRIE_SHIFT
-     *  3..0    UTRIE_SHIFT         // 1..9
-     */
-    uint32_t options;
-
-    /** indexLength is a multiple of UTRIE_SURROGATE_BLOCK_COUNT */
-    int32_t indexLength;
-
-    /** dataLength>=UTRIE_DATA_BLOCK_LENGTH */
-    int32_t dataLength;
-} UTrieHeader;
-
-/**
- * Constants for use with UTrieHeader.options.
- * @internal
- */
-enum {
-    /** Mask to get the UTRIE_SHIFT value from options. */
-    UTRIE_OPTIONS_SHIFT_MASK=0xf,
-
-    /** Shift options right this much to get the UTRIE_INDEX_SHIFT value. */
-    UTRIE_OPTIONS_INDEX_SHIFT=4,
-
-    /** If set, then the data (stage 2) array is 32 bits wide. */
-    UTRIE_OPTIONS_DATA_IS_32_BIT=0x100,
-
-    /**
-     * If set, then Latin-1 data (for U+0000..U+00ff) is stored in the data (stage 2) array
-     * as a simple, linear array at data+UTRIE_DATA_BLOCK_LENGTH.
-     */
-    UTRIE_OPTIONS_LATIN1_IS_LINEAR=0x200
-};
 
 U_CDECL_END
 

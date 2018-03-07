@@ -1,14 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
+
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
-#include "unicode/utypes.h"
 
-#if !UCONFIG_NO_FORMATTING
+#include "unicode/utypes.h"
 
 #include "intltest.h"
 #include "tchcfmt.h"
@@ -27,7 +25,11 @@ void TestChoiceFormat::runIndexedTest(int32_t index, UBool exec,
         TESTCASE(1,TestComplexExample);
         TESTCASE(2,TestClosures);
         TESTCASE(3,TestPatterns);
-        TESTCASE(4,TestChoiceFormatToPatternOverflow);
+// We can deprecate the test code right away; the API itself goes 2002-Jun-30
+#ifdef ICU_ENABLE_DEPRECATED_NEXTDOUBLE
+        TESTCASE(4,TestChoiceNextDouble);
+        TESTCASE(5,TestGapNextDouble);
+#endif
         default: name = ""; break;
     }
 }
@@ -50,7 +52,7 @@ TestChoiceFormat::TestSimpleExample( void )
     UnicodeString str;
     UnicodeString res1, res2;
     UErrorCode status;
-    FieldPosition fpos(FieldPosition::DONT_CARE);
+    FieldPosition fpos(0);
     Formattable f;
     int32_t ix;
     //for (double i = 0.0; i <= 8.0; ++i) {
@@ -66,7 +68,7 @@ TestChoiceFormat::TestSimpleExample( void )
         }
         //form->parse(res1, f, parse_pos);
         res2 = " ??? ";
-        it_logln(UnicodeString("") + ix + UnicodeString(" -> ") + res1 + UnicodeString(" -> ") + res2);
+        it_out << ix << " -> " << res1 << " -> " << res2 << endl;
     }
     //Testing ==operator
     const double filelimits[] = {0,1,2};
@@ -80,24 +82,25 @@ TestChoiceFormat::TestSimpleExample( void )
         errln("ERROR: ==operator failed\n");
     }
     delete formequal; 
-    delete formnew; 
+    
+    //Testing adoptChoices() 
+    double *limitsToAdopt = (double *)uprv_malloc(7 * sizeof(double));
+    UnicodeString *monthNamesToAdopt = new UnicodeString[7];
 
+    uprv_arrayCopy(monthNames, monthNamesToAdopt, 7);
+    uprv_memcpy(limitsToAdopt, limits, (size_t)(7 * sizeof(limits[0])));    
+
+    formnew->adoptChoices(limitsToAdopt, monthNamesToAdopt, 7);
+    if(!(*formnew == *form)){
+        errln("ERROR: ==Operator or adoptChoices failed\n");
+    }
+
+    delete formnew; 
+      
     //Testing getLimits()
+    double *gotLimits=0;
     int32_t count=0;
-    const double *gotLimits=form->getLimits(count);
-#if 1  // ICU 4.8 deprecates and disables the ChoiceFormat getters.
-    if(count != 0 || gotLimits != NULL) {
-        errln("getLimits() returns something, should be disabled");
-    }
-    const UnicodeString *gotFormats=form->getFormats(count);
-    if(count != 0 || gotFormats != NULL) {
-        errln("getFormats() returns something, should be disabled");
-    }
-    const UBool *gotClosures=form->getClosures(count);
-    if(count != 0 || gotClosures != NULL) {
-        errln("getClosures() returns something, should be disabled");
-    }
-#else
+    gotLimits=(double*)form->getLimits(count);
     if(count != 7){
         errln("getLimits didn't update the count correctly\n");
     }
@@ -106,9 +109,10 @@ TestChoiceFormat::TestSimpleExample( void )
             errln((UnicodeString)"getLimits didn't get the limits correctly.  Expected " + limits[ix] + " Got " + gotLimits[ix]);
         }
     }
-    //Testing getFormats()
+    //Testing getFormat()
     count=0;
-    const UnicodeString *gotFormats=form->getFormats(count);
+    UnicodeString *gotFormats=0;
+    gotFormats=(UnicodeString*)form->getFormats(count);
     if(count != 7){
         errln("getFormats didn't update the count correctly\n");
     }
@@ -117,9 +121,10 @@ TestChoiceFormat::TestSimpleExample( void )
             errln((UnicodeString)"getFormats didn't get the Formats correctly.  Expected " + monthNames[ix] + " Got " + gotFormats[ix]);
         }
     }
-#endif
-
+    
+   
     delete form;
+   
 }
 
 void
@@ -138,7 +143,7 @@ TestChoiceFormat::TestComplexExample( void )
 
     Format* filenumform = NumberFormat::createInstance( status );
     if (!filenumform) { 
-        dataerrln((UnicodeString)"***  test_complex_example filenumform - " + u_errorName(status)); 
+        it_errln("***  test_complex_example filenumform"); 
         delete fileform;
         return; 
     }
@@ -173,16 +178,16 @@ TestChoiceFormat::TestComplexExample( void )
     UnicodeString str;
     UnicodeString res1, res2;
     pattform->toPattern( res1 );
-    it_logln("MessageFormat toPattern: " + res1);
+    it_out << "MessageFormat toPattern: " << res1 << endl;
     fileform->toPattern( res1 );
-    it_logln("ChoiceFormat toPattern: " + res1);
-    if (res1 == "-1#are corrupted files|0#are no files|1#is one file|2#are {2} files") {
-        it_logln("toPattern tested!");
+    it_out << "ChoiceFormat toPattern: " << res1 << endl;
+    if (res1 == "-1.0#are corrupted files|0.0#are no files|1.0#is one file|2.0#are {2} files") {
+        it_out << "toPattern tested!" << endl;
     }else{
         it_errln("***  ChoiceFormat to Pattern result!");
     }
 
-    FieldPosition fpos(FieldPosition::DONT_CARE);
+    FieldPosition fpos(0);
 
     UnicodeString checkstr[] = { 
         "There are corrupted files on Disk_A",
@@ -216,18 +221,16 @@ TestChoiceFormat::TestComplexExample( void )
             delete pattform;
             return;
         }
-        it_logln(i + UnicodeString(" -> ") + res2);
+        it_out << i << " -> " << res2 << endl;
         if (res2 != checkstr[i - start]) {
             it_errln("***  test_complex_example res string");
-            it_errln(UnicodeString("*** ") + i + UnicodeString(" -> '") + res2 + UnicodeString("' unlike '") + checkstr[i] + UnicodeString("' ! "));
+            it_out << "*** " << i << " -> '" << res2 << "' unlike '" << checkstr[i] << "' ! " << endl;
         }
     }
-    it_logln();
+    it_out << endl;
 
-    it_logln("------ additional testing in complex test ------");
-    it_logln();
+    it_out << "------ additional testing in complex test ------" << endl << endl;
     //
-#if 0  // ICU 4.8 deprecates and disables the ChoiceFormat getters.
     int32_t retCount;
     const double* retLimits = fileform->getLimits( retCount );
     if ((retCount == 4) && (retLimits)
@@ -235,7 +238,7 @@ TestChoiceFormat::TestComplexExample( void )
     && (retLimits[1] == 0.0)
     && (retLimits[2] == 1.0)
     && (retLimits[3] == 2.0)) {
-        it_logln("getLimits tested!");
+        it_out << "getLimits tested!" << endl;
     }else{
         it_errln("***  getLimits unexpected result!");
     }
@@ -246,11 +249,10 @@ TestChoiceFormat::TestComplexExample( void )
     && (retFormats[1] == "are no files") 
     && (retFormats[2] == "is one file")
     && (retFormats[3] == "are {2} files")) {
-        it_logln("getFormats tested!");
+        it_out << "getFormats tested!" << endl;
     }else{
         it_errln("***  getFormats unexpected result!");
     }
-#endif
 
     UnicodeString checkstr2[] = { 
         "There is no folder on Disk_A",
@@ -260,8 +262,7 @@ TestChoiceFormat::TestComplexExample( void )
     };
 
     fileform->applyPattern("0#is no folder|1#is one folder|2#are many folders", status );
-    if (status == U_ZERO_ERROR)
-        it_logln("status applyPattern OK!");
+    if (status == U_ZERO_ERROR) it_out << "status applyPattern OK!" << endl;
     if (!chkstatus( status, "***  test_complex_example pattform" )) {
         delete fileform;
         delete filenumform;
@@ -282,12 +283,34 @@ TestChoiceFormat::TestComplexExample( void )
             delete pattform;
             return;
         }
-        it_logln(UnicodeString() + i + UnicodeString(" -> ") + res2);
+        it_out << i << " -> " << res2 << endl;
         if (res2 != checkstr2[i]) {
             it_errln("***  test_complex_example res string");
-            it_errln(UnicodeString("*** ") + i + UnicodeString(" -> '") + res2 + UnicodeString("' unlike '") + checkstr2[i] + UnicodeString("' ! "));
+            it_out << "*** " << i << " -> '" << res2 << "' unlike '" << checkstr2[i] << "' ! " << endl;
         }
     }
+
+// We can deprecate the test code right away; the API itself goes 2002-Jun-30
+#ifdef ICU_ENABLE_DEPRECATED_NEXTDOUBLE
+    double nd = ChoiceFormat::nextDouble( 1.0 );
+    double pd = ChoiceFormat::previousDouble( 1.0 );
+    if ((ChoiceFormat::nextDouble( 1.0, TRUE ) == nd)
+     && (ChoiceFormat::nextDouble( 1.0, FALSE ) == pd)) {
+        it_out << "nextDouble(x, TRUE) and nextDouble(x, FALSE) tested" << endl;
+    }else{
+        it_errln("***  nextDouble( x, BOOL )");
+    }
+    if ((nd > 1.0) && (nd < 1.0001)) {
+        it_out << "nextDouble(x) tested" << endl;
+    }else{
+        it_errln("***  nextDouble");
+    }
+    if ((pd < 1.0) && (pd > 0.9999)) {
+        it_out << "prevDouble(x) tested" << endl;
+    }else{
+        it_errln("***  prevDouble");
+    }
+#endif
 
     const double limits_A[] = {1,2,3,4,5,6,7};
     const UnicodeString monthNames_A[] = {"Sun","Mon","Tue","Wed","Thur","Fri","Sat"};
@@ -300,13 +323,13 @@ TestChoiceFormat::TestComplexExample( void )
         it_errln("***  test-choiceFormat not allocatable!");
     }else{
         if (*form_A == *form_A2) {
-            it_logln("operator== tested.");
+            it_out << "operator== tested." << endl;
         }else{
             it_errln("***  operator==");
         }
 
         if (*form_A != *form_B) {
-            it_logln("operator!= tested.");
+            it_out << "operator!= tested." << endl;
         }else{
             it_errln("***  operator!=");
         }
@@ -316,7 +339,7 @@ TestChoiceFormat::TestComplexExample( void )
             it_errln("***  ChoiceFormat->clone is nil.");
         }else{
             if ((*form_A3 == *form_A) && (*form_A3 != *form_B)) {
-                it_logln("method clone tested.");
+                it_out << "method clone tested." << endl;
             }else{
                 it_errln("***  ChoiceFormat clone or operator==, or operator!= .");
             }
@@ -327,7 +350,7 @@ TestChoiceFormat::TestComplexExample( void )
         form_Assigned = *form_B;
         ok = ok && (form_Assigned != *form_A) && (form_Assigned == *form_B);
         if (ok) {
-            it_logln("copy constructor and operator= tested.");
+            it_out << "copy constructor and operator= tested." << endl;
         }else{
             it_errln("***  copy constructor or operator= or operator == or operator != .");
         }
@@ -347,10 +370,27 @@ TestChoiceFormat::TestComplexExample( void )
     }
 
     form_pat.toPattern( res1 );
-    if (res1 == "0#none|1#one|2#many") {
-        it_logln("ChoiceFormat contructor( newPattern, status) tested");
+    if (res1 == "0.0#none|1.0#one|2.0#many") {
+        it_out << "ChoiceFormat contructor( newPattern, status) tested" << endl;
     }else{
         it_errln("***  ChoiceFormat contructor( newPattern, status) or toPattern result!");
+    }
+
+    double* d_a = (double *)uprv_malloc(2 * sizeof(double));
+    if (!d_a) { it_errln("*** allocation error."); return; }
+    d_a[0] = 1.0; d_a[1] = 2.0;
+
+    UnicodeString* s_a = new UnicodeString[2];
+    if (!s_a) { it_errln("*** allocation error."); return; }
+    s_a[0] = "first"; s_a[1] = "second";
+
+    form_pat.adoptChoices( d_a, s_a, 2 );
+    form_pat.toPattern( res1 );
+    it_out << "ChoiceFormat adoptChoices toPattern: " << res1 << endl;
+    if (res1 == "1.0#first|2.0#second") {
+        it_out << "ChoiceFormat adoptChoices tested" << endl;
+    }else{
+        it_errln("***  ChoiceFormat adoptChoices result!");
     }
 
     double d_a2[] = { 3.0, 4.0 };
@@ -358,9 +398,9 @@ TestChoiceFormat::TestComplexExample( void )
 
     form_pat.setChoices( d_a2, s_a2, 2 );
     form_pat.toPattern( res1 );
-    it_logln(UnicodeString("ChoiceFormat adoptChoices toPattern: ") + res1);
-    if (res1 == "3#third|4#forth") {
-        it_logln("ChoiceFormat adoptChoices tested");
+    it_out << "ChoiceFormat adoptChoices toPattern: " << res1 << endl;
+    if (res1 == "3.0#third|4.0#forth") {
+        it_out << "ChoiceFormat adoptChoices tested" << endl;
     }else{
         it_errln("***  ChoiceFormat adoptChoices result!");
     }
@@ -370,23 +410,15 @@ TestChoiceFormat::TestComplexExample( void )
     status = U_ZERO_ERROR;
     double arg_double = 3.0;
     res1 = form_pat.format( arg_double, str, fpos );
-    it_logln(UnicodeString("ChoiceFormat format:") + res1);
+    it_out << "ChoiceFormat format:" << res1 << endl;
     if (res1 != "third") it_errln("***  ChoiceFormat format (double, ...) result!");
-
-    str = "";
-    fpos = 0;
-    status = U_ZERO_ERROR;
-    int64_t arg_64 = 3;
-    res1 = form_pat.format( arg_64, str, fpos );
-    it_logln(UnicodeString("ChoiceFormat format:") + res1);
-    if (res1 != "third") it_errln("***  ChoiceFormat format (int64_t, ...) result!");
 
     str = "";
     fpos = 0;
     status = U_ZERO_ERROR;
     int32_t arg_long = 3;
     res1 = form_pat.format( arg_long, str, fpos );
-    it_logln(UnicodeString("ChoiceFormat format:") + res1);
+    it_out << "ChoiceFormat format:" << res1 << endl;
     if (res1 != "third") it_errln("***  ChoiceFormat format (int32_t, ...) result!");
 
     Formattable ft( (int32_t)3 );
@@ -400,7 +432,7 @@ TestChoiceFormat::TestComplexExample( void )
         delete pattform;
         return;
     }
-    it_logln(UnicodeString("ChoiceFormat format:") + res1);
+    it_out << "ChoiceFormat format:" << res1 << endl;
     if (res1 != "third") it_errln("***  ChoiceFormat format (Formattable, ...) result!");
 
     Formattable fta[] = { (int32_t)3 };
@@ -414,7 +446,7 @@ TestChoiceFormat::TestComplexExample( void )
         delete pattform;
         return;
     }
-    it_logln(UnicodeString("ChoiceFormat format:") + res1);
+    it_out << "ChoiceFormat format:" << res1 << endl;
     if (res1 != "third") it_errln("***  ChoiceFormat format (Formattable[], cnt, ...) result!");
 
     ParsePosition parse_pos = 0;
@@ -423,7 +455,7 @@ TestChoiceFormat::TestComplexExample( void )
     form_pat.parse( parsetext, result, parse_pos );
     double rd = (result.getType() == Formattable::kLong) ? result.getLong() : result.getDouble();
     if (rd == 3.0) {
-        it_logln("parse( ..., ParsePos ) tested.");
+        it_out << "parse( ..., ParsePos ) tested." << endl;
     }else{
         it_errln("*** ChoiceFormat parse( ..., ParsePos )!");
     }
@@ -431,7 +463,7 @@ TestChoiceFormat::TestComplexExample( void )
     form_pat.parse( parsetext, result, status );
     rd = (result.getType() == Formattable::kLong) ? result.getLong() : result.getDouble();
     if (rd == 3.0) {
-        it_logln("parse( ..., UErrorCode ) tested.");
+        it_out << "parse( ..., UErrorCode ) tested." << endl;
     }else{
         it_errln("*** ChoiceFormat parse( ..., UErrorCode )!");
     }
@@ -445,13 +477,194 @@ TestChoiceFormat::TestComplexExample( void )
     }
     */
 
-    it_logln();
+    it_out << endl;
 
     delete fileform; 
     delete filenumform;
     delete pattform;
 }
 
+// We can deprecate the test code right away; the API itself goes 2002-Jun-30
+#ifdef ICU_ENABLE_DEPRECATED_NEXTDOUBLE
+/**
+ * test the use of next_Double with ChoiceFormat
+ **/
+void
+TestChoiceFormat::TestChoiceNextDouble()
+{
+
+    double limit[] = {0.0, 1.0, 2.0};
+    const UnicodeString formats[] = {"0.0<=Arg<=1.0",
+                               "1.0<Arg<2.0",
+                               "2.0<Arg"};
+    limit[1] = ChoiceFormat::nextDouble( limit[1] );
+    ChoiceFormat *cf = new ChoiceFormat(limit, formats, 3);
+    FieldPosition status(0);
+    UnicodeString toAppendTo;
+    cf->format((int32_t)1, toAppendTo, status);
+    if (toAppendTo != "0.0<=Arg<=1.0") {
+        it_errln("ChoiceFormat cmp in testBug1");
+    }
+    it_out <<  toAppendTo << endl;
+    delete cf;
+}
+
+
+/*
+ * Return a random double (---Copied here from tsnmfmt.h---)
+ **/
+static double randDouble()
+{
+    // Assume 8-bit (or larger) rand values.  Also assume
+    // that the system rand() function is very poor, which it always is.
+    double d = 0;
+    uint32_t i;
+    char* poke = (char*)&d;
+    for (i=0; i < sizeof(double); ++i)
+    {
+        poke[i] = (char)(rand() & 0xFF);
+    }
+    return d;
+}
+
+/** 
+ * test the numerical results of next_Double and previous_Double
+ **/
+void
+TestChoiceFormat::TestGapNextDouble()
+{
+
+    double val;
+    int32_t i;
+    
+    //test area between -15 and 15
+    logln("TestChoiceFormat::TestGapNextDouble: ----- testing area between -15 and 15...");
+    val = -15.0;
+    while (val < 15.0) {
+        testValue( val );
+        val += 0.31;
+    }
+    
+    //test closely +/- n values around zero
+    logln("TestChoiceFormat::TestGapNextDouble: ----- testing closely +/- n values around zero...");
+    int32_t test_n;
+    if (quick) {
+        test_n = 25;
+    } else {
+        test_n = 1000;
+    }
+    val = 0.0;
+    for (i = 0; i < test_n; i++ ) {
+        testValue( val );
+        val = ChoiceFormat::nextDouble( val );
+    }
+    for (i = 0; i < (test_n + test_n); i++ ) {
+        testValue( val );
+        val = ChoiceFormat::previousDouble( val );
+    }
+    for (i = 0; i < test_n; i++ ) {
+        testValue( val );
+        val = ChoiceFormat::nextDouble( val );
+    }
+    if (val != 0.0) {
+        errln("*** TestMessageFormat::TestGapNextDouble didn't come back to zero!");
+    }
+
+    // random numbers
+    logln("TestChoiceFormat::TestGapNextDouble: ----- testing random numbers...");
+    if (quick) {
+        test_n = 25;
+    } else {
+        test_n = 5000;
+    }
+    srand(0);           // use common starting point to make test reproducable
+    double negTestLimit = -DBL_MAX / 2.0; // has to be larger than this (not larger or  equal)
+    double posTestLimit = DBL_MAX / 2.0; // has to be smaller than this (not smaller or equal)
+    for (i = 0; i < test_n; i++) {
+        val = randDouble();
+        if ((val > negTestLimit) && (val < posTestLimit)) {
+            testValue( val );
+        }
+    }
+
+    // extreme positive values
+    logln("TestChoiceFormat::TestGapNextDouble: ----- testing extreme positive values...");
+    val = ChoiceFormat::previousDouble( posTestLimit );
+    testValue( val );
+    val = ChoiceFormat::nextDouble( DBL_MIN );
+    testValue( val );
+    val = ChoiceFormat::previousDouble( DBL_MIN );
+    //logln((UnicodeString) "prev MIN: " + val );
+    testValue( val );
+    val = DBL_MIN;
+    testValue( val );
+
+
+    // extreme negative values
+    logln("TestChoiceFormat::TestGapNextDouble: ----- testing extreme negative values...");
+    val = ChoiceFormat::nextDouble( negTestLimit );
+    testValue( val );
+    val = ChoiceFormat::previousDouble( -DBL_MIN );
+    testValue( val );
+    val = ChoiceFormat::nextDouble( -DBL_MIN );
+    //logln((UnicodeString) "next -MIN: " + val );
+    testValue( val );
+    val = -DBL_MIN;
+    testValue( val );
+
+    it_out << "MSG: nextDouble & previousDouble tested." << endl;
+}
+
+/** 
+ * test a value for TestGapNextDouble
+ **/
+void
+TestChoiceFormat::testValue( double val )
+{
+    double valnext = ChoiceFormat::nextDouble( val );
+    double valprev = ChoiceFormat::previousDouble( val );
+
+    if (val >= valnext) {
+        errln( (UnicodeString)
+            "*** TestChoiceFormat::testValue #1 nextDouble returns same or smaller value for:" + val );
+        return;
+    }
+
+    if (val <= valprev) {
+        errln( (UnicodeString)
+            "*** TestChoiceFormat::testValue #2 PreviousDouble returns same or larger value for:" + val );
+        return;
+    }
+
+#ifdef OS400
+    /* The AS/400 will signal an underflow exception when
+     * attempting the rest of the test.  No can do.
+     * Generating values less that DBL_MIN are not allowed on AS/400
+     */
+    if (valprev == 0.0 || val == 0.0 || valnext == 0.0 ) {
+        logln("Skipping the rest of testValue(%lf) valprev=%lf valnext=%lf", val, valprev, valnext);
+        return;
+    }
+#endif
+
+    /* volatile so the compiler doesn't get confused.. --srl */
+    volatile double middle;  
+    middle = (val + valnext) / 2.0;
+    if ((middle != val) && (middle != valnext)) {
+        errln( (UnicodeString)
+            "*** TestChoiceFormat::testValue #3 WARNING: There seems to be a gap for:" + val );
+        return;
+    }
+
+    middle = (val + valprev) / 2.0;
+
+    if ((middle != val) && (middle != valprev)) {
+         errln( (UnicodeString)
+            "*** TestChoiceFormat::testValue #4 WARNING: There seems to be a gap for:" + val );
+        return;
+    }
+}
+#endif
 
 /**
  * Test new closure API
@@ -477,7 +690,7 @@ void TestChoiceFormat::TestClosures(void) {
 
     // 'fmt2' is created using a pattern; it should be equivalent
     UErrorCode status = U_ZERO_ERROR;
-    const char* PAT = "0#,1)|1#[1,2]|2<(2,3]|3<(3,4)|4#[4,5)|5#[5,";
+    const char* PAT = "0.0#,1)|1.0#[1,2]|2.0<(2,3]|3.0<(3,4)|4.0#[4,5)|5.0#[5,";
     ChoiceFormat fmt2(PAT, status);
     if (U_FAILURE(status)) {
         errln("FAIL: ChoiceFormat constructor failed");
@@ -498,30 +711,6 @@ void TestChoiceFormat::TestClosures(void) {
     if (fmt1 != fmt2) {
         errln("FAIL: fmt1 != fmt2");
     }
-
-#if 0  // ICU 4.8 deprecates and disables the ChoiceFormat getters.
-    int32_t i;
-    int32_t count2 = 0;
-    const double *limits2 = fmt2.getLimits(count2);
-    const UBool *closures2 = fmt2.getClosures(count2);
-
-    if((count2 != 6) || !limits2 || !closures2) {
-        errln("FAIL: couldn't get limits or closures");
-    } else {
-        for(i=0;i<count2;i++) {
-          logln("#%d/%d: limit %g closed %s\n",
-                i, count2,
-                limits2[i],
-                closures2[i] ?"T":"F");
-          if(limits2[i] != limits[i]) {
-            errln("FAIL: limit #%d = %g, should be %g\n", i, limits2[i], limits[i]);
-          }
-          if((closures2[i]!=0) != (closures[i]!=0)) {
-            errln("FAIL: closure #%d = %s, should be %s\n", i, closures2[i]?"T":"F", closures[i]?"T":"F");
-          }
-        }
-    }
-#endif
 
     // Now test both format objects
     UnicodeString exp[] = {
@@ -611,7 +800,6 @@ void TestChoiceFormat::TestPatterns(void) {
                  1.0, "b",
                  1.0 + 1e-9, "c");
 
-#if 0  // ICU 4.8 only checks the pattern syntax, not whether the ranges make sense.
     // Try an invalid pattern that isolates a single value.
     // [-Inf,1.0) [1.0,1.0) [1.0,+Inf]
     _testPattern("0.0#a|1.0#b|1.0#c", FALSE,
@@ -630,20 +818,4 @@ void TestChoiceFormat::TestPatterns(void) {
     // [-Inf,2.0) [2.0,1.0) [1.0,+Inf]
     _testPattern("0.0#a|2.0#b|1.0#c", FALSE,
                  0, 0, 0, 0, 0, 0);
-#endif
 }
-
-void TestChoiceFormat::TestChoiceFormatToPatternOverflow() 
-{
-    static const double limits[] = {0.1e-78, 1e13, 0.1e78};
-    UnicodeString monthNames[] = { "one", "two", "three" };
-    ChoiceFormat fmt(limits, monthNames, UPRV_LENGTHOF(limits));
-    UnicodeString patStr, expectedPattern1("1e-79#one|10000000000000#two|1e+77#three"), 
-        expectedPattern2("1e-079#one|10000000000000#two|1e+077#three");
-    fmt.toPattern(patStr);
-    if (patStr != expectedPattern1 && patStr != expectedPattern2) {
-        errln("ChoiceFormat returned \"" + patStr + "\" instead of \"" + expectedPattern1 + " or " + expectedPattern2 + "\"");
-    }
-}
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

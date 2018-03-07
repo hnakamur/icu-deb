@@ -1,16 +1,11 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 
 /********************************************************************
- * COPYRIGHT:
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "sdtfmtts.h"
 
 #include "unicode/smpdtfmt.h"
@@ -24,17 +19,15 @@ void IntlTestSimpleDateFormatAPI::runIndexedTest( int32_t index, UBool exec, con
 {
     if (exec) logln("TestSuite SimpleDateFormatAPI");
     switch (index) {
-        case 0: name = "SimpleDateFormat API test";
+        case 0: name = "SimpleDateFormat API test"; 
                 if (exec) {
                     logln("SimpleDateFormat API test---"); logln("");
                     UErrorCode status = U_ZERO_ERROR;
-                    Locale saveLocale;
-                    Locale::setDefault(Locale::getEnglish(), status);
+                    Locale::setDefault(Locale::ENGLISH, status);
                     if(U_FAILURE(status)) {
                         errln("ERROR: Could not set default locale, test may not give correct results");
                     }
                     testAPI(/*par*/);
-                    Locale::setDefault(saveLocale, status);
                 }
                 break;
 
@@ -55,28 +48,24 @@ void IntlTestSimpleDateFormatAPI::testAPI(/*char *par*/)
 
     SimpleDateFormat def(status);
     if(U_FAILURE(status)) {
-        dataerrln("ERROR: Could not create SimpleDateFormat (default) - exitting");
-        return;
+        errln("ERROR: Could not create SimpleDateFormat (default)");
     }
 
     status = U_ZERO_ERROR;
-    const UnicodeString pattern("yyyy.MM.dd G 'at' hh:mm:ss z", "");
-    const UnicodeString override("y=hebr;d=thai;s=arab", ""); /* use invariant converter */
-    const UnicodeString override_bogus("y=hebr;d=thai;s=bogus", "");
-
+    const UnicodeString pattern("yyyy.MM.dd G 'at' hh:mm:ss z");
     SimpleDateFormat pat(pattern, status);
     if(U_FAILURE(status)) {
-       errln("ERROR: Could not create SimpleDateFormat (pattern) - %s", u_errorName(status));
+        errln("ERROR: Could not create SimpleDateFormat (pattern)");
     }
 
     status = U_ZERO_ERROR;
-    SimpleDateFormat pat_fr(pattern, Locale::getFrench(), status);
+    SimpleDateFormat pat_fr(pattern, Locale::FRENCH, status);
     if(U_FAILURE(status)) {
         errln("ERROR: Could not create SimpleDateFormat (pattern French)");
     }
 
     status = U_ZERO_ERROR;
-    DateFormatSymbols *symbols = new DateFormatSymbols(Locale::getFrench(), status);
+    DateFormatSymbols *symbols = new DateFormatSymbols(Locale::FRENCH, status);
     if(U_FAILURE(status)) {
         errln("ERROR: Could not create DateFormatSymbols (French)");
     }
@@ -84,8 +73,7 @@ void IntlTestSimpleDateFormatAPI::testAPI(/*char *par*/)
     status = U_ZERO_ERROR;
     SimpleDateFormat cust1(pattern, symbols, status);
     if(U_FAILURE(status)) {
-        dataerrln("ERROR: Could not create SimpleDateFormat (pattern, symbols*) - exitting");
-        return;
+        errln("ERROR: Could not create SimpleDateFormat (pattern, symbols*)");
     }
 
     status = U_ZERO_ERROR;
@@ -93,27 +81,6 @@ void IntlTestSimpleDateFormatAPI::testAPI(/*char *par*/)
     if(U_FAILURE(status)) {
         errln("ERROR: Could not create SimpleDateFormat (pattern, symbols)");
     }
-
-    status = U_ZERO_ERROR;
-    logln(UnicodeString("Override with: ") + override);
-    SimpleDateFormat ovr1(pattern, override, status);
-    if(U_FAILURE(status)) {
-      errln("ERROR: Could not create SimpleDateFormat (pattern, override) - %s", u_errorName(status));
-    }
-
-    status = U_ZERO_ERROR;
-    SimpleDateFormat ovr2(pattern, override, Locale::getGerman(), status);
-    if(U_FAILURE(status)) {
-        errln("ERROR: Could not create SimpleDateFormat (pattern, override, locale) - %s", u_errorName(status));
-    }
-
-    status = U_ZERO_ERROR;
-    logln(UnicodeString("Override with: ") + override_bogus);
-    SimpleDateFormat ovr3(pattern, override_bogus, Locale::getGerman(), status);
-    if(U_SUCCESS(status)) {
-        errln("ERROR: Should not have been able to create SimpleDateFormat (pattern, override, locale) with a bogus override");
-    }
-
 
     SimpleDateFormat copy(pat);
 
@@ -144,7 +111,7 @@ void IntlTestSimpleDateFormatAPI::testAPI(/*char *par*/)
     Formattable fD(d, Formattable::kIsDate);
 
     UnicodeString res1, res2;
-    FieldPosition pos1(FieldPosition::DONT_CARE), pos2(FieldPosition::DONT_CARE);
+    FieldPosition pos1(0), pos2(0);
     
     res1 = def.format(d, res1, pos1);
     logln( (UnicodeString) "" + d + " formatted to " + res1);
@@ -178,13 +145,6 @@ void IntlTestSimpleDateFormatAPI::testAPI(/*char *par*/)
     logln("Testing getters and setters");
 
     const DateFormatSymbols *syms = pat.getDateFormatSymbols();
-    if(!syms) {
-      errln("Couldn't obtain DateFormatSymbols. Quitting test!");
-      return;
-    }
-    if(syms->getDynamicClassID() != DateFormatSymbols::getStaticClassID()) {
-        errln("ERROR: format->getDateFormatSymbols()->getDynamicClassID() != DateFormatSymbols::getStaticClassID()");
-    }
     DateFormatSymbols *newSyms = new DateFormatSymbols(*syms);
     def.adoptDateFormatSymbols(newSyms);    
     pat_fr.setDateFormatSymbols(*newSyms);
@@ -203,13 +163,6 @@ void IntlTestSimpleDateFormatAPI::testAPI(/*char *par*/)
     if(U_FAILURE(status)) {
         errln("ERROR: setTwoDigitStartDate() failed");
     }
-
-// ======= Test DateFormatSymbols constructor
-    newSyms  =new DateFormatSymbols("gregorian", status);
-    if(U_FAILURE(status)) {
-        errln("ERROR: new DateFormatSymbols() failed");
-    }
-    def.adoptDateFormatSymbols(newSyms);
 
 // ======= Test applyPattern()
 
@@ -231,7 +184,7 @@ void IntlTestSimpleDateFormatAPI::testAPI(/*char *par*/)
     status = U_ZERO_ERROR;
     pat.applyLocalizedPattern(p1, status);
     if(U_FAILURE(status)) {
-        errln("ERROR: applyPattern() failed with %s", u_errorName(status));
+        errln("ERROR: applyPattern() failed with " + (int32_t) status);
     }
     UnicodeString s3;
     status = U_ZERO_ERROR;
@@ -257,26 +210,6 @@ void IntlTestSimpleDateFormatAPI::testAPI(/*char *par*/)
     if(test->getDynamicClassID() != SimpleDateFormat::getStaticClassID()) {
         errln("ERROR: getDynamicClassID() didn't return the expected value");
     }
-    
+
     delete test;
-    
-// ======= Test Ticket 5684 (Parsing with 'e' and 'Y')
-    SimpleDateFormat object(UNICODE_STRING_SIMPLE("YYYY'W'wwe"), status);
-    if(U_FAILURE(status)) {
-        errln("ERROR: Couldn't create a SimpleDateFormat");
-    }
-    object.setLenient(false);
-    ParsePosition pp(0);
-    UDate udDate = object.parse("2007W014", pp);
-    if ((double)udDate == 0.0) {
-        errln("ERROR: Parsing failed using 'Y' and 'e'");
-    }
-
-// ====== Test ticket 11295 getNumberFormatForField returns wild pointer
-    if (object.getNumberFormatForField('N') != NULL) {
-        errln("N is not a valid field, "
-              "getNumberFormatForField should return NULL");
-    }
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

@@ -1,14 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2006, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 /**
  * G7CollationTest is a third level test class.  This test performs the examples 
- * mentioned on the IBM Java international demos web site.  
+ * mentioned on the Taligent international demos web site.  
  * Sample Rules: & Z < p , P 
  * Effect :  Making P sort after Z.
  *
@@ -33,10 +31,6 @@
 #ifndef _G7COLL
 #define _G7COLL
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "unicode/tblcoll.h"
 #include "tscoll.h"
 
@@ -51,9 +45,11 @@ public:
     enum ETotal_Test { TOTALTESTSET = 30 };
 
     G7CollationTest() {}
-    virtual ~G7CollationTest();
+    virtual ~G7CollationTest() {}
     void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL );
 
+    // main test routine, tests comparisons for a set of strings against sets of expected results
+    void doTest( Collator* col, UnicodeString source, UnicodeString target, Collator::EComparisonResult result);
 
     // perform test for G7 locales
     void TestG7Locales(/* char* par */);
@@ -72,8 +68,8 @@ public:
     // " & aa ; a'-' & ee ; e'-' & ii ; i'-' & oo ; o'-' & uu ; u'-' "
     void TestDemo4(/* char* par */);
 
+private:
+    static const UChar testCases[][MAX_TOKEN_LEN];
+    static const int32_t results[TESTLOCALES][TOTALTESTSET];
 };
-
-#endif /* #if !UCONFIG_NO_COLLATION */
-
 #endif

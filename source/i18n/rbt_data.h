@@ -1,9 +1,5 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
-**********************************************************************
-* Copyright (C) 1999-2007, International Business Machines Corporation
-* and others. All Rights Reserved.
+* Copyright (C) {1999}, International Business Machines Corporation and others. All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
 *   11/17/99    aliu        Creation.
@@ -12,20 +8,15 @@
 #ifndef RBT_DATA_H
 #define RBT_DATA_H
 
-#include "unicode/utypes.h"
-#include "unicode/uclean.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
-#include "unicode/uobject.h"
 #include "rbt_set.h"
-#include "hash.h"
 
 U_NAMESPACE_BEGIN
 
 class UnicodeFunctor;
+class UnicodeString;
 class UnicodeMatcher;
 class UnicodeReplacer;
+class Hashtable;
 
 /**
  * The rule data for a RuleBasedTransliterators.  RBT objects hold
@@ -44,7 +35,7 @@ class UnicodeReplacer;
  * data structure handles this.  See the parsing code for more
  * details.
  */
-class TransliterationRuleData : public UMemory {
+class U_I18N_API TransliterationRuleData {
 
 public:
 
@@ -64,7 +55,7 @@ public:
      * data.variables.  The stand-in also represents the UnicodeMatcher in
      * the stored rules.
      */
-    Hashtable variableNames;
+    Hashtable* variableNames;
 
     /**
      * Map category variable (UChar) to set (UnicodeFunctor).
@@ -76,15 +67,6 @@ public:
      * variables[i] represents character (variablesBase + i).
      */
     UnicodeFunctor** variables;
-
-    /**
-     * Flag that indicates whether the variables are owned (if a single
-     * call to Transliterator::createFromRules() produces a CompoundTransliterator
-     * with more than one RuleBasedTransliterator as children, they all share
-     * the same variables list, so only the first one is considered to own
-     * the variables)
-     */
-    UBool variablesAreOwned;
 
     /**
      * The character that represents variables[0].  Characters
@@ -100,27 +82,15 @@ public:
 
 public:
 
-    /**
-     * Constructor
-     * @param status Output param set to success/failure code on exit.
-     */
     TransliterationRuleData(UErrorCode& status);
 
-    /**
-     * Copy Constructor
-     */
     TransliterationRuleData(const TransliterationRuleData&);
 
-    /**
-     * destructor
-     */
     ~TransliterationRuleData();
 
     /**
      * Given a stand-in character, return the UnicodeFunctor that it
      * represents, or NULL if it doesn't represent anything.
-     * @param standIn    the given stand-in character.
-     * @return           the UnicodeFunctor that 'standIn' represents
      */
     UnicodeFunctor* lookup(UChar32 standIn) const;
 
@@ -128,8 +98,6 @@ public:
      * Given a stand-in character, return the UnicodeMatcher that it
      * represents, or NULL if it doesn't represent anything or if it
      * represents something that is not a matcher.
-     * @param standIn    the given stand-in character.
-     * @return           return the UnicodeMatcher that 'standIn' represents
      */
     UnicodeMatcher* lookupMatcher(UChar32 standIn) const;
 
@@ -137,18 +105,10 @@ public:
      * Given a stand-in character, return the UnicodeReplacer that it
      * represents, or NULL if it doesn't represent anything or if it
      * represents something that is not a replacer.
-     * @param standIn    the given stand-in character.
-     * @return           return the UnicodeReplacer that 'standIn' represents
      */
     UnicodeReplacer* lookupReplacer(UChar32 standIn) const;
-
-
-private:
-    TransliterationRuleData &operator=(const TransliterationRuleData &other); // forbid copying of this class
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif

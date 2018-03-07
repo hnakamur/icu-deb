@@ -1,29 +1,27 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2002, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+
 #include "unicode/utypes.h"
 
-#include "cmemory.h"
 #include "cstring.h"
 #include "unicode/unistr.h"
 #include "unicode/uniset.h"
 #include "unicode/resbund.h"
 #include "restest.h"
-
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
 #include <limits.h>
 
 //***************************************************************************************
 
 static const UChar kErrorUChars[] = { 0x45, 0x52, 0x52, 0x4f, 0x52, 0 };
 static const int32_t kErrorLength = 5;
+static const int32_t kERROR_COUNT = -1234567;
 
 //***************************************************************************************
 
@@ -87,7 +85,7 @@ itoa(int32_t i, char* buf)
 
 // Array of our test objects
 
-static struct
+struct
 {
     const char* name;
     Locale *locale;
@@ -105,12 +103,12 @@ param[] =
     { "root",       NULL,   U_ZERO_ERROR,             e_Root,      { TRUE, FALSE, FALSE }, { TRUE, FALSE, FALSE } },
     { "te",         NULL,   U_ZERO_ERROR,             e_te,        { FALSE, TRUE, FALSE }, { TRUE, TRUE, FALSE } },
     { "te_IN",      NULL,   U_ZERO_ERROR,             e_te_IN,     { FALSE, FALSE, TRUE }, { TRUE, TRUE, TRUE } },
-    { "te_NE",      NULL,   U_USING_FALLBACK_WARNING, e_te,        { FALSE, TRUE, FALSE }, { TRUE, TRUE, FALSE } },
-    { "te_IN_NE",   NULL,   U_USING_FALLBACK_WARNING, e_te_IN,     { FALSE, FALSE, TRUE }, { TRUE, TRUE, TRUE } },
-    { "ne",         NULL,   U_USING_DEFAULT_WARNING,  e_Root,      { TRUE, FALSE, FALSE }, { TRUE, FALSE, FALSE } }
+    { "te_NE",      NULL,   U_USING_FALLBACK_ERROR,   e_te,        { FALSE, TRUE, FALSE }, { TRUE, TRUE, FALSE } },
+    { "te_IN_NE",   NULL,   U_USING_FALLBACK_ERROR,   e_te_IN,     { FALSE, FALSE, TRUE }, { TRUE, TRUE, TRUE } },
+    { "ne",         NULL,   U_USING_DEFAULT_ERROR,    e_Root,      { TRUE, FALSE, FALSE }, { TRUE, FALSE, FALSE } }
 };
 
-static const int32_t bundles_count = UPRV_LENGTHOF(param);
+int32_t bundles_count = sizeof(param) / sizeof(param[0]);
 
 //***************************************************************************************
 
@@ -158,7 +156,8 @@ int32_t randi(int32_t n)
 */
 ResourceBundleTest::ResourceBundleTest()
 : pass(0),
-  fail(0)
+  fail(0),
+  OUT(it_out)
 {
     if (param[5].locale == NULL) {
         param[0].locale = new Locale("root");
@@ -174,7 +173,7 @@ ResourceBundleTest::~ResourceBundleTest()
 {
     if (param[5].locale) {
         int idx;
-        for (idx = 0; idx < UPRV_LENGTHOF(param); idx++) {
+        for (idx = 0; idx < (int)(sizeof(param)/sizeof(param[0])); idx++) {
             delete param[idx].locale;
             param[idx].locale = NULL;
         }
@@ -185,16 +184,9 @@ void ResourceBundleTest::runIndexedTest( int32_t index, UBool exec, const char* 
 {
     if (exec) logln("TestSuite ResourceBundleTest: ");
     switch (index) {
-#if !UCONFIG_NO_FILE_IO && !UCONFIG_NO_LEGACY_CONVERSION
     case 0: name = "TestResourceBundles"; if (exec) TestResourceBundles(); break;
     case 1: name = "TestConstruction"; if (exec) TestConstruction(); break;
-    case 2: name = "TestGetSize"; if (exec) TestGetSize(); break;
-    case 3: name = "TestGetLocaleByType"; if (exec) TestGetLocaleByType(); break;
-#else
-    case 0: case 1: case 2: case 3: name = "skip"; break;
-#endif
-
-    case 4: name = "TestExemplar"; if (exec) TestExemplar(); break;
+    case 2: name = "TestExemplar"; if (exec) TestExemplar(); break;
         default: name = ""; break; //needed to end loop
     }
 }
@@ -204,21 +196,6 @@ void ResourceBundleTest::runIndexedTest( int32_t index, UBool exec, const char* 
 void
 ResourceBundleTest::TestResourceBundles()
 {
-    UErrorCode status = U_ZERO_ERROR;
-
-    loadTestData(status);
-    if(U_FAILURE(status))
-    {
-        dataerrln("Could not load testdata.dat %s " + UnicodeString(u_errorName(status)));
-        return;
-    }
-
-    /* Make sure that users using te_IN for the default locale don't get test failures. */
-    Locale originalDefault;
-    if (Locale::getDefault() == Locale("te_IN")) {
-        Locale::setDefault(Locale("en_US"), status);
-    }
-
     testTag("only_in_Root", TRUE, FALSE, FALSE);
     testTag("only_in_te", FALSE, TRUE, FALSE);
     testTag("only_in_te_IN", FALSE, FALSE, TRUE);
@@ -228,73 +205,96 @@ ResourceBundleTest::TestResourceBundles()
     testTag("in_te_te_IN", FALSE, TRUE, TRUE);
     testTag("nonexistent", FALSE, FALSE, FALSE);
     logln("Passed: %d\nFailed: %d", pass, fail);
-
-    /* Restore the default locale for the other tests. */
-    Locale::setDefault(originalDefault, status);
 }
 
 void
 ResourceBundleTest::TestConstruction()
 {
-    UErrorCode   err = U_ZERO_ERROR;
-    Locale       locale("te", "IN");
-
-    const char* testdatapath=loadTestData(err);
-    if(U_FAILURE(err))
     {
-        dataerrln("Could not load testdata.dat " + UnicodeString(testdatapath) +  ", " + UnicodeString(u_errorName(err)));
-        return;
+        UErrorCode   err = U_ZERO_ERROR;
+        const char* testdatapath;
+        Locale       locale("te", "IN");
+
+        testdatapath=loadTestData(err);
+        if(U_FAILURE(err))
+        {
+            errln("Could not load testdata.dat %s " + UnicodeString(u_errorName(err)));
+            return;
+        }
+        ResourceBundle  test1((UnicodeString)testdatapath, err);
+        ResourceBundle  test2(testdatapath, locale, err);
+        //ResourceBundle  test1("c:\\icu\\icu\\source\\test\\testdata\\testdata", err);
+        //ResourceBundle  test2("c:\\icu\\icu\\source\\test\\testdata\\testdata", locale, err);
+
+        UnicodeString   result1(test1.getStringEx("string_in_Root_te_te_IN", err));
+        UnicodeString   result2(test2.getStringEx("string_in_Root_te_te_IN", err));
+
+        if (U_FAILURE(err)) {
+            errln("Something threw an error in TestConstruction()");
+            return;
+        }
+
+        logln("for string_in_Root_te_te_IN, default.txt had " + result1);
+        logln("for string_in_Root_te_te_IN, te_IN.txt had " + result2);
+
+        if (result1 != "ROOT" || result2 != "TE_IN")
+            errln("Construction test failed; run verbose for more information");
+
+        const char* version1;
+        const char* version2;
+
+        version1 = test1.getVersionNumber();
+        version2 = test2.getVersionNumber();
+
+        char *versionID1 = new char[1+strlen(version1)]; // + 1 for zero byte
+        char *versionID2 = new char[1+ strlen(version2)]; // + 1 for zero byte
+
+        strcpy(versionID1, "44.0");  // hardcoded, please change if the default.txt file or ResourceBundle::kVersionSeparater is changed.
+
+        strcpy(versionID2, "55.0");  // hardcoded, please change if the te_IN.txt file or ResourceBundle::kVersionSeparater is changed.
+
+        logln(UnicodeString("getVersionNumber on default.txt returned ") + version1);
+        logln(UnicodeString("getVersionNumber on te_IN.txt returned ") + version2);
+
+        if (strcmp(version1, versionID1) != 0 || strcmp(version2, versionID2) != 0)
+            errln("getVersionNumber() failed");
+
+        delete[] versionID1;
+        delete[] versionID2;
     }
+    {
+        UErrorCode   err = U_ZERO_ERROR;
+        const char* testdatapath;
+        Locale       locale("te", "IN");
 
-    /* Make sure that users using te_IN for the default locale don't get test failures. */
-    Locale originalDefault;
-    if (Locale::getDefault() == Locale("te_IN")) {
-        Locale::setDefault(Locale("en_US"), err);
+        testdatapath=loadTestData(err);
+        if(U_FAILURE(err))
+        {
+            errln("Could not load testdata.dat %s " + UnicodeString(u_errorName(err)));
+            return;
+        }
+
+
+        wchar_t* wideDirectory = new wchar_t[256];
+        mbstowcs(wideDirectory, testdatapath, 256);
+        //mbstowcs(wideDirectory, "c:\\icu\\icu\\source\\test\\testdata\\testdata", 256);
+
+        ResourceBundle  test2(wideDirectory, locale, err);
+
+        UnicodeString   result2(test2.getStringEx("string_in_Root_te_te_IN", err));
+
+        if (U_FAILURE(err)) {
+            errln("Something threw an error in TestConstruction()");
+            return;
+        }
+
+        logln("for string_in_Root_te_te_IN, te_IN.txt had " + result2);
+
+        if (result2 != "TE_IN")
+            errln("Construction test failed; run verbose for more information");
+
+        delete[] wideDirectory;
     }
-
-    ResourceBundle  test1((UnicodeString)testdatapath, err);
-    ResourceBundle  test2(testdatapath, locale, err);
-    //ResourceBundle  test1("c:\\icu\\icu\\source\\test\\testdata\\testdata", err);
-    //ResourceBundle  test2("c:\\icu\\icu\\source\\test\\testdata\\testdata", locale, err);
-
-    UnicodeString   result1(test1.getStringEx("string_in_Root_te_te_IN", err));
-    UnicodeString   result2(test2.getStringEx("string_in_Root_te_te_IN", err));
-
-    if (U_FAILURE(err)) {
-        errln("Something threw an error in TestConstruction()");
-        return;
-    }
-
-    logln("for string_in_Root_te_te_IN, default.txt had " + result1);
-    logln("for string_in_Root_te_te_IN, te_IN.txt had " + result2);
-
-    if (result1 != "ROOT" || result2 != "TE_IN")
-        errln("Construction test failed; run verbose for more information");
-
-    const char* version1;
-    const char* version2;
-
-    version1 = test1.getVersionNumber();
-    version2 = test2.getVersionNumber();
-
-    char *versionID1 = new char[1+strlen(version1)]; // + 1 for zero byte
-    char *versionID2 = new char[1+ strlen(version2)]; // + 1 for zero byte
-
-    strcpy(versionID1, "44.0");  // hardcoded, please change if the default.txt file or ResourceBundle::kVersionSeparater is changed.
-
-    strcpy(versionID2, "55.0");  // hardcoded, please change if the te_IN.txt file or ResourceBundle::kVersionSeparater is changed.
-
-    logln(UnicodeString("getVersionNumber on default.txt returned ") + version1);
-    logln(UnicodeString("getVersionNumber on te_IN.txt returned ") + version2);
-
-    if (strcmp(version1, versionID1) != 0 || strcmp(version2, versionID2) != 0)
-        errln("getVersionNumber() failed");
-
-    delete[] versionID1;
-    delete[] versionID2;
-
-    /* Restore the default locale for the other tests. */
-    Locale::setDefault(originalDefault, err);
 }
 
 //***************************************************************************************
@@ -326,7 +326,7 @@ ResourceBundleTest::testTag(const char* frag,
     testdatapath=loadTestData(status);
     if(U_FAILURE(status))
     {
-        dataerrln("Could not load testdata.dat %s " + UnicodeString(u_errorName(status)));
+        errln("Could not load testdata.dat %s " + UnicodeString(u_errorName(status)));
         return FALSE;
     }
 
@@ -358,9 +358,9 @@ ResourceBundleTest::testTag(const char* frag,
                 if(j == actual_bundle) /* it's in the same bundle OR it's a nonexistent=default bundle (5) */
                   expected_resource_status = U_ZERO_ERROR;
                 else if(j == 0)
-                  expected_resource_status = U_USING_DEFAULT_WARNING;
+                  expected_resource_status = U_USING_DEFAULT_ERROR;
                 else
-                  expected_resource_status = U_USING_FALLBACK_WARNING;
+                  expected_resource_status = U_USING_FALLBACK_ERROR;
                 
                 break;
             }
@@ -512,122 +512,6 @@ ResourceBundleTest::TestExemplar(){
     logln("Number of installed locales with exemplar characters that could be tested: %d",num);
 
 }
+            
+//eof
 
-void 
-ResourceBundleTest::TestGetSize(void) 
-{
-    const struct {
-        const char* key;
-        int32_t size;
-    } test[] = {
-        { "zerotest", 1},
-        { "one", 1},
-        { "importtest", 1},
-        { "integerarray", 1},
-        { "emptyarray", 0},
-        { "emptytable", 0},
-        { "emptystring", 1}, /* empty string is still a string */
-        { "emptyint", 1}, 
-        { "emptybin", 1},
-        { "testinclude", 1},
-        { "collations", 1}, /* not 2 - there is hidden %%CollationBin */
-    };
-    
-    UErrorCode status = U_ZERO_ERROR;
-    
-    const char* testdatapath = loadTestData(status);
-    int32_t i = 0, j = 0;
-    int32_t size = 0;
-    
-    if(U_FAILURE(status))
-    {
-        dataerrln("Could not load testdata.dat %s\n", u_errorName(status));
-        return;
-    }
-    
-    ResourceBundle rb(testdatapath, "testtypes", status);
-    if(U_FAILURE(status))
-    {
-        err("Could not testtypes resource bundle %s\n", u_errorName(status));
-        return;
-    }
-    
-    for(i = 0; i < UPRV_LENGTHOF(test); i++) {
-        ResourceBundle res = rb.get(test[i].key, status);
-        if(U_FAILURE(status))
-        {
-            err("Couldn't find the key %s. Error: %s\n", u_errorName(status));
-            return;
-        }
-        size = res.getSize();
-        if(size != test[i].size) {
-            err("Expected size %i, got size %i for key %s\n", test[i].size, size, test[i].key);
-            for(j = 0; j < size; j++) {
-                ResourceBundle helper = res.get(j, status);
-                err("%s\n", helper.getKey());
-            }
-        }
-    }
-}
-
-void 
-ResourceBundleTest::TestGetLocaleByType(void) 
-{
-    const struct {
-        const char *requestedLocale;
-        const char *resourceKey;
-        const char *validLocale;
-        const char *actualLocale;
-    } test[] = {
-        { "te_IN_BLAH", "string_only_in_te_IN", "te_IN", "te_IN" },
-        { "te_IN_BLAH", "string_only_in_te", "te_IN", "te" },
-        { "te_IN_BLAH", "string_only_in_Root", "te_IN", "root" },
-        { "te_IN_BLAH_01234567890_01234567890_01234567890_01234567890_01234567890_01234567890", "array_2d_only_in_Root", "te_IN", "root" },
-        { "te_IN_BLAH@currency=euro", "array_2d_only_in_te_IN", "te_IN", "te_IN" },
-        { "te_IN_BLAH@calendar=thai;collation=phonebook", "array_2d_only_in_te", "te_IN", "te" }
-    };
-    
-    UErrorCode status = U_ZERO_ERROR;
-    
-    const char* testdatapath = loadTestData(status);
-    int32_t i = 0;
-    Locale locale;
-    
-    if(U_FAILURE(status))
-    {
-        dataerrln("Could not load testdata.dat %s\n", u_errorName(status));
-        return;
-    }
-    
-    for(i = 0; i < UPRV_LENGTHOF(test); i++) {
-        ResourceBundle rb(testdatapath, test[i].requestedLocale, status);
-        if(U_FAILURE(status))
-        {
-            err("Could not open resource bundle %s (error %s)\n", test[i].requestedLocale, u_errorName(status));
-            status = U_ZERO_ERROR;
-            continue;
-        }
-        
-        ResourceBundle res = rb.get(test[i].resourceKey, status);
-        if(U_FAILURE(status))
-        {
-            err("Couldn't find the key %s. Error: %s\n", test[i].resourceKey, u_errorName(status));
-            status = U_ZERO_ERROR;
-            continue;
-        }
-
-        locale = res.getLocale(ULOC_REQUESTED_LOCALE, status);
-        if(U_SUCCESS(status) && locale != Locale::getDefault()) {
-            err("Expected requested locale to be %s. Got %s\n", test[i].requestedLocale, locale.getName());
-        }
-        status = U_ZERO_ERROR;
-        locale = res.getLocale(ULOC_VALID_LOCALE, status);
-        if(strcmp(locale.getName(), test[i].validLocale) != 0) {
-            err("Expected valid locale to be %s. Got %s\n", test[i].requestedLocale, locale.getName());
-        }
-        locale = res.getLocale(ULOC_ACTUAL_LOCALE, status);
-        if(strcmp(locale.getName(), test[i].actualLocale) != 0) {
-            err("Expected actual locale to be %s. Got %s\n", test[i].requestedLocale, locale.getName());
-        }
-    }
-}

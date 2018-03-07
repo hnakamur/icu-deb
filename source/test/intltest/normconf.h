@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ************************************************************************
-* Copyright (c) 1997-2003, International Business Machines
+* Copyright (c) 1997-2001, International Business Machines
 * Corporation and others.  All Rights Reserved.
 ************************************************************************
 */
@@ -11,18 +9,14 @@
 #define _NORMCONF
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_NORMALIZATION
-
-#include "unicode/normalizer2.h"
 #include "unicode/normlzr.h"
 #include "intltest.h"
 
-typedef struct _FileStream FileStream;
+#define TEST_SUITE_DIR  "unidata"
+#define TEST_SUITE_FILE "NormalizationTest.txt"
 
 class NormalizerConformanceTest : public IntlTest {
     Normalizer normalizer;
-    const Normalizer2 *nfc, *nfd, *nfkc, *nfkd;
 
  public:
     NormalizerConformanceTest();
@@ -33,18 +27,15 @@ class NormalizerConformanceTest : public IntlTest {
     /**
      * Test the conformance of Normalizer to
      * http://www.unicode.org/Public/UNIDATA/NormalizationTest.txt
+     * This file must be located at the path specified as TEST_SUITE_FILE.
      */
-    void TestConformance();
-    void TestConformance32();
-    void TestConformance(FileStream *input, int32_t options);
+    void TestConformance(void);
 
     // Specific tests for debugging.  These are generally failures taken from
     // the conformance file, but culled out to make debugging easier.
     void TestCase6(void);
 
  private:
-    FileStream *openNormalizationTestFile(const char *filename);
-
     /**
      * Verify the conformance of the given line of the Unicode
      * normalization (UTR 15) test suite file.  For each line,
@@ -61,34 +52,27 @@ class NormalizerConformanceTest : public IntlTest {
      * @return true if the test passes
      */
     UBool checkConformance(const UnicodeString* field,
-                           const char *line,
-                           int32_t options,
-                           UErrorCode &status);
-
-    UBool checkNorm(UNormalizationMode mode, int32_t options,
-                    const Normalizer2 *norm2,
-                    const UnicodeString &s, const UnicodeString &exp,
-                    int32_t field);
+                           const UnicodeString& line);
 
     void iterativeNorm(const UnicodeString& str,
-                       UNormalizationMode mode, int32_t options,
+                       UNormalizationMode mode,
                        UnicodeString& result,
                        int8_t dir);
 
     /**
      * @param op name of normalization form, e.g., "KC"
-     * @param op2 name of test case variant, e.g., "(-1)"
      * @param s string being normalized
      * @param got value received
      * @param exp expected value
      * @param msg description of this test
      * @param return true if got == exp
      */
-    UBool assertEqual(const char *op, const char *op2,
+    UBool assertEqual(const char *op,
                       const UnicodeString& s,
                       const UnicodeString& got,
                       const UnicodeString& exp,
-                      const char *msg);
+                      const char *msg,
+                      int32_t field);
 
     /**
      * Split a string into pieces based on the given delimiter
@@ -106,9 +90,6 @@ class NormalizerConformanceTest : public IntlTest {
                    UnicodeString output[], int32_t outputLength);
 
     void _testOneLine(const char *line);
-    void compare(const UnicodeString& s1,const UnicodeString& s2);
 };
-
-#endif /* #if !UCONFIG_NO_NORMALIZATION */
 
 #endif

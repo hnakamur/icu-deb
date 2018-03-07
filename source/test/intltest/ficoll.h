@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2003, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -15,10 +13,6 @@
 #ifndef _FICOLL
 #define _FICOLL
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "tscoll.h"
 
 class CollationFinnishTest: public IntlTestCollator {
@@ -30,6 +24,9 @@ public:
     CollationFinnishTest();
     virtual ~CollationFinnishTest();
     void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par = NULL );
+
+    // main test routine, tests rules specific to the finish locale
+    void doTest( UnicodeString source, UnicodeString target, Collator::EComparisonResult result);
 
     // perform tests with strength PRIMARY
     void TestPrimary(/* char* par */);
@@ -44,7 +41,4 @@ private:
 
     Collator *myCollation;
 };
-
-#endif /* #if !UCONFIG_NO_COLLATION */
-
 #endif

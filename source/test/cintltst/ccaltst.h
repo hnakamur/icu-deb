@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2012, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -16,12 +14,6 @@
 /* C API TEST FOR CALENDAR */
 #ifndef _CCALTST
 #define _CCALTST
-
-#include "unicode/utypes.h"
-#include "unicode/ucal.h"
-#include "unicode/udat.h"
-
-#if !UCONFIG_NO_FORMATTING
 
 #include "cintltst.h"
 
@@ -60,18 +52,6 @@
      * test subroutine used by TestGMTvsLocal()
      */
     static void testZones(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-    /**
-     * Test getKeywordValuesForLocale API
-     */
-    static void TestGetKeywordValuesForLocale(void);
-    /**
-     * Test weekend-related APIs
-     */
-    static void TestWeekend(void);
-    /**
-     * Test ambiguous wall time
-     */
-    static void TestAmbiguousWallTime(void);
 
 /*Internal functions used*/
     /**
@@ -91,6 +71,7 @@
     static void verify2(const char* msg, UCalendar* c, UDateFormat* dat, int32_t year, int32_t month, int32_t day,
                                                                 int32_t hour, int32_t min, int32_t sec, int32_t am_pm);
 
-#endif /* #if !UCONFIG_NO_FORMATTING */
+
+
 
 #endif

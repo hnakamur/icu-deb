@@ -1,18 +1,13 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2015, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #ifndef _NUMBERFORMATROUNDTRIPTEST_
 #define _NUMBERFORMATROUNDTRIPTEST_
  
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
+#include <stdlib.h>
 #include "unicode/numfmt.h"
 #include "unicode/fmtable.h"
 #include "intltest.h"
@@ -29,7 +24,7 @@ public:
     static UBool verbose;
     static UBool STRING_COMPARE;
     static UBool EXACT_NUMERIC_COMPARE;
-    static UBool DEBUG_VAR;
+    static UBool DEBUG;
     static double MAX_ERROR;
     static double max_numeric_error;
     static double min_numeric_error;
@@ -58,7 +53,19 @@ public:
     /*
      * Return a random uint32_t
      **/
-    static uint32_t randLong();
+    static uint32_t randLong()
+    {
+        // Assume 8-bit (or larger) rand values.  Also assume
+        // that the system rand() function is very poor, which it always is.
+        uint32_t d;
+        uint32_t i;
+        char* poke = (char*)&d;
+        for (i=0; i < sizeof(uint32_t); ++i)
+        {
+            poke[i] = (char)(rand() & 0xFF);
+        }
+        return d;
+    }
 
     /**
      * Return a random double 0 <= x < 1.0
@@ -69,11 +76,9 @@ public:
     }
 
 protected:
-    UBool failure(UErrorCode status, const char* msg, UBool possibleDataError=FALSE);
+    UBool failure(UErrorCode status, const char* msg);
 
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
  
 #endif // _NUMBERFORMATROUNDTRIPTEST_
 //eof

@@ -1,30 +1,28 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "unicode/coll.h"
 #include "unicode/tblcoll.h"
 #include "unicode/unistr.h"
 #include "unicode/sortkey.h"
 #include "allcoll.h"
-#include "cmemory.h"
 #include "sfwdchit.h"
-#include "../cintltst/calldata.h"
 
+/*
+ * Include callcoll.c to get the test data.
+ * This helps maintain a single copy of the data.
+ */
+#define INCLUDE_CALLCOLL_C
+#include "../cintltst/callcoll.c"
 
 CollationDummyTest::CollationDummyTest()
 : myCollation(0)
 {
     /*UErrorCode status = U_ZERO_ERROR;
-    UnicodeString rules(TRUE, DEFAULTRULEARRAY, UPRV_LENGTHOF(DEFAULTRULEARRAY));
+    UnicodeString rules(TRUE, DEFAULTRULEARRAY, sizeof(DEFAULTRULEARRAY)/sizeof(DEFAULTRULEARRAY[0]));
     UnicodeString newRules("& C < ch, cH, Ch, CH & Five, 5 & Four, 4 & one, 1 & Ampersand; '&' & Two, 2 ");
     rules += newRules;
     myCollation = new RuleBasedCollator(rules, status);
@@ -38,9 +36,7 @@ CollationDummyTest::CollationDummyTest()
     }
     myCollation = new RuleBasedCollator(ruleset, status);
     if(U_FAILURE(status)){
-        errcheckln(status, "ERROR: in creation of rule based collator from ruleset - %s", u_errorName(status));
-        delete myCollation;
-        myCollation = 0;
+        errln("ERROR: in creation of rule based collator from ruleset");
     }
 }
 
@@ -91,6 +87,58 @@ const Collator::EComparisonResult CollationDummyTest::results[] = {
     Collator::LESS 
 };
 
+void 
+CollationDummyTest::doTestVariant(const UnicodeString source, const UnicodeString target, Collator::EComparisonResult result)
+{   
+  UErrorCode status = U_ZERO_ERROR;
+
+  Collator::EComparisonResult compareResult = myCollation->compare(source, target);
+
+  CollationKey srckey, tgtkey;
+  myCollation->getCollationKey(source, srckey, status);
+  myCollation->getCollationKey(target, tgtkey, status);
+  if (U_FAILURE(status)){
+    errln("Creation of collation keys failed\n");
+  }
+  Collator::EComparisonResult keyResult = srckey.compareTo(tgtkey);
+
+  if (compareResult != result) {
+    errln("String comparison failed in variant test\n");
+  }
+  if (keyResult != result) {
+    errln("Collation key comparison failed in variant test\n");
+  }
+}
+
+void CollationDummyTest::doTest( UnicodeString source, UnicodeString target, Collator::EComparisonResult result)
+{
+    /*
+    Collator::EComparisonResult compareResult = myCollation->compare(source, target);
+    SimpleFwdCharIterator src(source);
+    SimpleFwdCharIterator trg(target);
+    Collator::EComparisonResult incResult = myCollation->compare(src, trg);
+    CollationKey sortKey1, sortKey2;
+    UErrorCode key1status = U_ZERO_ERROR, key2status = U_ZERO_ERROR; //nos
+    myCollation->getCollationKey(source, sortKey1, key1status );
+    myCollation->getCollationKey(target, sortKey2, key2status );
+    if (U_FAILURE(key1status) || U_FAILURE(key2status))
+    {
+        errln("SortKey generation Failed.\n");
+        return;
+    }
+
+    Collator::EComparisonResult keyResult = sortKey1.compareTo(sortKey2);
+    reportCResult( source, target, sortKey1, sortKey2, compareResult, keyResult, incResult, result );
+    */
+  doTestVariant(source, target, result);
+  if(result == Collator::LESS) {
+    doTestVariant(target, source, Collator::GREATER);
+  } else if (result == Collator::GREATER) {
+    doTestVariant(target, source, Collator::LESS);
+  } else {
+    doTestVariant(target, source, Collator::EQUAL);
+  }
+}
 
 void CollationDummyTest::TestTertiary(/* char* par */)
 {
@@ -98,7 +146,7 @@ void CollationDummyTest::TestTertiary(/* char* par */)
     myCollation->setStrength(Collator::TERTIARY);
     for (i = 0; i < 17 ; i++)
     {
-        doTest(myCollation, testSourceCases[i], testTargetCases[i], results[i]);
+        doTest(testSourceCases[i], testTargetCases[i], results[i]);
     }
 }
 void CollationDummyTest::TestPrimary(/* char* par */)
@@ -116,7 +164,7 @@ void CollationDummyTest::TestPrimary(/* char* par */)
     
     for (int i = 17; i < 26 ; i++)
     {
-        doTest(myCollation, testSourceCases[i], testTargetCases[i], results[i]);
+        doTest(testSourceCases[i], testTargetCases[i], results[i]);
     }
 }
 
@@ -126,7 +174,7 @@ void CollationDummyTest::TestSecondary(/* char* par */)
     myCollation->setStrength(Collator::SECONDARY);
     for (i = 26; i < 34; i++)
     {
-        doTest(myCollation, testSourceCases[i], testTargetCases[i], results[i]);
+        doTest(testSourceCases[i], testTargetCases[i], results[i]);
     }
 }
 
@@ -138,7 +186,7 @@ void CollationDummyTest::TestExtra(/* char* par */)
     {
         for (j = i + 1; j < COUNT_TEST_CASES; j += 1)
         {
-            doTest(myCollation, testCases[i], testCases[j], Collator::LESS);
+            doTest(testCases[i], testCases[j], Collator::LESS);
         }
     }
 }
@@ -149,7 +197,7 @@ void CollationDummyTest::TestIdentical()
     myCollation->setStrength(Collator::IDENTICAL);
     for (i= 34; i<37; i++)
     {
-        doTest(myCollation, testSourceCases[i], testTargetCases[i], results[i]);
+        doTest(testSourceCases[i], testTargetCases[i], results[i]);
     }
 }
 
@@ -196,20 +244,14 @@ void CollationDummyTest::TestJB581(void)
 void CollationDummyTest::runIndexedTest( int32_t index, UBool exec, const char* &name, char* /*par*/ )
 {
     if (exec) logln("TestSuite CollationDummyTest: ");
-    if(myCollation) {
-      switch (index) {
-          case 0: name = "TestPrimary";   if (exec)   TestPrimary(/* par */); break;
-          case 1: name = "TestSecondary"; if (exec)   TestSecondary(/* par */); break;
-          case 2: name = "TestTertiary";  if (exec)   TestTertiary(/* par */); break;
-          case 3: name = "TestExtra";     if (exec)   TestExtra(/* par */); break;
-          case 4: name = "TestIdentical"; if (exec)   TestIdentical(/* par */); break;
-          case 5: name = "TestJB581";     if (exec)   TestJB581(/* par */); break;
-          default: name = ""; break;
-      }
-    } else {
-      dataerrln("Collator couldn't be instantiated!");
-      name = "";
+    switch (index) {
+        case 0: name = "TestPrimary";   if (exec)   TestPrimary(/* par */); break;
+        case 1: name = "TestSecondary"; if (exec)   TestSecondary(/* par */); break;
+        case 2: name = "TestTertiary";  if (exec)   TestTertiary(/* par */); break;
+        case 3: name = "TestExtra";     if (exec)   TestExtra(/* par */); break;
+        case 4: name = "TestIdentical"; if (exec)   TestIdentical(/* par */); break;
+        case 5: name = "TestJB581";     if (exec)   TestJB581(/* par */); break;
+        default: name = ""; break;
     }
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */

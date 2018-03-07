@@ -1,7 +1,3 @@
-Copyright (C) 2016 and later: Unicode, Inc. and others.
-License & terms of use: http://www.unicode.org/copyright.html#License
-
-Copyright (c) 2002-2005, International Business Machines Corporation and others. All Rights Reserved.
 ufortune: a sample program demonstrating the use of ICU resource files by an application.
 
 This sample demonstrates
@@ -12,8 +8,8 @@ This sample demonstrates
          
 Files:
     ./ufortune.c                 source code for the sample
-    ./ufortune.sln               Windows MSVC workspace.  Double-click this to get started.
-    ./ufortune.vcproj            Windows MSVC project file.
+    ./ufortune.dsw               Windows MSVC workspace.  Double-click this to get started.
+    ./ufortune.dsp               Windows MSVC project file.
     ./Makefile                   Makefile for Unixes.  Needs gmake.
     resources/root.txt           Default resources  (text for messages in English)
     resources/es.txt             Spanish language resources source file..
@@ -23,7 +19,7 @@ Files:
 
 To Build ufortune on Windows
     1.  Install and build ICU
-    2.  In MSVC, open the workspace file icu\samples\ufortune\ufortune.sln
+    2.  In MSVC, open the workspace file icu\samples\ufortune\ufortune.dsw
     3.  Choose a Debug or Release build.
     4.  Build.
 	

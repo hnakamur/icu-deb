@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2003, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -14,7 +12,7 @@
 
 class SimpleFwdCharIterator : public ForwardCharacterIterator {
 public:
-    // not used -- SimpleFwdCharIterator(const UnicodeString& s);
+    SimpleFwdCharIterator(const UnicodeString& s);
     SimpleFwdCharIterator(UChar *s, int32_t len, UBool adopt = FALSE);
 
     virtual ~SimpleFwdCharIterator();
@@ -22,11 +20,13 @@ public:
   /**
    * Returns true when both iterators refer to the same
    * character in the same character-storage object.  
+   * @stable
    */
-  // not used -- virtual UBool operator==(const ForwardCharacterIterator& that) const;
+  virtual UBool operator==(const ForwardCharacterIterator& that) const;
         
   /**
    * Generates a hash code for this iterator.  
+   * @stable
    */
   virtual int32_t hashCode(void) const;
         
@@ -34,6 +34,7 @@ public:
    * Returns a UClassID for this ForwardCharacterIterator ("poor man's
    * RTTI").<P> Despite the fact that this function is public,
    * DO NOT CONSIDER IT PART OF CHARACTERITERATOR'S API!  
+   * @stable
    */
   virtual UClassID getDynamicClassID(void) const;
 
@@ -42,6 +43,7 @@ public:
    * in the iteration range
    * (toward endIndex()).  If there are
    * no more code units to return, returns DONE.
+   * @draft
    */
   virtual UChar         nextPostInc(void);
         
@@ -50,6 +52,7 @@ public:
    * in the iteration range
    * (toward endIndex()).  If there are
    * no more code points to return, returns DONE.
+   * @draft
    */
   virtual UChar32       next32PostInc(void);
         

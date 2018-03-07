@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-*   Copyright (C) 2000-2009, International Business Machines
+*   Copyright (C) 2000, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
 *   Date        Name        Description
@@ -23,7 +21,6 @@
 
 static void TestBasic(void);
 static void TestOtherAPI(void);
-static void hashIChars(void);
 
 static int32_t U_EXPORT2 U_CALLCONV hashChars(const UHashTok key);
 
@@ -49,26 +46,26 @@ void addHashtableTest(TestNode** root);
  *********************************************************************/
 
 static UBool
-_compareChars(const void* a, const void* b) {
+_compareChars(void* a, void* b) {
     UHashTok s, t;
-    s.pointer = (void *)a;
-    t.pointer = (void *)b;
+    s.pointer = a;
+    t.pointer = b;
     return uhash_compareChars(s, t);
 }
 
 static UBool
-_compareIChars(const void* a, const void* b) {
+_compareIChars(void* a, void* b) {
     UHashTok s, t;
-    s.pointer = (void *)a;
-    t.pointer = (void *)b;
+    s.pointer = a;
+    t.pointer = b;
     return uhash_compareIChars(s, t);
 }
 
 static UBool
-_compareUChars(const void* a, const void* b) {
+_compareUChars(void* a, void* b) {
     UHashTok s, t;
-    s.pointer = (void *)a;
-    t.pointer = (void *)b;
+    s.pointer = a;
+    t.pointer = b;
     return uhash_compareUChars(s, t);
 }
 
@@ -88,7 +85,6 @@ void addHashtableTest(TestNode** root) {
    
     addTest(root, &TestBasic,   "tsutil/chashtst/TestBasic");
     addTest(root, &TestOtherAPI, "tsutil/chashtst/TestOtherAPI");
-    addTest(root, &hashIChars, "tsutil/chashtst/hashIChars");
     
 }
 
@@ -97,15 +93,15 @@ void addHashtableTest(TestNode** root) {
  *********************************************************************/
 
 static void TestBasic(void) {
-    static const char one[4] =   {0x6F, 0x6E, 0x65, 0}; /* "one" */
-    static const char one2[4] =  {0x6F, 0x6E, 0x65, 0}; /* Get around compiler optimizations */
-    static const char two[4] =   {0x74, 0x77, 0x6F, 0}; /* "two" */
-    static const char three[6] = {0x74, 0x68, 0x72, 0x65, 0x65, 0}; /* "three" */
-    static const char omega[6] = {0x6F, 0x6D, 0x65, 0x67, 0x61, 0}; /* "omega" */
+    const char one[4] =   {0x6F, 0x6E, 0x65, 0}; /* "one" */
+    const char one2[4] =  {0x6F, 0x6E, 0x65, 0}; /* Get around compiler optimizations */
+    const char two[4] =   {0x74, 0x77, 0x6F, 0}; /* "two" */
+    const char three[6] = {0x74, 0x68, 0x72, 0x65, 0x65, 0}; /* "three" */
+    const char omega[6] = {0x6F, 0x6D, 0x65, 0x67, 0x61, 0}; /* "omega" */
     UErrorCode status = U_ZERO_ERROR;
     UHashtable *hash;
 
-    hash = uhash_open(hashChars, isEqualChars, NULL,  &status);
+    hash = uhash_open(hashChars, isEqualChars,  &status);
     if (U_FAILURE(status)) {
         log_err("FAIL: uhash_open failed with %s and returned 0x%08x\n",
                 u_errorName(status), hash);
@@ -156,16 +152,16 @@ static void TestOtherAPI(void){
     UHashtable *hash;
 
     /* Use the correct type when cast to void * */
-    static const UChar one[4]   = {0x006F, 0x006E, 0x0065, 0}; /* L"one" */
-    static const UChar one2[4]  = {0x006F, 0x006E, 0x0065, 0}; /* Get around compiler optimizations */
-    static const UChar two[4]   = {0x0074, 0x0077, 0x006F, 0}; /* L"two" */
-    static const UChar two2[4]  = {0x0074, 0x0077, 0x006F, 0}; /* L"two" */
-    static const UChar three[6] = {0x0074, 0x0068, 0x0072, 0x0065, 0x0065, 0}; /* L"three" */
-    static const UChar four[6]  = {0x0066, 0x006F, 0x0075, 0x0072, 0}; /* L"four" */
-    static const UChar five[6]  = {0x0066, 0x0069, 0x0076, 0x0065, 0}; /* L"five" */
-    static const UChar five2[6] = {0x0066, 0x0069, 0x0076, 0x0065, 0}; /* L"five" */
+    const UChar one[4]   = {0x006F, 0x006E, 0x0065, 0}; /* L"one" */
+    const UChar one2[4]  = {0x006F, 0x006E, 0x0065, 0}; /* Get around compiler optimizations */
+    const UChar two[4]   = {0x0074, 0x0077, 0x006F, 0}; /* L"two" */
+    const UChar two2[4]  = {0x0074, 0x0077, 0x006F, 0}; /* L"two" */
+    const UChar three[6] = {0x0074, 0x0068, 0x0072, 0x0065, 0x0065, 0}; /* L"three" */
+    const UChar four[6]  = {0x0066, 0x006F, 0x0075, 0x0072, 0}; /* L"four" */
+    const UChar five[6]  = {0x0066, 0x0069, 0x0076, 0x0065, 0}; /* L"five" */
+    const UChar five2[6] = {0x0066, 0x0069, 0x0076, 0x0065, 0}; /* L"five" */
 
-    hash = uhash_open(uhash_hashUChars, uhash_compareUChars, NULL,  &status);
+    hash = uhash_open(uhash_hashUChars, uhash_compareUChars,  &status);
     if (U_FAILURE(status)) {
         log_err("FAIL: uhash_open failed with %s and returned 0x%08x\n",
                 u_errorName(status), hash);
@@ -177,31 +173,24 @@ static void TestOtherAPI(void){
     }
     log_verbose("Ok: uhash_open returned 0x%08X\n", hash);
 
-    uhash_puti(hash, (void*)one, 1, &status);
+    uhash_put(hash, (void*)one, (void*)1, &status);
     if(uhash_count(hash) != 1){
          log_err("FAIL: uhas_count() failed. Expected: 1, Got: %d\n", uhash_count(hash));
-    }
-    if(uhash_find(hash, (void*)two) != NULL){
-        log_err("FAIL: uhash_find failed\n");
-    }
-    uhash_puti(hash, (void*)two, 2, &status);
-    uhash_puti(hash, (void*)three, 3, &status);
-    uhash_puti(hash, (void*)four, 4, &status);
-    uhash_puti(hash, (void*)five, 5, &status);
+     }
+    uhash_put(hash, (void*)two, (void*)2, &status);
+    uhash_put(hash, (void*)three, (void*)3, &status);
+    uhash_put(hash, (void*)four, (void*)4, &status);
+    uhash_put(hash, (void*)five, (void*)5, &status);
     
     if(uhash_count(hash) != 5){
         log_err("FAIL: uhas_count() failed. Expected: 5, Got: %d\n", uhash_count(hash));
     }
     
-    if(uhash_geti(hash, (void*)two2) != 2){
-        log_err("FAIL: uhash_geti failed\n");
+    if((int32_t)uhash_get(hash, (void*)two2) != 2){
+        log_err("FAIL: uhash_get failed\n");
     }
     
-    if(uhash_find(hash, (void*)two2) == NULL){
-        log_err("FAIL: uhash_find of \"two\" failed\n");
-    }
-    
-    if(uhash_removei(hash, (void*)five2) != 5){
+    if((int32_t)uhash_remove(hash, (void*)five2) != 5){
         log_err("FAIL: uhash_remove() failed\n");
     }
     if(uhash_count(hash) != 4){
@@ -213,13 +202,13 @@ static void TestOtherAPI(void){
         log_err("FAIL: uhash_put() with value=NULL didn't remove the key value pair\n");
     }
     status=U_ILLEGAL_ARGUMENT_ERROR;
-    uhash_puti(hash, (void*)one, 1, &status);
+    uhash_put(hash, (void*)one, (void*)1, &status);
     if(uhash_count(hash) != 3){
         log_err("FAIL: uhash_put() with value!=NULL should fail when status != U_ZERO_ERROR \n");
     }
     
     status=U_ZERO_ERROR;
-    uhash_puti(hash, (void*)one, 1, &status);
+    uhash_put(hash, (void*)one, (void*)1, &status);
     if(uhash_count(hash) != 4){
         log_err("FAIL: uhash_put() with value!=NULL didn't replace the key value pair\n");
     }
@@ -238,9 +227,9 @@ static void TestOtherAPI(void){
 
     uhash_setKeyComparator(hash, uhash_compareLong);
     uhash_setKeyHasher(hash, uhash_hashLong);
-    uhash_iputi(hash, 1001, 1, &status);
-    uhash_iputi(hash, 1002, 2, &status);
-    uhash_iputi(hash, 1003, 3, &status);
+    uhash_iput(hash, 1001, (void*)1, &status);
+    uhash_iput(hash, 1002, (void*)2, &status);
+    uhash_iput(hash, 1003, (void*)3, &status);
     if(_compareLong(1001, 1002) == TRUE ||
         _compareLong(1001, 1001) != TRUE ||
         _compareLong(1001, 0) == TRUE  )  {
@@ -249,70 +238,21 @@ static void TestOtherAPI(void){
     /*set the resize policy to just GROW and SHRINK*/
          /*how to test this??*/
     uhash_setResizePolicy(hash, U_GROW_AND_SHRINK);
-    uhash_iputi(hash, 1004, 4, &status);
-    uhash_iputi(hash, 1005, 5, &status);
-    uhash_iputi(hash, 1006, 6, &status);
+    uhash_iput(hash, 1004, (void*)4, &status);
+    uhash_iput(hash, 1005, (void*)5, &status);
+    uhash_iput(hash, 1006, (void*)6, &status);
     if(uhash_count(hash) != 6){
         log_err("FAIL: uhash_count() failed. Expected: 6, Got: %d\n", uhash_count(hash));
     }
-    if(uhash_iremovei(hash, 1004) != 4){
+    if((int32_t)uhash_iremove(hash, 1004) != 4){
         log_err("FAIL: uhash_remove failed\n");
     }
-    if(uhash_iremovei(hash, 1004) != 0){
+    if((int32_t)uhash_iremove(hash, 1004) != 0){
         log_err("FAIL: uhash_remove failed\n");
     }
-
-    uhash_removeAll(hash);
-    uhash_iput(hash, 2004, (void*)one, &status);
-    uhash_iput(hash, 2005, (void*)two, &status);
-    if(uhash_count(hash) != 2){
-        log_err("FAIL: uhash_count() failed. Expected: 2, Got: %d\n", uhash_count(hash));
-    }
-    if(uhash_iremove(hash, 2004) != (void*)one){
-        log_err("FAIL: uhash_remove failed\n");
-    }
-    if(uhash_iremove(hash, 2004) != NULL){
-        log_err("FAIL: uhash_remove failed\n");
-    }
-    if(uhash_count(hash) != 1){
-        log_err("FAIL: uhash_count() failed. Expected: 1, Got: %d\n", uhash_count(hash));
-    }
-
     uhash_close(hash);
 
 }
-
-static void hashIChars(void) {
-    static const char which[] = "which";
-    static const char WHICH2[] = "WHICH";
-    static const char where[] = "where";
-    UErrorCode status = U_ZERO_ERROR;
-    UHashtable *hash;
-
-    hash = uhash_open(uhash_hashIChars, uhash_compareIChars, NULL, &status);
-    if (U_FAILURE(status)) {
-        log_err("FAIL: uhash_open failed with %s and returned 0x%08x\n",
-                u_errorName(status), hash);
-        return;
-    }
-    if (hash == NULL) {
-        log_err("FAIL: uhash_open returned NULL\n");
-        return;
-    }
-    log_verbose("Ok: uhash_open returned 0x%08X\n", hash);
-
-    _put(hash, which, 1, 0);
-    _put(hash, WHICH2, 2, 1);
-    _put(hash, where, 3, 0);
-    if(uhash_count(hash) != 2){
-         log_err("FAIL: uhas_count() failed. Expected: 1, Got: %d\n", uhash_count(hash));
-    }
-    _remove(hash, which, 2);
-
-    uhash_close(hash);
-}
-
-
 /**********************************************************************
  * uhash Callbacks
  *********************************************************************/
@@ -340,8 +280,8 @@ static void _put(UHashtable* hash,
           int32_t value,
           int32_t expectedOldValue) {
     UErrorCode status = U_ZERO_ERROR;
-    int32_t oldValue =
-        uhash_puti(hash, (void*) key, value, &status);
+    int32_t oldValue = (int32_t)
+        uhash_put(hash, (void*) key, (void*) value, &status);
     if (U_FAILURE(status)) {
         log_err("FAIL: uhash_put(%s) failed with %s and returned %ld\n",
                 key, u_errorName(status), oldValue);
@@ -358,7 +298,7 @@ static void _get(UHashtable* hash,
           const char* key,
           int32_t expectedValue) {
     UErrorCode status = U_ZERO_ERROR;
-    int32_t value = uhash_geti(hash, key);
+    int32_t value = (int32_t) uhash_get(hash, key);
     if (U_FAILURE(status)) {
         log_err("FAIL: uhash_get(%s) failed with %s and returned %ld\n",
                 key, u_errorName(status), value);
@@ -374,7 +314,7 @@ static void _get(UHashtable* hash,
 static void _remove(UHashtable* hash,
              const char* key,
              int32_t expectedValue) {
-    int32_t value = uhash_removei(hash, key);
+    int32_t value = (int32_t) uhash_remove(hash, key);
     if (value != expectedValue) {
         log_err("FAIL: uhash_remove(%s) returned %ld; expected %ld\n",
                 key, value, expectedValue);
@@ -383,4 +323,3 @@ static void _remove(UHashtable* hash,
                     key, value);
     }
 }
-

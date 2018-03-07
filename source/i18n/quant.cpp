@@ -1,26 +1,16 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
-**********************************************************************
-*   Copyright (C) 2001-2012, International Business Machines
-*   Corporation and others.  All Rights Reserved.
+* Copyright (C) 2001, International Business Machines Corporation and others. All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
 *   07/26/01    aliu        Creation.
 **********************************************************************
 */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "quant.h"
 #include "unicode/unistr.h"
 #include "util.h"
 
 U_NAMESPACE_BEGIN
-
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(Quantifier)
 
 Quantifier::Quantifier(UnicodeFunctor *adoptedMatcher,
                        uint32_t _minCount, uint32_t _maxCount) {
@@ -33,7 +23,6 @@ Quantifier::Quantifier(UnicodeFunctor *adoptedMatcher,
 
 Quantifier::Quantifier(const Quantifier& o) :
     UnicodeFunctor(o),
-    UnicodeMatcher(o),
     matcher(o.matcher->clone()),
     minCount(o.minCount),
     maxCount(o.maxCount)
@@ -56,10 +45,7 @@ UnicodeFunctor* Quantifier::clone() const {
  * and return the pointer.
  */
 UnicodeMatcher* Quantifier::toMatcher() const {
-  Quantifier  *nonconst_this = const_cast<Quantifier *>(this);
-  UnicodeMatcher *nonconst_base = static_cast<UnicodeMatcher *>(nonconst_this);
-  
-  return nonconst_base;
+    return (UnicodeMatcher*) this;
 }
 
 UMatchDegree Quantifier::matches(const Replaceable& text,
@@ -99,7 +85,7 @@ UMatchDegree Quantifier::matches(const Replaceable& text,
  */
 UnicodeString& Quantifier::toPattern(UnicodeString& result,
                                      UBool escapeUnprintable) const {
-	result.truncate(0);
+    result.truncate(0);
     matcher->toMatcher()->toPattern(result, escapeUnprintable);
     if (minCount == 0) {
         if (maxCount == 1) {
@@ -129,23 +115,12 @@ UBool Quantifier::matchesIndexValue(uint8_t v) const {
 }
 
 /**
- * Implement UnicodeMatcher
- */
-void Quantifier::addMatchSetTo(UnicodeSet& toUnionTo) const {
-    if (maxCount > 0) {
-        matcher->toMatcher()->addMatchSetTo(toUnionTo);
-    }
-}
-
-/**
  * Implement UnicodeFunctor
  */
 void Quantifier::setData(const TransliterationRuleData* d) {
-		matcher->setData(d);
+    matcher->setData(d);
 }
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 //eof

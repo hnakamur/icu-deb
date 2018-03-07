@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
 *
-*   Copyright (C) 1999-2011, International Business Machines
+*   Copyright (C) 1999-2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************/
@@ -45,35 +43,7 @@ typedef struct  {
     UDataInfo   info;
 } DataHeader;
 
-typedef struct {
-    uint32_t nameOffset;
-    uint32_t dataOffset;
-} UDataOffsetTOCEntry;
 
-typedef struct {
-    uint32_t count;
-    UDataOffsetTOCEntry entry[2];    /* Actual size of array is from count. */
-} UDataOffsetTOC;
-
-/**
- * Get the header size from a const DataHeader *udh.
- * Handles opposite-endian data.
- *
- * @internal
- */
-U_CFUNC uint16_t
-udata_getHeaderSize(const DataHeader *udh);
-
-/**
- * Get the UDataInfo.size from a const UDataInfo *info.
- * Handles opposite-endian data.
- *
- * @internal
- */
-U_CFUNC uint16_t
-udata_getInfoSize(const UDataInfo *info);
-
-U_CDECL_BEGIN
 /*
  *  "Virtual" functions for data lookup.
  *  To call one, given a UDataMemory *p, the code looks like this:
@@ -82,15 +52,12 @@ U_CDECL_BEGIN
  */
 
 typedef const DataHeader *
-(U_CALLCONV * LookupFn)(const UDataMemory *pData,
-                        const char *tocEntryName,
-                        int32_t *pLength,
-                        UErrorCode *pErrorCode);
+(* LookupFn)(const UDataMemory *pData,
+             const char *tocEntryName,
+             UErrorCode *pErrorCode);
 
 typedef uint32_t
-(U_CALLCONV * NumEntriesFn)(const UDataMemory *pData);
-
-U_CDECL_END
+(* NumEntriesFn)(const UDataMemory *pData);
 
 typedef struct {
     LookupFn      Lookup;
@@ -108,6 +75,7 @@ typedef struct {
  *     otherwise
  *         set an errorcode.
  */
-U_CFUNC void udata_checkCommonData(UDataMemory *pData, UErrorCode *pErrorCode);
+void   udata_checkCommonData(UDataMemory *pData, UErrorCode *pErrorCode);
+
 
 #endif

@@ -1,28 +1,18 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
-**********************************************************************
-*   Copyright (c) 2001-2012, International Business Machines Corporation
-*   and others.  All Rights Reserved.
+* Copyright (C) 2001, International Business Machines Corporation and others. All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
 *   07/23/01    aliu        Creation.
 **********************************************************************
 */
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "strmatch.h"
 #include "rbt_data.h"
 #include "util.h"
-#include "unicode/uniset.h"
-#include "unicode/utf16.h"
 
 U_NAMESPACE_BEGIN
 
-UOBJECT_DEFINE_RTTI_IMPLEMENTATION(StringMatcher)
+const UChar EMPTY[] = { 0 }; // empty string: ""
 
 StringMatcher::StringMatcher(const UnicodeString& theString,
                              int32_t start,
@@ -38,9 +28,7 @@ StringMatcher::StringMatcher(const UnicodeString& theString,
 }
 
 StringMatcher::StringMatcher(const StringMatcher& o) :
-    UnicodeFunctor(o),
     UnicodeMatcher(o),
-    UnicodeReplacer(o),
     pattern(o.pattern),
     data(o.data),
     segmentNumber(o.segmentNumber),
@@ -67,10 +55,7 @@ UnicodeFunctor* StringMatcher::clone() const {
  * and return the pointer.
  */
 UnicodeMatcher* StringMatcher::toMatcher() const {
-  StringMatcher  *nonconst_this = const_cast<StringMatcher *>(this);
-  UnicodeMatcher *nonconst_base = static_cast<UnicodeMatcher *>(nonconst_this);
-  
-  return nonconst_base;
+    return (UnicodeMatcher*) this;
 }
 
 /**
@@ -78,10 +63,7 @@ UnicodeMatcher* StringMatcher::toMatcher() const {
  * and return the pointer.
  */
 UnicodeReplacer* StringMatcher::toReplacer() const {
-  StringMatcher  *nonconst_this = const_cast<StringMatcher *>(this);
-  UnicodeReplacer *nonconst_base = static_cast<UnicodeReplacer *>(nonconst_this);
-  
-  return nonconst_base;
+    return (UnicodeReplacer*) this;
 }
 
 /**
@@ -199,28 +181,12 @@ UBool StringMatcher::matchesIndexValue(uint8_t v) const {
 }
 
 /**
- * Implement UnicodeMatcher
- */
-void StringMatcher::addMatchSetTo(UnicodeSet& toUnionTo) const {
-    UChar32 ch;
-    for (int32_t i=0; i<pattern.length(); i+=U16_LENGTH(ch)) {
-        ch = pattern.char32At(i);
-        const UnicodeMatcher* matcher = data->lookupMatcher(ch);
-        if (matcher == NULL) {
-            toUnionTo.add(ch);
-        } else {
-            matcher->addMatchSetTo(toUnionTo);
-        }
-    }
-}
-
-/**
  * UnicodeReplacer API
  */
 int32_t StringMatcher::replace(Replaceable& text,
                                int32_t start,
                                int32_t limit,
-                               int32_t& /*cursor*/) {
+                               int32_t& cursor) {
     
     int32_t outLen = 0;
     
@@ -235,7 +201,7 @@ int32_t StringMatcher::replace(Replaceable& text,
         }
     }
     
-    text.handleReplaceBetween(start, limit, UnicodeString()); // delete original text
+    text.handleReplaceBetween(start, limit, EMPTY); // delete original text
     
     return outLen;
 }
@@ -244,7 +210,7 @@ int32_t StringMatcher::replace(Replaceable& text,
  * UnicodeReplacer API
  */
 UnicodeString& StringMatcher::toReplacerPattern(UnicodeString& rule,
-                                                UBool /*escapeUnprintable*/) const {
+                                                UBool escapeUnprintable) const {
     // assert(segmentNumber > 0);
     rule.truncate(0);
     rule.append((UChar)0x0024 /*$*/);
@@ -261,19 +227,6 @@ UnicodeString& StringMatcher::toReplacerPattern(UnicodeString& rule,
 }
 
 /**
- * Union the set of all characters that may output by this object
- * into the given set.
- * @param toUnionTo the set into which to union the output characters
- */
-void StringMatcher::addReplacementSetTo(UnicodeSet& /*toUnionTo*/) const {
-    // The output of this replacer varies; it is the source text between
-    // matchStart and matchLimit.  Since this varies depending on the
-    // input text, we can't compute it here.  We can either do nothing
-    // or we can add ALL characters to the set.  It's probably more useful
-    // to do nothing.
-}
-
-/**
  * Implement UnicodeFunctor
  */
 void StringMatcher::setData(const TransliterationRuleData* d) {
@@ -285,12 +238,10 @@ void StringMatcher::setData(const TransliterationRuleData* d) {
         if (f != NULL) {
             f->setData(data);
         }
-        i += U16_LENGTH(c);
-    }
+        i += UTF_CHAR_LENGTH(c);
+    }    
 }
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 //eof

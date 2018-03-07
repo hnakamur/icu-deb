@@ -1,18 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2009, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #ifndef _PARSEPOSITIONIONTEST_
 #define _PARSEPOSITIONIONTEST_
  
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "intltest.h"
 
 
@@ -30,10 +24,8 @@ public:
     void Test4109023(void);
 
 protected:
-    UBool failure(UErrorCode status, const char* msg, UBool possibleDataError=FALSE);
+    UBool failure(UErrorCode status, const char* msg);
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
  
 #endif // _PARSEPOSITIONIONTEST_
 //eof

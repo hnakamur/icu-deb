@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (c) 2001-2007, International Business Machines
+*   Copyright (c) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -12,10 +10,6 @@
 #ifndef REMTRANS_H
 #define REMTRANS_H
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "unicode/translit.h"
 
 U_NAMESPACE_BEGIN
@@ -24,7 +18,7 @@ U_NAMESPACE_BEGIN
  * A transliterator that removes text.
  * @author Alan Liu
  */
-class RemoveTransliterator : public Transliterator {
+class U_I18N_API RemoveTransliterator : public Transliterator {
 
 public:
 
@@ -45,36 +39,23 @@ public:
 
     /**
      * Transliterator API.
-     * @return A copy of the object.
      */
-    virtual Transliterator* clone(void) const;
+    Transliterator* clone(void) const;
 
     /**
      * Implements {@link Transliterator#handleTransliterate}.
-     * @param text          the buffer holding transliterated and
-     *                      untransliterated text
-     * @param offset        the start and limit of the text, the position
-     *                      of the cursor, and the start and limit of transliteration.
-     * @param incremental   if true, assume more text may be coming after
-     *                      pos.contextLimit. Otherwise, assume the text is complete.
      */
     virtual void handleTransliterate(Replaceable& text, UTransPosition& offset,
                                      UBool isIncremental) const;
 
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     */
-    virtual UClassID getDynamicClassID() const;
+ private:
 
     /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
+     * Factory method
      */
-    U_I18N_API static UClassID U_EXPORT2 getStaticClassID();
-
+    static Transliterator* _create(const UnicodeString& ID, Token context);
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif

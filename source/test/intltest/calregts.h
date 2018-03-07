@@ -1,27 +1,21 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * COPYRIGHT:
- * Copyright (c) 1997-2012, International Business Machines Corporation and
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #ifndef _CALENDARREGRESSIONTEST_
 #define _CALENDARREGRESSIONTEST_
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
+ 
 #include "unicode/calendar.h"
 #include "unicode/gregocal.h"
 #include "intltest.h"
 
-/**
+/** 
  * Performs regression test for Calendar
  **/
-class CalendarRegressionTest: public IntlTest {
-
+class CalendarRegressionTest: public IntlTest {    
+    
     // IntlTest override
     void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par );
 public:
@@ -66,19 +60,7 @@ public:
     void Test4197699(void);
     void TestJ81(void);
     void TestJ438(void);
-    void TestT5555(void);
-    void TestT6745(void);
-	void TestT8057(void);
     void TestLeapFieldDifference(void);
-    void TestMalaysianInstance(void);
-    void TestWeekShift(void);
-    void TestTimeZoneTransitionAdd(void);
-    void TestDeprecates(void);
-    void TestT8596(void);
-    void Test9019(void);
-    void TestT9452(void);
-    void TestT11632(void);
-    void TestPersianCalOverflow(void);
 
     void printdate(GregorianCalendar *cal, const char *string);
     void dowTest(UBool lenient) ;
@@ -95,7 +77,6 @@ protected:
     UBool failure(UErrorCode status, const char* msg);
 };
 
-#endif /* #if !UCONFIG_NO_FORMATTING */
-
+ 
 #endif // _CALENDARREGRESSIONTEST_
 //eof

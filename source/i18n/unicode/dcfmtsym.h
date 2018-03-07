@@ -1,21 +1,19 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ********************************************************************************
-*   Copyright (C) 1997-2016, International Business Machines
+*   Copyright (C) 1997-1999, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 ********************************************************************************
 *
 * File DCFMTSYM.H
 *
 * Modification History:
-*
+* 
 *   Date        Name        Description
 *   02/19/97    aliu        Converted from java.
 *   03/18/97    clhuang     Updated per C++ implementation.
 *   03/27/97    helena      Updated to pass the simple test after code review.
 *   08/26/97    aliu        Added currency/intl currency symbol support.
-*   07/22/98    stephen     Changed to match C++ style
+*   07/22/98    stephen     Changed to match C++ style 
 *                            currencySymbol -> fCurrencySymbol
 *                            Constants changed from CAPS to kCaps
 *   06/24/99    helena      Integrated Alan's NF enhancements and Java2 bug fixes
@@ -23,26 +21,12 @@
 *                            functions.
 ********************************************************************************
 */
-
+ 
 #ifndef DCFMTSYM_H
 #define DCFMTSYM_H
-
+ 
 #include "unicode/utypes.h"
-#include "unicode/uchar.h"
-
-#if !UCONFIG_NO_FORMATTING
-
-#include "unicode/uobject.h"
 #include "unicode/locid.h"
-#include "unicode/numsys.h"
-#include "unicode/unum.h"
-#include "unicode/unistr.h"
-
-/**
- * \file
- * \brief C++ API: Symbols for formatting numbers.
- */
-
 
 U_NAMESPACE_BEGIN
 
@@ -85,11 +69,11 @@ U_NAMESPACE_BEGIN
  * contiguous in Unicode, from 0 to 9. Other digits sets (such as
  * superscripts) would need a different subclass.
  */
-class U_I18N_API DecimalFormatSymbols : public UObject {
+class U_I18N_API DecimalFormatSymbols {
 public:
     /**
      * Constants for specifying a number format symbol.
-     * @stable ICU 2.0
+     * @stable
      */
     enum ENumberFormatSymbol {
         /** The decimal separator */
@@ -124,55 +108,8 @@ public:
         kInfinitySymbol,
         /** Nan symbol */
         kNaNSymbol,
-        /** Significant digit symbol
-         * @stable ICU 3.0 */
-        kSignificantDigitSymbol,
-        /** The monetary grouping separator
-         * @stable ICU 3.6
-         */
-        kMonetaryGroupingSeparatorSymbol,
-        /** One
-         * @stable ICU 4.6
-         */
-        kOneDigitSymbol,
-        /** Two
-         * @stable ICU 4.6
-         */
-        kTwoDigitSymbol,
-        /** Three
-         * @stable ICU 4.6
-         */
-        kThreeDigitSymbol,
-        /** Four
-         * @stable ICU 4.6
-         */
-        kFourDigitSymbol,
-        /** Five
-         * @stable ICU 4.6
-         */
-        kFiveDigitSymbol,
-        /** Six
-         * @stable ICU 4.6
-         */
-        kSixDigitSymbol,
-        /** Seven
-         * @stable ICU 4.6
-         */
-        kSevenDigitSymbol,
-        /** Eight
-         * @stable ICU 4.6
-         */
-        kEightDigitSymbol,
-        /** Nine
-         * @stable ICU 4.6
-         */
-        kNineDigitSymbol,
-        /** Multiplication sign.
-         * @stable ICU 54
-         */
-        kExponentMultiplicationSymbol,
         /** count symbol constants */
-        kFormatSymbolCount = kNineDigitSymbol + 2
+        kFormatSymbolCount
     };
 
     /**
@@ -181,29 +118,9 @@ public:
      * @param locale    The locale to get symbols for.
      * @param status    Input/output parameter, set to success or
      *                  failure code upon return.
-     * @stable ICU 2.0
+     * @stable
      */
     DecimalFormatSymbols(const Locale& locale, UErrorCode& status);
-
-#ifndef U_HIDE_DRAFT_API
-    /**
-     * Creates a DecimalFormatSymbols instance for the given locale with digits and symbols
-     * corresponding to the given NumberingSystem.
-     *
-     * This constructor behaves equivalently to the normal constructor called with a locale having a
-     * "numbers=xxxx" keyword specifying the numbering system by name.
-     *
-     * In this constructor, the NumberingSystem argument will be used even if the locale has its own
-     * "numbers=xxxx" keyword.
-     *
-     * @param locale    The locale to get symbols for.
-     * @param ns        The numbering system.
-     * @param status    Input/output parameter, set to success or
-     *                  failure code upon return.
-     * @draft ICU 60
-     */
-    DecimalFormatSymbols(const Locale& locale, const NumberingSystem& ns, UErrorCode& status);
-#endif  /* U_HIDE_DRAFT_API */
 
     /**
      * Create a DecimalFormatSymbols object for the default locale.
@@ -213,318 +130,697 @@ public:
      *
      * @param status    Input/output parameter, set to success or
      *                  failure code upon return.
-     * @stable ICU 2.0
+     * @stable
      */
-    DecimalFormatSymbols(UErrorCode& status);
-
-    /**
-     * Creates a DecimalFormatSymbols object with last-resort data.
-     * Intended for callers who cache the symbols data and
-     * set all symbols on the resulting object.
-     *
-     * The last-resort symbols are similar to those for the root data,
-     * except that the grouping separators are empty,
-     * the NaN symbol is U+FFFD rather than "NaN",
-     * and the CurrencySpacing patterns are empty.
-     *
-     * @param status    Input/output parameter, set to success or
-     *                  failure code upon return.
-     * @return last-resort symbols
-     * @stable ICU 52
-     */
-    static DecimalFormatSymbols* createWithLastResortData(UErrorCode& status);
+    DecimalFormatSymbols( UErrorCode& status);
 
     /**
      * Copy constructor.
-     * @stable ICU 2.0
+     * @stable
      */
     DecimalFormatSymbols(const DecimalFormatSymbols&);
 
     /**
      * Assignment operator.
-     * @stable ICU 2.0
+     * @stable
      */
     DecimalFormatSymbols& operator=(const DecimalFormatSymbols&);
 
     /**
      * Destructor.
-     * @stable ICU 2.0
+     * @stable
      */
-    virtual ~DecimalFormatSymbols();
+    ~DecimalFormatSymbols();
 
     /**
      * Return true if another object is semantically equal to this one.
-     *
-     * @param other    the object to be compared with.
-     * @return         true if another object is semantically equal to this one.
-     * @stable ICU 2.0
+     * @stable
      */
     UBool operator==(const DecimalFormatSymbols& other) const;
 
     /**
      * Return true if another object is semantically unequal to this one.
-     *
-     * @param other    the object to be compared with.
-     * @return         true if another object is semantically unequal to this one.
-     * @stable ICU 2.0
+     * @stable
      */
     UBool operator!=(const DecimalFormatSymbols& other) const { return !operator==(other); }
 
     /**
      * Get one of the format symbols by its enum constant.
      * Each symbol is stored as a string so that graphemes
-     * (characters with modifier letters) can be used.
-     *
-     * @param symbol    Constant to indicate a number format symbol.
-     * @return    the format symbols by the param 'symbol'
-     * @stable ICU 2.0
+     * (characters with modifyer letters) can be used.
+     * @stable
      */
-    inline UnicodeString getSymbol(ENumberFormatSymbol symbol) const;
+    UnicodeString getSymbol(ENumberFormatSymbol symbol) const;
 
     /**
      * Set one of the format symbols by its enum constant.
      * Each symbol is stored as a string so that graphemes
-     * (characters with modifier letters) can be used.
-     *
-     * @param symbol    Constant to indicate a number format symbol.
-     * @param value     value of the format symbol
-     * @param propogateDigits If false, setting the zero digit will not automatically set 1-9.
-     *     The default behavior is to automatically set 1-9 if zero is being set and the value
-     *     it is being set to corresponds to a known Unicode zero digit.
-     * @stable ICU 2.0
+     * (characters with modifyer letters) can be used.
+     * @stable
      */
-    void setSymbol(ENumberFormatSymbol symbol, const UnicodeString &value, const UBool propogateDigits);
+    void setSymbol(ENumberFormatSymbol symbol, UnicodeString value);
+
+#ifdef ICU_DECIMALFORMATSYMBOLS_USE_DEPRECATES
+    /**
+     * character used for zero. Different for Arabic, etc.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UChar getZeroDigit(void) const;
+    /**
+     * character used for zero. Different for Arabic, etc.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setZeroDigit(UChar zeroDigit);
 
     /**
-     * Returns the locale for which this object was constructed.
-     * @stable ICU 2.6
+     * character used for thousands separator. Different for French, etc.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
      */
-    inline Locale getLocale() const;
+    UChar getGroupingSeparator(void) const;
+    /**
+     * character used for thousands separator. Different for French, etc.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setGroupingSeparator(UChar groupingSeparator);
 
     /**
-     * Returns the locale for this object. Two flavors are available:
-     * valid and actual locale.
-     * @stable ICU 2.8
+     * character used for decimal sign. Different for French, etc.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
      */
-    Locale getLocale(ULocDataLocaleType type, UErrorCode& status) const;
+    UChar getDecimalSeparator(void) const;
+    /**
+     * character used for decimal sign. Different for French, etc.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setDecimalSeparator(UChar decimalSeparator);
 
     /**
-      * Get pattern string for 'CurrencySpacing' that can be applied to
-      * currency format.
-      * This API gets the CurrencySpacing data from ResourceBundle. The pattern can
-      * be empty if there is no data from current locale and its parent locales.
-      *
-      * @param type :  UNUM_CURRENCY_MATCH, UNUM_CURRENCY_SURROUNDING_MATCH or UNUM_CURRENCY_INSERT.
-      * @param beforeCurrency : true if the pattern is for before currency symbol.
-      *                         false if the pattern is for after currency symbol.
-      * @param status: Input/output parameter, set to success or
-      *                  failure code upon return.
-      * @return pattern string for currencyMatch, surroundingMatch or spaceInsert.
-      *     Return empty string if there is no data for this locale and its parent
-      *     locales.
-      * @stable ICU 4.8
-      */
-     const UnicodeString& getPatternForCurrencySpacing(UCurrencySpacing type,
-                                                 UBool beforeCurrency,
-                                                 UErrorCode& status) const;
-     /**
-       * Set pattern string for 'CurrencySpacing' that can be applied to
-       * currency format.
-       *
-       * @param type : UNUM_CURRENCY_MATCH, UNUM_CURRENCY_SURROUNDING_MATCH or UNUM_CURRENCY_INSERT.
-       * @param beforeCurrency : true if the pattern is for before currency symbol.
-       *                         false if the pattern is for after currency symbol.
-       * @param pattern : pattern string to override current setting.
-       * @stable ICU 4.8
-       */
-     void setPatternForCurrencySpacing(UCurrencySpacing type,
-                                       UBool beforeCurrency,
-                                       const UnicodeString& pattern);
+     * character used for per mill sign. Different for Arabic, etc.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UChar getPerMill(void) const;
+    /**
+     * character used for per mill sign. Different for Arabic, etc.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setPerMill(UChar permill);
 
     /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     *
-     * @stable ICU 2.2
+     * character used for percent sign. Different for Arabic, etc.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
      */
-    virtual UClassID getDynamicClassID() const;
+    UChar getPercent(void) const;
+    /**
+     * character used for percent sign. Different for Arabic, etc.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setPercent(UChar percent);
 
     /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     *
-     * @stable ICU 2.2
+     * character used for a digit in a pattern.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
      */
-    static UClassID U_EXPORT2 getStaticClassID();
+    UChar getDigit(void) const;
+    /**
+     * character used for a digit in a pattern.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setDigit(UChar digit);
 
+    /**
+     * character used to separate positive and negative subpatterns
+     * in a pattern.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UChar getPatternSeparator(void) const;
+    /**
+     * character used to separate positive and negative subpatterns
+     * in a pattern.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setPatternSeparator(UChar patternSeparator);
+
+    /**
+     * character used to represent infinity. Almost always left
+     * unchanged.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UnicodeString& getInfinity(UnicodeString& result) const;
+    /**
+     * character used to represent infinity. Almost always left
+     * unchanged.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setInfinity(const UnicodeString& infinity);
+    /**
+     * Checks to see if text at offset represents the inifinity string.
+     * @return the number of characters used to represent infinity when 
+     *      text starts with the inifinity string, otherwise it returns 0.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    int32_t compareInfinity(const UnicodeString& text, int32_t offset) const;
+
+    /**
+     * character used to represent NaN (Not A Number). Almost always left
+     * unchanged.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UnicodeString& getNaN(UnicodeString& result) const;
+    /**
+     * character used to represent NaN. Almost always left
+     * unchanged.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setNaN(const UnicodeString& NaN);
+    /**
+     * Checks to see if text at offset represents the NaN string.
+     * @return the number of characters used to represent NaN when 
+     *      text starts with the NaN string, otherwise it returns 0.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    int32_t compareNaN(const UnicodeString& text, int32_t offset) const;
+
+    /**
+     * character used to represent plus sign
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UChar getPlusSign(void) const;
+    /**
+     * character used to represent plus sign
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setPlusSign(UChar minusSign);
+
+    /**
+     * character used to represent minus sign. If no explicit
+     * negative format is specified, one is formed by prefixing
+     * minusSign to the positive format.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UChar getMinusSign(void) const;
+    /**
+     * character used to represent minus sign. If no explicit
+     * negative format is specified, one is formed by prefixing
+     * minusSign to the positive format.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setMinusSign(UChar minusSign);
+ 
+    /**
+     * character used to represent exponential. Almost always left
+     * unchanged.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UChar getExponentialSymbol(void) const;
+    /**
+     * character used to represent exponential. Almost always left
+     * unchanged.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setExponentialSymbol(UChar exponential);
+
+    /**
+     * The string denoting the local currency.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UnicodeString& getCurrencySymbol(UnicodeString& result) const;
+    /**
+     * The string denoting the local currency.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setCurrencySymbol(const UnicodeString& currency);
+    /**
+     * Checks to see if text at offset represents the Currency Symbol string.
+     * @return the number of characters used to represent Currency Symbol when
+     *      text starts with the Currency Symbol string, otherwise it returns
+     *      0.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    int32_t compareCurrencySymbol(const UnicodeString& text, int32_t offset) const;
+
+    /**
+     * The international string denoting the local currency.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UnicodeString& getInternationalCurrencySymbol(UnicodeString& result) const;
+    /**
+     * The international string denoting the local currency.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setInternationalCurrencySymbol(const UnicodeString& currency);
+    /**
+     * Checks to see if text at offset represents the International Currency
+     * Symbol string.
+     * @return the number of characters used to represent International
+     *      Currency Symbol when text starts with the International Currency
+     *      Symbol string, otherwise it returns 0.
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    int32_t compareInternationalCurrencySymbol(const UnicodeString& text, int32_t offset) const;
+
+    /**
+     * The monetary decimal separator.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UChar getMonetaryDecimalSeparator(void) const;
+    /**
+     * The monetary decimal separator.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setMonetaryDecimalSeparator(UChar sep);
+
+    /**
+     * Return the character used to pad numbers out to a specified width.  This
+     * is not the pad character itself; rather, it is the special pattern
+     * character <em>preceding</em> the pad character.  In the pattern
+     * "*_#,##0", '*' is the pad escape, and '_' is the pad character.
+     * This function returns only the first code unit of the symbol string,
+     * unlike getSymbol().
+     * @return the character 
+     * @see #setPadEscape
+     * @see DecimalFormat#getFormatWidth
+     * @see DecimalFormat#getPadPosition
+     * @see DecimalFormat#getPadCharacter
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and getSymbol() for a replacement.
+     */
+    UChar getPadEscape(void) const;
+
+    /**
+     * Set the character used to pad numbers out to a specified width.  This is
+     * not the pad character itself; rather, it is the special pattern character
+     * <em>preceding</em> the pad character.  In the pattern "*_#,##0", '*' is
+     * the pad escape, and '_' is the pad character.
+     * This function can set only a one-code unit symbol,
+     * unlike setSymbol().
+     * @see #getPadEscape
+     * @see DecimalFormat#setFormatWidth
+     * @see DecimalFormat#setPadPosition
+     * @see DecimalFormat#setPadCharacter
+     * @deprecated remove after 2000-dec-31. See UNumberFormatSymbol and setSymbol() for a replacement.
+     */
+    void setPadEscape(UChar c);
+#endif
 private:
-    DecimalFormatSymbols();
-
     /**
      * Initializes the symbols from the LocaleElements resource bundle.
      * Note: The organization of LocaleElements badly needs to be
      * cleaned up.
-     *
-     * @param locale               The locale to get symbols for.
-     * @param success              Input/output parameter, set to success or
-     *                             failure code upon return.
-     * @param useLastResortData    determine if use last resort data
-     * @param ns                   The NumberingSystem to use; otherwise, fall
-     *                             back to the locale.
      */
-    void initialize(const Locale& locale, UErrorCode& success,
-        UBool useLastResortData = FALSE, const NumberingSystem* ns = nullptr);
+    void initialize(const Locale& locale, UErrorCode& success, UBool useLastResortData = FALSE);
+
+    /**
+     * Initialize the symbols from the given array of UnicodeStrings.
+     * The array must be of the correct size.
+     */
+    void initialize(const UnicodeString* numberElements, const UnicodeString* currencyElements);
 
     /**
      * Initialize the symbols with default values.
      */
     void initialize();
 
-    void setCurrencyForSymbols();
-
-public:
-
-#ifndef U_HIDE_INTERNAL_API
-    /**
-     * @internal For ICU use only
-     */
-    inline UBool isCustomCurrencySymbol() const {
-        return fIsCustomCurrencySymbol;
-    }
-
-    /**
-     * @internal For ICU use only
-     */
-    inline UBool isCustomIntlCurrencySymbol() const {
-        return fIsCustomIntlCurrencySymbol;
-    }
-#endif  /* U_HIDE_INTERNAL_API */
-
-    /**
-     * _Internal_ function - more efficient version of getSymbol,
-     * returning a const reference to one of the symbol strings.
-     * The returned reference becomes invalid when the symbol is changed
-     * or when the DecimalFormatSymbols are destroyed.
-     * ### TODO markus 2002oct11: Consider proposing getConstSymbol() to be really public.
-     * Note: moved #ifndef U_HIDE_INTERNAL_API after this, since this is needed for inline in DecimalFormat
-     *
-     * @param symbol Constant to indicate a number format symbol.
-     * @return the format symbol by the param 'symbol'
-     * @internal
-     */
-    inline const UnicodeString &getConstSymbol(ENumberFormatSymbol symbol) const;
-
-#ifndef U_HIDE_INTERNAL_API
-    /**
-     * Returns that pattern stored in currecy info. Internal API for use by NumberFormat API.
-     * @internal
-     */
-    inline const char16_t* getCurrencyPattern(void) const;
-#endif  /* U_HIDE_INTERNAL_API */
-
-private:
-    /**
-     * Private symbol strings.
-     * They are either loaded from a resource bundle or otherwise owned.
-     * setSymbol() clones the symbol string.
-     * Readonly aliases can only come from a resource bundle, so that we can always
-     * use fastCopyFrom() with them.
-     *
-     * If DecimalFormatSymbols becomes subclassable and the status of fSymbols changes
-     * from private to protected,
-     * or when fSymbols can be set any other way that allows them to be readonly aliases
-     * to non-resource bundle strings,
-     * then regular UnicodeString copies must be used instead of fastCopyFrom().
-     *
-     * @internal
-     */
     UnicodeString fSymbols[kFormatSymbolCount];
 
-    /**
-     * Non-symbol variable for getConstSymbol(). Always empty.
-     * @internal
-     */
-    UnicodeString fNoSymbol;
-
-    Locale locale;
-
-    char actualLocale[ULOC_FULLNAME_CAPACITY];
-    char validLocale[ULOC_FULLNAME_CAPACITY];
-    const char16_t* currPattern;
-
-    UnicodeString currencySpcBeforeSym[UNUM_CURRENCY_SPACING_COUNT];
-    UnicodeString currencySpcAfterSym[UNUM_CURRENCY_SPACING_COUNT];
-    UBool fIsCustomCurrencySymbol;
-    UBool fIsCustomIntlCurrencySymbol;
+    static const char fgNumberElements[];
+    static const char fgCurrencyElements[];
 };
+
 
 // -------------------------------------
 
 inline UnicodeString
 DecimalFormatSymbols::getSymbol(ENumberFormatSymbol symbol) const {
-    const UnicodeString *strPtr;
-    if(symbol < kFormatSymbolCount) {
-        strPtr = &fSymbols[symbol];
+    if(symbol<kFormatSymbolCount) {
+        return fSymbols[symbol];
     } else {
-        strPtr = &fNoSymbol;
+        return UnicodeString();
     }
-    return *strPtr;
 }
 
-// See comments above for this function. Not hidden with #ifndef U_HIDE_INTERNAL_API
-inline const UnicodeString &
-DecimalFormatSymbols::getConstSymbol(ENumberFormatSymbol symbol) const {
-    const UnicodeString *strPtr;
-    if(symbol < kFormatSymbolCount) {
-        strPtr = &fSymbols[symbol];
-    } else {
-        strPtr = &fNoSymbol;
+// -------------------------------------
+
+/* TODO: This should use "const UnicodeString &value" */
+inline void
+DecimalFormatSymbols::setSymbol(ENumberFormatSymbol symbol, UnicodeString value) {
+    if(symbol<kFormatSymbolCount) {
+        fSymbols[symbol]=value;
     }
-    return *strPtr;
+}
+
+#ifdef ICU_DECIMALFORMATSYMBOLS_USE_DEPRECATES
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getZeroDigit() const
+{
+    return fSymbols[kZeroDigitSymbol].charAt(0);
+}
+
+// -------------------------------------
+ 
+inline void
+DecimalFormatSymbols::setZeroDigit(UChar zeroDigit)
+{
+    fSymbols[kZeroDigitSymbol] = zeroDigit;
+}
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getGroupingSeparator() const
+{
+    return fSymbols[kGroupingSeparatorSymbol].charAt(0);
 }
 
 // -------------------------------------
 
 inline void
-DecimalFormatSymbols::setSymbol(ENumberFormatSymbol symbol, const UnicodeString &value, const UBool propogateDigits = TRUE) {
-    if (symbol == kCurrencySymbol) {
-        fIsCustomCurrencySymbol = TRUE;
-    }
-    else if (symbol == kIntlCurrencySymbol) {
-        fIsCustomIntlCurrencySymbol = TRUE;
-    }
-    if(symbol<kFormatSymbolCount) {
-        fSymbols[symbol]=value;
-    }
-
-    // If the zero digit is being set to a known zero digit according to Unicode,
-    // then we automatically set the corresponding 1-9 digits
-    if ( propogateDigits && symbol == kZeroDigitSymbol && value.countChar32() == 1 ) {
-        UChar32 sym = value.char32At(0);
-        if ( u_charDigitValue(sym) == 0 ) {
-            for ( int8_t i = 1 ; i<= 9 ; i++ ) {
-                sym++;
-                fSymbols[(int)kOneDigitSymbol+i-1] = UnicodeString(sym);
-            }
-        }
-    }
+DecimalFormatSymbols::setGroupingSeparator(UChar groupingSeparator)
+{
+    fSymbols[kGroupingSeparatorSymbol] = groupingSeparator;
 }
 
 // -------------------------------------
 
-inline Locale
-DecimalFormatSymbols::getLocale() const {
-    return locale;
+inline UChar
+DecimalFormatSymbols::getDecimalSeparator() const
+{
+    return fSymbols[kDecimalSeparatorSymbol].charAt(0);
 }
 
-#ifndef U_HIDE_INTERNAL_API
-inline const char16_t*
-DecimalFormatSymbols::getCurrencyPattern() const {
-    return currPattern;
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setDecimalSeparator(UChar decimalSeparator)
+{
+    fSymbols[kDecimalSeparatorSymbol] = decimalSeparator;
 }
-#endif /* U_HIDE_INTERNAL_API */
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getPerMill() const
+{
+    return fSymbols[kPermillSymbol].charAt(0);
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setPerMill(UChar permill)
+{
+    fSymbols[kPermillSymbol] = permill;
+}
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getPercent() const
+{
+    return fSymbols[kPercentSymbol].charAt(0);
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setPercent(UChar percent)
+{
+    fSymbols[kPercentSymbol] = percent;
+}
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getDigit() const
+{
+    return fSymbols[kDigitSymbol].charAt(0);
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setDigit(UChar digit)
+{
+    fSymbols[kDigitSymbol] = digit;
+}
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getPatternSeparator() const
+{
+    return fSymbols[kPatternSeparatorSymbol].charAt(0);
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setPatternSeparator(UChar patternSeparator)
+{
+    fSymbols[kPatternSeparatorSymbol] = patternSeparator;
+}
+
+// -------------------------------------
+
+inline UnicodeString&
+DecimalFormatSymbols::getInfinity(UnicodeString& result) const
+{
+    return result = fSymbols[kInfinitySymbol];
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setInfinity(const UnicodeString& infinity)
+{
+    fSymbols[kInfinitySymbol] = infinity;
+}
+
+// -------------------------------------
+
+inline int32_t
+DecimalFormatSymbols::compareInfinity(const UnicodeString& text,
+                                      int32_t offset) const
+{
+    int32_t symbolLength = fSymbols[kInfinitySymbol].length();
+    return text.compare(offset,
+                        symbolLength,
+                        fSymbols[kInfinitySymbol],
+                        0,
+                        symbolLength)
+           ? 0 : symbolLength;
+}
+
+// -------------------------------------
+
+inline UnicodeString&
+DecimalFormatSymbols::getNaN(UnicodeString& result) const
+{
+    return result = fSymbols[kNaNSymbol];
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setNaN(const UnicodeString& NaN)
+{
+    fSymbols[kNaNSymbol] = NaN;
+}
+
+// -------------------------------------
+
+inline int32_t
+DecimalFormatSymbols::compareNaN(const UnicodeString& text, int32_t offset) const
+{
+    int32_t symbolLength = fSymbols[kNaNSymbol].length();
+    return text.compare(offset,
+                        symbolLength,
+                        fSymbols[kNaNSymbol],
+                        0,
+                        symbolLength)
+           ? 0 : symbolLength;
+}
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getPlusSign() const
+{
+    return fSymbols[kPlusSignSymbol].charAt(0);
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setPlusSign(UChar plusSign)
+{
+    fSymbols[kPlusSignSymbol] = plusSign;
+}
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getMinusSign() const
+{
+    return fSymbols[kMinusSignSymbol].charAt(0);
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setMinusSign(UChar minusSign)
+{
+    fSymbols[kMinusSignSymbol] = minusSign;
+}
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getExponentialSymbol(void) const
+{
+    return fSymbols[kExponentialSymbol].charAt(0);
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setExponentialSymbol(UChar exponential)
+{
+    fSymbols[kExponentialSymbol] = exponential;
+}
+
+// -------------------------------------
+
+inline UnicodeString&
+DecimalFormatSymbols::getCurrencySymbol(UnicodeString& result) const
+{
+    return result = fSymbols[kCurrencySymbol];
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setCurrencySymbol(const UnicodeString& str)
+{
+    fSymbols[kCurrencySymbol] = str;
+}
+
+// -------------------------------------
+
+inline int32_t
+DecimalFormatSymbols::compareCurrencySymbol(const UnicodeString& text,
+                                            int32_t offset) const
+{
+    int32_t symbolLength = fSymbols[kCurrencySymbol].length();
+    return text.compare(offset,
+                        symbolLength,
+                        fSymbols[kCurrencySymbol],
+                        0,
+                        symbolLength)
+           ? 0 : symbolLength;
+}
+
+// -------------------------------------
+
+inline UnicodeString&
+DecimalFormatSymbols::getInternationalCurrencySymbol(UnicodeString& result) const
+{
+    return result = fSymbols[kIntlCurrencySymbol];
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setInternationalCurrencySymbol(const UnicodeString& str)
+{
+    fSymbols[kIntlCurrencySymbol] = str;
+}
+
+// -------------------------------------
+
+inline int32_t
+DecimalFormatSymbols::compareInternationalCurrencySymbol(const UnicodeString& text,
+                                                         int32_t offset) const
+{
+    int32_t symbolLength = fSymbols[kIntlCurrencySymbol].length();
+    return text.compare(offset,
+                        symbolLength,
+                        fSymbols[kIntlCurrencySymbol],
+                        0,
+                        symbolLength)
+           ? 0 : symbolLength;
+}
+
+// -------------------------------------
+
+inline UChar
+DecimalFormatSymbols::getMonetaryDecimalSeparator(void) const
+{
+    return fSymbols[kMonetarySeparatorSymbol].charAt(0);
+}
+
+// -------------------------------------
+
+inline void
+DecimalFormatSymbols::setMonetaryDecimalSeparator(UChar sep)
+{
+    fSymbols[kMonetarySeparatorSymbol] = sep;
+}
+
+inline UChar DecimalFormatSymbols::getPadEscape(void) const {
+    return fSymbols[kPadEscapeSymbol].charAt(0);
+}
+
+inline void DecimalFormatSymbols::setPadEscape(UChar c) {
+    fSymbols[kPadEscapeSymbol] = c;
+}
+#endif /* ICU_DECIMALFORMATSYMBOLS_USE_DEPRECATES */
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif // _DCFMTSYM
 //eof

@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -15,7 +13,7 @@
 *********************************************************************************/
 /**
  * G7CollationTest is a third level test class.  This test performs the examples 
- * mentioned on the IBM Java international demos web site.  
+ * mentioned on the Taligent international demos web site.  
  * Sample Rules: & Z < p , P 
  * Effect :  Making P sort after Z.
  *
@@ -39,11 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
 #include "unicode/ucol.h"
 #include "unicode/uloc.h"
 #include "cintltst.h"
@@ -51,6 +45,7 @@
 #include "ccolltst.h"
 #include "callcoll.h"
 #include "unicode/ustring.h"
+
 
 const char* locales[8] = {
         "en_US",
@@ -109,7 +104,7 @@ const static int32_t results[TESTLOCALES][TOTALTESTSET] = {
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* en_US */
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* en_GB */
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* en_CA */
-    { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* fr_FR */
+    { 12, 13, 9, 0, 14, 1, 11, 3, 2, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* fr_FR */
     { 12, 13, 9, 0, 14, 1, 11, 3, 2, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* fr_CA */
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* de_DE */
     { 12, 13, 9, 0, 14, 1, 11, 2, 3, 4, 5, 6, 8, 10, 7, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 }, /* it_IT */
@@ -137,47 +132,36 @@ void addRuleBasedCollTest(TestNode** root)
 
 static void TestG7Locales()
 {
-    UCollator *myCollation;
+    UCollator *myCollation, *tblColl1;
     UErrorCode status = U_ZERO_ERROR;
     const UChar *defRules;
     int32_t i, rlen, j, n;
     log_verbose("Testing  ucol_openRules for all the locales\n");
-    for (i = 0; i < UPRV_LENGTHOF(locales); i++)
+    for (i = 0; i < 8; i++)
     {
-        const char *locale = locales[i];
         status = U_ZERO_ERROR;
-        myCollation = ucol_open(locale, &status);
+        myCollation = ucol_open(locales[i], &status);
         ucol_setAttribute(myCollation, UCOL_STRENGTH, UCOL_QUATERNARY, &status);
         ucol_setAttribute(myCollation, UCOL_ALTERNATE_HANDLING, UCOL_SHIFTED, &status);
 
         if (U_FAILURE(status))
         {
-            log_err_status(status, "Error in creating collator in %s:  %s\n", locale, myErrorName(status));
-            ucol_close(myCollation);
+            log_err("Error in creating collator in %s:  %s\n", locales[i], myErrorName(status));
             continue;
         }
 
         defRules = ucol_getRules(myCollation, &rlen);
-        if (rlen == 0 && (strcmp(locale, "fr_CA") == 0 || strcmp(locale, "ja_JP") == 0)) {
-            log_data_err("%s UCollator missing rule string\n", locale);
-            if (log_knownIssue("10671", "TestG7Locales does not test ignore-punctuation")) {
-                ucol_close(myCollation);
-                continue;
-            }
-        } else {
-            UCollator *tblColl1;
-            status = U_ZERO_ERROR;
-            tblColl1 = ucol_openRules(defRules, rlen, UCOL_OFF,
-                    UCOL_DEFAULT_STRENGTH,NULL, &status);
-            ucol_close(myCollation);
-            if (U_FAILURE(status))
-            {
-                log_err_status(status, "Error in creating collator in %s:  %s\n", locale, myErrorName(status));
-                continue;
-            }
-            myCollation = tblColl1;
+        status = U_ZERO_ERROR;
+        tblColl1 = ucol_openRules(defRules, rlen, UCOL_OFF,
+                   UCOL_DEFAULT_STRENGTH,NULL, &status);
+        if (U_FAILURE(status))
+        {
+            
+            log_err("Error in creating collator in %s:  %s\n", locales[i], myErrorName(status));
+            continue;
         }
 
+        
         log_verbose("Locale  %s\n", locales[i]);
         log_verbose("  tests start...\n");
 
@@ -187,11 +171,12 @@ static void TestG7Locales()
         {
             for (n = j+1; n < FIXEDTESTSET; n++)
             {
-                doTest(myCollation, testCases[results[i][j]], testCases[results[i][n]], UCOL_LESS);
+                doTest(tblColl1, testCases[results[i][j]], testCases[results[i][n]], UCOL_LESS);
             }
         }
 
         ucol_close(myCollation);
+        ucol_close(tblColl1);
     }
 }
 
@@ -199,9 +184,9 @@ static void TestDemo1()
 {
     UCollator *myCollation;
     int32_t j, n;
-    static const char rules[] = "& Z < p, P";
-    int32_t len=(int32_t)strlen(rules);
-    UChar temp[sizeof(rules)];
+    const char *rules = "& Z < p, P";
+    int32_t len=strlen(rules);
+    UChar *temp = (UChar*)malloc(sizeof(UChar) * (len+1));
     UErrorCode status = U_ZERO_ERROR;
     u_uastrcpy(temp, rules);
 
@@ -211,7 +196,7 @@ static void TestDemo1()
 
     if (U_FAILURE(status))
     {
-        log_err_status(status, "Demo Test 1 Rule collation object creation failed. : %s\n", myErrorName(status));
+        log_err( "Demo Test 1 Rule collation object creation failed. : %s\n", myErrorName(status));
         return;
     }
 
@@ -224,15 +209,16 @@ static void TestDemo1()
     }
 
     ucol_close(myCollation); 
+    free(temp);
 }
 
 static void TestDemo2()
 {
     UCollator *myCollation;
     int32_t j, n;
-    static const char rules[] = "& C < ch , cH, Ch, CH";
-    int32_t len=(int32_t)strlen(rules);
-    UChar temp[sizeof(rules)];
+    const char *rules = "& C < ch , cH, Ch, CH";
+    int32_t len=strlen(rules);
+    UChar *temp = (UChar*)malloc(sizeof(UChar) * (len+1));
     UErrorCode status = U_ZERO_ERROR;
     u_uastrcpy(temp, rules);
 
@@ -242,7 +228,7 @@ static void TestDemo2()
 
     if (U_FAILURE(status))
     {
-        log_err_status(status, "Demo Test 2 Rule collation object creation failed.: %s\n", myErrorName(status));
+        log_err( "Demo Test 2 Rule collation object creation failed.: %s\n", myErrorName(status));
         return;
     }
     for (j = 0; j < TOTALTESTSET; j++)
@@ -253,15 +239,16 @@ static void TestDemo2()
         }
     }
     ucol_close(myCollation); 
+    free(temp);  
 }
 
 static void TestDemo3()
 {
     UCollator *myCollation;
     int32_t j, n;
-    static const char rules[] = "& Question'-'mark ; '?' & Hash'-'mark ; '#' & Ampersand ; '&'";
-    int32_t len=(int32_t)strlen(rules);
-    UChar temp[sizeof(rules)];
+    const char *rules = "& Question'-'mark ; '?' & Hash'-'mark ; '#' & Ampersand ; '&'";
+    int32_t len=strlen(rules);
+    UChar *temp = (UChar*)malloc(sizeof(UChar) * (len+1));
     UErrorCode status = U_ZERO_ERROR;
     u_uastrcpy(temp, rules);
 
@@ -271,7 +258,7 @@ static void TestDemo3()
     
     if (U_FAILURE(status))
     {
-        log_err_status(status, "Demo Test 3 Rule collation object creation failed.: %s\n", myErrorName(status));
+        log_err( "Demo Test 3 Rule collation object creation failed.: %s\n", myErrorName(status));
         return;
     }
 
@@ -283,15 +270,16 @@ static void TestDemo3()
         }
     }
     ucol_close(myCollation); 
+    free(temp);   
 }
 
 static void TestDemo4()
 {
     UCollator *myCollation;
     int32_t j, n;
-    static const char rules[] = " & aa ; a'-' & ee ; e'-' & ii ; i'-' & oo ; o'-' & uu ; u'-' ";
-    int32_t len=(int32_t)strlen(rules);
-    UChar temp[sizeof(rules)];
+    const char *rules = " & aa ; a'-' & ee ; e'-' & ii ; i'-' & oo ; o'-' & uu ; u'-' ";
+    int32_t len=strlen(rules);
+    UChar *temp = (UChar*)malloc(sizeof(UChar) * (len+1));
     UErrorCode status = U_ZERO_ERROR;
     u_uastrcpy(temp, rules);
 
@@ -301,7 +289,7 @@ static void TestDemo4()
     
     if (U_FAILURE(status))
     {
-        log_err_status(status, "Demo Test 4 Rule collation object creation failed.: %s\n", myErrorName(status));
+        log_err( "Demo Test 4 Rule collation object creation failed.: %s\n", myErrorName(status));
         return;
     }
     for (j = 0; j < TOTALTESTSET; j++)
@@ -312,6 +300,5 @@ static void TestDemo4()
         }
     }
     ucol_close(myCollation); 
+    free(temp);
 }
-
-#endif /* #if !UCONFIG_NO_COLLATION */

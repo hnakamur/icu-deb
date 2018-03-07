@@ -1,10 +1,6 @@
 /*
-***********************************************************************
-* © 2016 and later: Unicode, Inc. and others.
-* License & terms of use: http://www.unicode.org/copyright.html#License
-***********************************************************************
 **********************************************************************
-* Copyright (C) 1998-2004, International Business Machines Corporation
+* Copyright (C) 1998-2001, International Business Machines Corporation
 * and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -25,6 +21,6 @@
 #include "unicode/utypes.h"
 
 /* Print a ustring to the specified FILE* in the default codepage */
-U_CFUNC void uprint(const UChar *s, FILE *f, UErrorCode *status);
+U_CAPI void uprint(const UChar *s, FILE *f, UErrorCode *status);
 
 #endif /* ! UPRINT_H */

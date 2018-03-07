@@ -1,10 +1,6 @@
 /*
-***********************************************************************
-* © 2016 and later: Unicode, Inc. and others.
-* License & terms of use: http://www.unicode.org/copyright.html#License
-***********************************************************************
 **********************************************************************
-* Copyright (C) 1998-2012, International Business Machines Corporation
+* Copyright (C) 1998-2001, International Business Machines Corporation
 * and others.  All Rights Reserved.
 **********************************************************************
 *
@@ -19,68 +15,33 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "unicode/uloc.h"
 #include "unicode/udat.h"
 #include "unicode/ucal.h"
+#include "unicode/ures.h"
 #include "unicode/ustring.h"
 #include "unicode/uclean.h"
 
 #include "uprint.h"
 
-#if UCONFIG_NO_FORMATTING
-
-int main(int argc, char **argv)
-{
-  printf("%s: Sorry, UCONFIG_NO_FORMATTING was turned on (see uconfig.h). No formatting can be done. \n", argv[0]);
-  return 0;
-}
-#else
-
-
 /* Protos */
 static void usage(void);
-
 static void version(void);
-
 static void cal(int32_t month, int32_t year,
                 UBool useLongNames, UErrorCode *status);
-
-static void get_symbols(const UDateFormat *fmt,
-                        UDateFormatSymbolType type,
-                        UChar *array[],
-                        int32_t arrayLength,
-                        int32_t lowestIndex,
-                        int32_t firstIndex,
-                        UErrorCode *status);
-
-static void free_symbols(UChar *array[],
-                         int32_t arrayLength);
-
-static void get_days(const UDateFormat *fmt,
-                     UChar *days [], UBool useLongNames, 
+static void get_days(const UChar *days [], UBool useLongNames, 
                      int32_t fdow, UErrorCode *status);
-
-static void free_days(UChar *days[]);
-
-static void get_months(const UDateFormat *fmt,
-                       UChar *months [], UBool useLongNames,
+static void get_months(const UChar *months [], UBool useLongNames,
                        UErrorCode *status);
-
-static void free_months(UChar *months[]);
-
 static void indent(int32_t count, FILE *f);
-
-static void print_days(UChar *days [], FILE *f, UErrorCode *status);
-
+static void print_days(const UChar *days [], FILE *f, UErrorCode *status);
 static void  print_month(UCalendar *c, 
-                         UChar *days [], 
+                         const UChar *days [], 
                          UBool useLongNames, int32_t fdow, 
                          UErrorCode *status);
-
 static void  print_year(UCalendar *c, 
-                        UChar *days [], UChar *months [],
+                        const UChar *days [], const UChar *months [],
                         UBool useLongNames, int32_t fdow, 
                         UErrorCode *status);
 
@@ -114,15 +75,15 @@ main(int argc,
     int printUsage = 0;
     int printVersion = 0;
     UBool useLongNames = 0;
-    int optInd = 1;
+    int optind = 1;
     char *arg;
     int32_t month = -1, year = -1;
     UErrorCode status = U_ZERO_ERROR;
     
     
     /* parse the options */
-    for(optInd = 1; optInd < argc; ++optInd) {
-        arg = argv[optInd];
+    for(optind = 1; optind < argc; ++optind) {
+        arg = argv[optind];
         
         /* version info */
         if(strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0) {
@@ -139,7 +100,7 @@ main(int argc,
         /* POSIX.1 says all arguments after -- are not options */
         else if(strcmp(arg, "--") == 0) {
             /* skip the -- */
-            ++optInd;
+            ++optind;
             break;
         }
         /* unrecognized option */
@@ -154,16 +115,16 @@ main(int argc,
     }
     
     /* Get the month and year to display, if specified */
-    if(optInd != argc) {
+    if(optind != argc) {
         
         /* Month and year specified */
-        if(argc - optInd == 2) {
-            sscanf(argv[optInd], "%d", (int*)&month);
-            sscanf(argv[optInd + 1], "%d", (int*)&year);
+        if(argc - optind == 2) {
+            sscanf(argv[optind], "%d", &month);
+            sscanf(argv[optind + 1], "%d", &year);
             
             /* Make sure the month value is legal */
             if(month < 0 || month > 12) {
-                printf("icucal: Bad value for month -- %d\n", (int)month);
+                printf("icucal: Bad value for month -- %d\n", month);
                 
                 /* Display usage */
                 printUsage = 1;
@@ -174,7 +135,7 @@ main(int argc,
         }
         /* Only year specified */
         else {
-            sscanf(argv[optInd], "%d", (int*)&year);
+            sscanf(argv[optind], "%d", &year);
         }
     }
     
@@ -233,8 +194,8 @@ cal(int32_t month,
     UErrorCode *status)
 {
     UCalendar *c;
-    UChar *days [DAY_COUNT];
-    UChar *months [MONTH_COUNT];
+    const UChar *days [DAY_COUNT];
+    const UChar *months [MONTH_COUNT];
     int32_t fdow;
     
     if(U_FAILURE(*status)) return;
@@ -253,6 +214,12 @@ cal(int32_t month,
         /* Determine the first day of the week */
         fdow = ucal_getAttribute(c, UCAL_FIRST_DAY_OF_WEEK);
         
+        /* Set up the day names */
+        get_days(days, useLongNames, fdow, status);
+        
+        /* Set up the month names */
+        get_months(months, useLongNames, status);
+        
         /* Print the calendar for the year */
         print_year(c, days, months, useLongNames, fdow, status);
     }
@@ -269,6 +236,9 @@ cal(int32_t month,
         /* Determine the first day of the week */
         fdow = ucal_getAttribute(c, UCAL_FIRST_DAY_OF_WEEK);
         
+        /* Set up the day names */
+        get_days(days, useLongNames, fdow, status);
+        
         /* Print the calendar for the month */
         print_month(c, days, useLongNames, fdow, status);
     }
@@ -276,105 +246,71 @@ cal(int32_t month,
     /* Clean up */
     ucal_close(c);
 }
-/*
- * Get a set of DateFormat symbols of a given type.
- *
- * lowestIndex is the index of the first symbol to fetch.
- * (e.g. it will be one to fetch day names, since Sunday is
- *  day 1 *not* day 0.)
- *
- * firstIndex is the index of the symbol to place first in
- * the output array. This is used when fetching day names
- * in locales where the week doesn't start on Sunday.
- */
-static void get_symbols(const UDateFormat *fmt,
-                        UDateFormatSymbolType type,
-                        UChar *array[],
-                        int32_t arrayLength,
-                        int32_t lowestIndex,
-                        int32_t firstIndex,
-                        UErrorCode *status)
-{
-    int32_t count, i;
-    
-    if (U_FAILURE(*status)) {
-        return;
-    }
-
-    count = udat_countSymbols(fmt, type);
-
-    if(count != arrayLength + lowestIndex) {
-        return;
-    }
-
-    for(i = 0; i < arrayLength; i++) {
-        int32_t idx = (i + firstIndex) % arrayLength;
-        int32_t size = 1 + udat_getSymbols(fmt, type, idx + lowestIndex, NULL, 0, status);
-        
-        array[idx] = (UChar *) malloc(sizeof(UChar) * size);
-
-        *status = U_ZERO_ERROR;
-        udat_getSymbols(fmt, type, idx + lowestIndex, array[idx], size, status);
-    }
-}
-
-/* Free the symbols allocated by get_symbols(). */
-static void free_symbols(UChar *array[],
-                         int32_t arrayLength)
-{
-    int32_t i;
-
-    for(i = 0; i < arrayLength; i++) {
-        free(array[i]);
-    }
-}
 
 /* Get the day names for the specified locale, in either long or short
 form.  Also, reorder the days so that they are in the proper order
 for the locale (not all locales begin weeks on Sunday; in France,
 weeks start on Monday) */
 static void
-get_days(const UDateFormat *fmt,
-         UChar *days [],
+get_days(const UChar *days [],
          UBool useLongNames,
          int32_t fdow,
          UErrorCode *status)
 {
-    UDateFormatSymbolType dayType = (useLongNames ? UDAT_WEEKDAYS : UDAT_SHORT_WEEKDAYS);
+    UResourceBundle *bundle, *dayBundle;
+    int32_t i, count, dayLen;
+    const char *key = (useLongNames ? "DayNames" : "DayAbbreviations");
     
     if(U_FAILURE(*status))
         return;
     
     /* fdow is 1-based */
     --fdow;
-
-    get_symbols(fmt, dayType, days, DAY_COUNT, 1, fdow, status);
-}
-
-static void free_days(UChar *days[])
-{
-    free_symbols(days, DAY_COUNT);
+    
+    bundle = ures_open(0, 0, status);
+    if(U_FAILURE(*status))
+        return;
+    dayBundle = ures_getByKey(bundle, key, NULL, status);
+    count = ures_countArrayItems(bundle, key, status);
+    if(count != DAY_COUNT)
+        goto finish;   /* sanity check */
+    for(i = 0; i < count; ++i) {
+        days[i] = ures_getStringByIndex(dayBundle, ((i + fdow) % DAY_COUNT), &dayLen, status);
+    }
+    
+finish:
+    ures_close(dayBundle);
+    ures_close(bundle);
 }
 
 /* Get the month names for the specified locale, in either long or
 short form. */
 static void
-get_months(const UDateFormat *fmt,
-           UChar *months [],
+get_months(const UChar *months [],
            UBool useLongNames,
            UErrorCode *status)
 {
-    UDateFormatSymbolType monthType = (useLongNames ? UDAT_MONTHS : UDAT_SHORT_MONTHS);
+    UResourceBundle *bundle, *monthBundle;
+    int32_t i, count, monthLen;
+    const char *key = (useLongNames ? "MonthNames" : "MonthAbbreviations");
     
     if(U_FAILURE(*status))
         return;
     
-    get_symbols(fmt, monthType, months, MONTH_COUNT - 1, 0, 0, status); /* some locales have 13 months, no idea why */
-}
-
-static void free_months(UChar *months[])
-{
-    free_symbols(months, MONTH_COUNT - 1);
+    bundle = ures_open(0, 0, status);
+    if(U_FAILURE(*status))
+        return;
+    monthBundle = ures_getByKey(bundle, key, NULL, status);
+    count = ures_countArrayItems(bundle, key, status);
+    if(count < (MONTH_COUNT-1)) /* Some locales have 13 months, no idea why */
+        goto finish;   /* sanity check */
+    for(i = 0; i < count; ++i) {
+        months[i] = ures_getStringByIndex(monthBundle, i, &monthLen, status);
+    }
+    
+finish:
+    ures_close(monthBundle);
+    ures_close(bundle);
 }
 
 /* Indent a certain number of spaces */
@@ -402,7 +338,7 @@ indent(int32_t count,
 
 /* Print the days */
 static void
-print_days(UChar *days [],
+print_days(const UChar *days [],
            FILE *f,
            UErrorCode *status)
 {
@@ -420,7 +356,7 @@ print_days(UChar *days [],
 /* Print out a calendar for c's current month */
 static void
 print_month(UCalendar *c, 
-            UChar *days [], 
+            const UChar *days [], 
             UBool useLongNames,
             int32_t fdow,
             UErrorCode *status)
@@ -440,15 +376,12 @@ print_month(UCalendar *c,
     /* ========== Generate the header containing the month and year */
     
     /* Open a formatter with a month and year only pattern */
-    dfmt = udat_open(UDAT_PATTERN,UDAT_PATTERN,NULL,NULL,0,pat, len,status);
+    dfmt = udat_open(UDAT_IGNORE,UDAT_IGNORE,NULL,NULL,0,pat, len,status);
     
     /* Format the date */
     udat_format(dfmt, ucal_getMillis(c, status), s, BUF_SIZE, 0, status);
     
     
-    /* ========== Get the day names */
-    get_days(dfmt, days, useLongNames, fdow, status);
-
     /* ========== Print the header */
     
     /* Calculate widths for justification */
@@ -529,7 +462,6 @@ print_month(UCalendar *c,
     putc('\n', stdout);
     
     /* Clean up */
-    free_days(days);
     unum_close(nfmt);
     udat_close(dfmt);
 }
@@ -537,8 +469,8 @@ print_month(UCalendar *c,
 /* Print out a calendar for c's current year */
 static void
 print_year(UCalendar *c, 
-           UChar *days [], 
-           UChar *months [],
+           const UChar *days [], 
+           const UChar *months [],
            UBool useLongNames, 
            int32_t fdow, 
            UErrorCode *status)
@@ -563,15 +495,12 @@ print_year(UCalendar *c,
     /* ========== Generate the header containing the year (only) */
     
     /* Open a formatter with a month and year only pattern */
-    dfmt = udat_open(UDAT_PATTERN,UDAT_PATTERN,NULL,NULL,0,pat, len, status);
+    dfmt = udat_open(UDAT_IGNORE,UDAT_IGNORE,NULL,NULL,0,pat, len, status);
     
     /* Format the date */
     udat_format(dfmt, ucal_getMillis(left_cal, status), s, BUF_SIZE, 0, status);
     
-    /* ========== Get the month and day names */
-    get_days(dfmt, days, useLongNames, fdow, status);
-    get_months(dfmt, months, useLongNames, status);
-
+    
     /* ========== Print the header, centered */
     
     /* Calculate widths for justification */
@@ -756,11 +685,8 @@ print_year(UCalendar *c,
   }
   
   /* Clean up */
-  free_months(months);
-  free_days(days);
   udat_close(dfmt);
   unum_close(nfmt);
   ucal_close(right_cal);
 }
 
-#endif

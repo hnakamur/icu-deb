@@ -1,15 +1,11 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***********************************************************************
+/********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2011, International Business Machines Corporation
- * and others. All Rights Reserved.
- ***********************************************************************/
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
+ ********************************************************************/
+
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "dtfmapts.h"
 
 #include "unicode/datefmt.h"
@@ -31,13 +27,11 @@ void IntlTestDateFormatAPI::runIndexedTest( int32_t index, UBool exec, const cha
                 if (exec) {
                     logln("DateFormat API test---"); logln("");
                     UErrorCode status = U_ZERO_ERROR;
-                    Locale saveLocale;
-                    Locale::setDefault(Locale::getEnglish(), status);
+                    Locale::setDefault(Locale::ENGLISH, status);
                     if(U_FAILURE(status)) {
                         errln("ERROR: Could not set default locale, test may not give correct results");
                     }
                     testAPI(/*par*/);
-                    Locale::setDefault(saveLocale, status);
                 }
                 break;
 
@@ -55,39 +49,10 @@ void IntlTestDateFormatAPI::runIndexedTest( int32_t index, UBool exec, const cha
                 }
                 break;
 
-        case 3: name = "TestCoverage";
-                if (exec) {
-                    logln("TestCoverage---"); logln("");
-                    TestCoverage();
-                }
-                break;
-
         default: name = ""; break;
     }
 }
 
-/**
- * Add better code coverage.
- */
-void IntlTestDateFormatAPI::TestCoverage(void)
-{
-    const char *LOCALES[] = {
-            "zh_CN@calendar=chinese",
-            "cop_EG@calendar=coptic",
-            "hi_IN@calendar=indian",
-            "am_ET@calendar=ethiopic"
-    };
-    int32_t numOfLocales = 4;
-
-    for (int32_t i = 0; i < numOfLocales; i++) {
-        DateFormat *df = DateFormat::createDateTimeInstance(DateFormat::kMedium, DateFormat::kMedium, Locale(LOCALES[i]));
-        if (df == NULL){
-            dataerrln("Error creating DateFormat instances.");
-            return;
-        }
-        delete df;
-    }
-}
 /**
  * Test that the equals method works correctly.
  */
@@ -100,21 +65,13 @@ void IntlTestDateFormatAPI::TestEquals(void)
     while (Calendar::getNow() == start) ; // Wait for time to change
     DateFormat *b = DateFormat::createInstance();
 
-    if (a == NULL || b == NULL){
-        dataerrln("Error calling DateFormat::createInstance()");
-        delete a;
-        delete b;
-        return;
-    }
-
     if (!(*a == *b))
         errln("FAIL: DateFormat objects created at different times are unequal.");
 
-    SimpleDateFormat *sdtfmt = dynamic_cast<SimpleDateFormat *>(b);
-    if (sdtfmt != NULL)
+    if (b->getDynamicClassID() == SimpleDateFormat::getStaticClassID())
     {
         double ONE_YEAR = 365*24*60*60*1000.0;
-        sdtfmt->set2DigitYearStart(start + 50*ONE_YEAR, status);
+        ((SimpleDateFormat*)b)->set2DigitYearStart(start + 50*ONE_YEAR, status);
         if (U_FAILURE(status))
             errln("FAIL: setTwoDigitStartDate failed.");
         else if (*a == *b)
@@ -137,34 +94,27 @@ void IntlTestDateFormatAPI::testAPI(/* char* par */)
     logln("Testing DateFormat constructors");
 
     DateFormat *def = DateFormat::createInstance();
-    DateFormat *fr = DateFormat::createTimeInstance(DateFormat::FULL, Locale::getFrench());
-    DateFormat *it = DateFormat::createDateInstance(DateFormat::MEDIUM, Locale::getItalian());
+    DateFormat *fr = DateFormat::createTimeInstance(DateFormat::FULL, Locale::FRENCH);
+    DateFormat *it = DateFormat::createDateInstance(DateFormat::MEDIUM, Locale::ITALIAN);
     DateFormat *de = DateFormat::createDateTimeInstance(DateFormat::LONG, DateFormat::LONG, Locale::getGerman());
 
-    if (def == NULL || fr == NULL || it == NULL || de == NULL){
-        dataerrln("Error creating DateFormat instances.");
-    }
-
 // ======= Test equality
-if (fr != NULL && def != NULL)
-{
+
     logln("Testing equality operator");
     
     if( *fr == *it ) {
         errln("ERROR: == failed");
     }
-}
 
 // ======= Test various format() methods
-if (fr != NULL && it != NULL && de != NULL)
-{
+
     logln("Testing various format() methods");
 
     UDate d = 837039928046.0;
     Formattable fD(d, Formattable::kIsDate);
 
     UnicodeString res1, res2, res3;
-    FieldPosition pos1(FieldPosition::DONT_CARE), pos2(FieldPosition::DONT_CARE);
+    FieldPosition pos1(0), pos2(0);
     
     status = U_ZERO_ERROR;
     res1 = fr->format(d, res1, pos1, status);
@@ -178,11 +128,9 @@ if (fr != NULL && it != NULL && de != NULL)
 
     res3 = de->format(d, res3);
     logln( (UnicodeString) "" + d + " formatted to " + res3);
-}
 
 // ======= Test parse()
-if (def != NULL)
-{
+
     logln("Testing parse()");
 
     UnicodeString text("02/03/76 2:50 AM, CST");
@@ -198,18 +146,16 @@ if (def != NULL)
     status = U_ZERO_ERROR;
     result2 = def->parse(text, status);
     if(U_FAILURE(status)) {
-        errln("ERROR: parse() failed, stopping testing");
-        return;
+        errln("ERROR: parse() failed");
     }
     logln(text + " parsed into " + result2);
 
     result3 = def->parse(text, pos01);
     logln(text + " parsed into " + result3);
-}
+
 
 // ======= Test getters and setters
-if (fr != NULL && it != NULL && de != NULL)
-{
+
     logln("Testing getters and setters");
 
     int32_t count = 0;
@@ -249,7 +195,7 @@ if (fr != NULL && it != NULL && de != NULL)
     if( de->getTimeZone() != it->getTimeZone()) {
         errln("ERROR: adopt or set TimeZone() failed");
     }
-}
+
 // ======= Test getStaticClassID()
 
     logln("Testing getStaticClassID()");
@@ -257,7 +203,7 @@ if (fr != NULL && it != NULL && de != NULL)
     status = U_ZERO_ERROR;
     DateFormat *test = new SimpleDateFormat(status);
     if(U_FAILURE(status)) {
-        dataerrln("ERROR: Couldn't create a DateFormat - %s", u_errorName(status));
+        errln("ERROR: Couldn't create a DateFormat");
     }
 
     if(test->getDynamicClassID() != SimpleDateFormat::getStaticClassID()) {
@@ -299,7 +245,7 @@ IntlTestDateFormatAPI::TestNameHiding(void) {
             dateFmt->format(dateObj, str, fpos, status);
             delete dateFmt;
         } else {
-            dataerrln("FAIL: Can't create DateFormat");
+            errln("FAIL: Can't create DateFormat");
         }
     }
 
@@ -308,19 +254,14 @@ IntlTestDateFormatAPI::TestNameHiding(void) {
         logln("SimpleDateFormat");
         status = U_ZERO_ERROR;
         SimpleDateFormat sdf(status);
-        if (U_SUCCESS(status)) {
-            // Format API
-            sdf.format(dateObj, str, status);
-            sdf.format(dateObj, str, fpos, status);
-            // DateFormat API
-            sdf.format((UDate)0, str, fpos);
-            sdf.format((UDate)0, str);
-            sdf.parse(str, status);
-            sdf.parse(str, ppos);
-            sdf.getNumberFormat();
-        } else {
-            dataerrln("FAIL: Can't create SimpleDateFormat() - %s", u_errorName(status));
-        }
+        // Format API
+        sdf.format(dateObj, str, status);
+        sdf.format(dateObj, str, fpos, status);
+        // DateFormat API
+        sdf.format((UDate)0, str, fpos);
+        sdf.format((UDate)0, str);
+        sdf.parse(str, status);
+        sdf.parse(str, ppos);
     }
 
     // NumberFormat calling Format API
@@ -333,7 +274,7 @@ IntlTestDateFormatAPI::TestNameHiding(void) {
             fmt->format(numObj, str, fpos, status);
             delete fmt;
         } else {
-            dataerrln("FAIL: Can't create NumberFormat()");
+            errln("FAIL: Can't create NumberFormat");
         }
     }
 
@@ -342,20 +283,16 @@ IntlTestDateFormatAPI::TestNameHiding(void) {
         logln("DecimalFormat");
         status = U_ZERO_ERROR;
         DecimalFormat fmt(status);
-        if(U_SUCCESS(status)) {
-          // Format API
-          fmt.format(numObj, str, status);
-          fmt.format(numObj, str, fpos, status);
-          // NumberFormat API
-          fmt.format(2.71828, str);
-          fmt.format((int32_t)1234567, str);
-          fmt.format(1.41421, str, fpos);
-          fmt.format((int32_t)9876543, str, fpos);
-          fmt.parse(str, obj, ppos);
-          fmt.parse(str, obj, status);
-        } else {
-          errcheckln(status, "FAIL: Couldn't instantiate DecimalFormat, error %s. Quitting test", u_errorName(status));
-        }
+        // Format API
+        fmt.format(numObj, str, status);
+        fmt.format(numObj, str, fpos, status);
+        // NumberFormat API
+        fmt.format(2.71828, str);
+        fmt.format((int32_t)1234567, str);
+        fmt.format(1.41421, str, fpos);
+        fmt.format((int32_t)9876543, str, fpos);
+        fmt.parse(str, obj, ppos);
+        fmt.parse(str, obj, status);
     }
 
     // ChoiceFormat calling Format & NumberFormat API
@@ -387,5 +324,3 @@ IntlTestDateFormatAPI::TestNameHiding(void) {
         fmt.format(dateObj, str, fpos, status);
     }
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

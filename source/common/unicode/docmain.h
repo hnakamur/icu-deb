@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2012, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  *
  *  FILE NAME: DOCMAIN.h
@@ -11,29 +9,26 @@
  *   12/11/2000    Ram        Creation.
  */
 
-/**
- * \file
- * \brief (Non API- contains Doxygen definitions)
- *
- * This file contains documentation for Doxygen and doesnot have
+/* This file contains documentation for Doxygen and doesnot have
  * any significance with respect to C or C++ API
  */
 
 /*! \mainpage
  *
- * \section API API Reference Usage
+ * \section Usage
+ * <h2>API Reference Usage</h2>
  * 
  * <h3>C++ Programmers:</h3>
- * <p>Use <a href="hierarchy.html">Class Hierarchy</a> or <a href="classes.html"> Alphabetical List </a>
+ * <p>Use  <a href="hierarchy.html">Class Hierarchy</a> or <a href="classes.html> Alphabetical List </a>
  * or <a href="annotated.html"> Compound List</a>
  * to find the class you are interested in. For example, to find BreakIterator,
  * you can go to the <a href="classes.html"> Alphabetical List</a>, then click on
  * "BreakIterator". Once you are at the class, you will find an inheritance
  * chart, a list of the public members, a detailed description of the class,
- * then detailed member descriptions.</p>
+ * then detailed member descriptions.<p>
  * 
  * <h3>C Programmers:</h3>
- * <p>Use <a href="#Module">Module List</a> or <a href="globals.html">File Members</a>
+ * <p>Use <a href="#Module">Module List</a> or <a href="globals.html"> File Members</a>
  * to find a list of all the functions and constants.
  * For example, to find BreakIterator functions you would click on
  * <a href="files.html"> File List</a>,
@@ -41,182 +36,120 @@
  * Typedefs, Enumerations, and Functions, with detailed descriptions below.
  * If you want to find a specific function, such as ubrk_next(), then click
  * first on <a href="globals.html"> File Members</a>, then use your browser
- * Find dialog to search for "ubrk_next()".</p>
+ * Find dialog to search for "ubrk_next()".<p>
  *
  *
  * <h3>API References for Previous Releases</h3>
- * <p>The API References for each release of ICU are also available as
- * a zip file from the ICU 
- * <a href="http://site.icu-project.org/download">download page</a>.</p>
+ * <p>The API References for the previous release are available
+ *   <a href="http://oss.software.ibm.com/icu/apiref/previous/">online</a>.
+ *   For each release there are also .zip and .tgz files for the API References
+ *   on the <a href="http://oss.software.ibm.com/icu/download/">download page</a> of the release.</p>
  *
  * <hr>
  *
- * <h2>Architecture (User's Guide)</h2>
+ * <h2> Architecture  (User's Guide)</h2>
  * <ul>
- *   <li><a href="http://userguide.icu-project.org/">Introduction</a></li>
- *   <li><a href="http://userguide.icu-project.org/i18n">Internationalization</a></li>
- *   <li><a href="http://userguide.icu-project.org/design">Locale Model, Multithreading, Error Handling, etc.</a></li>
- *   <li><a href="http://userguide.icu-project.org/conversion">Conversion</a></li>
+ *   <li><a href="http://oss.software.ibm.com/icu/userguide/index.html">Introduction</a></li>
+ *   <li><a href="http://oss.software.ibm.com/icu/userguide/i18n.html">Internationalization</a></li>
+ *   <li><a href="http://oss.software.ibm.com/icu/userguide/design.html">Locale Model</a></li>
+ *   <li><a href="http://oss.software.ibm.com/icu/userguide/design.html">Multithreading</a></li>
+ *   <li><a href="http://oss.software.ibm.com/icu/userguide/conversion.html">Conversion</a></li>
+ *   <li><a href="http://oss.software.ibm.com/icu/userguide/design.html">Error Handling</a></li>
  * </ul>
  *
  * <hr>
- *\htmlonly <h2><a NAME="Module">Module List</a></h2> \endhtmlonly
+ *
+ * <h2><a name="Module">Module List</h2>
  * <table border="1" cols="3" align="center">
  *   <tr>
- *     <td><strong>Module Name</strong></td>
+ *     <td><strong>Description</strong></td>
  *     <td><strong>C</strong></td>
  *     <td><strong>C++</strong></td>
  *   </tr>
  *   <tr>
- *     <td>Basic Types and Constants</td>
+ *     <td>Basic types and constants</td>
  *     <td>utypes.h</td>
  *     <td>utypes.h</td>
  *   </tr>
  *   <tr>
  *     <td>Strings and Character Iteration</td>
- *     <td>ustring.h, utf8.h, utf16.h, UText, UCharIterator</td>
- *     <td>icu::UnicodeString, icu::CharacterIterator, icu::Appendable, icu::StringPiece,icu::ByteSink</td>
+ *     <td>ustring.h, utf.h</td>
+ *     <td>UnicodeString, CharacterIterator</td>
  *   </tr>
  *   <tr>
- *     <td>Unicode Character<br/>Properties and Names</td>
- *     <td>uchar.h, uscript.h</td>
- *     <td>C API</td>
+ *     <td>Unicode character<br>properties and names</td>
+ *     <td>uchar.h</td>
+ *     <td>uchar.h C API<br>(the C++ Unicode class is deprecated)</td>
  *   </tr>
  *   <tr>
- *     <td>Sets of Unicode Code Points and Strings</td>
- *     <td>uset.h</td>
- *     <td>icu::UnicodeSet</td>
- *   </tr>
- *   <tr>
- *     <td>Maps from Strings to Integer Values</td>
- *     <td>(no C API)</td>
- *     <td>icu::BytesTrie, icu::UCharsTrie</td>
- *   </tr>
- *   <tr>
- *     <td>Codepage Conversion</td>
- *     <td>ucnv.h, ucnvsel.hb</td>
- *     <td>C API</td>
- *   </tr>
- *   <tr>
- *     <td>Codepage Detection</td>
- *     <td>ucsdet.h</td>
- *     <td>C API</td>
- *   </tr>
- *   <tr>
- *     <td>Unicode Text Compression</td>
- *     <td>ucnv.h<br/>(encoding name "SCSU" or "BOCU-1")</td>
- *     <td>C API</td>
+ *     <td>Codepage conversion</td>
+ *     <td>ucnv.h</td>
+ *     <td>ucnv.h C API<br>(UnicodeConverter is deprecated)</td>
  *   </tr>
  *   <tr>
  *     <td>Locales </td>
  *     <td>uloc.h</a></td>
- *     <td>icu::Locale</td>
+ *     <td>Locale</td>
  *   </tr>
  *   <tr>
  *     <td>Resource Bundles</td>
  *     <td>ures.h</td>
- *     <td>icu::ResourceBundle</td>
- *   </tr>
- *   <tr>
- *     <td>Normalization</td>
- *     <td>unorm2.h</td>
- *     <td>icu::Normalizer2</td>
- *   </tr>
- *   <tr>
- *     <td>Calendars</td>
- *     <td>ucal.h</td>
- *     <td>icu::Calendar</td>
+ *     <td>ResourceBundle</td>
  *   </tr>
  *   <tr>
  *     <td>Date and Time Formatting</td>
  *     <td>udat.h</td>
- *     <td>icu::DateFormat</td>
+ *     <td>DateFormat</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Calendars</td>
+ *     <td>ucal.h</td>
+ *     <td>Calendar</td>
  *   </tr>
  *   <tr>
  *     <td>Message Formatting</td>
  *     <td>umsg.h</td>
- *     <td>icu::MessageFormat</td>
+ *     <td>MessageFormat</td>
  *   </tr>
  *   <tr>
  *     <td>Number Formatting</td>
  *     <td>unum.h</td>
- *     <td>icu::number::NumberFormatter (ICU 60+) or icu::NumberFormat (older versions)</td>
+ *     <td>NumberFormat</td>
  *   </tr>
  *   <tr>
- *     <td>Number Spellout<br/>(Rule Based Number Formatting)</td>
- *     <td>unum.h<br/>(use UNUM_SPELLOUT)</td>
- *     <td>icu::RuleBasedNumberFormat</td>
+ *     <td>Normalization</td>
+ *     <td>unorm.h</td>
+ *     <td>Normalizer</td>
  *   </tr>
  *   <tr>
- *     <td>Text Transformation<br/>(Transliteration)</td>
+ *     <td>Transliteration</td>
  *     <td>utrans.h</td>
- *     <td>icu::Transliterator</td>
+ *     <td>Transliterator</td>
  *   </tr>
  *   <tr>
  *     <td>Bidirectional Algorithm</td>
- *     <td>ubidi.h, ubiditransform.h</td>
- *     <td>C API</td>
+ *     <td>ubidi.h</td>
+ *     <td>ubidi.h C API<br>(BiDi is deprecated)</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Collation and Searching</td>
+ *     <td>ucol.h, usearch.h</td>
+ *     <td>Collator, StringSearch</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Text boundary analysis<br>(Break Iteration)</td>
+ *     <td>ubrk.h</td>
+ *     <td>BreakIterator</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Unicode Text Compression</td>
+ *     <td>ucnv.h<br>(encoding name "SCSU")<br>(scsu.h is deprecated)</td>
+ *     <td>ucnv.h C API</td>
  *   </tr>
  *   <tr>
  *     <td>Arabic Shaping</td>
  *     <td>ushape.h</td>
- *     <td>C API</td>
- *   </tr>
- *   <tr>
- *     <td>Collation</td>
- *     <td>ucol.h</td>
- *     <td>icu::Collator</td>
- *   </tr>
- *   <tr>
- *     <td>String Searching</td>
- *     <td>usearch.h</td>
- *     <td>icu::StringSearch</td>
- *   </tr>
- *   <tr>
- *     <td>Index Characters/<br/>Bucketing for Sorted Lists</td>
- *     <td>(no C API)</td>
- *     <td>icu::AlphabeticIndex</td>
- *   </tr>
- *   <tr>
- *     <td>Text Boundary Analysis<br/>(Break Iteration)</td>
- *     <td>ubrk.h</td>
- *     <td>icu::BreakIterator</td>
- *   </tr>
- *   <tr>
- *     <td>Regular Expressions</td>
- *     <td>uregex.h</td>
- *     <td>icu::RegexPattern, icu::RegexMatcher</td>
- *   </tr>
- *   <tr>
- *     <td>StringPrep</td>
- *     <td>usprep.h</td>
- *     <td>C API</td>
- *   </tr>
- *   <tr>
- *     <td>International Domain Names in Applications:<br/>
- *         UTS #46 in C/C++, IDNA2003 only via C API</td>
- *     <td>uidna.h</td>
- *     <td>idna.h</td>
- *   </tr>
- *   <tr>
- *     <td>Identifier Spoofing & Confusability</td>
- *     <td>uspoof.h</td>
- *     <td>C API</td>
- *   <tr>
- *     <td>Universal Time Scale</td>
- *     <td>utmscale.h</td>
- *     <td>C API</td>
- *   </tr>
- *   <tr>
- *     <td>Layout Engine/Complex Text Layout</td>
- *     <td>loengine.h</td>
- *     <td>icu::LayoutEngine,icu::ParagraphLayout</td>
- *   </tr>
- *   <tr>
- *     <td>ICU I/O</td>
- *     <td>ustdio.h</td>
- *     <td>ustream.h</td>
+ *     <td>ushape.h C API</td>
  *   </tr>
  * </table>
- * <i>This main page is generated from docmain.h</i>
  */

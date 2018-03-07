@@ -1,26 +1,17 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***********************************************************************
+/********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2015, International Business Machines Corporation
- * and others. All Rights Reserved.
- ***********************************************************************/
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
+ ********************************************************************/
 
 #include "nmfmtrt.h"
 
 #include "unicode/dcfmtsym.h"
 #include "unicode/decimfmt.h"
 #include "unicode/locid.h"
-#include "putilimp.h"
-#include "cstring.h"
 
 #include <float.h>
 #include <stdio.h>    // for sprintf
-#include <stdlib.h>
  
 // *****************************************************************************
 // class NumberFormatRoundTripTest
@@ -29,7 +20,7 @@
 UBool NumberFormatRoundTripTest::verbose                  = FALSE;
 UBool NumberFormatRoundTripTest::STRING_COMPARE           = TRUE;
 UBool NumberFormatRoundTripTest::EXACT_NUMERIC_COMPARE    = FALSE;
-UBool NumberFormatRoundTripTest::DEBUG_VAR                = FALSE;
+UBool NumberFormatRoundTripTest::DEBUG                    = FALSE;
 double NumberFormatRoundTripTest::MAX_ERROR               = 1e-14;
 double NumberFormatRoundTripTest::max_numeric_error       = 0.0;
 double NumberFormatRoundTripTest::min_numeric_error       = 1.0;
@@ -46,43 +37,14 @@ void NumberFormatRoundTripTest::runIndexedTest( int32_t index, UBool exec, const
 }
 
 UBool 
-NumberFormatRoundTripTest::failure(UErrorCode status, const char* msg, UBool possibleDataError)
+NumberFormatRoundTripTest::failure(UErrorCode status, const char* msg)
 {
     if(U_FAILURE(status)) {
-        if (possibleDataError) {
-            dataerrln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
-        } else {
-            errln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
-        }
+        errln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
         return TRUE;
     }
 
     return FALSE;
-}
-
-uint32_t
-NumberFormatRoundTripTest::randLong()
-{
-    // Assume 8-bit (or larger) rand values.  Also assume
-    // that the system rand() function is very poor, which it always is.
-    uint32_t d;
-    uint32_t i;
-    char* poke = (char*)&d;
-    for (i=0; i < sizeof(uint32_t); ++i)
-    {
-        poke[i] = (char)(rand() & 0xFF);
-    }
-    return d;
-}
-
-/**
- * Return a random value from -range..+range.
- */
-double 
-NumberFormatRoundTripTest::randomDouble(double range)
-{
-    double a = randFraction();
-    return (2.0 * range * a) - range;
 }
 
 void 
@@ -97,21 +59,18 @@ NumberFormatRoundTripTest::start()
     logln("Default Locale");
 
     fmt = NumberFormat::createInstance(status);
-    if (!failure(status, "NumberFormat::createInstance", TRUE)){
-        test(fmt);
-    }
+    failure(status, "NumberFormat::createInstance");
+    test(fmt);
     delete fmt;
 
     fmt = NumberFormat::createCurrencyInstance(status);
-    if (!failure(status, "NumberFormat::createCurrencyInstance", TRUE)){
-        test(fmt);
-    }
+    failure(status, "NumberFormat::createCurrencyInstance");
+    test(fmt);
     delete fmt;
 
     fmt = NumberFormat::createPercentInstance(status);
-    if (!failure(status, "NumberFormat::createPercentInstance", TRUE)){
-        test(fmt);
-    }
+    failure(status, "NumberFormat::createPercentInstance");
+    test(fmt);
     delete fmt;
 
 
@@ -149,7 +108,7 @@ NumberFormatRoundTripTest::start()
 void 
 NumberFormatRoundTripTest::test(NumberFormat *fmt)
 {
-#if IEEE_754 && U_PLATFORM != U_PF_OS400
+#if IEEE_754
     test(fmt, uprv_getNaN());
     test(fmt, uprv_getInfinity());
     test(fmt, -uprv_getInfinity());
@@ -170,11 +129,11 @@ NumberFormatRoundTripTest::test(NumberFormat *fmt)
         test(fmt, uprv_floor((randomDouble(10000))));
         test(fmt, randomDouble(1e50));
         test(fmt, randomDouble(1e-50));
-#if !(U_PF_OS390 <= U_PLATFORM && U_PLATFORM <= U_PF_OS400)
+#ifndef OS390
         test(fmt, randomDouble(1e100));
 #elif IEEE_754
-        test(fmt, randomDouble(1e75));
-#endif /* OS390 and OS400 */
+        test(fmt, randomDouble(1e75));    /*OS390*/
+#endif /* OS390 */
         // {sfb} When formatting with a percent instance, numbers very close to
         // DBL_MAX will fail the round trip.  This is because:
         // 1) Format the double into a string --> INF% (since 100 * double > DBL_MAX)
@@ -185,36 +144,44 @@ NumberFormatRoundTripTest::test(NumberFormat *fmt)
         // I'll get around this by dividing by the multiplier to make sure
         // the double will stay in range.
         //if(fmt->getMultipler() == 1)
-        DecimalFormat *df = dynamic_cast<DecimalFormat *>(fmt);
-        if(df != NULL)
+        if(fmt->getDynamicClassID() == DecimalFormat::getStaticClassID())
         {
-#if !(U_PF_OS390 <= U_PLATFORM && U_PLATFORM <= U_PF_OS400)
-            /* DBL_MAX/2 is here because randomDouble does a *2 in the math */
-            test(fmt, randomDouble(DBL_MAX/2.0) / df->getMultiplier());
+#ifndef OS390
+            test(fmt, randomDouble(1e308) / ((DecimalFormat*)fmt)->getMultiplier());
 #elif IEEE_754
-            test(fmt, randomDouble(1e75) / df->getMultiplier());
+            test(fmt, randomDouble(1e75) / ((DecimalFormat*)fmt)->getMultiplier());   
 #else
-            test(fmt, randomDouble(1e65) / df->getMultiplier());
+            test(fmt, randomDouble(1e65) / ((DecimalFormat*)fmt)->getMultiplier());   /*OS390*/
 #endif
         }
 
-#if (defined(_MSC_VER) && _MSC_VER < 1400) || defined(__alpha__) || defined(U_OSF)
-        // These machines and compilers don't fully support denormalized doubles,
+#if defined XP_MAC || defined __alpha__ || defined OS400 || defined U_OSF
+// These machines don't support denormalized doubles,
+// so the low-end range doesn't match Windows
         test(fmt, randomDouble(1e-292));
-        test(fmt, randomDouble(1e-100));
-#elif U_PF_OS390 <= U_PLATFORM && U_PLATFORM <= U_PF_OS400
-        // i5/OS (OS/400) throws exceptions on denormalized numbers
+#elif defined(OS390)
 #   if IEEE_754
-        test(fmt, randomDouble(1e-78));
-        test(fmt, randomDouble(1e-78));
-        // #else we're using something like the old z/OS floating point.
+        test(fmt, randomDouble(1e-78));  /*OS390*/
 #   endif
 #else
-        // This is a normal machine that can support IEEE754 denormalized doubles without throwing an error.
-        test(fmt, randomDouble(DBL_MIN)); /* Usually 2.2250738585072014e-308 */
+        test(fmt, randomDouble(1e-323));
+#endif /* OS390 */
+#ifndef OS390
         test(fmt, randomDouble(1e-100));
-#endif
+#elif IEEE_754
+        test(fmt, randomDouble(1e-78));  /*OS390*/
+#endif /* OS390 */
     }
+}
+
+/**
+ * Return a random value from -range..+range.
+ */
+double 
+NumberFormatRoundTripTest::randomDouble(double range)
+{
+    double a = randFraction();
+    return (2.0 * range * a) - range;
 }
 
 void 
@@ -233,10 +200,7 @@ void
 NumberFormatRoundTripTest::test(NumberFormat *fmt, const Formattable& value)
 {
     fmt->setMaximumFractionDigits(999);
-    DecimalFormat *df = dynamic_cast<DecimalFormat *>(fmt);
-    if(df != NULL) {
-        df->setRoundingIncrement(0.0);
-    }
+    
     UErrorCode status = U_ZERO_ERROR;
     UnicodeString s, s2, temp;
     if(isDouble(value))
@@ -246,12 +210,12 @@ NumberFormatRoundTripTest::test(NumberFormat *fmt, const Formattable& value)
 
     Formattable n;
     UBool show = verbose;
-    if(DEBUG_VAR)
+    if(DEBUG)
         logln(/*value.getString(temp) +*/ " F> " + escape(s));
 
     fmt->parse(s, n, status);
     failure(status, "fmt->parse");
-    if(DEBUG_VAR) 
+    if(DEBUG) 
         logln(escape(s) + " P> " /*+ n.getString(temp)*/);
 
     if(isDouble(n))
@@ -259,7 +223,7 @@ NumberFormatRoundTripTest::test(NumberFormat *fmt, const Formattable& value)
     else
         s2 = fmt->format(n.getLong(), s2);
     
-    if(DEBUG_VAR) 
+    if(DEBUG) 
         logln(/*n.getString(temp) +*/ " F> " + escape(s2));
 
     if(STRING_COMPARE) {
@@ -290,12 +254,11 @@ NumberFormatRoundTripTest::test(NumberFormat *fmt, const Formattable& value)
             min_numeric_error = error;
     }
 
-    if (show) {
-        errln(/*value.getString(temp) +*/ typeOf(value, temp) + " F> " +
-            escape(s) + " P> " + (n.getType() == Formattable::kDouble ? n.getDouble() : (double)n.getLong())
-            /*n.getString(temp) */ + typeOf(n, temp) + " F> " +
+    if(show)
+        logln(/*value.getString(temp) +*/ typeOf(value, temp) + " F> " +
+            escape(s) + " P> " +
+            /*n.getString(temp) +*/ typeOf(n, temp) + " F> " +
             escape(s2));
-    }
 }
 
 double 
@@ -344,13 +307,10 @@ NumberFormatRoundTripTest::escape(UnicodeString& s)
     UnicodeString copy(s);
     s.remove();
     for(int i = 0; i < copy.length(); ++i) {
-        UChar32 c = copy.char32At(i);
-        if (c >= 0x10000) {
-            ++i;
-        }
-        if(c < 0x00FF) {
+        UChar c = copy[i];
+        if(c < 0x00FF) 
             s += c;
-        } else {
+        else {
             s += "+U";
             char temp[16];
             sprintf(temp, "%4X", c);        // might not work
@@ -359,5 +319,3 @@ NumberFormatRoundTripTest::escape(UnicodeString& s)
     }
     return s;
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

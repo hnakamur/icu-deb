@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 2001-2007, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -12,12 +10,8 @@
 #ifndef TOUPPTRN_H
 #define TOUPPTRN_H
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
 #include "unicode/translit.h"
-#include "casetrn.h"
+#include "unicode/locid.h"
 
 U_NAMESPACE_BEGIN
 
@@ -26,15 +20,14 @@ U_NAMESPACE_BEGIN
  * case mapping.
  * @author Alan Liu
  */
-class UppercaseTransliterator : public CaseMapTransliterator {
+class U_I18N_API UppercaseTransliterator : public Transliterator {
 
  public:
 
     /**
      * Constructs a transliterator.
-     * @param loc the given locale.
      */
-    UppercaseTransliterator();
+    UppercaseTransliterator(const Locale& loc = Locale::getDefault());
 
     /**
      * Destructor.
@@ -47,30 +40,32 @@ class UppercaseTransliterator : public CaseMapTransliterator {
     UppercaseTransliterator(const UppercaseTransliterator&);
 
     /**
-     * Transliterator API.
-     * @return a copy of the object.
-     */
-    virtual Transliterator* clone(void) const;
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     */
-    virtual UClassID getDynamicClassID() const;
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     */
-    U_I18N_API static UClassID U_EXPORT2 getStaticClassID();
-
-private:
-    /**
      * Assignment operator.
      */
     UppercaseTransliterator& operator=(const UppercaseTransliterator&);
+
+    /**
+     * Transliterator API.
+     */
+    Transliterator* clone(void) const;
+
+ protected:
+
+
+    /**
+     * Implements {@link Transliterator#handleTransliterate}.
+     */
+    virtual void handleTransliterate(Replaceable& text,
+                                     UTransPosition& offsets, 
+                                     UBool isIncremental) const;
+
+ private:
+
+    Locale loc;
+    UChar* buffer;
+    static const char _ID[];
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif

@@ -1,26 +1,21 @@
 /*
  ******************************************************************************
- * © 2016 and later: Unicode, Inc. and others.                    *
- * License & terms of use: http://www.unicode.org/copyright.html#License      *
- ******************************************************************************
- ******************************************************************************
- * Copyright (C) 1998-2003, International Business Machines Corporation and   *
+ * Copyright (C) 1998-2001, International Business Machines Corporation and   *
  * others. All Rights Reserved.                                               *
  ******************************************************************************
  */
 
 #include <windows.h>
 
-#include "layout/LEFontInstance.h"
-
+#include "RenderingFontInstance.h"
 #include "GDIFontInstance.h"
 
 #include "GUISupport.h"
 #include "FontMap.h"
 #include "GDIFontMap.h"
 
-GDIFontMap::GDIFontMap(GDISurface *surface, const char *fileName, le_int16 pointSize, GUISupport *guiSupport, LEErrorCode &status)
-    : FontMap(fileName, pointSize, guiSupport, status), fSurface(surface)
+GDIFontMap::GDIFontMap(HDC hdc, const char *fileName, le_int16 pointSize, GUISupport *guiSupport, RFIErrorCode &status)
+    : FontMap(fileName, pointSize, guiSupport, status), fHdc(hdc)
 {
     // nothing to do?
 }
@@ -30,14 +25,7 @@ GDIFontMap::~GDIFontMap()
     // anything?
 }
 
-const LEFontInstance *GDIFontMap::openFont(const char *fontName, le_int16 pointSize, LEErrorCode &status)
+const RenderingFontInstance *GDIFontMap::openFont(const char *fontName, le_int16 pointSize, RFIErrorCode &status)
 {
-	LEFontInstance *result = new GDIFontInstance(fSurface, fontName, pointSize, status);
-
-	if (LE_FAILURE(status)) {
-		delete result;
-		result = NULL;
-	}
-
-    return result;
+    return new GDIFontInstance(fHdc, fontName, pointSize, status);
 }

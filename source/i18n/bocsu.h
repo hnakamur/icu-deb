@@ -1,12 +1,10 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-*   Copyright (C) 2001-2014, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *******************************************************************************
-*   file name:  bocsu.h
-*   encoding:   UTF-8
+*   file name:  bocsu.c
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -18,16 +16,6 @@
 
 #ifndef BOCSU_H
 #define BOCSU_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
-
-U_NAMESPACE_BEGIN
-
-class ByteSink;
-
-U_NAMESPACE_END
 
 /*
  * "BOCSU"
@@ -82,6 +70,8 @@ U_NAMESPACE_END
  * to the middle of its Unicode script block to minimize the differences in
  * same-script text runs.
  */
+
+#include "unicode/utypes.h"
 
 /* Do not use byte values 0, 1, 2 because they are separators in sort keys. */
 #define SLOPE_MIN           3
@@ -153,9 +143,14 @@ U_NAMESPACE_END
     } \
 }
 
-U_CFUNC UChar32
-u_writeIdenticalLevelRun(UChar32 prev, const UChar *s, int32_t length, icu::ByteSink &sink);
+U_CFUNC int32_t
+u_writeIdenticalLevelRun(const UChar *s, int32_t length, uint8_t *p);
 
-#endif /* #if !UCONFIG_NO_COLLATION */
+U_CFUNC int32_t
+u_lengthOfIdenticalLevelRun(const UChar *s, int32_t length);
+
+U_CFUNC uint8_t *
+u_writeDiff(int32_t diff, uint8_t *p);
+
 
 #endif

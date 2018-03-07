@@ -1,198 +1,40 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/****************************************************************************************
+/********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2014, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  * Modification History:
  *
  *   Date          Name        Description
  *   05/22/2000    Madhu       Added tests for testing new API for utf16 support and more
- ****************************************************************************************/
+ **********************************************************************/
 
 #include <string.h>
-#include "utypeinfo.h"  // for 'typeid' to work
-
 #include "unicode/chariter.h"
 #include "unicode/ustring.h"
 #include "unicode/unistr.h"
 #include "unicode/schriter.h"
 #include "unicode/uchriter.h"
 #include "unicode/uiter.h"
-#include "unicode/putil.h"
-#include "unicode/utf16.h"
 #include "citrtest.h"
-#include "cmemory.h"
-
-
-class  SCharacterIterator : public CharacterIterator {
-public:
-    SCharacterIterator(const UnicodeString& textStr){
-        text = textStr;
-        pos=0;
-        textLength = textStr.length();
-        begin = 0;
-        end=textLength;
-
-    }
-
-    virtual ~SCharacterIterator(){};
-
-                                
-    void setText(const UnicodeString& newText){
-        text = newText;
-    }
-
-    virtual void getText(UnicodeString& result) {
-        text.extract(0,text.length(),result);
-    }
-    static UClassID getStaticClassID(void){ 
-        return (UClassID)(&fgClassID); 
-    }
-    virtual UClassID getDynamicClassID(void) const{ 
-        return getStaticClassID(); 
-    }
-
-    virtual UBool operator==(const ForwardCharacterIterator& /*that*/) const{
-        return TRUE;
-    }
-
-    virtual CharacterIterator* clone(void) const {
-        return NULL;
-    }
-    virtual int32_t hashCode(void) const{
-        return DONE;
-    }
-    virtual UChar nextPostInc(void){ return text.charAt(pos++);}
-    virtual UChar32 next32PostInc(void){return text.char32At(pos++);}
-    virtual UBool hasNext() { return TRUE;};
-    virtual UChar first(){return DONE;};
-    virtual UChar32 first32(){return DONE;};
-    virtual UChar last(){return DONE;};
-    virtual UChar32 last32(){return DONE;};
-    virtual UChar setIndex(int32_t /*pos*/){return DONE;};
-    virtual UChar32 setIndex32(int32_t /*pos*/){return DONE;};
-    virtual UChar current() const{return DONE;};
-    virtual UChar32 current32() const{return DONE;};
-    virtual UChar next(){return DONE;};
-    virtual UChar32 next32(){return DONE;};
-    virtual UChar previous(){return DONE;};
-    virtual UChar32 previous32(){return DONE;};
-    virtual int32_t move(int32_t delta,CharacterIterator::EOrigin origin){    
-        switch(origin) {
-        case kStart:
-            pos = begin + delta;
-            break;
-        case kCurrent:
-            pos += delta;
-            break;
-        case kEnd:
-            pos = end + delta;
-            break;
-        default:
-            break;
-        }
-
-        if(pos < begin) {
-            pos = begin;
-        } else if(pos > end) {
-            pos = end;
-        }
-
-        return pos;
-    };
-    virtual int32_t move32(int32_t delta, CharacterIterator::EOrigin origin){    
-        switch(origin) {
-        case kStart:
-            pos = begin;
-            if(delta > 0) {
-                U16_FWD_N(text, pos, end, delta);
-            }
-            break;
-        case kCurrent:
-            if(delta > 0) {
-                U16_FWD_N(text, pos, end, delta);
-            } else {
-                U16_BACK_N(text, begin, pos, -delta);
-            }
-            break;
-        case kEnd:
-            pos = end;
-            if(delta < 0) {
-                U16_BACK_N(text, begin, pos, -delta);
-            }
-            break;
-        default:
-            break;
-        }
-
-        return pos;
-    };
-    virtual UBool hasPrevious() {return TRUE;};
-
-  SCharacterIterator&  operator=(const SCharacterIterator&    that){
-     text = that.text;
-     return *this;
-  }
-
-
-private:
-    UnicodeString text;
-    static const char fgClassID;
-};
-const char SCharacterIterator::fgClassID=0;
 
 CharIterTest::CharIterTest()
 {
 }
+
 void CharIterTest::runIndexedTest( int32_t index, UBool exec, const char* &name, char* /*par*/ )
 {
-    if (exec) logln("TestSuite CharIterTest: ");
+    if (exec) logln("TestSuite LocaleTest: ");
     switch (index) {
         case 0: name = "TestConstructionAndEquality"; if (exec) TestConstructionAndEquality(); break;
         case 1: name = "TestConstructionAndEqualityUChariter"; if (exec) TestConstructionAndEqualityUChariter(); break;
         case 2: name = "TestIteration"; if (exec) TestIteration(); break;
         case 3: name = "TestIterationUChar32"; if (exec) TestIterationUChar32(); break;
         case 4: name = "TestUCharIterator"; if (exec) TestUCharIterator(); break;
-        case 5: name = "TestCoverage"; if(exec) TestCoverage(); break;
-        case 6: name = "TestCharIteratorSubClasses"; if (exec) TestCharIteratorSubClasses(); break;
+
         default: name = ""; break; //needed to end loop
     }
 }
 
-void CharIterTest::TestCoverage(){
-    UnicodeString  testText("Now is the time for all good men to come to the aid of their country.");
-    UnicodeString testText2("\\ud800\\udc01deadbeef");
-    testText2 = testText2.unescape();
-    SCharacterIterator* test = new SCharacterIterator(testText);
-    if(test->firstPostInc()!= 0x004E){
-        errln("Failed: firstPostInc() failed");
-    }
-    if(test->getIndex()!=1){
-        errln("Failed: getIndex().");
-    }
-    if(test->getLength()!=testText.length()){
-        errln("Failed: getLength()");
-    }
-    test->setToStart();
-    if(test->getIndex()!=0){
-        errln("Failed: setToStart().");
-    }
-    test->setToEnd();
-    if(test->getIndex()!=testText.length()){
-        errln("Failed: setToEnd().");
-    }
-    if(test->startIndex() != 0){
-        errln("Failed: startIndex()");
-    }
-    test->setText(testText2);
-    if(test->first32PostInc()!= testText2.char32At(0)){
-        errln("Failed: first32PostInc() failed");
-    }
- 
-    delete test;
-    
-}
 void CharIterTest::TestConstructionAndEquality() {
     UnicodeString  testText("Now is the time for all good men to come to the aid of their country.");
     UnicodeString  testText2("Don't bother using this string.");
@@ -227,9 +69,7 @@ void CharIterTest::TestConstructionAndEquality() {
     if (test1->hashCode() != test5->hashCode())
         errln("hashCode() failed:  identical objects have different hash codes");
 
-    if(test1->getLength() != testText.length()){
-        errln("getLength of CharacterIterator failed");
-    }
+
     test1->getText(result1);
     test1b->getText(result2);
     test1c->getText(result3);
@@ -611,7 +451,7 @@ void CharIterTest::TestIterationUChar32() {
                 errln("setIndex32() isn't working right");
             if (c != CharacterIterator::DONE) {
                 c = iter.next32();
-                i += U16_LENGTH(c);
+                i=UTF16_NEED_MULTIPLE_UCHAR(c) ? i+2 : i+1;
             }
         } while (c != CharacterIterator::DONE);
         if(iter.hasNext() == TRUE)
@@ -650,7 +490,7 @@ void CharIterTest::TestIterationUChar32() {
                 errln("getIndex() isn't working right");
             if (c != CharacterIterator::DONE) {
                 c = iter.previous32();
-                i -= U16_LENGTH(c);
+                i=UTF16_NEED_MULTIPLE_UCHAR(c) ? i-2 : i-1;
             }
         } while (c != CharacterIterator::DONE);
         if(iter.hasPrevious() == TRUE)
@@ -668,7 +508,7 @@ void CharIterTest::TestIterationUChar32() {
         c=iter.first32PostInc();
         if(c != text.char32At(i))
             errln("first32PostInc failed.  Expected->%X Got->%X", text.char32At(i), c);
-        if(iter.getIndex() != U16_LENGTH(c) + i)
+        if(iter.getIndex() != UTF16_CHAR_LENGTH(c) + i)
             errln((UnicodeString)"getIndex() after first32PostInc() failed");
 
         iter.setToStart();
@@ -684,7 +524,7 @@ void CharIterTest::TestIterationUChar32() {
             if(c != text.char32At(i))
                 errln("Character mismatch at position %d, iterator has %X, string has %X", i, c, text.char32At(i));
 
-            i += U16_LENGTH(c);
+            i=UTF16_NEED_MULTIPLE_UCHAR(c) ? i+2 : i+1;
             if(iter.getIndex() != i)
                 errln("getIndex() aftr next32PostInc() isn't working right");
             if(iter.current32() != text.char32At(i))
@@ -725,7 +565,7 @@ void CharIterTest::TestIterationUChar32() {
 
             if (c != CharacterIterator::DONE) {
                 c = iter.next32();
-                i += U16_LENGTH(c);
+                i=UTF16_NEED_MULTIPLE_UCHAR(c) ? i+2 : i+1;
             }
         } while (c != CharacterIterator::DONE);
         c=iter.next32();
@@ -753,7 +593,7 @@ void CharIterTest::TestIterationUChar32() {
 
             if (c != CharacterIterator::DONE) {
                 c = iter.previous32();
-                i -= U16_LENGTH(c);
+                i=UTF16_NEED_MULTIPLE_UCHAR(c) ? i-2 : i-1;
             }
            
         } while (c != CharacterIterator::DONE);
@@ -915,275 +755,34 @@ void CharIterTest::TestUCharIterator() {
 
     if(cIter.getIndex(&cIter, (enum UCharIteratorOrigin)-1) != -1)
     {
-        errln("error: UCharIterator(char iter).getIndex did not return error value");
+      errln("error: UCharIterator(char iter).getIndex did not return error value");
     }
 
     if(cIter.move(&cIter, 0, (enum UCharIteratorOrigin)-1) != -1)
     {
-        errln("error: UCharIterator(char iter).move did not return error value");
+      errln("error: UCharIterator(char iter).move did not return error value");
     }
 
 
     if(rIter.getIndex(&rIter, (enum UCharIteratorOrigin)-1) != -1)
     {
-        errln("error: UCharIterator(repl iter).getIndex did not return error value");
+      errln("error: UCharIterator(repl iter).getIndex did not return error value");
     }
 
     if(rIter.move(&rIter, 0, (enum UCharIteratorOrigin)-1) != -1)
     {
-        errln("error: UCharIterator(repl iter).move did not return error value");
+      errln("error: UCharIterator(repl iter).move did not return error value");
     }
 
 
     if(sIter.getIndex(&sIter, (enum UCharIteratorOrigin)-1) != -1)
     {
-        errln("error: UCharIterator(string iter).getIndex did not return error value");
+      errln("error: UCharIterator(string iter).getIndex did not return error value");
     }
 
     if(sIter.move(&sIter, 0, (enum UCharIteratorOrigin)-1) != -1)
     {
-        errln("error: UCharIterator(string iter).move did not return error value");
+      errln("error: UCharIterator(string iter).move did not return error value");
     }
 
-    /* Testing function coverage on bad input */
-    UErrorCode status = U_ZERO_ERROR;
-    uiter_setString(&sIter, NULL, 1);
-    uiter_setState(&sIter, 1, &status);
-    if (status != U_UNSUPPORTED_ERROR) {
-        errln("error: uiter_setState returned %s instead of U_UNSUPPORTED_ERROR", u_errorName(status));
-    }
-    status = U_ZERO_ERROR;
-    uiter_setState(NULL, 1, &status);
-    if (status != U_ILLEGAL_ARGUMENT_ERROR) {
-        errln("error: uiter_setState returned %s instead of U_ILLEGAL_ARGUMENT_ERROR", u_errorName(status));
-    }
-    if (uiter_getState(&sIter) != UITER_NO_STATE) {
-        errln("error: uiter_getState did not return UITER_NO_STATE on bad input");
-    }
-}
-
-// subclass test, and completing API coverage -------------------------------
-
-class SubCharIter : public CharacterIterator {
-public:
-    // public default constructor, to get coverage of CharacterIterator()
-    SubCharIter() : CharacterIterator() {
-        textLength=end=UPRV_LENGTHOF(s);
-        s[0]=0x61;      // 'a'
-        s[1]=0xd900;    // U+50400
-        s[2]=0xdd00;
-        s[3]=0x2029;    // PS
-    }
-
-    // useful stuff, mostly dummy but testing coverage and subclassability
-    virtual UChar nextPostInc() {
-        if(pos<UPRV_LENGTHOF(s)) {
-            return s[pos++];
-        } else {
-            return DONE;
-        }
-    }
-
-    virtual UChar32 next32PostInc() {
-        if(pos<UPRV_LENGTHOF(s)) {
-            UChar32 c;
-            U16_NEXT(s, pos, UPRV_LENGTHOF(s), c);
-            return c;
-        } else {
-            return DONE;
-        }
-    }
-
-    virtual UBool hasNext() {
-        return pos<UPRV_LENGTHOF(s);
-    }
-
-    virtual UChar first() {
-        pos=0;
-        return s[0];
-    }
-
-    virtual UChar32 first32() {
-        UChar32 c;
-        pos=0;
-        U16_NEXT(s, pos, UPRV_LENGTHOF(s), c);
-        pos=0;
-        return c;
-    }
-
-    virtual UChar setIndex(int32_t position) {
-        if(0<=position && position<=UPRV_LENGTHOF(s)) {
-            pos=position;
-            if(pos<UPRV_LENGTHOF(s)) {
-                return s[pos];
-            }
-        }
-        return DONE;
-    }
-
-    virtual UChar32 setIndex32(int32_t position) {
-        if(0<=position && position<=UPRV_LENGTHOF(s)) {
-            pos=position;
-            if(pos<UPRV_LENGTHOF(s)) {
-                UChar32 c;
-                U16_GET(s, 0, pos, UPRV_LENGTHOF(s), c);
-                return c;
-            }
-        }
-        return DONE;
-    }
-
-    virtual UChar current() const {
-        if(pos<UPRV_LENGTHOF(s)) {
-            return s[pos];
-        } else {
-            return DONE;
-        }
-    }
-
-    virtual UChar32 current32() const {
-        if(pos<UPRV_LENGTHOF(s)) {
-            UChar32 c;
-            U16_GET(s, 0, pos, UPRV_LENGTHOF(s), c);
-            return c;
-        } else {
-            return DONE;
-        }
-    }
-
-    virtual UChar next() {
-        if(pos<UPRV_LENGTHOF(s) && ++pos<UPRV_LENGTHOF(s)) {
-            return s[pos];
-        } else {
-            return DONE;
-        }
-    }
-
-    virtual UChar32 next32() {
-        if(pos<UPRV_LENGTHOF(s)) {
-            U16_FWD_1(s, pos, UPRV_LENGTHOF(s));
-        }
-        if(pos<UPRV_LENGTHOF(s)) {
-            UChar32 c;
-            int32_t i=pos;
-            U16_NEXT(s, i, UPRV_LENGTHOF(s), c);
-            return c;
-        } else {
-            return DONE;
-        }
-    }
-
-    virtual UBool hasPrevious() {
-        return pos>0;
-    }
-
-    virtual void getText(UnicodeString &result) {
-        result.setTo(s, UPRV_LENGTHOF(s));
-    }
-
-    // dummy implementations of other pure virtual base class functions
-    virtual UBool operator==(const ForwardCharacterIterator &that) const {
-        return
-            this==&that ||
-            (typeid(*this)==typeid(that) && pos==((SubCharIter &)that).pos);
-    }
-
-    virtual int32_t hashCode() const {
-        return 2;
-    }
-
-    virtual CharacterIterator *clone() const {
-        return NULL;
-    }
-
-    virtual UChar last() {
-        return 0;
-    }
-
-    virtual UChar32 last32() {
-        return 0;
-    }
-
-    virtual UChar previous() {
-        return 0;
-    }
-
-    virtual UChar32 previous32() {
-        return 0;
-    }
-
-    virtual int32_t move(int32_t /*delta*/, EOrigin /*origin*/) {
-        return 0;
-    }
-
-    virtual int32_t move32(int32_t /*delta*/, EOrigin /*origin*/) {
-        return 0;
-    }
-
-    // RTTI
-    static UClassID getStaticClassID() {
-        return (UClassID)(&fgClassID);
-    }
-
-    virtual UClassID getDynamicClassID() const {
-        return getStaticClassID();
-    }
-
-private:
-    // dummy string data
-    UChar s[4];
-
-    static const char fgClassID;
-};
-
-const char SubCharIter::fgClassID = 0;
-
-class SubStringCharIter : public StringCharacterIterator {
-public:
-    SubStringCharIter() {
-        setText(UNICODE_STRING("abc", 3));
-    }
-};
-
-class SubUCharCharIter : public UCharCharacterIterator {
-public:
-    SubUCharCharIter() {
-        setText(u, 3);
-    }
-
-private:
-    static const UChar u[3];
-};
-
-const UChar SubUCharCharIter::u[3]={ 0x61, 0x62, 0x63 };
-
-void CharIterTest::TestCharIteratorSubClasses() {
-    SubCharIter *p;
-
-    // coverage - call functions that are not otherwise tested
-    // first[32]PostInc() are default implementations that are overridden
-    // in ICU's own CharacterIterator subclasses
-    p=new SubCharIter;
-    if(p->firstPostInc()!=0x61) {
-        errln("SubCharIter.firstPosInc() failed\n");
-    }
-    delete p;
-
-    p=new SubCharIter[2];
-    if(p[1].first32PostInc()!=0x61) {
-        errln("SubCharIter.first32PosInc() failed\n");
-    }
-    delete [] p;
-
-    // coverage: StringCharacterIterator default constructor
-    SubStringCharIter sci;
-    if(sci.firstPostInc()!=0x61) {
-        errln("SubStringCharIter.firstPostInc() failed\n");
-    }
-
-    // coverage: UCharCharacterIterator default constructor
-    SubUCharCharIter uci;
-    if(uci.firstPostInc()!=0x61) {
-        errln("SubUCharCharIter.firstPostInc() failed\n");
-    }
 }

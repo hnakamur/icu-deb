@@ -1,14 +1,9 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***********************************************************************
- * Copyright (c) 1997-2011, International Business Machines Corporation
- * and others. All Rights Reserved.
- ***********************************************************************/
+/********************************************************************
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
+ ********************************************************************/
  
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "miscdtfm.h"
 
 #include "unicode/format.h"
@@ -45,7 +40,7 @@ UBool
 DateFormatMiscTests::failure(UErrorCode status, const char* msg)
 {
     if(U_FAILURE(status)) {
-        errcheckln(status, UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
+        errln(UnicodeString("FAIL: ") + msg + " failed, error " + u_errorName(status));
         return TRUE;
     }
 
@@ -115,10 +110,7 @@ DateFormatMiscTests::test4097450()
     UErrorCode status = U_ZERO_ERROR;
     SimpleDateFormat *formatter;
     SimpleDateFormat *resultFormatter = new SimpleDateFormat((UnicodeString)"yyyy", status);
-    if (U_FAILURE(status)) {
-        dataerrln("Fail new SimpleDateFormat: %s", u_errorName(status));
-        return;
-    }
+    failure(status, "new SimpleDateFormat");
 
     logln("Format\tSource\tResult");
     logln("-------\t-------\t-------");
@@ -126,7 +118,7 @@ DateFormatMiscTests::test4097450()
     {
         log(dformat[i] + "\t" + dstring[i] + "\t");
         formatter = new SimpleDateFormat(dformat[i], status);
-        if(failure(status, "new SimpleDateFormat")) return;
+        failure(status, "new SimpleDateFormat");
         //try {
         UnicodeString str;
         FieldPosition pos(FieldPosition::DONT_CARE);
@@ -161,12 +153,9 @@ DateFormatMiscTests::test4099975()
     {
         UErrorCode status = U_ZERO_ERROR;
         DateFormatSymbols* symbols = new DateFormatSymbols(Locale::getUS(), status);
-        if (U_FAILURE(status)) {
-            dataerrln("Unable to create DateFormatSymbols - %s", u_errorName(status));
-            return;	
-        }
+        failure(status, "new DateFormatSymbols");
         SimpleDateFormat *df = new SimpleDateFormat(UnicodeString("E hh:mm"), *symbols, status);
-        if(failure(status, "new SimpleDateFormat")) return;
+        failure(status, "new SimpleDateFormat");
         UnicodeString format0;
         format0 = df->format(d, format0);
         UnicodeString localizedPattern0;
@@ -196,9 +185,9 @@ DateFormatMiscTests::test4099975()
     {
         UErrorCode status = U_ZERO_ERROR;
         DateFormatSymbols* symbols = new DateFormatSymbols(Locale::getUS(), status);
-        if(failure(status, "new DateFormatSymbols")) return;
+        failure(status, "new DateFormatSymbols");
         SimpleDateFormat *df = new SimpleDateFormat(UnicodeString("E hh:mm"), status);
-        if(failure(status, "new SimpleDateFormat")) return;
+        failure(status, "new SimpleDateFormat");
         df->setDateFormatSymbols(*symbols);
         UnicodeString format0;
         format0 = df->format(d, format0);
@@ -227,9 +216,9 @@ DateFormatMiscTests::test4099975()
     {
         UErrorCode status = U_ZERO_ERROR;
         DateFormatSymbols* symbols = new DateFormatSymbols(Locale::getUS(), status);
-        if(failure(status, "new DateFormatSymbols")) return;
+        failure(status, "new DateFormatSymbols");
         SimpleDateFormat *df = new SimpleDateFormat(UnicodeString("E hh:mm"), symbols, status);
-        if(failure(status, "new SimpleDateFormat")) return;
+        failure(status, "new SimpleDateFormat");
         UnicodeString format0;
         format0 = df->format(d, format0);
         UnicodeString localizedPattern0;
@@ -258,7 +247,7 @@ DateFormatMiscTests::test4099975()
         DateFormatSymbols* symbols = new DateFormatSymbols(Locale::getUS(), status);
         failure(status, "new DateFormatSymbols");
         SimpleDateFormat *df = new SimpleDateFormat(UnicodeString("E hh:mm"), status);
-        if(failure(status, "new SimpleDateFormat")) return;
+        failure(status, "new SimpleDateFormat");
         df-> adoptDateFormatSymbols(symbols);
         UnicodeString format0;
         format0 = df->format(d, format0);
@@ -315,27 +304,16 @@ DateFormatMiscTests::test4117335()
         0x6e96,
         0x6642
     };
-    UChar jdtLongC [] = {0x65E5, 0x672C, 0x590F, 0x6642, 0x9593};
-
     UnicodeString jstLong(jstLongC, 5, 5);
 
-//    UnicodeString jstShort = "JST";
-    
-    UnicodeString tzID = "Asia/Tokyo";
+    UnicodeString jstShort = "JST";
 
-    UnicodeString jdtLong(jdtLongC, 5, 5);
- 
-//    UnicodeString jdtShort = "JDT";
+    
     UErrorCode status = U_ZERO_ERROR;
     DateFormatSymbols *symbols = new DateFormatSymbols(Locale::getJapan(), status);
-    if(U_FAILURE(status)) {
-      dataerrln("Failure creating DateFormatSymbols, %s", u_errorName(status));
-      delete symbols;
-      return;
-    }
     failure(status, "new DateFormatSymbols");
     int32_t eraCount = 0;
-    const UnicodeString *eras = symbols->getEraNames(eraCount);
+    const UnicodeString *eras = symbols->getEras(eraCount);
     
     logln(UnicodeString("BC = ") + eras[0]);
     if (eras[0] != bc) {
@@ -351,36 +329,26 @@ DateFormatMiscTests::test4117335()
 
     int32_t rowCount, colCount;
     const UnicodeString **zones = symbols->getZoneStrings(rowCount, colCount);
-    //don't hard code the index .. compute it.
-    int32_t index = -1;
-    for (int32_t i = 0; i < rowCount; ++i) {
-        if (tzID == (zones[i][0])) {
-            index = i;
-            break;
-        }
-    }
-    logln(UnicodeString("Long zone name = ") + zones[index][1]);
-    if (zones[index][1] != jstLong) {
-        errln("*** Should have been " + prettify(jstLong)+ " but it is: " + prettify(zones[index][1]));
+    logln(UnicodeString("Long zone name = ") + zones[0][1]);
+    if (zones[0][1] != jstLong) {
+        errln("*** Should have been " + jstLong);
         //throw new Exception("Error in long TZ name");
     }
-//    logln(UnicodeString("Short zone name = ") + zones[index][2]);
-//    if (zones[index][2] != jstShort) {
-//        errln("*** Should have been " + prettify(jstShort) + " but it is: " + prettify(zones[index][2]));
-//        //throw new Exception("Error in short TZ name");
-//    }
-    logln(UnicodeString("Long zone name = ") + zones[index][3]);
-    if (zones[index][3] != jdtLong) {
-        errln("*** Should have been " + prettify(jstLong) + " but it is: " + prettify(zones[index][3]));
+    logln(UnicodeString("Short zone name = ") + zones[0][2]);
+    if (zones[0][2] != jstShort) {
+        errln("*** Should have been " + jstShort);
+        //throw new Exception("Error in short TZ name");
+    }
+    logln(UnicodeString("Long zone name = ") + zones[0][3]);
+    if (zones[0][3] != jstLong) {
+        errln("*** Should have been " + jstLong);
         //throw new Exception("Error in long TZ name");
     }
-//    logln(UnicodeString("SHORT zone name = ") + zones[index][4]);
-//    if (zones[index][4] != jdtShort) {
-//        errln("*** Should have been " + prettify(jstShort)+ " but it is: " + prettify(zones[index][4]));
-//        //throw new Exception("Error in short TZ name");
-//    }
+    logln(UnicodeString("SHORT zone name = ") + zones[0][4]);
+    if (zones[0][4] != jstShort) {
+        errln("*** Should have been " + jstShort);
+        //throw new Exception("Error in short TZ name");
+    }
     delete symbols;
 
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */

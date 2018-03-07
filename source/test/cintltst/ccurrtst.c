@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2016, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -16,11 +14,7 @@
 */
 
 #include <stdlib.h>
-
 #include "unicode/utypes.h"
-
-#if (!UCONFIG_NO_COLLATION)  /* This is not a formatting test. This is a collation test. */
-
 #include "unicode/ucol.h"
 #include "unicode/uloc.h"
 #include "cintltst.h"
@@ -29,7 +23,9 @@
 #include "unicode/ustring.h"
 #include "cmemory.h"
 
-void addCurrencyCollTest(TestNode** root)
+#define ARRAY_LENGTH(array) (sizeof array / sizeof array[0]) 
+
+void addCurrencyTest(TestNode** root)
 {
     
     addTest(root, &currTest, "tscoll/ccurrtst/currTest");
@@ -111,15 +107,15 @@ void currTest()
     c = ucol_open("en_US", &status);
     if (U_FAILURE(status))
     {
-        log_err_status(status, "collator open failed! :%s\n", myErrorName(status));
+        log_err("collator open failed! :%s\n", myErrorName(status));
         return;
     }
 
     /*Compare each currency symbol against all the
      currency symbols, including itself*/
-    for (i = 0; i < UPRV_LENGTHOF(currency); i += 1)
+    for (i = 0; i < ARRAY_LENGTH(currency); i += 1)
     {
-        for (j = 0; j < UPRV_LENGTHOF(currency); j += 1)
+        for (j = 0; j < ARRAY_LENGTH(currency); j += 1)
         {
              u_strcpy(source, currency[i]);
              u_strcpy(target, currency[j]);
@@ -164,4 +160,5 @@ void currTest()
     ucol_close(c);
 }
 
-#endif /* #if !UCONFIG_NO_FORMATTING && !UCONFIG_NO_COLLATION */
+
+

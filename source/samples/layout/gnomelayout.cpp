@@ -1,14 +1,8 @@
 
 /*
- *******************************************************************************
- *
- *   © 2016 and later: Unicode, Inc. and others.
- *   License & terms of use: http://www.unicode.org/copyright.html#License
- *
- *******************************************************************************
  ****************************************************************************** *
  *
- *   Copyright (C) 1999-2007, International Business Machines
+ *   Copyright (C) 1999-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  ****************************************************************************** *
@@ -19,11 +13,12 @@
  */
 
 #include <gnome.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "freetype/freetype.h"
 
 #include "unicode/ustring.h"
 #include "unicode/uscript.h"
+
+#include "unicode/loengine.h"
 
 #include "GnomeFontInstance.h"
 
@@ -32,7 +27,7 @@
 #include "GnomeGUISupport.h"
 #include "GnomeFontMap.h"
 #include "UnicodeReader.h"
-#include "ScriptCompositeFontInstance.h"
+#include "scrptrun.h"
 
 #define ARRAY_LENGTH(array) (sizeof array / sizeof array[0])
 
@@ -43,20 +38,18 @@ struct Context
     Paragraph *paragraph;
 };
 
-static FT_Library engine;
+static TT_Engine engine;
 static GnomeGUISupport *guiSupport;
 static GnomeFontMap *fontMap;
-static ScriptCompositeFontInstance *font;
 
 static GSList *appList = NULL;
 
 GtkWidget *newSample(const gchar *fileName);
 void       closeSample(GtkWidget *sample);
 
-void showabout(GtkWidget */*widget*/, gpointer /*data*/)
+void showabout(GtkWidget *widget, gpointer data)
 {
     GtkWidget *aboutBox;
-    const gchar *documentedBy[] = {NULL};
     const gchar *writtenBy[] = {
         "Eric Mader",
         NULL
@@ -64,30 +57,28 @@ void showabout(GtkWidget */*widget*/, gpointer /*data*/)
 
     aboutBox = gnome_about_new("Gnome Layout Sample",
                                "0.1",
-                               "Copyright (C) 1998-2006 By International Business Machines Corporation and others. All Rights Reserved.",
-                               "A simple demo of the ICU LayoutEngine.",
+                               "Copyright (C) 1998-2002 By International Business Machines Corporation and others. All Rights Reserved.",
                                writtenBy,
-                               documentedBy,
-                               "",
+                               "A simple demo of the ICU LayoutEngine.",
                                NULL);
 
     gtk_widget_show(aboutBox);
 }
 
-void notimpl(GtkObject */*object*/, gpointer /*data*/)
+void notimpl(GtkObject *object, gpointer data)
 {
     gnome_ok_dialog("Not implemented...");
 }
 
 gchar *prettyTitle(const gchar *path)
 {
-  const gchar *name  = g_basename(path);
+  gchar *name  = g_basename(path);
   gchar *title = g_strconcat("Gnome Layout Sample - ", name, NULL);
 
   return title;
 }
 
-void openOK(GtkObject */*object*/, gpointer data)
+void openOK(GtkObject *object, gpointer data)
 {
   GtkFileSelection *fileselection = GTK_FILE_SELECTION(data);
   GtkWidget *app = GTK_WIDGET(gtk_object_get_data(GTK_OBJECT(fileselection), "app"));
@@ -97,7 +88,7 @@ void openOK(GtkObject */*object*/, gpointer data)
 
   gtk_widget_destroy(GTK_WIDGET(fileselection));
 
-  newPara = Paragraph::paragraphFactory(fileName, font, guiSupport);
+  newPara = Paragraph::paragraphFactory(fileName, fontMap, guiSupport, NULL);
 
   if (newPara != NULL) {
     gchar *title = prettyTitle(fileName);
@@ -120,7 +111,7 @@ void openOK(GtkObject */*object*/, gpointer data)
   g_free(fileName);
 }
 
-void openfile(GtkObject */*object*/, gpointer data)
+void openfile(GtkObject *object, gpointer data)
 {
   GtkWidget *app = GTK_WIDGET(data);
   GtkWidget *fileselection;
@@ -152,29 +143,29 @@ void openfile(GtkObject */*object*/, gpointer data)
   gtk_main();
 }
 
-void newapp(GtkObject */*object*/, gpointer /*data*/)
+void newapp(GtkObject *object, gpointer data)
 {
   GtkWidget *app = newSample("Sample.txt");
 
   gtk_widget_show_all(app);
 }
 
-void closeapp(GtkWidget */*widget*/, gpointer data)
+void closeapp(GtkWidget *widget, gpointer data)
 {
   GtkWidget *app = GTK_WIDGET(data);
 
   closeSample(app);
 }
 
-void shutdown(GtkObject */*object*/, gpointer /*data*/)
+void shutdown(GtkObject *object, gpointer data)
 {
     gtk_main_quit();
 }
 
 GnomeUIInfo fileMenu[] =
 {
-  GNOMEUIINFO_MENU_NEW_ITEM((gchar *) "_New Sample",
-			    (gchar *) "Create a new Gnome Layout Sample",
+  GNOMEUIINFO_MENU_NEW_ITEM("_New Sample",
+			    "Create a new Gnome Layout Sample",
 			    newapp, NULL),
 
   GNOMEUIINFO_MENU_OPEN_ITEM(openfile, NULL),
@@ -193,12 +184,12 @@ GnomeUIInfo helpMenu[] =
 
 GnomeUIInfo mainMenu[] =
 {
-    GNOMEUIINFO_SUBTREE(N_((gchar *) "File"), fileMenu),
-    GNOMEUIINFO_SUBTREE(N_((gchar *) "Help"), helpMenu),
+    GNOMEUIINFO_SUBTREE(N_("File"), fileMenu),
+    GNOMEUIINFO_SUBTREE(N_("Help"), helpMenu),
     GNOMEUIINFO_END
 };
 
-gint eventDelete(GtkWidget *widget, GdkEvent */*event*/, gpointer /*data*/)
+gint eventDelete(GtkWidget *widget, GdkEvent *event, gpointer data)
 {
   closeSample(widget);
 
@@ -206,7 +197,7 @@ gint eventDelete(GtkWidget *widget, GdkEvent */*event*/, gpointer /*data*/)
   return TRUE;
 }
 
-gint eventConfigure(GtkWidget */*widget*/, GdkEventConfigure *event, Context *context)
+gint eventConfigure(GtkWidget *widget, GdkEventConfigure *event, Context *context)
 {
   if (context->paragraph != NULL) {
     context->width  = event->width;
@@ -220,14 +211,13 @@ gint eventConfigure(GtkWidget */*widget*/, GdkEventConfigure *event, Context *co
   return TRUE;
 }
 
-gint eventExpose(GtkWidget *widget, GdkEvent */*event*/, Context *context)
+gint eventExpose(GtkWidget *widget, GdkEvent *event, Context *context)
 {
   if (context->paragraph != NULL) {
     gint maxLines = context->paragraph->getLineCount() - 1;
     gint firstLine = 0, lastLine = context->height / context->paragraph->getLineHeight();
-    GnomeSurface surface(widget);
 
-    context->paragraph->draw(&surface, firstLine, (maxLines < lastLine)? maxLines : lastLine);
+    context->paragraph->draw(widget, firstLine, (maxLines < lastLine)? maxLines : lastLine);
   }
 
   return TRUE;
@@ -235,48 +225,57 @@ gint eventExpose(GtkWidget *widget, GdkEvent */*event*/, Context *context)
 
 GtkWidget *newSample(const gchar *fileName)
 {
+  gchar     *title   = NULL;
+  GtkWidget *app     = NULL;
+  GtkWidget *area    = NULL;
   Context   *context = new Context();
 
   context->width  = 600;
   context->height = 400;
-  context->paragraph = Paragraph::paragraphFactory(fileName, font, guiSupport);
+  context->paragraph = Paragraph::paragraphFactory(fileName, fontMap, guiSupport, NULL);
 
-  gchar *title = prettyTitle(fileName);
-  GtkWidget *app = gnome_app_new("gnomeLayout", title);
+  if (context->paragraph != NULL) {
+    GtkStyle *style;
+    gchar *title = prettyTitle(fileName);
 
-  gtk_object_set_data(GTK_OBJECT(app), "context", context);
+    app = gnome_app_new("gnomeLayout", title);
 
-  gtk_window_set_default_size(GTK_WINDOW(app), 600 - 24, 400);
+    gtk_object_set_data(GTK_OBJECT(app), "context", context);
 
-  gnome_app_create_menus_with_data(GNOME_APP(app), mainMenu, app);
+    gtk_window_set_default_size(GTK_WINDOW(app), 600 - 24, 400);
 
-  gtk_signal_connect(GTK_OBJECT(app), "delete_event",
-		     GTK_SIGNAL_FUNC(eventDelete), NULL);
+    gnome_app_create_menus_with_data(GNOME_APP(app), mainMenu, app);
 
-  GtkWidget *area = gtk_drawing_area_new();
-  gtk_object_set_data(GTK_OBJECT(app), "area", area);
+    gtk_signal_connect(GTK_OBJECT(app), "delete_event",
+		       GTK_SIGNAL_FUNC(eventDelete), NULL);
 
-  GtkStyle *style = gtk_style_copy(gtk_widget_get_style(area));
+    area = gtk_drawing_area_new();
+    gtk_object_set_data(GTK_OBJECT(app), "area", area);
 
-  for (int i = 0; i < 5; i += 1) {
-    style->fg[i] = style->white;
-  }
+#if 1
+    style = gtk_style_copy(gtk_widget_get_style(area));
+
+    for (int i = 0; i < 5; i += 1) {
+      style->fg[i] =style->white;
+    }
     
-  gtk_widget_set_style(area, style);
+    gtk_widget_set_style(area, style);
+#endif
 
-  gnome_app_set_contents(GNOME_APP(app), area);
+    gnome_app_set_contents(GNOME_APP(app), area);
 
-  gtk_signal_connect(GTK_OBJECT(area),
-		     "expose_event",
-		     GTK_SIGNAL_FUNC(eventExpose),
-		     context);
+    gtk_signal_connect(GTK_OBJECT(area),
+                       "expose_event",
+                       GTK_SIGNAL_FUNC(eventExpose),
+                       context);
 
-  gtk_signal_connect(GTK_OBJECT(area),
-		     "configure_event",
-		     GTK_SIGNAL_FUNC(eventConfigure),
-		     context);
+    gtk_signal_connect(GTK_OBJECT(area),
+                       "configure_event",
+                       GTK_SIGNAL_FUNC(eventConfigure),
+                       context);
 
-  appList = g_slist_prepend(appList, app);
+    appList = g_slist_prepend(appList, app);
+  }
 
   g_free(title);
 
@@ -304,44 +303,42 @@ void closeSample(GtkWidget *app)
 
 int main (int argc, char *argv[])
 {
-    LEErrorCode   fontStatus = LE_NO_ERROR;
-    poptContext   ptctx;
-    GtkWidget    *app;
+    RFIErrorCode   fontStatus = RFI_NO_ERROR;
+    GtkWidget     *app;
 
-    FT_Init_FreeType(&engine);
+    TT_Init_FreeType(&engine);
 
-    gnome_init_with_popt_table("gnomelayout", "0.1", argc, argv, NULL, 0, &ptctx);
+    gnome_init("gnomelayout", "0.1", argc, argv);
 
     guiSupport = new GnomeGUISupport();
     fontMap    = new GnomeFontMap(engine, "FontMap.Gnome", 24, guiSupport, fontStatus);
-    font       = new ScriptCompositeFontInstance(fontMap);
 
     if (LE_FAILURE(fontStatus)) {
-        FT_Done_FreeType(engine);
+        TT_Done_FreeType(engine);
         return 1;
     }
 
-    const char  *defaultArgs[] = {"Sample.txt", NULL};
-    const char **args = poptGetArgs(ptctx);
-    
-    if (args == NULL) {
-        args = defaultArgs;
+#if 0
+    app = newSample("Sample.txt");
+    gtk_widget_show_all(app);
+#else
+    if (argc <= 1) {
+      app = newSample("Sample.txt");
+      gtk_widget_show_all(app);
+    } else {
+      for (int i = 1; i < argc; i += 1) {
+	app = newSample(argv[i]);
+	gtk_widget_show_all(app);
+      }
     }
+#endif
 
-    for (int i = 0; args[i] != NULL; i += 1) {
-       app = newSample(args[i]);
-           
-       gtk_widget_show_all(app);
-    }
-    
-    poptFreeContext(ptctx);
-    
     gtk_main();
 
-    delete font;
+    delete fontMap;
     delete guiSupport;
 
-    FT_Done_FreeType(engine);
+    TT_Done_FreeType(engine);
 
     exit(0);
 }

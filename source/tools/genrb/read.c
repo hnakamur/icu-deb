@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
 *
-*   Copyright (C) 1998-2012, International Business Machines
+*   Copyright (C) 1998-2000, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -19,9 +17,8 @@
 */
 
 #include "read.h"
-#include "errmsg.h"
+#include "error.h"
 #include "unicode/ustring.h"
-#include "unicode/utf16.h"
 
 #define OPENBRACE    0x007B
 #define CLOSEBRACE   0x007D
@@ -33,9 +30,7 @@
 #define SPACE        0x0020
 #define COLON        0x003A
 #define BADBOM       0xFFFE
-#define CR           0x000D
-#define LF           0x000A
-               
+
 static int32_t lineCount;
 
 /* Protos */
@@ -44,13 +39,13 @@ static enum ETokenType getStringToken(UCHARBUF *buf,
                                       struct UString *token,
                                       UErrorCode *status);
 
-static UChar32 getNextChar           (UCHARBUF *buf, UBool skipwhite, struct UString *token, UErrorCode *status);
-static void    seekUntilNewline      (UCHARBUF *buf, struct UString *token, UErrorCode *status);
-static void    seekUntilEndOfComment (UCHARBUF *buf, struct UString *token, UErrorCode *status);
+static UChar32 getNextChar           (UCHARBUF *buf, UBool skipwhite, UErrorCode *status);
+static void    seekUntilNewline      (UCHARBUF *buf, UErrorCode *status);
+static void    seekUntilEndOfComment (UCHARBUF *buf, UErrorCode *status);
 static UBool   isWhitespace          (UChar32 c);
 static UBool   isNewline             (UChar32 c);
 
-U_CFUNC void resetLineNumber() {
+void resetLineNumber() {
     lineCount = 1;
 }
 
@@ -62,12 +57,10 @@ U_CFUNC void resetLineNumber() {
    never return eString twice in a row; instead, multiple adjacent
    string tokens will be merged into one, with no intervening
    space. */
-U_CFUNC enum ETokenType
-getNextToken(UCHARBUF* buf,
-             struct UString *token,
-             uint32_t *linenumber, /* out: linenumber of token */
-             struct UString *comment,
-             UErrorCode *status) {
+enum ETokenType getNextToken(UCHARBUF* buf,
+                             struct UString *token,
+                             uint32_t *linenumber, /* out: linenumber of token */
+                             UErrorCode *status) {
     enum ETokenType result;
     UChar32         c;
 
@@ -76,7 +69,7 @@ getNextToken(UCHARBUF* buf,
     }
 
     /* Skip whitespace */
-    c = getNextChar(buf, TRUE, comment, status);
+    c = getNextChar(buf, TRUE, status);
 
     if (U_FAILURE(*status)) {
         return TOK_ERROR;
@@ -127,9 +120,6 @@ static enum ETokenType getStringToken(UCHARBUF* buf,
     UChar    *pTarget   = target;
     int      len=0;
     UBool    isFollowingCharEscaped=FALSE;
-    UBool    isNLUnescaped = FALSE;
-    UChar32  prevC=0;
-
     /* We are guaranteed on entry that initialChar is not a whitespace
        character. If we are at the EOF, or have some other problem, it
        doesn't matter; we still want to validly return the initialChar
@@ -177,15 +167,12 @@ static enum ETokenType getStringToken(UCHARBUF* buf,
                     break;
                 }
 
-                if (c == ESCAPE  && !isFollowingCharEscaped) {
+                if (c == ESCAPE) {
                     pTarget = target;
                     c       = unescape(buf, status);
 
                     if (c == U_ERR) {
                         return TOK_ERROR;
-                    }
-                    if(c == CR || c == LF){
-                        isNLUnescaped = TRUE;
                     }
                 }               
 
@@ -197,18 +184,11 @@ static enum ETokenType getStringToken(UCHARBUF* buf,
                     ustr_uscat(token, pTarget,len, status);
                     isFollowingCharEscaped = FALSE;
                     len=0;
-                    if(c == CR || c == LF){
-                        if(isNLUnescaped == FALSE && prevC!=CR){
-                            lineCount++;
-                        }
-                        isNLUnescaped = FALSE;
-                    }
                 }
                 
                 if (U_FAILURE(*status)) {
                     return TOK_ERROR;
                 }
-                prevC = c;
             }
         } else {
             if (token->fLength > 0) {
@@ -218,24 +198,8 @@ static enum ETokenType getStringToken(UCHARBUF* buf,
                     return TOK_ERROR;
                 }
             }
-            
-            if(lastStringWasQuoted){
-                if(getShowWarning()){
-                    warning(lineCount, "Mixing quoted and unquoted strings");
-                }
-                if(isStrict()){
-                    return TOK_ERROR;
-                }
-
-            }
 
             lastStringWasQuoted = FALSE;
-            
-            /* if we reach here we are mixing 
-             * quoted and unquoted strings
-             * warn in normal mode and error in
-             * pedantic mode
-             */
 
             if (c == ESCAPE) {
                 pTarget = target;
@@ -251,14 +215,14 @@ static enum ETokenType getStringToken(UCHARBUF* buf,
             pTarget = target;
             ustr_uscat(token, pTarget,len, status);
             len=0;
-            
+
             if (U_FAILURE(*status)) {
                 return TOK_ERROR;
             }
 
             for (;;) {
                 /* DON'T skip whitespace */
-                c = getNextChar(buf, FALSE, NULL, status);
+                c = getNextChar(buf, FALSE, status);
 
                 /* EOF reached */
                 if (c == U_EOF) {
@@ -303,7 +267,7 @@ static enum ETokenType getStringToken(UCHARBUF* buf,
         }
 
         /* DO skip whitespace */
-        c = getNextChar(buf, TRUE, NULL, status);
+        c = getNextChar(buf, TRUE, status);
 
         if (U_FAILURE(*status)) {
             return TOK_STRING;
@@ -316,13 +280,12 @@ static enum ETokenType getStringToken(UCHARBUF* buf,
     }
 }
 
-/* Retrieve the next character.  If skipwhite is
+/* Retrieve the next character, ignoring comments.  If skipwhite is
    true, whitespace is skipped as well. */
 static UChar32 getNextChar(UCHARBUF* buf,
                            UBool skipwhite,
-                           struct UString *token,
                            UErrorCode *status) {
-    UChar32 c, c2;
+    UChar32 c;
 
     if (U_FAILURE(*status)) {
         return U_EOF;
@@ -344,39 +307,30 @@ static UChar32 getNextChar(UCHARBUF* buf,
             return c;
         }
 
-        c = ucbuf_getc(buf,status); /* "/c" */
+        c = ucbuf_getc(buf,status);
 
         if (c == U_EOF) {
             return U_EOF;
         }
 
         switch (c) {
-        case SLASH:  /* "//" */
-            seekUntilNewline(buf, NULL, status);
+        case SLASH:
+            seekUntilNewline(buf, status);
             break;
 
-        case ASTERISK:  /* " / * " */
-            c2 = ucbuf_getc(buf, status); /* "/ * c" */
-            if(c2 == ASTERISK){  /* "/ * *" */
-                /* parse multi-line comment and store it in token*/
-                seekUntilEndOfComment(buf, token, status);
-            } else {
-                ucbuf_ungetc(c2, buf); /* c2 is the non-asterisk following "/ *".  Include c2  back in buffer.  */
-                seekUntilEndOfComment(buf, NULL, status);
-            }
+        case ASTERISK:
+            seekUntilEndOfComment(buf, status);
             break;
 
         default:
-            ucbuf_ungetc(c, buf); /* "/c" - put back the c */
+            ucbuf_ungetc(c, buf);
             /* If get() failed this is a NOP */
             return SLASH;
         }
-
     }
 }
 
 static void seekUntilNewline(UCHARBUF* buf,
-                             struct UString *token,
                              UErrorCode *status) {
     UChar32 c;
 
@@ -386,15 +340,10 @@ static void seekUntilNewline(UCHARBUF* buf,
 
     do {
         c = ucbuf_getc(buf,status);
-        /* add the char to token */
-        if(token!=NULL){
-            ustr_u32cat(token, c, status);
-        }
     } while (!isNewline(c) && c != U_EOF && *status == U_ZERO_ERROR);
 }
 
 static void seekUntilEndOfComment(UCHARBUF *buf,
-                                  struct UString *token,
                                   UErrorCode *status) {
     UChar32  c, d;
     uint32_t line;
@@ -417,13 +366,6 @@ static void seekUntilEndOfComment(UCHARBUF *buf,
                 break;
             }
         }
-        /* add the char to token */
-        if(token!=NULL){
-            ustr_u32cat(token, c, status);
-        }
-        /* increment the lineCount */
-        isNewline(c);
-
     } while (c != U_EOF && *status == U_ZERO_ERROR);
 
     if (c == U_EOF) {
@@ -432,7 +374,8 @@ static void seekUntilEndOfComment(UCHARBUF *buf,
     }
 }
 
-U_CFUNC UChar32 unescape(UCHARBUF *buf, UErrorCode *status) {
+UChar32 unescape(UCHARBUF *buf,
+                 UErrorCode *status) {
     if (U_FAILURE(*status)) {
         return U_EOF;
     }
@@ -441,7 +384,7 @@ U_CFUNC UChar32 unescape(UCHARBUF *buf, UErrorCode *status) {
      * u_fgetcx needs an ESCAPE to do its magic. */
     ucbuf_ungetc(ESCAPE, buf);
 
-    return ucbuf_getcx32(buf, status);
+    return ucbuf_getcx(buf, status);
 }
 
 static UBool isWhitespace(UChar32 c) {

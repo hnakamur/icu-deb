@@ -1,5 +1,3 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
  * Copyright (c) 1997-2001, International Business Machines Corporation and
@@ -13,10 +11,6 @@
 
 #ifndef _ITERCOLL
 #define _ITERCOLL
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "unicode/tblcoll.h"
 #include "unicode/coleitr.h"
@@ -90,6 +84,7 @@ public:
     //
 
 private:
+    void backAndForth(CollationElementIterator &iter);
 
     struct ExpansionRecord
     {
@@ -103,6 +98,12 @@ private:
     void verifyExpansion(UnicodeString rules, ExpansionRecord tests[], int32_t testCount);
     
     /**
+     * Return an integer array containing all of the collation orders
+     * returned by calls to next on the specified iterator
+     */
+    int32_t *getOrders(CollationElementIterator &iter, int32_t &orderLength);
+
+    /**
      * Return a string containing all of the collation orders
      * returned by calls to next on the specified iterator
      */
@@ -115,7 +116,5 @@ private:
     const UnicodeString test2;
 
 };
-
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

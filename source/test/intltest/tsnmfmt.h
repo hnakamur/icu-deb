@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2003, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -10,11 +8,10 @@
 #define _INTLTESTNUMBERFORMAT
 
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
+#include <stdlib.h>
 
 #include "unicode/numfmt.h"
+#include "unicode/fmtable.h"
 #include "unicode/locid.h"
 #include "intltest.h"
 
@@ -59,22 +56,43 @@ private:
 
 public:
 
-    virtual ~IntlTestNumberFormat();
-
-    /*
-     * Return a random double that isn't too large.
-     */
-    static double getSafeDouble(double smallerThanMax);
+    virtual ~IntlTestNumberFormat() {}
 
     /*
      * Return a random double
      **/
-    static double randDouble();
+    static double randDouble()
+    {
+        // Assume 8-bit (or larger) rand values.  Also assume
+        // that the system rand() function is very poor, which it always is.
+        // Call srand(currentTime) in intltest to make it truly random.
+        double d;
+        uint32_t i;
+        char* poke = (char*)&d;
+        for (i=0; i < sizeof(double); ++i)
+        {
+            poke[i] = (char)(rand() & 0xFF);
+        }
+        return d;
+    }
 
     /*
      * Return a random uint32_t
      **/
-    static uint32_t randLong();
+    static uint32_t randLong()
+    {
+        // Assume 8-bit (or larger) rand values.  Also assume
+        // that the system rand() function is very poor, which it always is.
+        // Call srand(currentTime) in intltest to make it truly random.
+        uint32_t d;
+        uint32_t i;
+        char* poke = (char*)&d;
+        for (i=0; i < sizeof(uint32_t); ++i)
+        {
+            poke[i] = (char)(rand() & 0xFF);
+        }
+        return d;
+    }
 
     /**
      * Return a random double 0 <= x < 1.0
@@ -85,7 +103,5 @@ public:
     }
 
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 #endif

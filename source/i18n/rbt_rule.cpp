@@ -1,34 +1,27 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
- **********************************************************************
- *   Copyright (C) 1999-2011, International Business Machines
- *   Corporation and others.  All Rights Reserved.
- **********************************************************************
- *   Date        Name        Description
- *   11/17/99    aliu        Creation.
- **********************************************************************
- */
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
+**********************************************************************
+*   Copyright (C) 1999-2001, International Business Machines
+*   Corporation and others.  All Rights Reserved.
+**********************************************************************
+*   Date        Name        Description
+*   11/17/99    aliu        Creation.
+**********************************************************************
+*/
+#include "rbt_rule.h"
 #include "unicode/rep.h"
+#include "rbt_data.h"
 #include "unicode/unifilt.h"
 #include "unicode/uniset.h"
-#include "unicode/utf16.h"
-#include "rbt_rule.h"
-#include "rbt_data.h"
 #include "cmemory.h"
 #include "strmatch.h"
 #include "strrepl.h"
 #include "util.h"
-#include "putilimp.h"
 
 static const UChar FORWARD_OP[] = {32,62,32,0}; // " > "
 
 U_NAMESPACE_BEGIN
+
+const UChar TransliterationRule::ETHER = 0xFFFF;
 
 /**
  * Construct a new rule with the given input, output text, and other
@@ -64,7 +57,6 @@ TransliterationRule::TransliterationRule(const UnicodeString& input,
                                          UBool anchorStart, UBool anchorEnd,
                                          const TransliterationRuleData* theData,
                                          UErrorCode& status) :
-    UMemory(),
     segments(0),
     data(theData) {
 
@@ -120,22 +112,12 @@ TransliterationRule::TransliterationRule(const UnicodeString& input,
     if (anteContextLength > 0) {
         anteContext = new StringMatcher(pattern, 0, anteContextLength,
                                         FALSE, *data);
-        /* test for NULL */
-        if (anteContext == 0) {
-            status = U_MEMORY_ALLOCATION_ERROR;
-            return;
-        }
     }
     
     key = NULL;
     if (keyLength > 0) {
         key = new StringMatcher(pattern, anteContextLength, anteContextLength + keyLength,
                                 FALSE, *data);
-        /* test for NULL */
-        if (key == 0) {
-            status = U_MEMORY_ALLOCATION_ERROR;
-            return;
-        }
     }
     
     int32_t postContextLength = pattern.length() - keyLength - anteContextLength;
@@ -143,26 +125,15 @@ TransliterationRule::TransliterationRule(const UnicodeString& input,
     if (postContextLength > 0) {
         postContext = new StringMatcher(pattern, anteContextLength + keyLength, pattern.length(),
                                         FALSE, *data);
-        /* test for NULL */
-        if (postContext == 0) {
-            status = U_MEMORY_ALLOCATION_ERROR;
-            return;
-        }
     }
 
     this->output = new StringReplacer(outputStr, cursorPosition + cursorOffset, data);
-    /* test for NULL */
-    if (this->output == 0) {
-        status = U_MEMORY_ALLOCATION_ERROR;
-        return;
-    }
 }
 
 /**
  * Copy constructor.
  */
 TransliterationRule::TransliterationRule(TransliterationRule& other) :
-    UMemory(other),
     anteContext(NULL),
     key(NULL),
     postContext(NULL),
@@ -175,8 +146,8 @@ TransliterationRule::TransliterationRule(TransliterationRule& other) :
     segments = NULL;
     segmentsCount = 0;
     if (other.segmentsCount > 0) {
-        segments = (UnicodeFunctor **)uprv_malloc(other.segmentsCount * sizeof(UnicodeFunctor *));
-        uprv_memcpy(segments, other.segments, (size_t)other.segmentsCount*sizeof(segments[0]));
+        segments = new UnicodeFunctor*[other.segmentsCount];
+        uprv_memcpy(segments, other.segments, other.segmentsCount*sizeof(segments[0]));
     }
 
     if (other.anteContext != NULL) {
@@ -192,7 +163,7 @@ TransliterationRule::TransliterationRule(TransliterationRule& other) :
 }
 
 TransliterationRule::~TransliterationRule() {
-    uprv_free(segments);
+    delete[] segments;
     delete anteContext;
     delete key;
     delete postContext;
@@ -295,7 +266,6 @@ UBool TransliterationRule::masks(const TransliterationRule& r2) const {
     int32_t left2 = r2.anteContextLength;
     int32_t right = len - left;
     int32_t right2 = r2.pattern.length() - left2;
-    int32_t cachedCompare = r2.pattern.compare(left2 - left, len, pattern);
 
     // TODO Clean this up -- some logic might be combinable with the
     // next statement.
@@ -303,7 +273,7 @@ UBool TransliterationRule::masks(const TransliterationRule& r2) const {
     // Test for anchor masking
     if (left == left2 && right == right2 &&
         keyLength <= r2.keyLength &&
-        0 == cachedCompare) {
+        0 == r2.pattern.compare(0, len, pattern)) {
         // The following boolean logic implements the table above
         return (flags == r2.flags) ||
             (!(flags & ANCHOR_START) && !(flags & ANCHOR_END)) ||
@@ -313,18 +283,18 @@ UBool TransliterationRule::masks(const TransliterationRule& r2) const {
     return left <= left2 &&
         (right < right2 ||
          (right == right2 && keyLength <= r2.keyLength)) &&
-         (0 == cachedCompare);
+        0 == r2.pattern.compare(left2 - left, len, pattern);
 }
 
 static inline int32_t posBefore(const Replaceable& str, int32_t pos) {
     return (pos > 0) ?
-        pos - U16_LENGTH(str.char32At(pos-1)) :
+        pos - UTF_CHAR_LENGTH(str.char32At(pos-1)) :
         pos - 1;
 }
 
 static inline int32_t posAfter(const Replaceable& str, int32_t pos) {
     return (pos >= 0 && pos < str.length()) ?
-        pos + U16_LENGTH(str.char32At(pos)) :
+        pos + UTF_CHAR_LENGTH(str.char32At(pos)) :
         pos + 1;
 }
 
@@ -504,7 +474,7 @@ UnicodeString& TransliterationRule::toRule(UnicodeString& rule,
         rule.append((UChar)36/*$*/);
     }
 
-    ICU_Utility::appendToRule(rule, UnicodeString(TRUE, FORWARD_OP, 3), TRUE, escapeUnprintable, quoteBuf);
+    ICU_Utility::appendToRule(rule, FORWARD_OP, TRUE, escapeUnprintable, quoteBuf);
 
     // Emit the output pattern
 
@@ -526,34 +496,6 @@ void TransliterationRule::setData(const TransliterationRuleData* d) {
     // Don't have to do segments since they are in the context or key
 }
 
-/**
- * Union the set of all characters that may be modified by this rule
- * into the given set.
- */
-void TransliterationRule::addSourceSetTo(UnicodeSet& toUnionTo) const {
-    int32_t limit = anteContextLength + keyLength;
-    for (int32_t i=anteContextLength; i<limit; ) {
-        UChar32 ch = pattern.char32At(i);
-        i += U16_LENGTH(ch);
-        const UnicodeMatcher* matcher = data->lookupMatcher(ch);
-        if (matcher == NULL) {
-            toUnionTo.add(ch);
-        } else {
-            matcher->addMatchSetTo(toUnionTo);
-        }
-    }
-}
-
-/**
- * Union the set of all characters that may be emitted by this rule
- * into the given set.
- */
-void TransliterationRule::addTargetSetTo(UnicodeSet& toUnionTo) const {
-    output->toReplacer()->addReplacementSetTo(toUnionTo);
-}
-
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 //eof

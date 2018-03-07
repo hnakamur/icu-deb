@@ -1,17 +1,11 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /****************************************************************************
  * COPYRIGHT: 
- * Copyright (c) 2001-2008, International Business Machines Corporation and others
+ * Copyright (c) 2001, International Business Machines Corporation and others
  * All Rights Reserved.
  ***************************************************************************/
 
 #ifndef _STRSRCH_H
 #define _STRSRCH_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION 
 
 #include "unicode/tblcoll.h"
 #include "unicode/brkiter.h"
@@ -29,7 +23,7 @@ public:
 
     void runIndexedTest(int32_t index, UBool exec, const char* &name, 
                         char* par = NULL);
-#if !UCONFIG_NO_BREAK_ITERATION
+
 private:
     RuleBasedCollator *m_en_us_; 
     RuleBasedCollator *m_fr_fr_;
@@ -55,9 +49,7 @@ private:
     void TestBasic();
     void TestNormExact();
     void TestStrength();
-#if !UCONFIG_NO_BREAK_ITERATION
     void TestBreakIterator();
-#endif
     void TestVariable();
     void TestOverlap();
     void TestCollator();
@@ -75,9 +67,7 @@ private:
     void TestCanonical();
     void TestNormCanonical();
     void TestStrengthCanonical();
-#if !UCONFIG_NO_BREAK_ITERATION
     void TestBreakIteratorCanonical();
-#endif
     void TestVariableCanonical();
     void TestOverlapCanonical();
     void TestCollatorCanonical();
@@ -87,13 +77,7 @@ private:
     void TestGetSetOffsetCanonical();
     void TestSupplementaryCanonical();
     void TestContractionCanonical();
-    void TestUClassID();
-    void TestSubclass();
-    void TestCoverage();
-    void TestDiacriticMatch();
-#endif
+    void TestSearchIterator();
 };
-
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

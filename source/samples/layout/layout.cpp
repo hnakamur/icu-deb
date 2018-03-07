@@ -1,13 +1,7 @@
 /*
  *******************************************************************************
  *
- *   © 2016 and later: Unicode, Inc. and others.
- *   License & terms of use: http://www.unicode.org/copyright.html#License
- *
- *******************************************************************************
- *******************************************************************************
- *
- *   Copyright (C) 1999-2007, International Business Machines
+ *   Copyright (C) 1999-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  *******************************************************************************
@@ -20,12 +14,21 @@
 #include <windows.h>
 #include <stdio.h>
 
+//#include "LETypes.h"
+//#include "LEFontInstance.h"
+//#include "LayoutEngine.h"
+//#include "unicode/loengine.h"
+#include "unicode/uscript.h"
+//#include "LEScripts.h"
+
+#include "GDIFontInstance.h"
+
 #include "paragraph.h"
 
 #include "GDIGUISupport.h"
 #include "GDIFontMap.h"
 #include "UnicodeReader.h"
-#include "ScriptCompositeFontInstance.h"
+#include "scrptrun.h"
 
 #include "resource.h"
 
@@ -69,7 +72,7 @@ void InitParagraph(HWND hwnd, Context *context)
         si.nMin = 0;
         si.nMax = context->paragraph->getLineCount() - 1;
         si.nPage = context->height / context->paragraph->getLineHeight();
-        SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+        SetScrollInfo(hwnd, SB_VERT, &si, true);
     }
 }
 
@@ -79,7 +82,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
     HACCEL hAccel;
     MSG msg;
     WNDCLASS wndclass;
-    LEErrorCode status = LE_NO_ERROR;
+    RFIErrorCode status = RFI_NO_ERROR;
 
     wndclass.style         = CS_HREDRAW | CS_VREDRAW;
     wndclass.lpfnWndProc   = WndProc;
@@ -116,7 +119,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
         }
     }
 
-    UnregisterClass(szAppName, hInstance);
     return msg.wParam;
 }
 
@@ -126,48 +128,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     Context *context;
     static le_int32 windowCount = 0;
     static GDIFontMap *fontMap = NULL;
-    static GDISurface *surface = NULL;
     static GDIGUISupport *guiSupport = new GDIGUISupport();
-    static ScriptCompositeFontInstance *font = NULL;
 
     switch (message) {
     case WM_CREATE:
     {
-        LEErrorCode fontStatus = LE_NO_ERROR;
+        RFIErrorCode fontStatus = RFI_NO_ERROR;
 
         hdc = GetDC(hwnd);
-        surface = new GDISurface(hdc);
 
-        fontMap = new GDIFontMap(surface, "FontMap.GDI", 24, guiSupport, fontStatus);
-        font    = new ScriptCompositeFontInstance(fontMap);
+        fontMap = new GDIFontMap(hdc, "FontMap.GDI", 24, guiSupport, fontStatus);
 
         if (LE_FAILURE(fontStatus)) {
             ReleaseDC(hwnd, hdc);
-            return -1;
+            return 0;
         }
 
-        context = new Context();
+    context = new Context();
 
-        context->width  = 600;
-        context->height = 400;
+    context->width  = 600;
+    context->height = 400;
 
-        context->paragraph = Paragraph::paragraphFactory("Sample.txt", font, guiSupport);
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) context);
+        context->paragraph = Paragraph::paragraphFactory("Sample.txt", fontMap, guiSupport, hdc);
+        SetWindowLong(hwnd, 0, (LONG) context);
 
         windowCount += 1;
         ReleaseDC(hwnd, hdc);
 
-        PrettyTitle(hwnd, "Sample.txt");
+    PrettyTitle(hwnd, "Sample.txt");
         return 0;
     }
 
     case WM_SIZE:
     {
-        context = (Context *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
-        context->width  = LOWORD(lParam);
-        context->height = HIWORD(lParam);
+        context = (Context *) GetWindowLong(hwnd, 0);
+    context->width  = LOWORD(lParam);
+    context->height = HIWORD(lParam);
 
-        InitParagraph(hwnd, context);
+    InitParagraph(hwnd, context);
         return 0;
     }
 
@@ -217,10 +215,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         si.fMask = SIF_POS;
-        SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+        SetScrollInfo(hwnd, SB_VERT, &si, true);
         GetScrollInfo(hwnd, SB_VERT, &si);
 
-        context = (Context *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        context = (Context *) GetWindowLong(hwnd, 0);
 
         if (context->paragraph != NULL && si.nPos != vertPos) {
             ScrollWindow(hwnd, 0, context->paragraph->getLineHeight() * (vertPos - si.nPos), NULL, NULL);
@@ -245,17 +243,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         firstLine = si.nPos;
 
-        context = (Context *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        context = (Context *) GetWindowLong(hwnd, 0);
 
         if (context->paragraph != NULL) {
-            surface->setHDC(hdc);
-
             // NOTE: si.nPos + si.nPage may include a partial line at the bottom
             // of the window. We need this because scrolling assumes that the
             // partial line has been painted.
             lastLine  = min (si.nPos + (le_int32) si.nPage, context->paragraph->getLineCount() - 1);
 
-            context->paragraph->draw(surface, firstLine, lastLine);
+            context->paragraph->draw(hdc, firstLine, lastLine);
         }
 
         EndPaint(hwnd, &ps);
@@ -294,14 +290,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             szFileName[0] = '\0';
 
-            if (GetOpenFileNameA(&ofn)) {
-                hdc = GetDC(hwnd);
-                surface->setHDC(hdc);
+            hdc = GetDC(hwnd);
 
-                Paragraph *newParagraph = Paragraph::paragraphFactory(szFileName, font, guiSupport);
+            if (GetOpenFileNameA(&ofn)) {
+                Paragraph *newParagraph = Paragraph::paragraphFactory(szFileName, fontMap, guiSupport, hdc);
 
                 if (newParagraph != NULL) {
-                    context = (Context *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+                    context = (Context *) GetWindowLong(hwnd, 0);
 
                     if (context->paragraph != NULL) {
                         delete context->paragraph;
@@ -310,12 +305,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     context->paragraph = newParagraph;
                     InitParagraph(hwnd, context);
                     PrettyTitle(hwnd, szTitleName);
-                    InvalidateRect(hwnd, NULL, TRUE);
+                    InvalidateRect(hwnd, NULL, true);
 
                 }
             }
 
-            //ReleaseDC(hwnd, hdc);
+            ReleaseDC(hwnd, hdc);
 
             return 0;
         }
@@ -327,7 +322,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         case IDM_HELP_ABOUTLAYOUTSAMPLE:
             MessageBox(hwnd, TEXT("Windows Layout Sample 0.1\n")
-                             TEXT("Copyright (C) 1998-2005 By International Business Machines Corporation and others.\n")
+                             TEXT("Copyright (C) 1998-2002 By International Business Machines Corporation and others.\n")
                              TEXT("Author: Eric Mader"),
                        szAppName, MB_ICONINFORMATION | MB_OK);
             return 0;
@@ -338,17 +333,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_DESTROY:
     {
-        context = (Context *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+        context = (Context *) GetWindowLong(hwnd, 0);
 
-        if (context != NULL && context->paragraph != NULL) {
+        if (context->paragraph != NULL) {
             delete context->paragraph;
         }
 
         delete context;
 
         if (--windowCount <= 0) {
-            delete font;
-            delete surface;
+            delete fontMap;
 
             PostQuitMessage(0);
         }

@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2009, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -20,7 +18,6 @@
 #include "cintltst.h"
 #include "unicode/utypes.h"
 
-void addTestNewConvert(TestNode** root);
-
+static void TestInBufSizes(void);
 
 #endif

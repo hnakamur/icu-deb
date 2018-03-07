@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
  *******************************************************************************
- * Copyright (C) 1996-2006, International Business Machines Corporation and    *
+ * Copyright (C) 1996-2000, International Business Machines Corporation and    *
  * others. All Rights Reserved.                                                *
  *******************************************************************************
  */
@@ -10,11 +8,9 @@
 #ifndef ITRBNFRT_H
 #define ITRBNFRT_H
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "intltest.h"
+
+#include "unicode/utypes.h"
 #include "unicode/rbnf.h"
 
 class RbnfRoundTripTest : public IntlTest {
@@ -79,9 +75,9 @@ class RbnfRoundTripTest : public IntlTest {
   virtual void TestRussianSpelloutRT();
 
   /**
-   * Perform an exhaustive round-trip test on the Portuguese spellout rules
+   * Perform an exhaustive round-trip test on the Greek spellout rules
    */
-  virtual void TestPortugueseSpelloutRT();
+  virtual void TestGreekSpelloutRT();
 
  protected:
   void doTest(const RuleBasedNumberFormat* formatter,  double lowLimit, double highLimit);
@@ -94,8 +90,6 @@ class RbnfRoundTripTest : public IntlTest {
   /* U_HAVE_RBNF */
 #endif
 };
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
 
 // endif ITRBNFRT_H
 #endif

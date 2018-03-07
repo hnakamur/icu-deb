@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1999-2016 International Business Machines Corporation and
+ * Copyright (c) 1999-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /************************************************************************
@@ -15,9 +13,6 @@
 #ifndef RBBIAPITEST_H
 #define RBBIAPITEST_H
 
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_BREAK_ITERATION
 
 #include "intltest.h"
 #include "unicode/rbbi.h"
@@ -51,57 +46,33 @@ public:
       **/
     void TestGetSetAdoptText();
      /**
-      * Testing the iteration methods of RuleBasedBreakIterator
+      * Testing the methods first(), next(), next(int) and following() of RuleBasedBreakIterator
       **/
-    void TestIteration(void);
-
-    void TestFilteredBreakIteratorBuilder(void);
-
+    void TestFirstNextFollowing(void);
     /**
-     * Tests creating RuleBasedBreakIterator from rules strings.
+     * Testing the methods lastt(), previous(), and preceding() of RuleBasedBreakIterator
      **/
-    void TestBuilder(void);
-
-    void TestRoundtripRules(void);
-
-    void RoundtripRule(const char *dataFile);
-
+   void TestLastPreviousPreceding(void);
     /**
-     * Test getting and using binary (compiled) rules.
+     * Tests the method IsBoundary() of RuleBasedBreakIterator
      **/
-    void TestGetBinaryRules(void);
-
-    /**
-     * Tests grouping effect of 'single quotes' in rules.
-     **/
-    void TestQuoteGrouping();
-
-    /**
-     *  Tests word break status returns.
-     */
-    void TestRuleStatus();
-    void TestRuleStatusVec();
-
-    void TestBug2190();
-
-    void TestBoilerPlate();
-
-    void TestRegistration();
-
-    void TestRefreshInputText();
+   void TestIsBoundary(void);
 
     /**
      *Internal subroutines
      **/
     /* Internal subroutine used by TestIsBoundary() */ 
-    void doBoundaryTest(BreakIterator& bi, UnicodeString& text, int32_t *boundaries);
+    void doBoundaryTest(RuleBasedBreakIterator& bi, UnicodeString& text, int32_t *boundaries);
 
     /*Internal subroutine used for comparision of expected and acquired results */
     void doTest(UnicodeString& testString, int32_t start, int32_t gotoffset, int32_t expectedOffset, const char* expected);
 
 
+
 };
 
-#endif /* #if !UCONFIG_NO_BREAK_ITERATION */
-
 #endif
+
+
+
+

@@ -1,14 +1,8 @@
-Copyright (C) 2016 and later: Unicode, Inc. and others.
-License & terms of use: http://www.unicode.org/copyright.html#License
-
-Copyright (C) 2002-2010, International Business Machines
-Corporation and others.  All Rights Reserved.
-
 convsamp: a sample program which demonstrates using ICU conversion
 
 This sample demonstrates
-         Opening and closing converters using the C api
-         String manipulation in C 
+         Opening and closing converters using the C and C++ api
+         String manipulation in C and C++
          Writing a custom conversion callback function
 
          
@@ -16,12 +10,12 @@ Files:
     convsamp.c                 Main source file
     flagcb.h                   codepage output convenience header
     flagcb.c                   codepage output convenience implementation
-    ucnv.sln                   Windows MSVC workspace.  Double-click this to get started.
-    ucnv.vcproj                Windows MSVC project file
+    ucnv.dsw                   Windows MSVC workspace.  Double-click this to get started.
+    ucnv.dsp                   Windows MSVC project file
 
 To Build ucnv on Windows
     1.  Install and build ICU
-    2.  In MSVC, open the workspace file icu\samples\ucnv\ucnv.sln
+    2.  In MSVC, open the workspace file icu\samples\ucnv\ucnv.dsw
     3.  Choose a Debug or Release build.
     4.  Build.
 	
@@ -34,7 +28,6 @@ To Run on Windows
             cd c:\icu\source\samples\ucnv\debug
     4.  Run it
             ucnv
-    WARNING: The .bin and .txt files must be in the same directory as the executable, which is not the case by default on some systems.
 
 To Build on Unixes
     1.  Build ICU.  

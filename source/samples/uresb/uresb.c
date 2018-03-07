@@ -1,18 +1,12 @@
 /*
 *******************************************************************************
 *
-*   © 2016 and later: Unicode, Inc. and others.
-*   License & terms of use: http://www.unicode.org/copyright.html#License
-*
-*******************************************************************************
-*******************************************************************************
-*
-*   Copyright (C) 1999-2007, International Business Machines
+*   Copyright (C) 1999-2000, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
 *   file name:  uresb.c
-*   encoding:   UTF-8
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -26,7 +20,6 @@
  * TODO: make a complete i18n layout for this program.
  ******************************************************************************/
 
-#include "unicode/putil.h"
 #include "unicode/ures.h"
 #include "unicode/ustdio.h"
 #include "unicode/uloc.h"
@@ -34,7 +27,6 @@
 #include "uoptions.h"
 #include "toolutil.h"
 
-#include <string.h>
 #include <stdlib.h>
 #ifdef WIN32
 #include <direct.h>
@@ -64,7 +56,7 @@ void reportError(UErrorCode *status);
 static UChar *quotedString(const UChar *string);
 void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErrorCode *status);
 void printIndent(UFILE *out, int32_t indent);
-void printHex(UFILE *out, const int8_t *what);
+void printHex(UFILE *out, const uint8_t *what);
 
 static UOption options[]={
     UOPTION_HELP_H,
@@ -86,7 +78,6 @@ main(int argc, char* argv[]) {
     UFILE *out = NULL;
     int32_t i = 0;
     const char* arg;
-    char resPathBuffer[1024];
 #ifdef WIN32
     currdir = _getcwd(NULL, 0);
 #else
@@ -101,9 +92,9 @@ main(int argc, char* argv[]) {
             "error in command line argument \"%s\"\n",
             argv[-argc]);
     }
-    if(argc<2 || options[0].doesOccur || options[1].doesOccur) {
+    if(argc<0 || options[0].doesOccur || options[1].doesOccur) {
         fprintf(stderr,
-            "usage: %s [-options] locale(s)\n",
+            "usage: %s [-options]\n",
             argv[0]);
         return argc<0 ? U_ILLEGAL_ARGUMENT_ERROR : U_ZERO_ERROR;
     }
@@ -127,10 +118,7 @@ main(int argc, char* argv[]) {
             resPath = NULL; /* we'll use ICU system resources for dumping */
         }
     } else {
-        strcpy(resPathBuffer, currdir);
-        /*strcat(resPathBuffer, U_FILE_SEP_STRING);
-        strcat(resPathBuffer, "uresb");*/
-        resPath = resPathBuffer; /* we'll just dump uresb samples resources */
+        resPath = currdir; /* we'll just dump uresb samples resources */
     }
 
     if(options[5].doesOccur) {
@@ -145,17 +133,23 @@ main(int argc, char* argv[]) {
     }
 
     if(options[6].doesOccur) {
-        VERBOSE = TRUE;
+      VERBOSE = TRUE;
     }
 
     outerr = u_finit(stderr, locale, encoding);
     out = u_finit(stdout, locale, encoding); 
 
+/*
+    for(i = 0; i<20; i++) {
+        reportError(&i);
+    }
+*/
+
     for(i = 1; i < argc; ++i) {
         status = U_ZERO_ERROR;
         arg = getLongPathname(argv[i]);
 
-        u_fprintf(out, "uresb: processing file \"%s\" in path \"%s\"\n", arg, resPath);
+        printf("uresb: processing file \"%s\"\n", arg);
         bundle = ures_open(resPath, arg, &status);
         if(U_SUCCESS(status)) {
             u_fprintf(out, "%s\n", arg);
@@ -184,8 +178,8 @@ void printIndent(UFILE *out, int32_t indent) {
     u_fprintf(out, "%s", inchar);
 }
 
-void printHex(UFILE *out, const int8_t *what) {
-  u_fprintf(out, "%02X", (uint8_t)*what);
+void printHex(UFILE *out, const uint8_t *what) {
+  u_fprintf(out, "%02X", *what);
 }
 
 static UChar *quotedString(const UChar *string) {
@@ -225,11 +219,12 @@ static UChar *quotedString(const UChar *string) {
 }
 
 void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErrorCode *status) {
+    int32_t noOfElements = ures_getSize(resource);
     int32_t i = 0;
     const char *key = ures_getKey(resource);
 
     switch(ures_getType(resource)) {
-    case URES_STRING :
+    case RES_STRING :
         {
             int32_t len=0;
             const UChar*thestr = ures_getString(resource, &len, status);
@@ -245,9 +240,9 @@ void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErro
             */
             printIndent(out, indent);
             if(key != NULL) {
-                u_fprintf(out, "%s { \"%S\" } ", key, string);
+                u_fprintf(out, "%s { \"%U\" } ", key, string);
             } else {
-                u_fprintf(out, "\"%S\",", string);
+                u_fprintf(out, "\"%U\",", string);
             }
             if(VERBOSE) {
                 u_fprintf(out, " // STRING");
@@ -256,7 +251,7 @@ void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErro
             free(string);
         }
         break;
-    case URES_INT :
+    case RES_INT :
         printIndent(out, indent);
         if(key != NULL) {
             u_fprintf(out, "%s", key);
@@ -268,7 +263,7 @@ void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErro
         }
         u_fprintf(out, "\n");
         break;
-    case URES_BINARY :
+    case RES_BINARY :
         {
             int32_t len = 0;
             const int8_t *data = (const int8_t *)ures_getBinary(resource, &len, status);
@@ -297,7 +292,7 @@ void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErro
             }
         }
         break;
-    case URES_INT_VECTOR :
+    case RES_INT_VECTOR :
       {
           int32_t len = 0;
           const int32_t *data = ures_getIntVector(resource, &len, status);
@@ -324,8 +319,8 @@ void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErro
           }
       }
       break;
-    case URES_TABLE :
-    case URES_ARRAY :
+    case RES_TABLE :
+    case RES_ARRAY :
         {
             UResourceBundle *t = NULL;
             ures_resetIterator(resource);
@@ -335,7 +330,7 @@ void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErro
             }
             u_fprintf(out, "{");
             if(VERBOSE) {
-                if(ures_getType(resource) == URES_TABLE) {
+                if(ures_getType(resource) == RES_TABLE) {
                     u_fprintf(out, " // TABLE");
                 } else {
                     u_fprintf(out, " // ARRAY");
@@ -360,7 +355,7 @@ void printOutBundle(UFILE *out, UResourceBundle *resource, int32_t indent, UErro
 }
 
 void reportError(UErrorCode *status) {
-    u_fprintf(outerr, "Error %d(%s) : %U happened!\n", *status, u_errorName(*status), getErrorName(*status));
+    u_fprintf(outerr, "Error %d : %U happened!\n", *status, getErrorName(*status));
 }
 
 

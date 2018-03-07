@@ -1,8 +1,5 @@
-# Copyright (C) 2016 and later: Unicode, Inc. and others.
-# License & terms of use: http://www.unicode.org/copyright.html#License
-#
-# Copyright (c) 2001-2004 IBM, Inc. and others
-# conversion sample code
+# Copyright (c) 2001 IBM, Inc. and others
+# conversion sample code $Revision: 1.2 $
 
 
 # Usage:

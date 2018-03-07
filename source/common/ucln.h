@@ -1,14 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 ******************************************************************************
-*
-* Copyright (C) 2001-2013, International Business Machines
-*                Corporation and others. All Rights Reserved.
-*
+*                                                                            *
+* Copyright (C) 2001-2001, International Business Machines                   *
+*                Corporation and others. All Rights Reserved.                *
+*                                                                            *
 ******************************************************************************
-*   file name:  ucln.h
-*   encoding:   UTF-8
+*   file name:  ucln_cmn.h
+*   encoding:   US-ASCII
 *   tab size:   8 (not used)
 *   indentation:4
 *
@@ -49,43 +47,18 @@
  * Please see common/ucln_cmn.{h,c} and i18n/ucln_in.{h,c} for examples.
  */
 
-/**
- * Data Type for cleanup function selector. These roughly correspond to libraries.
- */
 typedef enum ECleanupLibraryType {
     UCLN_START = -1,
-    UCLN_UPLUG,     /* ICU plugins */
     UCLN_CUSTOM,    /* Custom is for anyone else. */
-    UCLN_CTESTFW,
-    UCLN_TOOLUTIL,
-    UCLN_LAYOUTEX,
     UCLN_LAYOUT,
-    UCLN_IO,
+    UCLN_USTDIO,
     UCLN_I18N,
     UCLN_COMMON /* This must be the last one to cleanup. */
 } ECleanupLibraryType;
 
-/**
- * Data type for cleanup function pointer
- */
-U_CDECL_BEGIN
-typedef UBool U_CALLCONV cleanupFunc(void);
-typedef void U_CALLCONV initFunc(UErrorCode *);
-U_CDECL_END
+typedef UBool cleanupFunc(void);
 
-/**
- * Register a cleanup function
- * @param type which library to register for.
- * @param func the function pointer
- */
 U_CAPI void U_EXPORT2 ucln_registerCleanup(ECleanupLibraryType type,
                                            cleanupFunc *func);
-
-/**
- * Request cleanup for one specific library.
- * Not thread safe.
- * @param type which library to cleanup
- */
-U_CAPI void U_EXPORT2 ucln_cleanupOne(ECleanupLibraryType type);
 
 #endif

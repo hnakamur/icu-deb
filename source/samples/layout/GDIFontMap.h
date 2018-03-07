@@ -1,10 +1,6 @@
 /*
  ******************************************************************************
- * © 2016 and later: Unicode, Inc. and others.                    *
- * License & terms of use: http://www.unicode.org/copyright.html#License      *
- ******************************************************************************
- ******************************************************************************
- * Copyright (C) 1998-2003, International Business Machines Corporation and   *
+ * Copyright (C) 1998-2001, International Business Machines Corporation and   *
  * others. All Rights Reserved.                                               *
  ******************************************************************************
  */
@@ -17,26 +13,25 @@
 #include "unicode/uscript.h"
 
 #include "layout/LETypes.h"
-#include "layout/LEFontInstance.h"
 
 #include "FontMap.h"
 #include "GUISupport.h"
-#include "GDIFontInstance.h"
+#include "RenderingFontInstance.h"
 
 #define BUFFER_SIZE 128
 
 class GDIFontMap : public FontMap
 {
 public:
-    GDIFontMap(GDISurface *surface, const char *fileName, le_int16 pointSize, GUISupport *guiSupport, LEErrorCode &status);
+    GDIFontMap(HDC hdc, const char *fileName, le_int16 pointSize, GUISupport *guiSupport, RFIErrorCode &status);
 
     virtual ~GDIFontMap();
 
 protected:
-    virtual const LEFontInstance *openFont(const char *fontName, le_int16 pointSize, LEErrorCode &status);
+    virtual const RenderingFontInstance *openFont(const char *fontName, le_int16 pointSize, RFIErrorCode &status);
 
 private:
-    GDISurface *fSurface;
+    HDC fHdc;
 };
 
 #endif

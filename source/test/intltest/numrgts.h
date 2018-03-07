@@ -1,18 +1,12 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
-/***********************************************************************
+/********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2013, International Business Machines Corporation
- * and others. All Rights Reserved.
- ***********************************************************************/
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
+ * others. All Rights Reserved.
+ ********************************************************************/
 
 #ifndef _NUMBERFORMATREGRESSIONTEST_
 #define _NUMBERFORMATREGRESSIONTEST_
  
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "unicode/unistr.h"
 #include "unicode/numfmt.h"
 #include "unicode/decimfmt.h"
@@ -21,8 +15,8 @@
 /** 
  * Performs regression test for MessageFormat
  **/
-class NumberFormatRegressionTest: public IntlTest {
-
+class NumberFormatRegressionTest: public IntlTest {    
+    
     // IntlTest override
     void runIndexedTest( int32_t index, UBool exec, const char* &name, char* par );
 public:
@@ -92,18 +86,72 @@ public:
     void Test4243011(void);
     void Test4243108(void);
     void TestJ691(void);
-    void Test8199(void);
-    void Test9109(void);
-    void Test9780(void);
-    void Test9677(void);
-    void Test10361(void);
+
 protected:
-    UBool failure(UErrorCode status, const UnicodeString& msg, UBool possibleDataError=FALSE);
-    UBool failure(UErrorCode status, const UnicodeString& msg, const char *l, UBool possibleDataError=FALSE);
-    UBool failure(UErrorCode status, const UnicodeString& msg, const Locale& l, UBool possibleDataError=FALSE);
+    UBool failure(UErrorCode status, const UnicodeString& msg);
 };
 
-#endif /* #if !UCONFIG_NO_FORMATTING */
+class MyNumberFormatTest : public NumberFormat 
+{
+public:
+
+  
+    virtual UnicodeString& format(    double            number, 
+                    UnicodeString&        toAppendTo, 
+                    FieldPosition&        pos,
+                    UErrorCode& status) const
+    {
+        return NumberFormat::format(number, toAppendTo, pos, status);
+    }
+
+    /* Just keep this here to make some of the compilers happy */
+    virtual UnicodeString& format(const Formattable& obj,
+                                  UnicodeString& toAppendTo,
+                                  FieldPosition& pos,
+                                  UErrorCode& status) const
+    {
+        return NumberFormat::format(obj, toAppendTo, pos, status);
+    }
+
+    /* Just use one of the format functions */
+    virtual UnicodeString& format(    double            /* number */, 
+                    UnicodeString&        toAppendTo, 
+                    FieldPosition&        /* pos */) const
+    {
+        toAppendTo = "";
+        return toAppendTo;
+    }
+  
+    /*
+    public Number parse(String text, ParsePosition parsePosition) 
+    { return new Integer(0); }
+    */
+  
+    /* Just use one of the parse functions */
+    virtual void parse(    const UnicodeString&    /* text */, 
+            Formattable&            result, 
+            ParsePosition&          /* parsePosition */) const
+    {
+        result.setLong((int32_t)0);
+    }
+  
+    virtual void parse(    const UnicodeString&    text, 
+            Formattable&            result, 
+            UErrorCode&            status) const 
+    {
+        NumberFormat::parse(text, result, status);
+    }
+    virtual Format* clone() const 
+    { return NULL; }
+  
+    virtual UnicodeString& format(int32_t, 
+                UnicodeString& foo, 
+                FieldPosition&) const
+    { return foo.remove(); }
+
+    virtual void applyPattern(const UnicodeString&, UParseError&, UErrorCode&){
+    }
+};
 
 #endif // _NUMBERFORMATREGRESSIONTEST_
 //eof

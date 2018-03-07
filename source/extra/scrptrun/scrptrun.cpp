@@ -1,9 +1,7 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
  *******************************************************************************
  *
- *   Copyright (C) 1999-2016, International Business Machines
+ *   Copyright (C) 1999-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  *******************************************************************************
@@ -16,10 +14,9 @@
 #include "unicode/utypes.h"
 #include "unicode/uscript.h"
 
-#include "cmemory.h"
 #include "scrptrun.h"
 
-const char ScriptRun::fgClassID=0;
+#define ARRAY_SIZE(array) (sizeof array  / sizeof array[0])
 
 UChar32 ScriptRun::pairedChars[] = {
     0x0028, 0x0029, // ascii paired punctuation
@@ -41,7 +38,7 @@ UChar32 ScriptRun::pairedChars[] = {
     0x301a, 0x301b
 };
 
-const int32_t ScriptRun::pairedCharCount = UPRV_LENGTHOF(pairedChars);
+const int32_t ScriptRun::pairedCharCount = ARRAY_SIZE(pairedChars);
 const int32_t ScriptRun::pairedCharPower = 1 << highBit(pairedCharCount);
 const int32_t ScriptRun::pairedCharExtra = pairedCharCount - pairedCharPower;
 

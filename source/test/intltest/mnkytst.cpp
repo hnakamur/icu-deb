@@ -1,14 +1,8 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2009, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "unicode/coll.h"
 #include "unicode/tblcoll.h"
@@ -251,21 +245,32 @@ void CollationMonkeyTest::TestRules(/* char* par */){
     delete col;
 
 }
+void CollationMonkeyTest::doTest(RuleBasedCollator *myCollation, UnicodeString mysource, UnicodeString target, Collator::EComparisonResult result)
+{
+    Collator::EComparisonResult compareResult = myCollation->compare(source, target);
+    CollationKey sortKey1, sortKey2;
+    UErrorCode key1status = U_ZERO_ERROR, key2status = U_ZERO_ERROR; //nos
+    myCollation->getCollationKey(source, /*nos*/ sortKey1, key1status );
+    myCollation->getCollationKey(target, /*nos*/ sortKey2, key2status );
+    if (U_FAILURE(key1status) || U_FAILURE(key2status))
+    {
+        errln("SortKey generation Failed.\n");
+        return;
+    }
+
+    Collator::EComparisonResult keyResult = sortKey1.compareTo(sortKey2);
+    reportCResult( mysource, target, sortKey1, sortKey2, compareResult, keyResult, compareResult, result );
+}
 
 void CollationMonkeyTest::runIndexedTest( int32_t index, UBool exec, const char* &name, char* /*par*/ )
 {
     if (exec) logln("TestSuite CollationMonkeyTest: ");
-    if(myCollator) {
-      switch (index) {
-          case 0: name = "TestCompare";   if (exec)   TestCompare(/* par */); break;
-          case 1: name = "TestCollationKey"; if (exec)    TestCollationKey(/* par */); break;
-          case 2: name = "TestRules"; if (exec) TestRules(/* par */); break;
-          default: name = ""; break;
-      }
-    } else {
-      dataerrln("Class collator not instantiated");
-      name = "";
+    switch (index) {
+        case 0: name = "TestCompare";   if (exec)   TestCompare(/* par */); break;
+        case 1: name = "TestCollationKey"; if (exec)    TestCollationKey(/* par */); break;
+        case 2: name = "TestRules"; if (exec) TestRules(/* par */); break;
+        default: name = ""; break;
     }
 }
 
-#endif /* #if !UCONFIG_NO_COLLATION */
+

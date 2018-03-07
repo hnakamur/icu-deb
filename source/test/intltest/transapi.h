@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 2001-2005, International Business Machines Corporation and
+ * Copyright (c) 2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /************************************************************************
@@ -12,10 +10,6 @@
 
 #ifndef TRANSAPI_H
 #define TRANSAPI_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
 
 #include "unicode/translit.h"
 #include "intltest.h"
@@ -61,8 +55,6 @@ public:
     
     void TestDevanagariLatinRT(void);
 
-    void TestUnicodeFunctor(void);
-
     /*Internal functions used*/
     void doTest(const UnicodeString& , const UnicodeString& , const UnicodeString& );
 
@@ -71,10 +63,10 @@ public:
     void displayOutput(const UnicodeString&, const UnicodeString&, UnicodeString&,
                        UTransPosition&);
 
-    void callEverything(const Transliterator *t, int line);
-
 };
 
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
-
 #endif
+
+
+
+

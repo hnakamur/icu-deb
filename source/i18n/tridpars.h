@@ -1,22 +1,16 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
- **************************************************************************
- *   Copyright (c) 2002-2010, International Business Machines Corporation *
- *   and others.  All Rights Reserved.                                    *
- **************************************************************************
- *   Date        Name        Description                                  *
- *   01/28/2002  aliu        Creation.                                    *
- **************************************************************************
- */
+**********************************************************************
+*   Copyright (c) 2002, International Business Machines Corporation
+*   and others.  All Rights Reserved.
+**********************************************************************
+*   Date        Name        Description
+*   01/28/2002  aliu        Creation.
+**********************************************************************
+*/
 #ifndef TRIDPARS_H
 #define TRIDPARS_H
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
-
-#include "unicode/uobject.h"
 #include "unicode/unistr.h"
 
 U_NAMESPACE_BEGIN
@@ -47,7 +41,7 @@ class UVector;
  *
  * @author Alan Liu
  */
-class TransliteratorIDParser /* not : public UObject because all methods are static */ {
+class TransliteratorIDParser {
 
  public:
 
@@ -65,7 +59,7 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
      * 'filter' is the parsed filter pattern, or null if there was no
      * filter.
      */
-    class Specs : public UMemory {
+    class Specs {
     public:
         UnicodeString source; // not null
         UnicodeString target; // not null
@@ -75,11 +69,6 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
         Specs(const UnicodeString& s, const UnicodeString& t,
               const UnicodeString& v, UBool sawS,
               const UnicodeString& f);
-
-    private:
-
-        Specs(const Specs &other); // forbid copying of this class
-        Specs &operator=(const Specs &other); // forbid copying of this class
     };
 
     /**
@@ -97,7 +86,7 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
      * 'filter' may be null, if there is none, or non-null and
      * non-empty.
      */
-    class SingleID : public UMemory {
+    class SingleID {
     public:
         UnicodeString canonID;
         UnicodeString basicID;
@@ -106,23 +95,22 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
                  const UnicodeString& f);
         SingleID(const UnicodeString& c, const UnicodeString& b);
         Transliterator* createInstance();
-
-    private:
-
-        SingleID(const SingleID &other); // forbid copying of this class
-        SingleID &operator=(const SingleID &other); // forbid copying of this class
     };
 
     /**
-     * Parse a filter ID, that is, an ID of the general form
-     * "[f1] s1-t1/v1", with the filters optional, and the variants optional.
+     * Parse a basic ID from the given string.  A basic ID contains
+     * only a single source, target, and variant.  It does not contain
+     * a filter or an explicit inverse.
      * @param id the id to be parsed
      * @param pos INPUT-OUTPUT parameter.  On input, the position of
      * the first character to parse.  On output, the position after
-     * the last character parsed.
-     * @return a SingleID object or null if the parse fails
+     * the last character parsed.  If the parse fails pos[0] will be
+     * unchanged.
+     * @return the parsed ID in canonical format, or null on parse
+     * failure.  If the parsed ID did not contain a source, the return
+     * ID will not.
      */
-    static SingleID* parseFilterID(const UnicodeString& id, int32_t& pos);
+    static UnicodeString parseBasicID(const UnicodeString& id, int32_t& pos);
 
     /**
      * Parse a single ID, that is, an ID of the general form
@@ -137,7 +125,7 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
      * @return a SingleID object or null
      */
     static SingleID* parseSingleID(const UnicodeString& id, int32_t& pos,
-                                  int32_t dir, UErrorCode& status);
+                                  int32_t dir);
 
     /**
      * Parse a global filter of the form "[f]" or "([f])", depending
@@ -149,7 +137,7 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
      * @param dir the direction.
      * @param withParens INPUT-OUTPUT parameter.  On entry, if
      * withParens[0] is 0, then parens are disallowed.  If it is 1,
-     * then parens are required.  If it is -1, then parens are
+     * then parens are requires.  If it is -1, then parens are
      * optional, and the return result will be set to 0 or 1.
      * @param canonID OUTPUT parameter.  The pattern for the filter
      * added to the canonID, either at the end, if dir is FORWARD, or
@@ -204,27 +192,28 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
      * the reverse.  THIS MAY RESULT IN AN EMPTY VECTOR.  Convert
      * SingleID entries to actual transliterators.
      *
+     * Also, optionally, insert the given transliterator at the given
+     * position.  This effectively happens before anything else.
+     *
      * @param list vector of SingleID objects.  On exit, vector
      * of one or more Transliterators.
-     * @param ec Output param to receive a success or an error code.
+     * @param insert Transliterator to insert, or null if none.
+     * @param insertIndex index from 0..list.size()-1, at which
+     * to place 'insert', or -1 if none.
      * @return new value of insertIndex.  The index will shift if
      * there are empty items, like "(Lower)", with indices less than
      * insertIndex.
      */
-    static void instantiateList(UVector& list,
-                                UErrorCode& ec);
+    static int32_t instantiateList(UVector& list,
+                                   Transliterator* insert,
+                                   int32_t insertIndex,
+                                   UErrorCode& ec);
 
     /**
      * Parse an ID into pieces.  Take IDs of the form T, T/V, S-T,
      * S-T/V, or S/V-T.  If the source is missing, return a source of
      * ANY.
      * @param id the id string, in any of several forms
-     * @param source          the given source.
-     * @param target          the given target.
-     * @param variant         the given variant
-     * @param isSourcePresent If TRUE then the source is present. 
-     *                        If the source is not present, ANY will be
-     *                        given as the source, and isSourcePresent will be null
      * @return an array of 4 strings: source, target, variant, and
      * isSourcePresent.  If the source is not present, ANY will be
      * given as the source, and isSourcePresent will be null.  Otherwise
@@ -236,16 +225,6 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
                         UnicodeString& target,
                         UnicodeString& variant,
                         UBool& isSourcePresent);
-
-    /**
-     * Given source, target, and variant strings, concatenate them into a
-     * full ID.  If the source is empty, then "Any" will be used for the
-     * source, so the ID will always be of the form s-t/v or s-t.
-     */
-    static void STVtoID(const UnicodeString& source,
-                        const UnicodeString& target,
-                        const UnicodeString& variant,
-                        UnicodeString& id);
 
     /**
      * Register two targets as being inverses of one another.  For
@@ -281,8 +260,7 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
      */
     static void registerSpecialInverse(const UnicodeString& target,
                                        const UnicodeString& inverseTarget,
-                                       UBool bidirectional,
-                                       UErrorCode &status);
+                                       UBool bidirectional);
 
     /**
      * Free static memory.
@@ -290,12 +268,10 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
     static void cleanup();
 
  private:
+
     //----------------------------------------------------------------
     // Private implementation
     //----------------------------------------------------------------
-
-    // forbid instantiation
-    TransliteratorIDParser();
 
     /**
      * Parse an ID into component pieces.  Take IDs of the form T,
@@ -320,11 +296,9 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
                                 UBool allowFilter);
 
     /**
-     * Givens a Specs object, convert it to a SingleID object.  The
+     * Givens a Spec object, convert it to a SingleID object.  The
      * Spec object is a more unprocessed parse result.  The SingleID
      * object contains information about canonical and basic IDs.
-     * @param specs the given Specs object.
-     * @param dir   either FORWARD or REVERSE.
      * @return a SingleID; never returns null.  Returned object always
      * has 'filter' field of null.
      */
@@ -334,16 +308,13 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
      * Given a Specs object, return a SingleID representing the
      * special inverse of that ID.  If there is no special inverse
      * then return null.
-     * @param specs the given Specs.
      * @return a SingleID or null.  Returned object always has
      * 'filter' field of null.
      */
-    static SingleID* specsToSpecialInverse(const Specs& specs, UErrorCode &status);
+    static SingleID* specsToSpecialInverse(const Specs& specs);
 
     /**
      * Glue method to get around access problems in C++.
-     * @param id the id string for the transliterator, in any of several forms
-     * @param canonID the given canonical ID
      */
     static Transliterator* createBasicInstance(const UnicodeString& id,
                                                const UnicodeString* canonID);
@@ -351,13 +322,11 @@ class TransliteratorIDParser /* not : public UObject because all methods are sta
     /**
      * Initialize static memory.
      */
-    static void U_CALLCONV init(UErrorCode &status);
+    static void init();
 
     friend class SingleID;
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif

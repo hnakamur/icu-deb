@@ -1,8 +1,6 @@
 //*******************************************************************************
-// Copyright (C) 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 //*
-//*   Copyright (C) 1998-2013, International Business Machines
+//*   Copyright (C) 1998-2000, International Business Machines
 //*   Corporation and others.  All Rights Reserved.
 //*
 //*******************************************************************************
@@ -13,8 +11,6 @@
 te
 {
     string_only_in_te { TE }
-
-    string_in_te_no_te_IN_fallback { TE_no_fallback }
 
     array_only_in_te { TE0, TE1, TE2, TE3 }
 
@@ -92,81 +88,13 @@ te
     {
         tag0 { TE0 } 
     }
-
-    collations {
-      standard { 
-        Version { "1.0" }
-        Override { "FALSE" }
-        Sequence {"[reorder Grek] & A < a\u0308 , A\u0308 & C < c\u0327 , C\u0327 & G < g"
-            "\u0306 , G\u0306 & H < \u0131 , I , i , \u0130 < \u0132 , \u0133 & O < o\u0308 "
-            ", O\u0308 & S < s\u0327 , S\u0327 & U < u\u0308 , U\u0308" }
-      }
-    }
-    aliasClient:alias {"/LOCALE/aliasDestination"}
-    aliasDestination {"tedest"}
-    rootAliasDestination {"correct"}
-    a {
-    a1{"a21"}
-    a2{"a22"}
-        a3{"a23"}
-    a4{"a24"}
-    }    
-  zoneStrings{
-        {
-            "Pacific/Honolulu",
-            "Hawaii Standard Time",
-            "HST",
-            "Hawaii Daylight Time",
-            "HDT",
-            "Honolulu",
-            "Hawaii Time",
-            "HT",
-        }
-        {
-            "America/Anchorage",
-            "Alaska Standard Time",
-            "AKST",
-            "Alaska Daylight Time",
-            "AKDT",
-            "Anchorage",
-            "Alaska Time",
-            "AKT",
-        }
-        {
-            "America/Los_Angeles",
-            "Pacific Standard Time",
-            "PST",
-            "Pacific Daylight Time",
-            "PDT",
-            "Los Angeles",
-            "Pacific Time",
-            "PT",
-        }
-        {
-            "America/Phoenix",
-            "Mountain Standard Time",
-            "MST",
-            "Mountain Daylight Time",
-            "MDT",
-            "Phoenix",
-            "Mountain Time",
-            "MT",
-        }
-        {
-            "America/Denver",
-            "Mountain Standard Time",
-            "MST",
-            "Mountain Daylight Time",
-            "MDT",
-            "Denver",
-            "Mountain Time",
-            "MT",
-        }
-    }
-
-    tableT7996 {
-        a7996:alias {"sh"}
-        c7996 {"string c7996 in tableT7996 for te"}
+	
+	CollationElements 
+	{ Version { "1.0" }
+	  Override { "FALSE" }
+	  Sequence {"& A < a\u0308 , A\u0308 & C < c\u0327 , C\u0327 & G < g"
+        "\u0306 , G\u0306 & H < \u0131 , I , i , \u0130 < \u0132 , \u0133 & O < o\u0308 "
+        ", O\u0308 & S < s\u0327 , S\u0327 & U < u\u0308 , U\u0308 " }
     }
 }
 

@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (c) 2002-2011, International Business Machines Corporation
+*   Copyright (c) 2002, International Business Machines Corporation
 *   and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -12,10 +10,6 @@
 
 #ifndef STRREPL_H
 #define STRREPL_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_TRANSLITERATION
 
 #include "unicode/unifunct.h"
 #include "unicode/unirepl.h"
@@ -134,29 +128,12 @@ class StringReplacer : public UnicodeFunctor, public UnicodeReplacer {
                                              UBool escapeUnprintable) const;
 
     /**
-     * Implement UnicodeReplacer
-     */
-    virtual void addReplacementSetTo(UnicodeSet& toUnionTo) const;
-
-    /**
      * UnicodeFunctor API
      */
     virtual void setData(const TransliterationRuleData*);
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for this class.
-     */
-    static UClassID U_EXPORT2 getStaticClassID();
-
-    /**
-     * ICU "poor man's RTTI", returns a UClassID for the actual class.
-     */
-    virtual UClassID getDynamicClassID() const;
 };
 
 U_NAMESPACE_END
-
-#endif /* #if !UCONFIG_NO_TRANSLITERATION */
 
 #endif
 

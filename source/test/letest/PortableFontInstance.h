@@ -1,10 +1,8 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 
 /*
  *******************************************************************************
  *
- *   Copyright (C) 1999-2015, International Business Machines
+ *   Copyright (C) 1999-2001, International Business Machines
  *   Corporation and others.  All Rights Reserved.
  *
  *******************************************************************************
@@ -19,36 +17,48 @@
 
 #include <stdio.h>
 
-#include "layout/LETypes.h"
-#include "layout/LEFontInstance.h"
-
-#include "FontTableCache.h"
+#include "LETypes.h"
+#include "LEFontInstance.h"
 
 #include "sfnt.h"
 #include "cmaps.h"
 
-class PortableFontInstance : public LEFontInstance, protected FontTableCache
+#define TABLE_CACHE_INIT 5
+#define TABLE_CACHE_GROW 5
+
+struct TableCacheEntry
+{
+    LETag tag;
+    void *table;
+};
+
+enum PFIErrorCode {
+    PFI_NO_ERROR = 0,
+
+    PFI_FONT_FILE_NOT_FOUND_ERROR = 1,
+    PFI_MISSING_FONT_TABLE_ERROR  = 2,
+    PFI_OUT_OF_MEMORY_ERROR       = 3
+};
+
+#ifndef XP_CPLUSPLUS
+typedef enum PFIErrorCode PFIErrorCode;
+#endif
+
+class PortableFontInstance : public LEFontInstance
 {
 private:
     FILE *fFile;
 
-    float     fPointSize;
-    le_int32  fUnitsPerEM;
-    le_uint32 fFontChecksum;
-    le_int32  fAscent;
-    le_int32  fDescent;
-    le_int32  fLeading;
+    float fUnitsPerEM;
+    float fPointSize;
 
     const SFNTDirectory *fDirectory;
     le_uint16 fDirPower;
     le_uint16 fDirExtra;
 
-    float fDeviceScaleX;
-    float fDeviceScaleY;
-
-    const NAMETable *fNAMETable;
-    le_uint16 fNameCount;
-    le_uint16 fNameStringOffset;
+    TableCacheEntry *fTableCache;
+    le_int32 fTableCacheCurr;
+    le_int32 fTableCacheSize;
 
     CMAPMapper *fCMAPMapper;
 
@@ -58,65 +68,100 @@ private:
 
     static le_int8 highBit(le_int32 value);
 
+    PFIErrorCode PortableFontInstance::initFontTableCache();
+    void PortableFontInstance::flushFontTableCache();
+
     const DirectoryEntry *findTable(LETag tag) const;
     const void *readTable(LETag tag, le_uint32 *length) const;
-    void getMetrics();
+    void deleteTable(const void *table) const;
 
-    CMAPMapper *findUnicodeMapper();
-
-protected:
-    const void *readFontTable(LETag tableTag) const { size_t ignored; return readFontTable(tableTag, ignored); }
-    const void *readFontTable(LETag tableTag, size_t &length) const;
+    CMAPMapper *PortableFontInstance::findUnicodeMapper();
 
 public:
-    PortableFontInstance(const char *fileName, float pointSize, LEErrorCode &status);
+    PortableFontInstance(char *fileName, float pointSize, PFIErrorCode &status);
 
     virtual ~PortableFontInstance();
 
-    virtual const void *getFontTable(LETag tableTag, size_t &length) const;
+    virtual const void *getFontTable(LETag tableTag) const;
 
-    virtual const char *getNameString(le_uint16 nameID, le_uint16 platform, le_uint16 encoding, le_uint16 language) const;
+    virtual le_bool canDisplay(LEUnicode32 ch) const
+    {
+        return (le_bool) fCMAPMapper->unicodeToGlyph(ch) != 0;
+    };
 
-    virtual const LEUnicode16 *getUnicodeNameString(le_uint16 nameID, le_uint16 platform, le_uint16 encoding, le_uint16 language) const;
+    virtual le_int32 getUnitsPerEM() const
+    {
+        return (le_int32) fUnitsPerEM;
+    };
 
-    virtual void deleteNameString(const char *name) const;
+    virtual le_int32 getLineHeight() const
+    {
+        // this is a cheap hack!!
+    return (le_int32) fPointSize;
+    };
 
-    virtual void deleteNameString(const LEUnicode16 *name) const;
+    virtual void mapCharsToGlyphs(const LEUnicode chars[], le_int32 offset, le_int32 count, le_bool reverse, const LECharMapper *mapper, LEGlyphID glyphs[]) const;
 
-    virtual le_int32 getUnitsPerEM() const;
-
-    virtual le_uint32 getFontChecksum() const;
-
-    virtual le_uint32 getRawChecksum() const;
-
-    virtual le_int32 getAscent() const;
-
-    virtual le_int32 getDescent() const;
-
-    virtual le_int32 getLeading() const;
-
-    // We really want to inherit this method from the superclass, but some compilers
-    // issue a warning if we don't implement it...
-    virtual LEGlyphID mapCharToGlyph(LEUnicode32 ch, const LECharMapper *mapper, le_bool filterZeroWidth) const;
-    
-    // We really want to inherit this method from the superclass, but some compilers
-    // issue a warning if we don't implement it...
     virtual LEGlyphID mapCharToGlyph(LEUnicode32 ch, const LECharMapper *mapper) const;
 
-    virtual LEGlyphID mapCharToGlyph(LEUnicode32 ch) const;
+    virtual le_int32 getName(le_uint16 platformID, le_uint16 scriptID, le_uint16 languageID, le_uint16 nameID, LEUnicode *name) const
+    {
+        // This is only used for CDAC fonts, and we'll have to loose that support anyhow...
+        //return (le_int32) fFontObject->getName(platformID, scriptID, languageID, nameID, name);
+        if (name != NULL) {
+            *name = 0;
+        }
+
+        return 0;
+    };
 
     virtual void getGlyphAdvance(LEGlyphID glyph, LEPoint &advance) const;
 
     virtual le_bool getGlyphPoint(LEGlyphID glyph, le_int32 pointNumber, LEPoint &point) const;
 
-    float getXPixelsPerEm() const;
+    float getXPixelsPerEm() const
+    {
+        return fPointSize;
+    };
 
-    float getYPixelsPerEm() const;
+    float getYPixelsPerEm() const
+    {
+        return fPointSize;
+    };
 
-    float getScaleFactorX() const;
+    float xUnitsToPoints(float xUnits) const
+    {
+        return (xUnits * fPointSize) / fUnitsPerEM;
+    };
 
-    float getScaleFactorY() const;
+    float yUnitsToPoints(float yUnits) const
+    {
+        return (yUnits * fPointSize) / fUnitsPerEM;
+    };
 
+    void unitsToPoints(LEPoint &units, LEPoint &points) const
+    {
+        points.fX = xUnitsToPoints(units.fX);
+        points.fY = yUnitsToPoints(units.fY);
+    }
+
+    float xPixelsToUnits(float xPixels) const
+    {
+        return (xPixels * fUnitsPerEM) / fPointSize;
+    };
+
+    float yPixelsToUnits(float yPixels) const
+    {
+        return (yPixels * fUnitsPerEM) / fPointSize;
+    };
+
+    void pixelsToUnits(LEPoint &pixels, LEPoint &units) const
+    {
+        units.fX = xPixelsToUnits(pixels.fX);
+        units.fY = yPixelsToUnits(pixels.fY);
+    };
+
+    void transformFunits(float xFunits, float yFunits, LEPoint &pixels) const;
 };
 
 #endif

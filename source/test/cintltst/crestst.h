@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2004, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 /********************************************************************************
@@ -36,11 +34,6 @@
     void TestConstruction2(void);
 
     void TestAliasConflict(void);
-
-    static void TestGetSize(void);
-
-    static void TestGetLocaleByType(void);
-
     /**
      * extensive subtests called by TestResourceBundles
      **/

@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
  * COPYRIGHT: 
- * Copyright (c) 1997-2003, International Business Machines Corporation and
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
@@ -34,10 +32,6 @@ public:
 
     void TestOtherAPI(void);
 
-    void TestNewTypes(void);
-
-    void TestGetByFallback(void);
-
 private:
     /**
      * The assignment operator has no real implementation.
@@ -56,6 +50,7 @@ private:
     int32_t pass;
     int32_t fail;
 
+    IntlTest& OUT;
 };
 
 #endif

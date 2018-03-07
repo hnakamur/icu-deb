@@ -1,9 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 *******************************************************************************
-* Copyright (C) 1997-2015, International Business Machines
-* Corporation and others. All Rights Reserved.
+* Copyright (C) 1997-2001, International Business Machines Corporation and others. All Rights Reserved.
 *******************************************************************************
 */
 
@@ -15,7 +12,6 @@
 #if U_HAVE_RBNF
 
 #include "unicode/utypes.h"
-#include "unicode/uobject.h"
 #include "unicode/unistr.h"
 
 U_NAMESPACE_BEGIN
@@ -26,11 +22,10 @@ class NFRuleList;
 class NFRuleSet;
 class NFSubstitution;
 class ParsePosition;
-class PluralFormat;
 class RuleBasedNumberFormat;
 class UnicodeString;
 
-class NFRule : public UMemory {
+class NFRule {
 public:
 
     enum ERuleType {
@@ -39,19 +34,17 @@ public:
         kImproperFractionRule = -2,
         kProperFractionRule = -3,
         kMasterRule = -4,
-        kInfinityRule = -5,
-        kNaNRule = -6,
-        kOtherRule = -7
+        kOtherRule = -5
     };
 
     static void makeRules(UnicodeString& definition,
-                          NFRuleSet* ruleSet, 
+                          const NFRuleSet* ruleSet, 
                           const NFRule* predecessor, 
                           const RuleBasedNumberFormat* rbnf, 
                           NFRuleList& ruleList,
                           UErrorCode& status);
 
-    NFRule(const RuleBasedNumberFormat* rbnf, const UnicodeString &ruleText, UErrorCode &status);
+    NFRule(const RuleBasedNumberFormat* rbnf);
     ~NFRule();
 
     UBool operator==(const NFRule& rhs) const;
@@ -61,14 +54,12 @@ public:
     void setType(ERuleType ruleType) { baseValue = (int32_t)ruleType; }
 
     int64_t getBaseValue() const { return baseValue; }
-    void setBaseValue(int64_t value, UErrorCode& status);
+    void setBaseValue(int64_t value);
 
-    UChar getDecimalPoint() const { return decimalPoint; }
+    double getDivisor() const { return uprv_pow(radix, exponent); }
 
-    int64_t getDivisor() const;
-
-    void doFormat(int64_t number, UnicodeString& toAppendTo, int32_t pos, int32_t recursionCount, UErrorCode& status) const;
-    void doFormat(double  number, UnicodeString& toAppendTo, int32_t pos, int32_t recursionCount, UErrorCode& status) const;
+    void doFormat(int64_t number, UnicodeString& toAppendTo, int32_t pos) const;
+    void doFormat(double  number, UnicodeString& toAppendTo, int32_t pos) const;
 
     UBool doParse(const UnicodeString& text, 
                   ParsePosition& pos, 
@@ -76,45 +67,35 @@ public:
                   double upperBound,
                   Formattable& result) const;
 
-    UBool shouldRollBack(int64_t number) const;
+    UBool shouldRollBack(double number) const;
 
-    void _appendRuleText(UnicodeString& result) const;
-
-    int32_t findTextLenient(const UnicodeString& str, const UnicodeString& key, 
-                     int32_t startingAt, int32_t* resultCount) const;
-
-    void setDecimalFormatSymbols(const DecimalFormatSymbols &newSymbols, UErrorCode& status);
+    void appendRuleText(UnicodeString& result) const;
 
 private:
     void parseRuleDescriptor(UnicodeString& descriptor, UErrorCode& status);
-    void extractSubstitutions(const NFRuleSet* ruleSet, const UnicodeString &ruleText, const NFRule* predecessor, UErrorCode& status);
-    NFSubstitution* extractSubstitution(const NFRuleSet* ruleSet, const NFRule* predecessor, UErrorCode& status);
+    void extractSubstitutions(const NFRuleSet* ruleSet, const NFRule* predecessor, const RuleBasedNumberFormat* rbnf, UErrorCode& status);
+    NFSubstitution* extractSubstitution(const NFRuleSet* ruleSet, const NFRule* predecessor, const RuleBasedNumberFormat* rbnf, UErrorCode& status);
     
     int16_t expectedExponent() const;
-    int32_t indexOfAnyRulePrefix() const;
+    int32_t indexOfAny(const UChar* const strings[]) const;
     double matchToDelimiter(const UnicodeString& text, int32_t startPos, double baseValue,
                             const UnicodeString& delimiter, ParsePosition& pp, const NFSubstitution* sub, 
                             double upperBound) const;
     void stripPrefix(UnicodeString& text, const UnicodeString& prefix, ParsePosition& pp) const;
 
-    int32_t prefixLength(const UnicodeString& str, const UnicodeString& prefix, UErrorCode& status) const;
-    UBool allIgnorable(const UnicodeString& str, UErrorCode& status) const;
+    int32_t prefixLength(const UnicodeString& str, const UnicodeString& prefix) const;
+    UBool allIgnorable(const UnicodeString& str) const;
     int32_t findText(const UnicodeString& str, const UnicodeString& key, 
                      int32_t startingAt, int32_t* resultCount) const;
 
 private:
     int64_t baseValue;
-    int32_t radix;
+    int16_t radix;
     int16_t exponent;
-    UChar decimalPoint;
     UnicodeString ruleText;
     NFSubstitution* sub1;
     NFSubstitution* sub2;
     const RuleBasedNumberFormat* formatter;
-    const PluralFormat* rulePatternFormat;
-
-    NFRule(const NFRule &other); // forbid copying of this class
-    NFRule &operator=(const NFRule &other); // forbid copying of this class
 };
 
 U_NAMESPACE_END

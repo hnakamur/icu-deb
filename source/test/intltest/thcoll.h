@@ -1,8 +1,6 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /*
 **********************************************************************
-*   Copyright (C) 1999-2003, International Business Machines
+*   Copyright (C) 2001, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -12,10 +10,6 @@
 
 #ifndef COLLATIONTHAITEST_H
 #define COLLATIONTHAITEST_H
-
-#include "unicode/utypes.h"
-
-#if !UCONFIG_NO_COLLATION
 
 #include "tscoll.h"
 
@@ -44,26 +38,9 @@ private:
      */
     void TestCornerCases(void);
     
-    /**
-     * Read the external names list, and confirms that the collator 
-     * gets the same results when comparing lines one to another
-     * using regular and iterative comparison.
-     */
-    void TestNamesList(void);
-
-    /** 
-     * test that invalid Thai sorts properly
-     */
-    void TestInvalidThai(void);
-
-    /** 
-     * test that reording is done properly
-     */
-    void TestReordering(void);
-
 private:
 
-    void compareArray(Collator& c, const char* tests[],
+    void compareArray(const Collator& c, const char* tests[],
                       int32_t testsLength);
 
     int8_t sign(int32_t i);
@@ -76,7 +53,5 @@ private:
     UnicodeString& parseChars(UnicodeString& result,
                               const char* chars);
 };
-
-#endif /* #if !UCONFIG_NO_COLLATION */
 
 #endif

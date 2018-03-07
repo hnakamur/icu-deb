@@ -1,7 +1,5 @@
 ## Makefile.in for ICU - test/letest
-## Copyright (C) 2016 and later: Unicode, Inc. and others.
-## License & terms of use: http://www.unicode.org/copyright.html
-## Copyright (c) 2001-2014, International Business Machines Corporation and
+## Copyright (c) 2001, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
 ## Source directory information
@@ -12,6 +10,9 @@ top_builddir = ../..
 
 include $(top_builddir)/icudefs.mk
 
+## Platform-specific setup
+include @platform_make_fragment@
+
 ## Build directory information
 subdir = test/letest
 
@@ -19,24 +20,22 @@ subdir = test/letest
 CLEANFILES = *~ $(DEPS)
 
 ## Target information
-TESTTARGET  = letest
-GENTARGET   = gendata
+TESTTARGET = letest
+GENTARGET  = gendata
 
-BUILDDIR := $(CURR_SRCCODE_FULL_DIR)/../../
-# Simplify the path for Unix
-BUILDDIR := $(BUILDDIR:test/cintltst/../../=)
-# Simplify the path for Windows
-BUILDDIR := $(BUILDDIR:test\\cintltst/../../=)
-# Simplify the path for Windows 98
-BUILDDIR := $(BUILDDIR:TEST\\CINTLTST/../../=)
+DEFS = @DEFS@
+CPPFLAGS = @CPPFLAGS@ -I$(top_builddir)/common -I$(top_srcdir)/common -I$(top_srcdir)/layout -I$(top_srcdir)
+CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
+ENABLE_RPATH = @ENABLE_RPATH@
+ifeq ($(ENABLE_RPATH),YES)
+RPATHLDFLAGS = $(LD_RPATH)$(LD_RPATH_PRE)$(libdir)
+endif
+LDFLAGS = @LDFLAGS@ $(RPATHLDFLAGS)
+LIBS = $(LIBICULE) $(LIBICUUC) @LIBS@ @LIB_M@
 
-CPPFLAGS += -I$(top_srcdir)/common -I$(top_srcdir)/i18n -I$(top_srcdir)/tools/ctestfw -I$(top_srcdir)/tools/toolutil -I$(top_srcdir)/layoutex $(ICULE_CFLAGS) $(ICULEHB_CFLAGS)
-DEFS += -D'U_TOPSRCDIR="$(top_srcdir)/"' -D'U_TOPBUILDDIR="$(BUILDDIR)"'
-LIBS = $(LIBICULX) $(LIBICUUC) $(LIBICUI18N) $(LIBCTESTFW) $(LIBICUTOOLUTIL) $(DEFAULT_LIBS) $(LIB_M) $(ICULEHB_LIBS)
-
-COMMONOBJECTS = letsutil.o cmaps.o FontTableCache.o SimpleFontInstance.o PortableFontInstance.o
-TESTOBJECTS   = letest.o
-CTESTOBJECTS  = cfonts.o xmlreader.o cletest.o
+COMMONOBJECTS = cmaps.o PortableFontInstance.o
+TESTOBJECTS   = testdata.o letest.o
 GENOBJECTS    = gendata.o
 
 OBJECTS = $(COMMONOBJECTS) $(TESTOBJECTS) $(GENOBJECTS)
@@ -45,7 +44,7 @@ DEPS = $(OBJECTS:.o=.d)
 
 ## List of phony targets
 .PHONY : all all-local install install-local clean clean-local	\
-distclean distclean-local dist dist-local check check-local xcheck xcheck-local
+distclean distclean-local dist dist-local check check-local
 
 ## Clear suffix list
 .SUFFIXES :
@@ -57,7 +56,6 @@ clean: clean-local
 distclean : distclean-local
 dist: dist-local
 check: all check-local
-xcheck: all xcheck-local
 
 all-local: $(TESTTARGET)
 
@@ -67,35 +65,25 @@ dist-local:
 
 clean-local:
 	test -z "$(CLEANFILES)" || $(RMV) $(CLEANFILES)
-	$(RMV) $(COMMONOBJECTS) $(TESTOBJECTS) $(CTESTOBJECTS) $(GENOBJECTS) $(TARGET)
+	$(RMV) $(OBJECTS) $(TARGET)
 
 distclean-local: clean-local
 	$(RMV) Makefile
 
 check-local: all-local
-	$(INVOKE) ./$(TESTTARGET) $(TEST_OUTPUT_OPTS) $(LETEST_OPTS)
-
-TESTXML=$(top_builddir)/test-$(TESTTARGET).xml
-xcheck-local: all-local
-	$(INVOKE) ./$(TESTTARGET) $(TEST_OUTPUT_OPTS) $(LETEST_OPTS) -x $(TESTXML)
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
 	 && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-$(TESTTARGET) : $(COMMONOBJECTS) $(TESTOBJECTS) $(CTESTOBJECTS)
-	$(LINK.cc) $(OUTOPT)$@ $^ $(LIBS)
-	$(POST_BUILD_STEP)
+$(TESTTARGET) : $(COMMONOBJECTS) $(TESTOBJECTS)
+	$(LINK.cc) -o $@ $^ $(LIBS)
 
 $(GENTARGET) : $(COMMONOBJECTS) $(GENOBJECTS)
-	$(LINK.cc) $(OUTOPT)$@ $^ $(LIBS)
-	$(POST_BUILD_STEP)
+	$(LINK.cc) -o $@ $^ $(LIBS)
 
 invoke:
 	ICU_DATA=$${ICU_DATA:-$(top_builddir)/data/} TZ=PST8PDT $(INVOKE) $(INVOCATION)
-
-gen-data: $(GENTARGET)
-	ICU_DATA=$${ICU_DATA:-$(top_builddir)/data/} TZ=PST8PDT $(INVOKE) ./$(GENTARGET) $(top_srcdir)/test/testdata/letest.xml $(srcdir)/gendata.xml
 
 ifeq (,$(MAKECMDGOALS))
 -include $(DEPS)

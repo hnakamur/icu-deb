@@ -1,15 +1,10 @@
-// © 2016 and later: Unicode, Inc. and others.
-// License & terms of use: http://www.unicode.org/copyright.html
 /********************************************************************
- * COPYRIGHT:
- * Copyright (c) 1997-2013, International Business Machines Corporation and
+ * COPYRIGHT: 
+ * Copyright (c) 1997-2001, International Business Machines Corporation and
  * others. All Rights Reserved.
  ********************************************************************/
 
 #include "unicode/utypes.h"
-
-#if !UCONFIG_NO_FORMATTING
-
 #include "unicode/dcfmtsym.h"
 #include "unicode/decimfmt.h"
 #include "unicode/unum.h"
@@ -17,14 +12,17 @@
 
 void IntlTestDecimalFormatSymbols::runIndexedTest( int32_t index, UBool exec, const char* &name, char* /*par*/ )
 {
-    if (exec) {
-        logln("TestSuite DecimalFormatSymbols:");
+    if (exec) logln("TestSuite DecimalFormatSymbols");
+    switch (index) {
+        case 0: name = "DecimalFormatSymbols test"; 
+                if (exec) {
+                    logln("DecimalFormatSymbols test---"); logln("");
+                    testSymbols(/*par*/);
+                }
+                break;
+
+        default: name = ""; break;
     }
-    TESTCASE_AUTO_BEGIN;
-    TESTCASE_AUTO(testSymbols);
-    TESTCASE_AUTO(testLastResortData);
-    TESTCASE_AUTO(testNumberingSystem);
-    TESTCASE_AUTO_END;
 }
 
 /**
@@ -36,15 +34,13 @@ void IntlTestDecimalFormatSymbols::testSymbols(/* char *par */)
 
     DecimalFormatSymbols fr(Locale::getFrench(), status);
     if(U_FAILURE(status)) {
-        errcheckln(status, "ERROR: Couldn't create French DecimalFormatSymbols - %s", u_errorName(status));
-        return;
+        errln("ERROR: Couldn't create French DecimalFormatSymbols");
     }
 
     status = U_ZERO_ERROR;
     DecimalFormatSymbols en(Locale::getEnglish(), status);
     if(U_FAILURE(status)) {
-        errcheckln(status, "ERROR: Couldn't create English DecimalFormatSymbols - %s", u_errorName(status));
-        return;
+        errln("ERROR: Couldn't create English DecimalFormatSymbols");
     }
 
     if(en == fr || ! (en != fr) ) {
@@ -114,62 +110,16 @@ void IntlTestDecimalFormatSymbols::testSymbols(/* char *par */)
     if(fr.getSymbol(DecimalFormatSymbols::kMinusSignSymbol) != en.getSymbol(DecimalFormatSymbols::kMinusSignSymbol)) {
         errln("ERROR: get/set MinusSign failed");
     }
-
+ 
     UnicodeString exponential(en.getSymbol(DecimalFormatSymbols::kExponentialSymbol));
     fr.setSymbol(DecimalFormatSymbols::kExponentialSymbol, exponential);
     if(fr.getSymbol(DecimalFormatSymbols::kExponentialSymbol) != en.getSymbol(DecimalFormatSymbols::kExponentialSymbol)) {
         errln("ERROR: get/set Exponential failed");
     }
 
-    // Test get currency spacing before the currency.
-    status = U_ZERO_ERROR;
-    for (int32_t i = 0; i < (int32_t)UNUM_CURRENCY_SPACING_COUNT; i++) {
-        UnicodeString enCurrencyPattern = en.getPatternForCurrencySpacing(
-             (UCurrencySpacing)i, TRUE, status);
-        if(U_FAILURE(status)) {
-            errln("Error: cannot get CurrencyMatch for locale:en");
-            status = U_ZERO_ERROR;
-        }
-        UnicodeString frCurrencyPattern = fr.getPatternForCurrencySpacing(
-             (UCurrencySpacing)i, TRUE, status);
-        if(U_FAILURE(status)) {
-            errln("Error: cannot get CurrencyMatch for locale:fr");
-        }
-        if (enCurrencyPattern != frCurrencyPattern) {
-           errln("ERROR: get CurrencySpacing failed");
-        }
-    }
-    // Test get currencySpacing after the currency.
-    status = U_ZERO_ERROR;
-    for (int32_t i = 0; i < UNUM_CURRENCY_SPACING_COUNT; i++) {
-        UnicodeString enCurrencyPattern = en.getPatternForCurrencySpacing(
-            (UCurrencySpacing)i, FALSE, status);
-        if(U_FAILURE(status)) {
-            errln("Error: cannot get CurrencyMatch for locale:en");
-            status = U_ZERO_ERROR;
-        }
-        UnicodeString frCurrencyPattern = fr.getPatternForCurrencySpacing(
-             (UCurrencySpacing)i, FALSE, status);
-        if(U_FAILURE(status)) {
-            errln("Error: cannot get CurrencyMatch for locale:fr");
-        }
-        if (enCurrencyPattern != frCurrencyPattern) {
-            errln("ERROR: get CurrencySpacing failed");
-        }
-    }
-    // Test set curerncySpacing APIs
-    status = U_ZERO_ERROR;
-    UnicodeString dash = UnicodeString("-");
-    en.setPatternForCurrencySpacing(UNUM_CURRENCY_INSERT, TRUE, dash);
-    UnicodeString enCurrencyInsert = en.getPatternForCurrencySpacing(
-        UNUM_CURRENCY_INSERT, TRUE, status);
-    if (dash != enCurrencyInsert) {
-        errln("Error: Failed to setCurrencyInsert for locale:en");
-    }
-
     status = U_ZERO_ERROR;
     DecimalFormatSymbols foo(status);
-
+    
     DecimalFormatSymbols bar(foo);
 
     en = fr;
@@ -196,116 +146,35 @@ void IntlTestDecimalFormatSymbols::testSymbols(/* char *par */)
                   UnicodeString((UChar32)(0x10330 + i)));
         }
     }
-
+   
+   
     DecimalFormatSymbols sym(Locale::getUS(), status);
 
     UnicodeString customDecSeperator("S");
     Verify(34.5, (UnicodeString)"00.00", sym, (UnicodeString)"34.50");
-    sym.setSymbol(DecimalFormatSymbols::kDecimalSeparatorSymbol, customDecSeperator);
+    sym.setSymbol((DecimalFormatSymbols::ENumberFormatSymbol)0, customDecSeperator);
     Verify(34.5, (UnicodeString)"00.00", sym, (UnicodeString)"34S50");
-    sym.setSymbol(DecimalFormatSymbols::kPercentSymbol, (UnicodeString)"P");
+    sym.setSymbol((DecimalFormatSymbols::ENumberFormatSymbol)3, (UnicodeString)"P");
     Verify(34.5, (UnicodeString)"00 %", sym, (UnicodeString)"3450 P");
-    sym.setSymbol(DecimalFormatSymbols::kCurrencySymbol, (UnicodeString)"D");
+    sym.setSymbol((DecimalFormatSymbols::ENumberFormatSymbol)8, (UnicodeString)"D");
     Verify(34.5, CharsToUnicodeString("\\u00a4##.##"), sym, (UnicodeString)"D34.5");
-    sym.setSymbol(DecimalFormatSymbols::kGroupingSeparatorSymbol, (UnicodeString)"|");
+    sym.setSymbol((DecimalFormatSymbols::ENumberFormatSymbol)1, (UnicodeString)"|");
     Verify(3456.5, (UnicodeString)"0,000.##", sym, (UnicodeString)"3|456S5");
-
+    
 }
 
-void IntlTestDecimalFormatSymbols::testLastResortData() {
-    IcuTestErrorCode errorCode(*this, "testLastResortData");
-    LocalPointer<DecimalFormatSymbols> lastResort(
-        DecimalFormatSymbols::createWithLastResortData(errorCode));
-    if(errorCode.logIfFailureAndReset("DecimalFormatSymbols::createWithLastResortData() failed")) {
-        return;
-    }
-    DecimalFormatSymbols root(Locale::getRoot(), errorCode);
-    if(errorCode.logDataIfFailureAndReset("DecimalFormatSymbols(root) failed")) {
-        return;
-    }
-    // Note: It is not necessary that the last resort data matches the root locale,
-    // but it seems weird if most symbols did not match.
-    // Also, one purpose for calling operator==() is to find uninitialized memory in a debug build.
-    if(*lastResort == root) {
-        errln("DecimalFormatSymbols last resort data unexpectedly matches root");
-    }
-    // Here we adjust for expected differences.
-    assertEquals("last-resort grouping separator",
-                 "", lastResort->getSymbol(DecimalFormatSymbols::kGroupingSeparatorSymbol));
-    lastResort->setSymbol(DecimalFormatSymbols::kGroupingSeparatorSymbol, ",");
-    assertEquals("last-resort monetary grouping separator",
-                 "", lastResort->getSymbol(DecimalFormatSymbols::kMonetaryGroupingSeparatorSymbol));
-    lastResort->setSymbol(DecimalFormatSymbols::kMonetaryGroupingSeparatorSymbol, ",");
-    assertEquals("last-resort NaN",
-                 UnicodeString((UChar)0xfffd), lastResort->getSymbol(DecimalFormatSymbols::kNaNSymbol));
-    lastResort->setSymbol(DecimalFormatSymbols::kNaNSymbol, "NaN");
-    // Check that now all of the symbols match root.
-    for(int32_t i = 0; i < DecimalFormatSymbols::kFormatSymbolCount; ++i) {
-        DecimalFormatSymbols::ENumberFormatSymbol e = (DecimalFormatSymbols::ENumberFormatSymbol)i;
-        assertEquals("last-resort symbol vs. root", root.getSymbol(e), lastResort->getSymbol(e));
-    }
-    // Also, the CurrencySpacing patterns are empty in the last resort instance,
-    // but not in root.
-    Verify(1234567.25, "#,##0.##", *lastResort, "1,234,567.25");
-}
-
-void IntlTestDecimalFormatSymbols::testNumberingSystem() {
-    IcuTestErrorCode errorCode(*this, "testNumberingSystem");
-    struct testcase {
-        const char* locid;
-        const char* nsname;
-        const char16_t* expected1; // Expected number format string
-        const char16_t* expected2; // Expected pattern separator
-    };
-    static const testcase cases[9] = {
-            {"en", "latn", u"1,234.56", u";"},
-            {"en", "arab", u"١٬٢٣٤٫٥٦", u"؛"},
-            {"en", "mathsanb", u"𝟭,𝟮𝟯𝟰.𝟱𝟲", u";"},
-            {"en", "mymr", u"၁,၂၃၄.၅၆", u";"},
-            {"my", "latn", u"1,234.56", u";"},
-            {"my", "arab", u"١٬٢٣٤٫٥٦", u"؛"},
-            {"my", "mathsanb", u"𝟭,𝟮𝟯𝟰.𝟱𝟲", u";"},
-            {"my", "mymr", u"၁,၂၃၄.၅၆", u"၊"},
-            {"en@numbers=thai", "mymr", u"၁,၂၃၄.၅၆", u";"}, // conflicting numbering system
-    };
-
-    for (int i=0; i<8; i++) {
-        testcase cas = cases[i];
-        Locale loc(cas.locid);
-        LocalPointer<NumberingSystem> ns(NumberingSystem::createInstanceByName(cas.nsname, errorCode));
-        if (errorCode.logDataIfFailureAndReset("NumberingSystem failed")) {
-            return;
-        }
-        UnicodeString expected1(cas.expected1);
-        UnicodeString expected2(cas.expected2);
-        DecimalFormatSymbols dfs(loc, *ns, errorCode);
-        if (errorCode.logDataIfFailureAndReset("DecimalFormatSymbols failed")) {
-            return;
-        }
-        Verify(1234.56, "#,##0.##", dfs, expected1);
-        // The pattern separator is something that differs by numbering system in my@numbers=mymr.
-        UnicodeString actual2 = dfs.getSymbol(DecimalFormatSymbols::kPatternSeparatorSymbol);
-        if (expected2 != actual2) {
-            errln((UnicodeString)"ERROR: DecimalFormatSymbols returned pattern separator " + actual2
-                + " but we expected " + expected2);
-        }
-    }
-}
-
-void IntlTestDecimalFormatSymbols::Verify(double value, const UnicodeString& pattern,
-                                          const DecimalFormatSymbols &sym, const UnicodeString& expected){
+void IntlTestDecimalFormatSymbols::Verify(double value, const UnicodeString& pattern, DecimalFormatSymbols sym, const UnicodeString& expected){
     UErrorCode status = U_ZERO_ERROR;
-    DecimalFormat df(pattern, sym, status);
+    DecimalFormat *df = new DecimalFormat(pattern, sym, status);
     if(U_FAILURE(status)){
-        errln("ERROR: construction of decimal format failed - %s", u_errorName(status));
+        errln("ERROR: construction of decimal format failed");
     }
     UnicodeString buffer;
     FieldPosition pos(FieldPosition::DONT_CARE);
-    buffer = df.format(value, buffer, pos);
+    buffer = df->format(value, buffer, pos);
     if(buffer != expected){
-        errln((UnicodeString)"ERROR: format() returns wrong result\n Expected " +
+        errln((UnicodeString)"ERROR: format failed after setSymbols()\n Expected " + 
             expected + ", Got " + buffer);
     }
+    delete df;
 }
-
-#endif /* #if !UCONFIG_NO_FORMATTING */
