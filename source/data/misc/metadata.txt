@@ -1,12 +1,294 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2011 International Business Machines
-// * Corporation and others.  All Rights Reserved.
-// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
-// * Source File:<path>/supplementalMetadata.xml
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/supplementalMetadata.xml
 // *
 // ***************************************************************************
 metadata:table(nofallback){
+    languageAlias{
+        aa_SAAHO{"ssy"}
+        aar{"aa"}
+        abk{"ab"}
+        afr{"af"}
+        aju{"jrb"}
+        aka{"ak"}
+        als{"sq"}
+        amh{"am"}
+        ara{"ar"}
+        arb{"ar"}
+        arg{"an"}
+        art_lojban{"jbo"}
+        asm{"as"}
+        ava{"av"}
+        ave{"ae"}
+        aym{"ay"}
+        ayr{"ay"}
+        aze{"az"}
+        azj{"az"}
+        bak{"ba"}
+        bam{"bm"}
+        bcc{"bal"}
+        bcl{"bik"}
+        bel{"be"}
+        ben{"bn"}
+        bih{"bh"}
+        bis{"bi"}
+        bod{"bo"}
+        bos{"bs"}
+        bre{"br"}
+        bul{"bg"}
+        bxk{"luy"}
+        bxr{"bua"}
+        cat{"ca"}
+        ces{"cs"}
+        cha{"ch"}
+        che{"ce"}
+        chu{"cu"}
+        chv{"cv"}
+        cld{"syr"}
+        cmn{"zh"}
+        cor{"kw"}
+        cos{"co"}
+        cre{"cr"}
+        cwd{"cr"}
+        cym{"cy"}
+        dan{"da"}
+        deu{"de"}
+        dgo{"doi"}
+        dhd{"mwr"}
+        dik{"din"}
+        diq{"zza"}
+        div{"dv"}
+        dzo{"dz"}
+        ekk{"et"}
+        ell{"el"}
+        emk{"man"}
+        eng{"en"}
+        epo{"eo"}
+        esk{"ik"}
+        est{"et"}
+        eus{"eu"}
+        ewe{"ee"}
+        fao{"fo"}
+        fas{"fa"}
+        fat{"ak"}
+        fij{"fj"}
+        fin{"fi"}
+        fra{"fr"}
+        fry{"fy"}
+        fuc{"ff"}
+        ful{"ff"}
+        gaz{"om"}
+        gbo{"grb"}
+        gla{"gd"}
+        gle{"ga"}
+        glg{"gl"}
+        glv{"gv"}
+        gno{"gon"}
+        grn{"gn"}
+        gug{"gn"}
+        guj{"gu"}
+        gya{"gba"}
+        hat{"ht"}
+        hau{"ha"}
+        hbs{"sr_Latn"}
+        hdn{"hai"}
+        hea{"hmn"}
+        heb{"he"}
+        her{"hz"}
+        him{"srx"}
+        hin{"hi"}
+        hmo{"ho"}
+        hrv{"hr"}
+        hun{"hu"}
+        hye{"hy"}
+        i_ami{"ami"}
+        i_bnn{"bnn"}
+        i_hak{"hak"}
+        i_klingon{"tlh"}
+        i_lux{"lb"}
+        i_navajo{"nv"}
+        i_pwn{"pwn"}
+        i_tao{"tao"}
+        i_tay{"tay"}
+        i_tsu{"tsu"}
+        ibo{"ig"}
+        ido{"io"}
+        iii{"ii"}
+        ike{"iu"}
+        iku{"iu"}
+        ile{"ie"}
+        in{"id"}
+        ina{"ia"}
+        ind{"id"}
+        ipk{"ik"}
+        isl{"is"}
+        ita{"it"}
+        iw{"he"}
+        jav{"jv"}
+        ji{"yi"}
+        jpn{"ja"}
+        jw{"jv"}
+        kal{"kl"}
+        kan{"kn"}
+        kas{"ks"}
+        kat{"ka"}
+        kau{"kr"}
+        kaz{"kk"}
+        khk{"mn"}
+        khm{"km"}
+        kik{"ki"}
+        kin{"rw"}
+        kir{"ky"}
+        kmr{"ku"}
+        knc{"kr"}
+        kng{"kg"}
+        knn{"kok"}
+        kom{"kv"}
+        kon{"kg"}
+        kor{"ko"}
+        kpv{"kv"}
+        kua{"kj"}
+        kur{"ku"}
+        lao{"lo"}
+        lat{"la"}
+        lav{"lv"}
+        lbk{"bnc"}
+        lim{"li"}
+        lin{"ln"}
+        lit{"lt"}
+        ltz{"lb"}
+        lub{"lu"}
+        lug{"lg"}
+        lvs{"lv"}
+        mah{"mh"}
+        mal{"ml"}
+        mar{"mr"}
+        mhr{"chm"}
+        mkd{"mk"}
+        mlg{"mg"}
+        mlt{"mt"}
+        mnk{"man"}
+        mo{"ro"}
+        mol{"ro"}
+        mon{"mn"}
+        mri{"mi"}
+        msa{"ms"}
+        mup{"raj"}
+        mya{"my"}
+        nau{"na"}
+        nav{"nv"}
+        nbl{"nr"}
+        nde{"nd"}
+        ndo{"ng"}
+        nep{"ne"}
+        nld{"nl"}
+        nno{"nn"}
+        no{"nb"}
+        no_BOKMAL{"nb"}
+        no_NYNORSK{"nn"}
+        no_bok{"nb"}
+        no_nyn{"nn"}
+        nob{"nb"}
+        nor{"nb"}
+        npi{"ne"}
+        nya{"ny"}
+        oci{"oc"}
+        ojg{"oj"}
+        oji{"oj"}
+        ori{"or"}
+        orm{"om"}
+        ory{"or"}
+        oss{"os"}
+        pan{"pa"}
+        pbu{"ps"}
+        pes{"fa"}
+        pli{"pi"}
+        plt{"mg"}
+        pnb{"lah"}
+        pol{"pl"}
+        por{"pt"}
+        pus{"ps"}
+        que{"qu"}
+        qxp{"qu"}
+        rmy{"rom"}
+        roh{"rm"}
+        ron{"ro"}
+        run{"rn"}
+        rus{"ru"}
+        sag{"sg"}
+        san{"sa"}
+        sgn_BE_FR{"sfb"}
+        sgn_BE_NL{"vgt"}
+        sgn_CH_DE{"sgg"}
+        sh{"sr_Latn"}
+        sin{"si"}
+        slk{"sk"}
+        slv{"sl"}
+        sme{"se"}
+        smo{"sm"}
+        sna{"sn"}
+        snd{"sd"}
+        som{"so"}
+        sot{"st"}
+        spa{"es"}
+        spy{"kln"}
+        sqi{"sq"}
+        src{"sc"}
+        srd{"sc"}
+        srp{"sr"}
+        ssw{"ss"}
+        sun{"su"}
+        swa{"sw"}
+        swe{"sv"}
+        swh{"sw"}
+        tah{"ty"}
+        tam{"ta"}
+        tat{"tt"}
+        tel{"te"}
+        tgk{"tg"}
+        tgl{"fil"}
+        tha{"th"}
+        tir{"ti"}
+        tl{"fil"}
+        ton{"to"}
+        tsn{"tn"}
+        tso{"ts"}
+        ttq{"tmh"}
+        tuk{"tk"}
+        tur{"tr"}
+        tw{"ak"}
+        twi{"ak"}
+        uig{"ug"}
+        ukr{"uk"}
+        umu{"del"}
+        urd{"ur"}
+        uzb{"uz"}
+        uzn{"uz"}
+        ven{"ve"}
+        vie{"vi"}
+        vol{"vo"}
+        wln{"wa"}
+        wol{"wo"}
+        xho{"xh"}
+        xpe{"kpe"}
+        xsl{"den"}
+        ydd{"yi"}
+        yid{"yi"}
+        yor{"yo"}
+        zai{"zap"}
+        zh_guoyu{"zh"}
+        zh_hakka{"hak"}
+        zh_min_nan{"nan"}
+        zh_xiang{"hsn"}
+        zha{"za"}
+        zho{"zh"}
+        zsm{"ms"}
+        zul{"zu"}
+        zyb{"za"}
+    }
     regionCodes{
         "001",
         "002",
@@ -30,7 +312,6 @@ metadata:table(nofallback){
         "054",
         "057",
         "061",
-        "062",
         "142",
         "143",
         "145",
@@ -39,9 +320,6 @@ metadata:table(nofallback){
         "154",
         "155",
         "419",
-        "172",
-        "200",
-        "830",
         "AC",
         "AD",
         "AE",
@@ -50,7 +328,6 @@ metadata:table(nofallback){
         "AI",
         "AL",
         "AM",
-        "AN",
         "AO",
         "AQ",
         "AR",
@@ -77,7 +354,6 @@ metadata:table(nofallback){
         "BR",
         "BS",
         "BT",
-        "BU",
         "BV",
         "BW",
         "BY",
@@ -96,22 +372,18 @@ metadata:table(nofallback){
         "CO",
         "CP",
         "CR",
-        "CS",
         "CU",
         "CV",
         "CW",
         "CX",
         "CY",
-        "CS",
         "CZ",
-        "DD",
         "DE",
         "DG",
         "DJ",
         "DK",
         "DM",
         "DO",
-        "DY",
         "DZ",
         "EA",
         "EC",
@@ -127,9 +399,7 @@ metadata:table(nofallback){
         "FK",
         "FM",
         "FO",
-        "FQ",
         "FR",
-        "FX",
         "GA",
         "GB",
         "GD",
@@ -155,7 +425,6 @@ metadata:table(nofallback){
         "HR",
         "HT",
         "HU",
-        "HV",
         "IC",
         "ID",
         "IE",
@@ -171,7 +440,6 @@ metadata:table(nofallback){
         "JM",
         "JO",
         "JP",
-        "JT",
         "KE",
         "KG",
         "KH",
@@ -201,7 +469,6 @@ metadata:table(nofallback){
         "MF",
         "MG",
         "MH",
-        "MI",
         "MK",
         "ML",
         "MM",
@@ -223,19 +490,15 @@ metadata:table(nofallback){
         "NE",
         "NF",
         "NG",
-        "NH",
         "NI",
         "NL",
         "NO",
         "NP",
-        "NQ",
         "NR",
-        "NT",
         "NU",
         "NZ",
         "OM",
         "PA",
-        "PC",
         "PE",
         "PF",
         "PG",
@@ -247,13 +510,10 @@ metadata:table(nofallback){
         "PR",
         "PS",
         "PT",
-        "PU",
         "PW",
         "PY",
-        "PZ",
         "QA",
         "QO",
-        "QU",
         "RE",
         "RO",
         "RS",
@@ -274,8 +534,8 @@ metadata:table(nofallback){
         "SN",
         "SO",
         "SR",
+        "SS",
         "ST",
-        "SU",
         "SV",
         "SX",
         "SY",
@@ -292,7 +552,6 @@ metadata:table(nofallback){
         "TM",
         "TN",
         "TO",
-        "TP",
         "TR",
         "TT",
         "TV",
@@ -313,15 +572,16 @@ metadata:table(nofallback){
         "VU",
         "WF",
         "WS",
-        "YD",
+        "XK",
         "YE",
         "YT",
-        "YU",
         "ZA",
         "ZM",
-        "ZR",
         "ZW",
         "ZZ",
+    }
+    scriptAlias{
+        Qaai{"Zinh"}
     }
     territoryAlias{
         004{"AF"}
@@ -482,8 +742,12 @@ metadata:table(nofallback){
         520{"NR"}
         524{"NP"}
         528{"NL"}
-        532{"AN"}
+        530{"CW SX BQ"}
+        531{"CW"}
+        532{"CW SX BQ"}
         533{"AW"}
+        534{"SX"}
+        535{"BQ"}
         536{"SA IQ"}
         540{"NC"}
         548{"VU"}
@@ -541,6 +805,8 @@ metadata:table(nofallback){
         716{"ZW"}
         720{"YE"}
         724{"ES"}
+        728{"SS"}
+        729{"SD"}
         732{"EH"}
         736{"SD"}
         740{"SR"}
@@ -585,7 +851,48 @@ metadata:table(nofallback){
         890{"RS ME SI HR MK BA"}
         891{"RS ME"}
         894{"ZM"}
+        958{"AA"}
+        959{"QM"}
+        960{"QN"}
+        962{"QP"}
+        963{"QQ"}
+        964{"QR"}
+        965{"QS"}
+        966{"QT"}
+        967{"EU"}
+        968{"QV"}
+        969{"QW"}
+        970{"QX"}
+        971{"QY"}
+        972{"QZ"}
+        973{"XA"}
+        974{"XB"}
+        975{"XC"}
+        976{"XD"}
+        977{"XE"}
+        978{"XF"}
+        979{"XG"}
+        980{"XH"}
+        981{"XI"}
+        982{"XJ"}
+        983{"XK"}
+        984{"XL"}
+        985{"XM"}
+        986{"XN"}
+        987{"XO"}
+        988{"XP"}
+        989{"XQ"}
+        990{"XR"}
+        991{"XS"}
+        992{"XT"}
+        993{"XU"}
+        994{"XV"}
+        995{"XW"}
+        996{"XX"}
+        997{"XY"}
+        998{"XZ"}
         999{"ZZ"}
+        AAA{"AA"}
         ABW{"AW"}
         AFG{"AF"}
         AGO{"AO"}
@@ -594,6 +901,7 @@ metadata:table(nofallback){
         ALB{"AL"}
         AN{"CW SX BQ"}
         AND{"AD"}
+        ANT{"CW SX BQ"}
         ARE{"AE"}
         ARG{"AR"}
         ARM{"AM"}
@@ -608,6 +916,7 @@ metadata:table(nofallback){
         BDI{"BI"}
         BEL{"BE"}
         BEN{"BJ"}
+        BES{"BQ"}
         BFA{"BF"}
         BGD{"BD"}
         BGR{"BG"}
@@ -646,6 +955,7 @@ metadata:table(nofallback){
         CS{"RS ME"}
         CT{"KI"}
         CUB{"CU"}
+        CUW{"CW"}
         CXR{"CX"}
         CYM{"KY"}
         CYP{"CY"}
@@ -795,7 +1105,20 @@ metadata:table(nofallback){
         PYF{"PF"}
         PZ{"PA"}
         QAT{"QA"}
+        QMM{"QM"}
+        QNN{"QN"}
+        QPP{"QP"}
+        QQQ{"QQ"}
+        QRR{"QR"}
+        QSS{"QS"}
+        QTT{"QT"}
         QU{"EU"}
+        QUU{"EU"}
+        QVV{"QV"}
+        QWW{"QW"}
+        QXX{"QX"}
+        QYY{"QY"}
+        QZZ{"QZ"}
         REU{"RE"}
         RH{"ZW"}
         ROU{"RO"}
@@ -816,6 +1139,7 @@ metadata:table(nofallback){
         SOM{"SO"}
         SPM{"PM"}
         SRB{"RS"}
+        SSD{"SS"}
         STP{"ST"}
         SU{"RU AM AZ BY EE GE KZ KG LV LT MD TJ TM UA UZ"}
         SUN{"RU AM AZ BY EE GE KZ KG LV LT MD TJ TM UA UZ"}
@@ -824,6 +1148,7 @@ metadata:table(nofallback){
         SVN{"SI"}
         SWE{"SE"}
         SWZ{"SZ"}
+        SXM{"SX"}
         SYC{"SC"}
         SYR{"SY"}
         TAA{"TA"}
@@ -862,6 +1187,32 @@ metadata:table(nofallback){
         WK{"UM"}
         WLF{"WF"}
         WSM{"WS"}
+        XAA{"XA"}
+        XBB{"XB"}
+        XCC{"XC"}
+        XDD{"XD"}
+        XEE{"XE"}
+        XFF{"XF"}
+        XGG{"XG"}
+        XHH{"XH"}
+        XII{"XI"}
+        XJJ{"XJ"}
+        XKK{"XK"}
+        XLL{"XL"}
+        XMM{"XM"}
+        XNN{"XN"}
+        XOO{"XO"}
+        XPP{"XP"}
+        XQQ{"XQ"}
+        XRR{"XR"}
+        XSS{"XS"}
+        XTT{"XT"}
+        XUU{"XU"}
+        XVV{"XV"}
+        XWW{"XW"}
+        XXX{"XX"}
+        XYY{"XY"}
+        XZZ{"XZ"}
         YD{"YE"}
         YEM{"YE"}
         YMD{"YE"}
@@ -873,5 +1224,10 @@ metadata:table(nofallback){
         ZR{"CD"}
         ZWE{"ZW"}
         ZZZ{"ZZ"}
+    }
+    variantAlias{
+        AALAND{"AX"}
+        HEPLOC{"ALALC97"}
+        POLYTONI{"POLYTON"}
     }
 }
