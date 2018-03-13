@@ -24,7 +24,7 @@ else
 endif
 
 override_dh_auto_build:
-	dh_auto_build --parallel
+	dh_auto_build
 	$(MAKE) -C $(CURDIR)/source/ doc
 
 override_dh_auto_test:
@@ -61,7 +61,7 @@ override_dh_strip:
 	done
 
 %:
-	dh $@ --sourcedirectory=$(CURDIR/)source/ --parallel
+	dh $@ --sourcedirectory=$(CURDIR/)source/
 
 .PHONY: override_dh_clean override_dh_auto_configure override_dh_auto_build \
 	override_dh_auto_test override_dh_auto_install \
