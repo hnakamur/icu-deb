@@ -1,3 +1,10 @@
+icu (57.1-6+deb9u2) stretch-security; urgency=high
+
+  * Backport upstream security fix for CVE-2017-15422: Persian calendar
+    integer overflow (closes: #892766).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 14 Mar 2018 18:28:38 +0000
+
 icu (57.1-6+deb9u1) stretch; urgency=high
 
   * Backport upstream security fix for CVE-2017-14952: double free in
