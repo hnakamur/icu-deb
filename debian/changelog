@@ -1,3 +1,9 @@
+icu (60.2-3ubuntu3) bionic; urgency=medium
+
+  * Correct Breaks for openttd.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Thu, 22 Mar 2018 19:42:43 +0000
+
 icu (60.2-3ubuntu2) bionic; urgency=medium
 
   * Split Layout Engine shared library into a separate package, due to
