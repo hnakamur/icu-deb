@@ -286,6 +286,24 @@ public:
      */
     explicit LocalArray(T *p=NULL) : LocalPointerBase<T>(p) {}
     /**
+     * Constructor takes ownership and reports an error if NULL.
+     *
+     * This constructor is intended to be used with other-class constructors
+     * that may report a failure UErrorCode,
+     * so that callers need to check only for U_FAILURE(errorCode)
+     * and not also separately for isNull().
+     *
+     * @param p simple pointer to an array of T objects that is adopted
+     * @param errorCode in/out UErrorCode, set to U_MEMORY_ALLOCATION_ERROR
+     *     if p==NULL and no other failure code had been set
+     * @stable ICU 56
+     */
+    LocalArray(T *p, UErrorCode &errorCode) : LocalPointerBase<T>(p) {
+        if(p==NULL && U_SUCCESS(errorCode)) {
+            errorCode=U_MEMORY_ALLOCATION_ERROR;
+        }
+    }
+    /**
      * Destructor deletes the array it owns.
      * @stable ICU 4.4
      */
