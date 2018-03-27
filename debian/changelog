@@ -1,3 +1,14 @@
+icu (55.1-7ubuntu0.4) xenial-security; urgency=medium
+
+  * SECURITY UPDATE: integer overflow in Persian Cal
+    - debian/patches/CVE-2017-15422.patch: use int64_t math for one
+      operation to avoid overflow, add tests in source/i18n/gregoimp.cpp,
+      source/i18n/gregoimp.h, source/i18n/persncal.cpp,
+      source/test/intltest/calregts.cpp, source/test/intltest/calregts.h.
+    - CVE-2017-15422
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 27 Mar 2018 11:09:09 -0400
+
 icu (55.1-7ubuntu0.3) xenial-security; urgency=medium
 
   * SECURITY UPDATE: double free
