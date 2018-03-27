@@ -78,6 +78,7 @@ public:
 
     void printdate(GregorianCalendar *cal, const char *string);
     void dowTest(UBool lenient) ;
+    void TestPersianCalOverflow(void);
 
 
     static UDate getAssociatedDate(UDate d, UErrorCode& status);
