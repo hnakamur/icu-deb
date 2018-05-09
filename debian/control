@@ -3,7 +3,7 @@ Section: libs
 Priority: optional
 Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
 Standards-Version: 4.1.4
-Build-Depends: debhelper (>= 11), pkg-config, libicu-le-hb-dev
+Build-Depends: debhelper (>= 11), pkg-config
 Build-Depends-Indep: doxygen (>= 1.7.1)
 Build-Conflicts: clang
 Homepage: http://www.icu-project.org
@@ -13,6 +13,7 @@ Multi-Arch: same
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Breaks: openttd
 Description: International Components for Unicode
  ICU is a C++ and C library that provides robust and full-featured
  Unicode and locale support.  This package contains the runtime
@@ -23,7 +24,7 @@ Section: libdevel
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, libicu60 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libicu-le-hb-dev, libc6-dev | libc-dev, libstdc++-6-dev | libstdc++-dev
+Depends: ${misc:Depends}, libicu60 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libc6-dev | libc-dev, libstdc++-6-dev | libstdc++-dev
 Replaces: icu-devtools (<< 60.1-1~)
 Breaks: icu-devtools (<< 60.1-1~)
 Suggests: icu-doc
