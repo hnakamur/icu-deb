@@ -1,3 +1,10 @@
+icu (60.2-5) unstable; urgency=medium
+
+  * Upload to Sid.
+  * Break OpenTTD as this build is without Paragraph Layout API.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 09 May 2018 04:31:49 +0000
+
 icu (60.2-4) experimental; urgency=medium
 
   * Install icu-config again.
