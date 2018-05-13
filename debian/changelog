@@ -1,3 +1,12 @@
+icu (60.2-6ubuntu1) cosmic; urgency=medium
+
+  * Merge with Debian; remaining changes:
+    - Add Breaks for openttd.
+    - Split Layout Engine shared library into a separate package, due to
+      heavy dependencies, and breaking circular dependency.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sun, 13 May 2018 12:34:49 -0400
+
 icu (60.2-6) unstable; urgency=medium
 
   * Build with Paragraph Layout API.
@@ -23,6 +32,26 @@ icu (60.2-4) experimental; urgency=medium
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 24 Apr 2018 16:45:42 +0000
 
+icu (60.2-3ubuntu3) bionic; urgency=medium
+
+  * Correct Breaks for openttd.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Thu, 22 Mar 2018 19:42:43 +0000
+
+icu (60.2-3ubuntu2) bionic; urgency=medium
+
+  * Split Layout Engine shared library into a separate package, due to
+    heavy dependencies, and breaking circular dependency.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Wed, 21 Mar 2018 13:25:27 +0000
+
+icu (60.2-3ubuntu1) bionic; urgency=medium
+
+  * Merge with Debian; remaining changes:
+    - libicu-dev: Ship the icu-config binary again and remove M-A: same.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 31 Jan 2018 04:54:19 +0100
+
 icu (60.2-3) experimental; urgency=medium
 
   * Don't distclean in parallel (closes: #884898).
@@ -36,6 +65,13 @@ icu (60.2-2) experimental; urgency=medium
   * Update debhelper level to 11 .
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Mon, 18 Dec 2017 19:32:35 +0000
+
+icu (60.2-1ubuntu1) bionic; urgency=medium
+
+  * Merge with Debian; remaining changes:
+    - libicu-dev: Ship the icu-config binary again and remove M-A: same.
+
+ -- Matthias Klose <doko@ubuntu.com>  Sun, 10 Dec 2017 10:04:10 +0100
 
 icu (60.2-1) experimental; urgency=high
 
@@ -55,11 +91,31 @@ icu (60.2-1) experimental; urgency=high
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 09 Dec 2017 16:20:17 +0000
 
+icu (60.1-1ubuntu2) bionic; urgency=medium
+
+  * Revert the upstream fix for #13104, requiring C++11 for some header files.
+    The archive still has packages not ready for C++11, e.g. firebird3.0.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 08 Nov 2017 11:34:56 +0100
+
+icu (60.1-1ubuntu1) bionic; urgency=medium
+
+  * Merge with Debian; remaining changes:
+    - libicu-dev: Ship the icu-config binary again and remove M-A: same.
+
+ -- Matthias Klose <doko@ubuntu.com>  Tue, 07 Nov 2017 08:13:11 +0100
+
 icu (60.1-1) experimental; urgency=medium
 
   * New major upstream release.
 
  -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 01 Nov 2017 18:22:48 +0000
+
+icu (59.1-3ubuntu1) bionic; urgency=medium
+
+  * libicu-dev: Ship the icu-config binary again and remove M-A: same.
+
+ -- Matthias Klose <doko@ubuntu.com>  Thu, 26 Oct 2017 09:46:04 +0200
 
 icu (59.1-3) experimental; urgency=medium
 
