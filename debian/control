@@ -1,7 +1,8 @@
 Source: icu
 Section: libs
 Priority: optional
-Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
 Standards-Version: 4.1.4
 Build-Depends: debhelper (>= 11), pkg-config, libicu-le-hb-dev
 Build-Depends-Indep: doxygen (>= 1.7.1)
@@ -13,16 +14,32 @@ Multi-Arch: same
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Breaks: openttd (<= 1.7.1-1)
 Description: International Components for Unicode
  ICU is a C++ and C library that provides robust and full-featured
  Unicode and locale support.  This package contains the runtime
  libraries for ICU.
 
+Package: libiculx60
+Multi-Arch: same
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Breaks: libicu60 (<< 60.2-3ubuntu2~)
+Replaces: libicu60 (<< 60.2-3ubuntu2~)
+Description: International Components for Unicode
+ ICU is a C++ and C library that provides robust and full-featured
+ Unicode and locale support.  This package contains the runtime
+ libraries for ICU.
+ .
+ This package contains the layout engine
+
 Package: libicu-dev
 Section: libdevel
 Architecture: any
+#Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, libicu60 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libicu-le-hb-dev, libc6-dev | libc-dev
+Depends: ${misc:Depends}, libicu60 (= ${binary:Version}), libiculx60 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libicu-le-hb-dev, libc6-dev | libc-dev
 Replaces: icu-devtools (<< 60.1-1~)
 Breaks: icu-devtools (<< 60.1-1~)
 Suggests: icu-doc
