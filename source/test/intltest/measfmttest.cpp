@@ -1039,6 +1039,9 @@ void MeasureFormatTest::TestCompatible59() {
     assertSuccess("", status);
 }
 
+// Note that TestCompatible60(), TestCompatible61(), TestCompatible62()
+// would be the same as TestCompatible59(), no need to add them.
+
 void MeasureFormatTest::TestBasic() {
     UErrorCode status = U_ZERO_ERROR;
     MeasureUnit *ptr1 = MeasureUnit::createArcMinute(status);
@@ -1747,7 +1750,7 @@ void MeasureFormatTest::TestMultiples() {
     helperTestMultiples(en, UMEASFMT_WIDTH_SHORT,  "2 mi, 1 ft, 2.3 in");
     helperTestMultiples(en, UMEASFMT_WIDTH_NARROW, "2mi 1\\u2032 2.3\\u2033");
     helperTestMultiples(ru, UMEASFMT_WIDTH_WIDE,   "2 \\u043C\\u0438\\u043B\\u0438 1 \\u0444\\u0443\\u0442 2,3 \\u0434\\u044E\\u0439\\u043C\\u0430");
-    helperTestMultiples(ru, UMEASFMT_WIDTH_SHORT,  "2 \\u043C\\u0438\\u043B\\u0438 1 \\u0444\\u0443\\u0442 2,3 \\u0434\\u044E\\u0439\\u043C.");
+    helperTestMultiples(ru, UMEASFMT_WIDTH_SHORT,  "2 \\u043C\\u0438\\u043B\\u0438 1 \\u0444\\u0442 2,3 \\u0434\\u044E\\u0439\\u043C.");
     helperTestMultiples(ru, UMEASFMT_WIDTH_NARROW, "2 \\u043C\\u0438\\u043B\\u044C 1 \\u0444\\u0442 2,3 \\u0434\\u044E\\u0439\\u043C\\u0430");
 }
 
@@ -1876,9 +1879,9 @@ void MeasureFormatTest::TestCurrencies() {
     if (!assertSuccess("Error creating format object", status)) {
         return;
     }
-    verifyFormat("TestCurrenciesShort", fmt, &USD_NEG_1, 1, "-USD1.00");
-    verifyFormat("TestCurrenciesShort", fmt, &USD_1, 1, "USD1.00");
-    verifyFormat("TestCurrenciesShort", fmt, &USD_2, 1, "USD2.00");
+    verifyFormat("TestCurrenciesShort", fmt, &USD_NEG_1, 1, "-USD\\u00A01.00");
+    verifyFormat("TestCurrenciesShort", fmt, &USD_1, 1, "USD\\u00A01.00");
+    verifyFormat("TestCurrenciesShort", fmt, &USD_2, 1, "USD\\u00A02.00");
     fmt = MeasureFormat(en, UMEASFMT_WIDTH_NARROW, status);
     if (!assertSuccess("Error creating format object", status)) {
         return;
@@ -2099,8 +2102,8 @@ void MeasureFormatTest::TestGroupingSeparator() {
             "grouping separator",
             "2,147,483,647 yrs, -2,147,483,648 mths, -987 days, 1,362 hr, 987 min",
             appendTo);
-    assertEquals("begin index", 9, pos.getBeginIndex());
-    assertEquals("end index", 10, pos.getEndIndex());
+    assertEquals("begin index", 1, pos.getBeginIndex());
+    assertEquals("end index", 2, pos.getEndIndex());
 }
 
 void MeasureFormatTest::TestDoubleZero() {

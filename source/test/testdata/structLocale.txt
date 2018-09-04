@@ -536,6 +536,10 @@ structLocale:table(nofallback){
             "",
             "",
         }
+        BYN{
+            "",
+            "",
+        }
         BYR{
             "",
             "",
@@ -573,6 +577,10 @@ structLocale:table(nofallback){
             "",
         }
         CLP{
+            "",
+            "",
+        }
+        CNH{
             "",
             "",
         }
@@ -1004,6 +1012,10 @@ structLocale:table(nofallback){
             "",
             "",
         }
+        MRU{
+            "",
+            "",
+        }
         MTL{
             "",
             "",
@@ -1233,6 +1245,10 @@ structLocale:table(nofallback){
             "",
         }
         STD{
+            "",
+            "",
+        }
+        STN{
             "",
             "",
         }
@@ -4131,6 +4147,10 @@ structLocale:table(nofallback){
             2,
         }
         script:intvector{  
+            2,
+            2,
+        }
+        typographicNames:intvector{
             2,
             2,
         }
@@ -8349,6 +8369,7 @@ structLocale:table(nofallback){
             }
         }
         default{""}
+        default_latn{""}
         deva{
             miscPatterns{
                 atLeast{""}

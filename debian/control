@@ -2,13 +2,13 @@ Source: icu
 Section: libs
 Priority: optional
 Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
-Standards-Version: 4.1.4
-Build-Depends: debhelper (>= 11), pkg-config, libicu-le-hb-dev
+Standards-Version: 4.2.1
+Build-Depends: debhelper (>= 11), pkg-config
 Build-Depends-Indep: doxygen (>= 1.7.1)
 Build-Conflicts: clang
 Homepage: http://www.icu-project.org
 
-Package: libicu60
+Package: libicu62
 Multi-Arch: same
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
@@ -22,9 +22,9 @@ Package: libicu-dev
 Section: libdevel
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, libicu60 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libicu-le-hb-dev, libc6-dev | libc-dev
-Replaces: icu-devtools (<< 60.1-1~)
-Breaks: icu-devtools (<< 60.1-1~)
+Depends: ${misc:Depends}, libicu62 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libc6-dev | libc-dev
+Replaces: icu-devtools (<< 62.1-1~)
+Breaks: icu-devtools (<< 62.1-1~)
 Suggests: icu-doc
 Description: Development files for International Components for Unicode
  ICU is a C++ and C library that provides robust and full-featured
@@ -37,8 +37,8 @@ Architecture: any
 Multi-Arch: foreign
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Replaces: libicu-dev (<< ${binary:Version}), icu-tools (<< 60.1-1~)
-Breaks: libicu-dev (<< ${binary:Version}), icu-tools (<< 60.1-1~)
+Replaces: libicu-dev (<< ${binary:Version}), icu-tools (<< 62.1-1~)
+Breaks: libicu-dev (<< ${binary:Version}), icu-tools (<< 62.1-1~)
 Description: Development utilities for International Components for Unicode
  ICU is a C++ and C library that provides robust and full-featured
  Unicode and locale support. This package contains programs used to
