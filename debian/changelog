@@ -1,3 +1,14 @@
+icu (62.1-1) experimental; urgency=medium
+
+  * New major upstream release (closes: #907748).
+  * Update Standards-Version to 4.2.1 .
+
+  [ Helmut Grohne <helmut@subdivi.de> ]
+  * Fix FTCBFS: Build the native pass without libicu-le-hb-dev
+    (closes: #906906).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 04 Sep 2018 20:49:13 +0000
+
 icu (60.2-6) unstable; urgency=medium
 
   * Build with Paragraph Layout API.
