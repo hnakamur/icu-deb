@@ -1,3 +1,15 @@
+icu (62.1-2) experimental; urgency=medium
+
+  * Build with Paragraph Layout API.
+  * Add break for OpenTTD.
+
+  [ Matthias Klose <doko@ubuntu.com> ]
+  * Split Layout Engine shared library into a separate package, due to
+    heavy dependencies, and breaking circular dependency
+    (closes: #893801, #898571, #898806).
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Sat, 29 Sep 2018 16:45:41 +0000
+
 icu (62.1-1) experimental; urgency=medium
 
   * New major upstream release (closes: #907748).

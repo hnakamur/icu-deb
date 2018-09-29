@@ -23,7 +23,7 @@ override_dh_clean:
 
 override_dh_auto_configure:
 ifeq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
-	dh_auto_configure -- --enable-static --disable-layoutex
+	dh_auto_configure -- --enable-static --enable-layoutex
 else
 	dh_auto_configure -B $(CURDIR)/build-native -- --host=$(DEB_BUILD_GNU_TYPE) --disable-layoutex
 	dh_auto_build -B $(CURDIR)/build-native
