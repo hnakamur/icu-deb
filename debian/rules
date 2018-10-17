@@ -10,7 +10,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/buildflags.mk
 
-l_SONAME=62
+l_SONAME=63
 
 override_dh_auto_clean:
 	dh_auto_clean --no-parallel
@@ -23,7 +23,7 @@ override_dh_clean:
 
 override_dh_auto_configure:
 ifeq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
-	dh_auto_configure -- --enable-static --enable-layoutex
+	dh_auto_configure -- --enable-static --disable-layoutex
 else
 	dh_auto_configure -B $(CURDIR)/build-native -- --host=$(DEB_BUILD_GNU_TYPE) --disable-layoutex
 	dh_auto_build -B $(CURDIR)/build-native
