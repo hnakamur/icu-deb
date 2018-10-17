@@ -1,3 +1,10 @@
+icu (63.1-1) experimental; urgency=medium
+
+  * New major upstream release.
+  * Build without Paragraph Layout API.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Wed, 17 Oct 2018 16:44:27 +0000
+
 icu (62.1-2) experimental; urgency=medium
 
   * Build with Paragraph Layout API.

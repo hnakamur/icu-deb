@@ -1,3 +1,0 @@
-# libicu62 installs multiple shared libraries, none of which is
-# actually called libicu.so.62, but all of which are libicu*.so.62.
-libicu62: package-name-doesnt-match-sonames libicudata62 libicui18n62 libicuio62 libicutest62 libicutu62 libicuuc62
