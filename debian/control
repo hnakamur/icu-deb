@@ -3,7 +3,7 @@ Section: libs
 Priority: optional
 Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
 Standards-Version: 4.2.1
-Build-Depends: debhelper (>= 11), pkg-config
+Build-Depends: debhelper (>= 11), pkg-config, libicu-le-hb-dev (>= 1.0.3+git180724-2)
 Build-Depends-Indep: doxygen (>= 1.7.1)
 Build-Conflicts: clang
 Homepage: http://www.icu-project.org
@@ -29,14 +29,13 @@ Description: International Components for Unicode
  Unicode and locale support.  This package contains the runtime
  libraries for ICU.
  .
- This package contains the layout engine, but while bootstrapping it's
- currently empty.
+ This package contains the layout engine.
 
 Package: libicu-dev
 Section: libdevel
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, libicu63 (= ${binary:Version}), libiculx63 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libc6-dev | libc-dev
+Depends: ${misc:Depends}, libicu63 (= ${binary:Version}), libiculx63 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libicu-le-hb-dev (>= 1.0.3+git180724-2), libc6-dev | libc-dev
 Replaces: icu-devtools (<< 63.1-1~)
 Breaks: icu-devtools (<< 63.1-1~)
 Suggests: icu-doc
