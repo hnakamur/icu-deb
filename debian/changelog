@@ -1,3 +1,9 @@
+icu (63.1-4) unstable; urgency=medium
+
+  * Build with Paragraph Layout API.
+
+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Tue, 13 Nov 2018 05:48:13 +0000
+
 icu (63.1-3) unstable; urgency=high
 
   * Backport fix for ICU-20246: fixing another integer overflow in number
