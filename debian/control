@@ -2,15 +2,15 @@ Source: icu
 Section: libs
 Priority: optional
 Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
-Standards-Version: 4.2.1
+Standards-Version: 4.3.0
 Build-Depends: debhelper (>= 11), pkg-config
 Build-Depends-Indep: doxygen (>= 1.7.1)
 Build-Conflicts: clang
 Homepage: http://www.icu-project.org
 
 Package: libicu63
-Multi-Arch: same
 Architecture: any
+Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Breaks: openttd (<< 1.8.0-2~), libiculx63 (<< 63.1-5)
@@ -35,6 +35,7 @@ Description: International Components for Unicode
 Package: libicu-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, libicu63 (= ${binary:Version}), icu-devtools (>= ${binary:Version}), libc6-dev | libc-dev
 Replaces: icu-devtools (<< 63.1-1~)
