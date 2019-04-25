@@ -1,3 +1,9 @@
+icu (63.1-6ppa1~ubuntu18.04) bionic; urgency=medium
+
+  * Backport to Ubuntu bionic.
+
+ -- Hiroaki Nakamura <hnakamur@gmail.com>  Fri, 26 Apr 2019 00:41:30 +0900
+
 icu (63.1-6) unstable; urgency=medium
 
   * Build without icu-config (closes: #898820).
